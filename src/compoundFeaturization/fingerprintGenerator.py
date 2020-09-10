@@ -21,7 +21,7 @@ class fingerprintGenerator():
     Topological and RDK fingerprints giving the same results???? Maybe not
     """
 
-    def __init__(self, smiles_list, class_list=[], fpt_type='morgan'):
+    def __init__(self, dataset, smiles_label, class_label = None, fpt_type='morgan'):
 
         """
         Class to generate multiple RDKit fingerprint types.
@@ -41,11 +41,11 @@ class fingerprintGenerator():
                         ergraphs --> Extended Reduced Graphs
         """
 
-        if len(smiles_list) == len(class_list):
-            self.dataset = pd.DataFrame({'Smiles': smiles_list, 'Class': class_list})
+        if class_label is not None:
+            self.dataset = pd.DataFrame({'Smiles': dataset[smiles_label].tolist(), 'Class': dataset[class_label].tolist()})
             self.labeled = True
         else:
-            self.dataset = pd.DataFrame({'Smiles': smiles_list})
+            self.dataset = pd.DataFrame({'Smiles': dataset[smiles_label].tolist()})
             self.labeled = False
 
         self.fpt_type = fpt_type
@@ -205,17 +205,14 @@ class fingerprintGenerator():
         ecfp_df = ecfp_df.rename(columns=lambda x: 'FPT_' + str(x + 1))
         dataset = pd.concat([dataset, ecfp_df], axis=1).drop(['ECFP'], axis=1)
         print('Dataset dimensions: ', dataset.shape)
-        return dataset
+        #keep or remove dropna to maintain order??
+        return dataset.dropna()
 
-'''
+
 if __name__ == '__main__':
     df = pd.read_csv('dataset_last_version2.csv', sep=';', header=0)
     print(df.shape)
-    smiles_list = df['Smiles'].tolist()
-    class_list = df['Class'].tolist()
-    mrg_fps = fingerprintGenerator(smiles_list, class_list, 'morgan')
+    mrg_fps = fingerprintGenerator(df, 'Smiles', 'Class', 'morgan')
     mrg_dataset = mrg_fps.getFingerprintsDataset()
-    mrg_dataset = mrg_dataset.dropna()
     print(mrg_dataset.shape)
     # mrg_dataset.to_csv('mrg_fps.csv', sep = ';', index=False)
-'''

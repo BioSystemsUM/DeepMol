@@ -1,8 +1,8 @@
 #ARG cuda_version=10.0
 #ARG cudnn_version=7
 #FROM nvidia/cuda:${cuda_version}-cudnn${cudnn_version}-devel
-#FROM tensorflow/tensorflow:1.13.2-gpu-py3
-FROM tensorflow/tensorflow:latest-gpu-py3
+FROM tensorflow/tensorflow:1.14.0-gpu-py3
+#FROM tensorflow/tensorflow:latest-gpu-py3
 
 # Install system packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -44,11 +44,17 @@ RUN conda install -y python=${python_version} && \
     pip install --upgrade pip --ignore-installed six && \
     pip install \
 #      sklearn_pandas \
+      joblib \
+      pillow \
+      mordred \
+      molvs \
+      deepchem \
       git+https://github.com/samoturk/mol2vec \
-      tensorflow-gpu \
+      tensorflow-gpu==1.14 \
       cntk-gpu && \
     conda install \
-      rdkit deepchem==2.3.0 \
+      scikit-learn==0.22.0 \
+#      rdkit deepchem \
       bcolz \
       h5py \
       matplotlib \
@@ -60,7 +66,6 @@ RUN conda install -y python=${python_version} && \
       pydot \
       pygpu \
       pyyaml \
-      scikit-learn \
       six \
       theano \
       mkdocs \

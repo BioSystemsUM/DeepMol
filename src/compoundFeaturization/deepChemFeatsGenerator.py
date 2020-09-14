@@ -9,9 +9,9 @@ import pandas as pd
 import numpy as np
 import rdkit
 import deepchem as dc
-from deepchem.feat import RDKitDescriptors, BPSymmetryFunctionInput, CoulombMatrix, CoulombMatrixEig
 from deepchem.utils import conformers
-import joblib
+from rdkit import Chem
+#from deepchem.feat import RDKitDescriptors, BPSymmetryFunctionInput, CoulombMatrix, CoulombMatrixEig
 
 
 class DeepChemFeaturizerGenerator():
@@ -45,16 +45,15 @@ class DeepChemFeaturizerGenerator():
         the featurizer is a set of allowed descriptors, which can be accessed using RDKitDescriptors.allowedDescriptors.
         '''
         try:
-            featurizer = RDKitDescriptors()
+            featurizer = dc.feat.RDKitDescriptors()
             features = featurizer.featurize(molecule)
-            print(len(features), ' computed!')
-            arr = np.array(features)
+            arr = np.array(features[0])
         except Exception as e:
             print('error in smile: ' + str(molecule))
             arr = np.nan
         return arr
 
-    def _BPSymmetryFunction(self, molecule):
+    def _BPSymmetryFunction(self, molecule): #TODO: not working properly
         '''
         Behler-Parinello Symmetry function or BPSymmetryFunction featurizes a molecule by computing the atomic
         number and coordinates for each atom in the molecule.
@@ -63,7 +62,7 @@ class DeepChemFeaturizerGenerator():
             #engine = conformers.ConformerGenerator(max_conformers=1)
             #mol = engine.generate_conformers(molecule)
 
-            featurizer = BPSymmetryFunctionInput(max_atoms=20)
+            featurizer = dc.feat.BPSymmetryFunctionInput(max_atoms=20)
             features = featurizer.featurize(mol=molecule)
 
             arr = np.array(features)
@@ -72,7 +71,8 @@ class DeepChemFeaturizerGenerator():
             arr = np.nan
         return arr
 
-    def _CoulombMatrix(self, molecule):
+
+    def _CoulombMatrix(self, molecule): #TODO: not working properly
         '''
         CoulombMatrix, featurizes a molecule by computing the coulomb matrices for different conformers
         of the molecule, and returning it as a list.
@@ -82,18 +82,21 @@ class DeepChemFeaturizerGenerator():
         capturing atomic energies using the atomic numbers.
         '''
         try:
+            #molecule = Chem.MolFromSmiles(molecule)
             #engine = conformers.ConformerGenerator(max_conformers=1)
             #mol = engine.generate_conformers(molecule)
 
-            featurizer = CoulombMatrix(max_atoms=20, randomize=False, remove_hydrogens=False, upper_tri=False, n_samples=1, seed=None)
-            features = featurizer.featurize(mol=molecule)
-            arr = np.array(features)
+            featurizer = dc.feat.CoulombMatrix(max_atoms=20, randomize=False, remove_hydrogens=False, upper_tri=False, n_samples=1, seed=None)
+            features = featurizer.featurize(molecule)
+            print(features)
+            arr = np.array(features[0])
         except Exception as e:
+            print(e)
             print('error in smile: ' + str(molecule))
             arr = np.nan
         return arr
 
-    def _CoulombMatrixEig(self, molecule):
+    def _CoulombMatrixEig(self, molecule): #TODO: not working properly
         '''
         CoulombMatrix is invariant to molecular rotation and translation, since the interatomic distances or atomic
         numbers do not change. However the matrix is not invariant to random permutations of the atom's indices.
@@ -104,9 +107,9 @@ class DeepChemFeaturizerGenerator():
             #engine = conformers.ConformerGenerator(max_conformers=1)
             #mol = engine.generate_conformers(molecule)
 
-            featurizer = CoulombMatrixEig(max_atoms=20, randomize=False, remove_hydrogens=False, n_samples=1, seed=None)
-            features = featurizer.featurize(mol=molecule)
-            arr = np.array(features)
+            featurizer = dc.feat.CoulombMatrixEig(max_atoms=20, randomize=False, remove_hydrogens=False, n_samples=1, seed=None)
+            features = featurizer.featurize(molecule)
+            arr = np.array(features[0])
         except Exception as e:
             print('error in smile: ' + str(molecule))
             arr = np.nan
@@ -119,7 +122,8 @@ class DeepChemFeaturizerGenerator():
         try:
             featurizer = dc.feat.ConvMolFeaturizer(master_atom=False, use_chirality=False, atom_properties=[])
             features = featurizer.featurize(molecule)
-            arr = np.array(features)
+            #TODO: append features[0] or features[0].atom_features
+            arr = np.array(features[0])
         except Exception as e:
             print('error in smile: ' + str(molecule))
             arr = np.nan
@@ -128,10 +132,12 @@ class DeepChemFeaturizerGenerator():
     def _WeaveFeaturizer(self, molecule):
         '''
 
+        return a WeaveMol object --> .nodes, .pairs, .num_atoms, .n_features, .pair_edges $TODO: what should i return?
         '''
         try:
             featurizer = dc.feat.WeaveFeaturizer(graph_distance=True, explicit_H=False, use_chirality=False, max_pair_distance=None)
             features = featurizer.featurize(molecule)
+
             arr = np.array(features)
         except Exception as e:
             print('error in smile: ' + str(molecule))
@@ -146,7 +152,7 @@ class DeepChemFeaturizerGenerator():
         try:
             featurizer = dc.feat.CircularFingerprint(radius=2, size=2048, chiral=False, bonds=True, features=False, sparse=False, smiles=False)
             features = featurizer.featurize(molecule)
-            arr = np.array(features)
+            arr = np.array(features[0])
         except Exception as e:
             print('error in smile: ' + str(molecule))
             arr = np.nan
@@ -159,13 +165,13 @@ class DeepChemFeaturizerGenerator():
         try:
             featurizer = dc.feat.Mol2VecFingerprint(pretrain_model_path=None, radius=1, unseen='UNK', gather_method='sum')
             features = featurizer.featurize(molecule)
-            arr = np.array(features)
+            arr = np.array(features[0])
         except Exception as e:
             print('error in smile: ' + str(molecule))
             arr = np.nan
         return arr
 
-    def _MordredDescriptors(self, molecule):
+    def _MordredDescriptors(self, molecule): #TODO: install mordred and test again
         '''
 
         '''
@@ -178,15 +184,16 @@ class DeepChemFeaturizerGenerator():
             arr = np.nan
         return arr
 
-    def _AtomCoordinates(self, molecule):
+    def _AtomCoordinates(self, molecule): #TODO: not working properly
         '''
 
         '''
         try:
             featurizer = dc.feat.AtomicCoordinates()
             features = featurizer.featurize(molecule)
-            arr = np.array(features)
+            arr = np.array(features[0])
         except Exception as e:
+            print(e)
             print('error in smile: ' + str(molecule))
             arr = np.nan
         return arr
@@ -204,7 +211,7 @@ class DeepChemFeaturizerGenerator():
         Turns list of smiles characters into array of indices
         '''
         try:
-            featurizer = dc.feat.SmilesToSeq(char_to_idx: Dict[str, int], max_len=250, pad_len=10)
+            #featurizer = dc.feat.SmilesToSeq(char_to_idx: Dict[str, int], max_len=250, pad_len=10)
             features = featurizer.featurize(molecule)
             arr = np.array(features)
         except Exception as e:
@@ -212,20 +219,21 @@ class DeepChemFeaturizerGenerator():
             arr = np.nan
         return arr
 
-    def _SmilesToImage(self, molecule):
+    def _SmilesToImage(self, molecule): #TODO: solve image array problem while applying dataset['ECFP'].apply(pd.Series)
         '''
 
         '''
         try:
             featurizer = dc.feat.SmilesToImage(img_size=80, res=0.5, max_len=250, img_spec='std')
             features = featurizer.featurize(molecule)
-            arr = np.array(features)
+            print(features[0])
+            arr = np.array(features[0])
         except Exception as e:
             print('error in smile: ' + str(molecule))
             arr = np.nan
         return arr
 
-    def _OneHotFeaturizer(self, molecule):
+    def _OneHotFeaturizer(self, molecule): #TODO: solve onehotencoding array problem while applying dataset['ECFP'].apply(pd.Series)
         '''
         pad_smile(smiles: str) → str
         Pad SMILES string to self.pad_length
@@ -244,7 +252,7 @@ class DeepChemFeaturizerGenerator():
         try:
             featurizer = dc.feat.OneHotFeaturizer(charset=['#', ')', '(', '+', '-', '/', '1', '3', '2', '5', '4', '7', '6', '8', '=', '@', 'C', 'B', 'F', 'I', 'H', 'O', 'N', 'S', '[', ']', '\\', 'c', 'l', 'o', 'n', 'p', 's', 'r'], max_length=100)
             features = featurizer.featurize(molecule)
-            arr = np.array(features)
+            arr = np.array(features[0])
         except Exception as e:
             print('error in smile: ' + str(molecule))
             arr = np.nan
@@ -262,6 +270,24 @@ class DeepChemFeaturizerGenerator():
             dataset['ECFP'] = dataset['Smiles'].apply(self._CoulombMatrix).tolist()
         elif self.fpt_type == 'coulombEig':
             dataset['ECFP'] = dataset['Smiles'].apply(self._CoulombMatrixEig).tolist()
+        elif self.fpt_type == 'convMol':
+            dataset['ECFP'] = dataset['Smiles'].apply(self._ConvMolFeaturizer).tolist()
+        elif self.fpt_type == 'weave':
+            dataset['ECFP'] = dataset['Smiles'].apply(self._WeaveFeaturizer).tolist()
+        elif self.fpt_type == 'circular':
+            dataset['ECFP'] = dataset['Smiles'].apply(self._CircularFingerprint).tolist()
+        elif self.fpt_type == 'mol2vec':
+            dataset['ECFP'] = dataset['Smiles'].apply(self._Mol2VecFingerprint).tolist()
+        elif self.fpt_type == 'mordred':
+            dataset['ECFP'] = dataset['Smiles'].apply(self._MordredDescriptors).tolist()
+        elif self.fpt_type == 'atomcoord':
+            dataset['ECFP'] = dataset['Smiles'].apply(self._AtomCoordinates).tolist()
+        elif self.fpt_type == 'smiles2seq':
+            dataset['ECFP'] = dataset['Smiles'].apply(self._SmilesToSeq).tolist()
+        elif self.fpt_type == 'smiles2image':
+            dataset['ECFP'] = dataset['Smiles'].apply(self._SmilesToImage).tolist()
+        elif self.fpt_type == 'onehot':
+            dataset['ECFP'] = dataset['Smiles'].apply(self._OneHotFeaturizer).tolist()
         else:
             print('Invalid featurizer name!')
             return pd.DataFrame()
@@ -276,6 +302,7 @@ class DeepChemFeaturizerGenerator():
 if __name__ == '__main__':
     df = pd.read_csv('dataset_last_version2.csv', sep=';', header=0)[:10]
     print(df.shape)
-    rdkit_fps = DeepChemFeaturizerGenerator(df, 'Smiles', 'Class', 'rdkit')
+    rdkit_fps = DeepChemFeaturizerGenerator(df, 'Smiles', 'Class', 'onehot')
     rdkit_dataset = rdkit_fps.getFeaturizerDataset()
     print(rdkit_dataset.shape)
+    print(rdkit_dataset)

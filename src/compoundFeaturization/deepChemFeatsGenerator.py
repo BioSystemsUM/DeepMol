@@ -302,7 +302,7 @@ class DeepChemFeaturizerGenerator():
 if __name__ == '__main__':
     df = pd.read_csv('dataset_last_version2.csv', sep=';', header=0)[:10]
     print(df.shape)
-    rdkit_fps = DeepChemFeaturizerGenerator(df, 'Smiles', 'Class', 'onehot')
+    rdkit_fps = DeepChemFeaturizerGenerator(df, 'Smiles', 'Class', 'rdkit')
     rdkit_dataset = rdkit_fps.getFeaturizerDataset()
     print(rdkit_dataset.shape)
     print(rdkit_dataset)

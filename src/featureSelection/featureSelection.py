@@ -17,11 +17,11 @@ class featureSelection():
     
     """
     
-    def __init__(self, features, labels, fsType, param = None):
+    def __init__(self, dataset, smiles_label, class_label,  fsType, param = None):
+        self.X = dataset.drop([smiles_label, class_label], axis=1)
+        self.y = dataset[class_label]
         self.fsType = fsType
         self.param = param
-        self.X = features
-        self.y = labels
         self.column_indexes = None
         #self.smiles = self.data['Smiles']
         #self.X, self.y = self.data.drop(columns = ['Smiles', 'Class']), self.data['Class']

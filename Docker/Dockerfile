@@ -26,6 +26,7 @@ RUN wget --quiet --no-check-certificate https://repo.continuum.io/miniconda/Mini
     rm Miniconda3-4.2.12-Linux-x86_64.sh && \
     echo export PATH=$CONDA_DIR/bin:'$PATH' > /etc/profile.d/conda.sh
 
+
 # Install Python packages and keras
 ENV NB_USER keras
 ENV NB_UID 1000
@@ -41,18 +42,20 @@ ARG python_version=3.6
 
 RUN conda config --append channels conda-forge
 RUN conda install -y python=${python_version} && \
-    pip install --upgrade pip --ignore-installed six && \
+    pip install --upgrade pip --ignore-installed six --upgrade cython && \
     pip install \
 #      sklearn_pandas \
       joblib \
       pillow \
       mordred \
       molvs \
+      auto-sklearn \
       deepchem \
       git+https://github.com/samoturk/mol2vec \
       tensorflow-gpu==1.14 \
       cntk-gpu && \
     conda install \
+      swig3 \
       scikit-learn==0.22.0 \
 #      rdkit deepchem \
       bcolz \

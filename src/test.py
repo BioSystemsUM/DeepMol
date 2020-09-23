@@ -8,8 +8,8 @@ from deepchem.models import GraphConvModel, MultitaskClassifier, RobustMultitask
 #TODO: define some args as *kwargs and do something by default except if the args are defined ???
 dataset_path = preprocess(path='data/dataset_last_version2.csv', smiles_header='Smiles', sep=';', header=0, n=1000)[1]
 
-#featurizer = dc.feat.ConvMolFeaturizer()
-featurizer = dc.feat.CircularFingerprint(radius = 2, size = 2048)
+featurizer = dc.feat.ConvMolFeaturizer()
+#featurizer = dc.feat.CircularFingerprint(radius = 2, size = 2048)
 
 loader = dc.data.CSVLoader(
       tasks=["Class"], smiles_field="Canonical_Smiles",
@@ -22,31 +22,27 @@ train_dataset, valid_dataset, test_dataset = splitter.train_valid_test_split(dat
 
 print(train_dataset)
 
-#transformers = [dc.trans.NormalizationTransformer(transform_y=True, dataset=train_dataset)]
+transformers = [dc.trans.BalancingTransformer(dataset=train_dataset)]
+
+for transformer in transformers:
+      train_dataset = transformer.transform(train_dataset)
+      valid_dataset = transformer.transform(valid_dataset)
+      test_dataset = transformer.transform(test_dataset)
 
 metric = dc.metrics.Metric(dc.metrics.accuracy_score, np.mean)
 
-#model = GraphConvModel(1, batch_size=128, mode='classification')
-model = RobustMultitaskClassifier(1, 2048)
+model = GraphConvModel(1, batch_size=128, mode='classification')
+#model = RobustMultitaskClassifier(1, 2048)
 
 print(type(train_dataset))
 # Fit trained model
 model.fit(train_dataset, nb_epoch=20)
-'''
-print("Evaluating model")
-train_scores = model.evaluate(train_dataset, [metric], transformers)
-valid_scores = model.evaluate(valid_dataset, [metric], transformers)
-test_scores = model.evaluate(test_dataset, [metric], transformers)
 
-print("Train scores")
-print(train_scores)
-
-print("Validation scores")
-print(valid_scores)
-
-print("Test scores")
-print(test_scores)
-'''
+metric1 = dc.metrics.Metric(dc.metrics.roc_auc_score)
+metric2 = dc.metrics.Metric(dc.metrics.accuracy_score)
+metric3 = dc.metrics.Metric(dc.metrics.f1_score)
+print('Training set score:', model.evaluate(train_dataset, [metric1, metric2, metric3], transformers))
+print('Test set score:', model.evaluate(test_dataset, [metric1, metric2, metric3], transformers))
 
 '''
 #TODO: define some args as *kwargs and do something by default except if the args are defined ???

@@ -51,9 +51,10 @@ RUN conda install -y python=${python_version} && \
       pillow \
       mordred \
       molvs \
-      deepchem \
+#      deepchem \
       git+https://github.com/samoturk/mol2vec \
-      tensorflow-gpu==1.14 \
+      tensorflow-gpu==2.2 \
+      --pre deepchem  \
 #      setuptools \
 #      lockfile \
 #      pyyaml \

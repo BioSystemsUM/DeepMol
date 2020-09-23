@@ -33,7 +33,7 @@ def same_mol(m1, m2):
     return m1==m2
 
 
-def preprocess(path, smiles_header, sep=',', header=0, n=None):
+def preprocess(path, smiles_header, sep=',', header=0, n=None, save=True, save_path='preprocessed_dataset.csv'):
 
     dataset = pd.read_csv(path, sep=sep, header=header)
 
@@ -56,8 +56,10 @@ def preprocess(path, smiles_header, sep=',', header=0, n=None):
     dataset = dataset.drop_duplicates(subset='Smiles', keep="first")
 
     print(n-dataset.shape[0], ' repeated smiles removed!')
+    if save:
+        dataset.to_csv(save_path, sep=',', header=True)
 
-    return dataset
+    return dataset, save_path
 
 
 if __name__ == '__main__':

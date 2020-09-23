@@ -40,6 +40,8 @@ USER $NB_USER
 
 ARG python_version=3.6
 
+#RUN apt-get install build-essential swig
+
 RUN conda config --append channels conda-forge
 RUN conda install -y python=${python_version} && \
     pip install --upgrade pip --ignore-installed six --upgrade cython && \
@@ -49,13 +51,19 @@ RUN conda install -y python=${python_version} && \
       pillow \
       mordred \
       molvs \
-      auto-sklearn \
       deepchem \
       git+https://github.com/samoturk/mol2vec \
       tensorflow-gpu==1.14 \
+#      setuptools \
+#      lockfile \
+#      pyyaml \
+#      ConfigSpace \
+#      pynisher \
+#      pyrfr \
+#      smac \
+#      auto-sklearn \
       cntk-gpu && \
     conda install \
-      swig3 \
       scikit-learn==0.22.0 \
 #      rdkit deepchem \
       bcolz \

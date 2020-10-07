@@ -1,7 +1,7 @@
 #ARG cuda_version=10.0
 #ARG cudnn_version=7
 #FROM nvidia/cuda:${cuda_version}-cudnn${cudnn_version}-devel
-FROM tensorflow/tensorflow:1.14.0-gpu-py3
+FROM tensorflow/tensorflow:2.2-gpu-py3
 #FROM tensorflow/tensorflow:latest-gpu-py3
 
 # Install system packages
@@ -53,7 +53,8 @@ RUN conda install -y python=${python_version} && \
       molvs \
 #      deepchem \
       git+https://github.com/samoturk/mol2vec \
-      tensorflow-gpu==2.2 \
+#      tensorflow-gpu==2.2 \
+      tensorflow-probability==0.10.0 \
       --pre deepchem  \
 #      setuptools \
 #      lockfile \

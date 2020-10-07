@@ -3,12 +3,13 @@ from compoundFeaturization.deepChemFeatsGenerator import DeepChemFeaturizerGener
 from featureSelection.featureSelection import featureSelection
 import deepchem as dc
 import numpy as np
-from deepchem.models import GraphConvModel, MultitaskClassifier, RobustMultitaskClassifier
+from deepchem.models import GraphConvModel, MultitaskClassifier, RobustMultitaskClassifier, WeaveModel
 
 #TODO: define some args as *kwargs and do something by default except if the args are defined ???
 dataset_path = preprocess(path='data/dataset_last_version2.csv', smiles_header='Smiles', sep=';', header=0, n=1000)[1]
 
-featurizer = dc.feat.ConvMolFeaturizer()
+#featurizer = dc.feat.ConvMolFeaturizer()
+featurizer = dc.feat.WeaveFeaturizer()
 #featurizer = dc.feat.CircularFingerprint(radius = 2, size = 2048)
 
 loader = dc.data.CSVLoader(
@@ -29,10 +30,10 @@ for transformer in transformers:
       valid_dataset = transformer.transform(valid_dataset)
       test_dataset = transformer.transform(test_dataset)
 
-metric = dc.metrics.Metric(dc.metrics.accuracy_score, np.mean)
 
-model = GraphConvModel(1, batch_size=128, mode='classification')
+#model = GraphConvModel(1, batch_size=128, mode='classification')
 #model = RobustMultitaskClassifier(1, 2048)
+model = WeaveModel(n_tasks=1, n_weave=2, fully_connected_layer_sizes=[2000, 1000], mode="classification")
 
 print(type(train_dataset))
 # Fit trained model

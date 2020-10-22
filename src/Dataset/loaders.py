@@ -1,9 +1,6 @@
 
 import numpy as np
 import pandas as pd
-import logging
-
-logger = logging.getLogger(__name__)
 
 def load_csv_file(input_file, keep_fields, chunk_size=None):
     """Load data as pandas dataframe from CSV files.
@@ -19,20 +16,18 @@ def load_csv_file(input_file, keep_fields, chunk_size=None):
         Generator which yields the dataframe which is the same chunk size.
     """
 
-    chunk_num = 1
+    #chunk_num = 1
     if chunk_size is None:
         if keep_fields is None:
             return pd.read_csv(input_file)
         else : return pd.read_csv(input_file)[keep_fields]
     else:
-        logger.info("Starting to load the CSV...")
         for df in pd.read_csv(input_file, chunksize=chunk_size):
-            logger.info("Loading shard %d of size %s." % (chunk_num, str(chunk_size)))
-            df = df.replace(np.nan, str(""), regex=True)
-            chunk_num += 1
+            #df = df.replace(np.nan, str(""), regex=True)
+            #chunk_num += 1
             if keep_fields is None:
                 return df
-            else : return df[keep_fields]
+            else: return df[keep_fields]
 
 class Dataset(object):
     """Abstract base class for datasets
@@ -65,7 +60,7 @@ class CSVLoader(Dataset):
     '''
 
     def __init__(self, dataset_path, input_field, output_fields=None,
-                 id_field=None, user_features=None, keep_all_fields=False):
+                 id_field=None, user_features=None, keep_all_fields=False, chunk_size=None):
         """Initialize this object.
         Parameters
         ----------
@@ -94,7 +89,7 @@ class CSVLoader(Dataset):
         if not isinstance(id_field, str) and id_field is not None:
             raise ValueError("Field id must be a string or None.")
 
-        #TODO: provide user features in a better way
+        #TODO: provide user features in a better way? Maybe give the columns that do not contain the features?
         if not isinstance(user_features, list) and user_features is not None:
             raise ValueError("User features must be a list of string containing "
                              "the features fields or None.")
@@ -111,16 +106,15 @@ class CSVLoader(Dataset):
         self.user_features = user_features
 
         if keep_all_fields:
-            self.dataset = self._get_dataset(dataset_path, keep_fields=None)
+            self.dataset = self._get_dataset(dataset_path, keep_fields=None, chunk_size=chunk_size)
         else:
             columns = [id_field, input_field]
             for field in output_fields:
                 columns.append(field)
-            print(columns)
             if user_features is None:
-                self.dataset = self._get_dataset(dataset_path, keep_fields=columns)
+                self.dataset = self._get_dataset(dataset_path, keep_fields=columns, chunk_size=chunk_size)
             else:
-                self.dataset = self._get_dataset(dataset_path, keep_fields=columns)
+                self.dataset = self._get_dataset(dataset_path, keep_fields=columns, chunk_size=chunk_size)
 
         self.X = self.dataset[input_field]
 
@@ -189,11 +183,11 @@ class CSVLoader(Dataset):
         ----------
         input_files: List[str]
           List of filenames to process
-        shard_size: int, optional
+        chunk_size: int, optional
           The size of a shard of data to process at a time.
         Returns
         -------
         Iterator[pd.DataFrame]
-          Iterator over shards
+          Iterator over chunks
         """
         return load_csv_file(dataset_path, keep_fields, chunk_size)

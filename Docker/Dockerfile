@@ -1,7 +1,7 @@
 #ARG cuda_version=10.0
 #ARG cudnn_version=7
 #FROM nvidia/cuda:${cuda_version}-cudnn${cudnn_version}-devel
-FROM tensorflow/tensorflow:2.2-gpu-py3
+FROM tensorflow/tensorflow:2.2.1-gpu-py3
 #FROM tensorflow/tensorflow:latest-gpu-py3
 
 # Install system packages

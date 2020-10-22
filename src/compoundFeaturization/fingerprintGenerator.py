@@ -7,12 +7,13 @@ Created on Wed Feb 27 15:36:08 2019
 
 import pandas as pd
 import numpy as np
+import deepchem as dc
 from rdkit import Chem, DataStructs
 from rdkit.Chem import rdMolDescriptors, MACCSkeys, rdReducedGraphs, rdmolops
 from rdkit.Chem.Fingerprints import FingerprintMols
 from rdkit.Chem.Pharm2D import Gobbi_Pharm2D, Generate
 
-
+#TODO: redo comments
 class fingerprintGenerator():
     """
     Class to generate fingerprints with RDKit
@@ -21,7 +22,7 @@ class fingerprintGenerator():
     Topological and RDK fingerprints giving the same results???? Maybe not
     """
 
-    def __init__(self, dataset, smiles_label, class_label = None, fpt_type='morgan'):
+    def __init__(self, dataset, smiles_label, class_label = None, fpt_type='morgan', to_dc=False):
 
         """
         Class to generate multiple RDKit fingerprint types.
@@ -58,6 +59,9 @@ class fingerprintGenerator():
 
     def _convert_numpy_to_list(self, np_array):
         return np_array.tolist()
+
+    def _convert_to_dc_dataset(self, X, y):
+        return dc.data.DiskDataset.from_numpy(X=X, y=y)
 
     # Morgan Fingerprints (Circular Fingerprints)
     def _getMorganFingerprint(self, molecule, radius=2, nBits=1024):
@@ -206,7 +210,11 @@ class fingerprintGenerator():
         dataset = pd.concat([dataset, ecfp_df], axis=1).drop(['ECFP'], axis=1)
         print('Dataset dimensions: ', dataset.shape)
         #keep or remove dropna to maintain order??
-        return dataset.dropna()
+        #TODO: check if works
+        if self.to_dc:
+            return self._convert_to_dc_dataset(ecfp_df, df['Smiles'])
+        else:
+            return dataset.dropna()
 
 
 if __name__ == '__main__':

@@ -20,7 +20,7 @@ class DeepChemFeaturizerGenerator():
 
     """
 
-    def __init__(self, dataset, smiles_label, class_label=None, fpt_type='morgan'):
+    def __init__(self, dataset, smiles_label, class_label=None, fpt_type='morgan', to_pandas=False):
 
         """
 
@@ -34,6 +34,7 @@ class DeepChemFeaturizerGenerator():
             self.labeled = False
 
         self.fpt_type = fpt_type
+        self.to_pandas = to_pandas
         self.smiles_list = self.dataset.Smiles.tolist()
         if self.labeled:
             self.labels_list = self.dataset.Class.tolist()
@@ -258,6 +259,9 @@ class DeepChemFeaturizerGenerator():
             arr = np.nan
         return arr
 
+    def dc_to_pandas(self, dataset):
+        return dataset.to_dataframe()
+
 
     def getFeaturizerDataset(self):
 
@@ -297,7 +301,11 @@ class DeepChemFeaturizerGenerator():
         dataset = pd.concat([dataset, ecfp_df], axis=1).drop(['ECFP'], axis=1)
         print('Dataset dimensions: ', dataset.shape)
         #keep or remove dropna to maintain order??
-        return dataset.dropna()
+        #TODO: Check if works and if to_dataframe is pandas or not!
+        if self.to_pandas:
+            return dataset.to_dataframe()
+        else:
+            return dataset.dropna()
 
 if __name__ == '__main__':
     df = pd.read_csv('dataset_last_version2.csv', sep=';', header=0)[:10]

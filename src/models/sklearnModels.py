@@ -65,7 +65,7 @@ class SklearnModel(Model):
             if model is not None:
                 raise ValueError("Can not use both model and model_instance argument at the same time.")
 
-          model = model_instance
+            model = model_instance
 
         super(SklearnModel, self).__init__(model, model_dir, **kwargs)
         if 'use_weights' in kwargs:

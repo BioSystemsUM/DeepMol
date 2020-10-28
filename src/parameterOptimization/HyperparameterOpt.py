@@ -1,8 +1,14 @@
+from models.Models import Model
+from metrics.Metrics import Metric
+from Dataset.Dataset import Dataset
+
+
+
 class HyperparamOpt(object):
   """Abstract superclass for hyperparameter search classes.
   """
 
-  def __init__(self, model_builder: Callable[..., Model]):
+  def __init__(self, model_builder: Model):
     """Initialize Hyperparameter Optimizer.
     Note this is an abstract constructor which should only be used by
     subclasses.

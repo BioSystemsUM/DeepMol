@@ -1,5 +1,6 @@
 import numpy as np
 import csv
+from metrics.Metrics import Metric
 
 
 def _process_metric_input(metrics: Metrics) -> List[Metric]:
@@ -59,7 +60,7 @@ class Evaluator(object):
     model.
     """
 
-    def __init__(self, model, dataset: Dataset):
+    def __init__(self, model, dataset: Dataset, metric: Metric): #TODO: metric: Metric (remove here?)
 
         """Initialize this evaluator
         Parameters

@@ -1,5 +1,8 @@
 import numpy as np
 import pandas as pd
+from typing import Tuple, Iterator, Optional, Sequence
+
+Batch = Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
 
 def load_csv_file(input_file, keep_fields, chunk_size=None):
     """Load data as pandas dataframe from CSV files.
@@ -41,7 +44,7 @@ class Dataset(object):
         """Get the number of elements in the dataset."""
         raise NotImplementedError()
 
-    def get_shape(self) -> Tuple[Shape, Shape, Shape]:
+    def get_shape(self) -> Tuple[Tuple[int, ...], Tuple[int, ...], Tuple[int, ...]]:
         """Get the shape of all the elements of the dataset.
         Returns three tuples, shape of X (number of examples), y (number of tasks) and ids arrays.
         """
@@ -57,6 +60,10 @@ class Dataset(object):
 
     def ids(self) -> np.ndarray:
         """Get the ids vector for this dataset as a single numpy array."""
+        raise NotImplementedError()
+
+    def features(self) -> np.ndarray:
+        """Get the features array for this dataset as a single numpy array."""
         raise NotImplementedError()
 
     def iterbatches(self, 
@@ -89,13 +96,107 @@ class Dataset(object):
         """Get an object that iterates over the samples in the dataset."""
         raise NotImplementedError("Each dataset model must implement its own itersamples method.")
 
+
+class NumpyDataset(Dataset):
+    """A Dataset defined by in-memory numpy arrays.
+      This subclass of `Dataset` stores arrays `X,y,features,ids` in memory as
+      numpy arrays. This makes it very easy to construct `NumpyDataset`
+      objects.
+      """
+
+    def __init__(self,
+                 X: np.ndarray,
+                 y: Optional[np.ndarray] = None,
+                 features: Optional[np.ndarray] = None,
+                 ids: Optional[np.ndarray] = None,
+                 n_tasks: int = 1) -> None:
+        """Initialize this object.
+        Parameters
+        ----------
+        X: np.ndarray
+          Input features. A numpy array of shape `(n_samples,...)`.
+        y: np.ndarray, optional (default None)
+          Labels. A numpy array of shape `(n_samples, ...)`. Note that each label can
+          have an arbitrary shape.
+        w: np.ndarray, optional (default None)
+          Weights. Should either be 1D array of shape `(n_samples,)` or if
+          there's more than one task, of shape `(n_samples, n_tasks)`.
+        ids: np.ndarray, optional (default None)
+          Identifiers. A numpy array of shape `(n_samples,)`
+        n_tasks: int, default 1
+          Number of learning tasks.
+        """
+        n_samples = len(X)
+        if n_samples > 0:
+            if y is None:
+                # Set labels to be zero, with zero weights
+                y = np.zeros((n_samples, n_tasks), np.float32)
+                w = np.zeros((n_samples, 1), np.float32)
+        if ids is None:
+            ids = np.arange(n_samples)
+        if not isinstance(X, np.ndarray):
+            X = np.array(X)
+        if not isinstance(y, np.ndarray):
+            y = np.array(y)
+        if features is None:
+            if len(y.shape) == 1:
+                features = np.ones(y.shape[0], np.float32)
+            else:
+                features = np.ones((y.shape[0], 1), np.float32)
+        if not isinstance(features, np.ndarray):
+            features = np.array(features)
+
+        self.X = X
+        self.y = y
+        self.features = features
+        self.ids = np.array(ids, dtype=object)
+
+    def __len__(self) -> int:
+        """Get the number of elements in the dataset."""
+        return len(self.y)
+
+    def get_shape(self) -> Tuple[Tuple[int, ...], Tuple[int, ...], Tuple[int, ...], Tuple[int, ...]]:
+        """Get the shape of the dataset.
+        Returns four tuples, giving the shape of the X, y, w, and ids arrays.
+        """
+        return self.X.shape, self.y.shape, self.w.shape, self.ids.shape
+
+    def get_task_names(self) -> np.ndarray:
+        """Get the names of the tasks associated with this dataset."""
+        if len(self.y.shape) < 2:
+            return np.array([0])
+        return np.arange(self.y.shape[1])
+
+
+    def X(self) -> np.ndarray:
+        """Get the X vector for this dataset as a single numpy array."""
+        return self.X
+
+
+    def y(self) -> np.ndarray:
+        """Get the y vector for this dataset as a single numpy array."""
+        return self.y
+
+
+    def ids(self) -> np.ndarray:
+        """Get the ids vector for this dataset as a single numpy array."""
+        return self.ids
+
+
+    def features(self) -> np.ndarray:
+        """Get the features array for this dataset as a single numpy array."""
+        return self.features
+
+
+
 class CSVLoader(Dataset):
     '''
     ...
     '''
 
     def __init__(self, dataset_path, input_field, output_fields=None,
-                 id_field=None, user_features=None, keep_all_fields=False):
+                 id_field=None, user_features=None, keep_all_fields=False,
+                 chunk_size=None):
         """Initialize this object.
         Parameters
         ----------
@@ -132,6 +233,7 @@ class CSVLoader(Dataset):
         self.dataset_path = dataset_path
         self.tasks = output_fields
         self.input_field = input_field
+        self.chunk_size = chunk_size
 
         if id_field is None:
             self.id_field = input_field
@@ -141,16 +243,16 @@ class CSVLoader(Dataset):
         self.user_features = user_features
 
         if keep_all_fields:
-            self.dataset = self._get_dataset(dataset_path, keep_fields=None)
+            self.dataset = self._get_dataset(dataset_path, keep_fields=None, chunk_size = self.chunk_size)
         else:
             columns = [id_field, input_field]
             for field in output_fields:
                 columns.append(field)
-            print(columns)
             if user_features is None:
-                self.dataset = self._get_dataset(dataset_path, keep_fields=columns)
+                self.dataset = self._get_dataset(dataset_path, keep_fields=columns, chunk_size = self.chunk_size)
             else:
-                self.dataset = self._get_dataset(dataset_path, keep_fields=columns)
+                columns = columns + user_features
+                self.dataset = self._get_dataset(dataset_path, keep_fields=columns, chunk_size = self.chunk_size)
 
         self.X = self.dataset[input_field]
 
@@ -190,9 +292,9 @@ class CSVLoader(Dataset):
 
     def get_shape(self):
         """Get the shape of the dataset.
-        Returns four tuples, giving the shape of the X, y, w, and ids arrays.
+        Returns four tuples, giving the shape of the X, y, features, and ids arrays.
         """
-        return self.X.shape, self.y.shape, self.ids.shape
+        return self.X.shape, self.y.shape, self.features.shape, self.ids.shape
 
     def get_task_names(self):
         """Get the names of the tasks associated with this dataset."""
@@ -213,6 +315,10 @@ class CSVLoader(Dataset):
         """Get the ids vector for this dataset as a single numpy array."""
         return self.ids
 
+    def features(self):
+        """Get the features vector for this dataset as a single numpy array."""
+        return self.features
+
     def _get_dataset(self, dataset_path, keep_fields=None, chunk_size=None):
         """Defines a generator which returns data for each shard
         Parameters
@@ -227,3 +333,23 @@ class CSVLoader(Dataset):
           Iterator over shards
         """
         return load_csv_file(dataset_path, keep_fields, chunk_size)
+
+    def select(self, indices: Sequence[int]) -> Dataset:
+        """Creates a new dataset from a selection of indices from self.
+        Parameters
+        ----------
+        indices: List[int]
+          List of indices to select.
+        select_dir: str, optional (default None)
+          Used to provide same API as `DiskDataset`. Ignored since
+          `NumpyDataset` is purely in-memory.
+        Returns
+        -------
+        Dataset
+          A selected Dataset object
+        """
+        X = self.X[indices]
+        y = self.y[indices]
+        features = self.features[indices]
+        ids = self.ids[indices]
+        return NumpyDataset(X, y, features, ids)

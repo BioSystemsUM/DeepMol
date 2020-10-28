@@ -1,7 +1,8 @@
-from baseFeaturizer import MolecularFeaturizer
+from compoundFeaturization.baseFeaturizer import MolecularFeaturizer
 from rdkit.Chem import rdMolDescriptors
+from rdkit.Chem.Fingerprints import FingerprintMols
 import numpy as np
-
+from typing import Any
 
 class MorganFingerprint(MolecularFeaturizer):
     """Morgan fingerprints.
@@ -10,12 +11,12 @@ class MorganFingerprint(MolecularFeaturizer):
     hashing into a bit vector of the specified size.
     """
 
-      def __init__(self,
-                   radius: int = 2,
-                   size: int = 1024,
-                   chiral: bool = False,
-                   bonds: bool = True,
-                   features: bool = False):
+    def __init__(self,
+                 radius: int = 2,
+                 size: int = 1024,
+                 chiral: bool = False,
+                 bonds: bool = True,
+                 features: bool = False):
         """
         Parameters
         ----------
@@ -37,8 +38,8 @@ class MorganFingerprint(MolecularFeaturizer):
         self.bonds = bonds
         self.features = features
 
-      def _featurize(self, mol: RDKitMol) -> np.ndarray:
-        """Calculate circular fingerprint.
+    def _featurize(self, mol: Any) -> np.ndarray:
+        """Calculate morgan fingerprint.
         Parameters
         ----------
         mol: rdkit.Chem.rdchem.Mol
@@ -57,8 +58,50 @@ class MorganFingerprint(MolecularFeaturizer):
                                                                 useBondTypes=self.bonds,
                                                                 useFeatures=self.features)
         except Exception as e:
+            #print(e)
             print('error in smile: ' + str(mol))
             fp = np.nan
         fp = np.asarray(fp, dtype=np.float)
 
         return fp
+
+'''
+#TODO: Check which parameters this fps use and implement it
+class TopologicalFingerprint(MolecularFeaturizer):
+    """Topological fingerprints.
+    """
+
+    def __init__(self,
+                 ...):
+        """
+        Parameters
+        ----------
+        ...
+        """
+
+        self ...
+
+    def _featurize(self, mol: Any) -> np.ndarray:
+        """Calculate morgan fingerprint.
+        Parameters
+        ----------
+        mol: rdkit.Chem.rdchem.Mol
+          RDKit Mol object
+        Returns
+        -------
+        np.ndarray
+          A numpy array of circular fingerprint.
+        """
+
+        try :
+            fp = FingerprintMols.FingerprintMol(mol,
+                                                ...)
+        except Exception as e:
+            #print(e)
+            print('error in smile: ' + str(mol))
+            fp = np.nan
+        fp = np.asarray(fp, dtype=np.float)
+
+        return fp
+        
+'''

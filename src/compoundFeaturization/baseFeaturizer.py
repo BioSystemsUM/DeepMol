@@ -6,8 +6,11 @@ from rdkit.Chem import rdmolfiles
 from rdkit.Chem import rdmolops
 from rdkit.Chem.rdchem import Mol
 
+from Dataset import Dataset
+
 
 class MolecularFeaturizer(object):
+    #TODO: rewrite comments
     """Abstract class for calculating a set of features for a
     molecule.
     A `MolecularFeaturizer` uses SMILES strings or RDKit molecule
@@ -23,35 +26,8 @@ class MolecularFeaturizer(object):
         if self.__class__ == MolecularFeaturizer:
             raise Exception('Abstract class MolecularFeaturizer should not be instantiated')
 
-    def featurizeMols(self, molecules: Iterable[Any], log_every_n: int = 1000):
-        """Calculate features for molecules.
-        Parameters
-        ----------
-        molecules: Iterable[Any]
-            A sequence of molecules that you want to featurize. Subclassses of
-            `MolecularFeaturizer` should instantiate their own `_featurize` method.
-        log_every_n: int, default 1000
-            Logs featurization progress every `log_every_n` steps.
-        Returns
-        -------
-        np.ndarray
-            A numpy array containing a featurized representation of the given molecules.
-        """
-        molecules = list(molecules)
-        features = []
-        for i, mol in enumerate(molecules):
-            if i % log_every_n == 0:
-                print("Featurizing datapoint %i" % i)
-            try:
-                features.append(self._featurize(mol))
-            except:
-                print("Failed to featurize datapoint %d. Appending empty array" % log_every_n)
-                features.append(np.array([]))
-
-        features = np.asarray(features)
-        return features
-
-    def _featurize(self, molecules, log_every_n=1000):
+    def featurize(self, dataset: Dataset, log_every_n=1000):
+        # TODO: rewrite comments
         """Calculate features for molecules.
         Parameters
         ----------
@@ -65,13 +41,7 @@ class MolecularFeaturizer(object):
         features: np.ndarray
           A numpy array containing a featurized representation of `datapoints`.
         """
-
-        # Special case handling of single molecule
-        if isinstance(molecules, str) or isinstance(molecules, Mol):
-            molecules = [molecules]
-        else:
-            # Convert iterables to list
-            molecules = list(molecules)
+        molecules = dataset.X
 
         features = []
         for i, mol in enumerate(molecules):
@@ -90,14 +60,13 @@ class MolecularFeaturizer(object):
             except Exception as e:
                 if isinstance(mol, Chem.rdchem.Mol):
                     mol = Chem.MolToSmiles(mol)
-                print(
-                    "Failed to featurize datapoint %d, %s. Appending empty array", i,
-                    mol)
+                print("Failed to featurize datapoint %d, %s. Appending empty array" %(i, mol))
                 print("Exception message: {}".format(e))
-                features.append(np.array([]))
+                #features.append(np.array([]))
 
-        features = np.asarray(features)
-        return features
+
+        dataset.features = np.asarray(features)
+        return dataset
 
 
 

@@ -110,18 +110,14 @@ class SklearnModel(Model):
         except AttributeError:
             return self.model.predict(X)
 
-    def predict(self, X: Dataset,
-              transformers: List[Transformer] = []) -> np.ndarray:
+    def predict(self, X: Dataset) -> np.ndarray:
         """Makes predictions on dataset.
         Parameters
         ----------
         dataset: Dataset
           Dataset to make prediction on.
-        transformers: List[Transformer]
-          Transformers that the input data has been transformed by. The output
-          is passed through these transformers to undo the transformations.
         """
-        return super(SklearnModel, self).predict(X, transformers)
+        return super(SklearnModel, self).predict(X)
 
     def save(self):
         """Saves scikit-learn model to disk using joblib."""

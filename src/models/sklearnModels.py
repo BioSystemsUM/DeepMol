@@ -17,6 +17,7 @@ from deepchem.data import Dataset
 from deepchem.trans import Transformer
 from deepchem.utils.data_utils import load_from_disk, save_to_disk
 
+#TODO: change models
 NON_WEIGHTED_MODELS = [
     LogisticRegression, PLSRegression, GaussianProcessRegressor, ElasticNetCV,
     LassoCV, BayesianRidge

@@ -1,7 +1,7 @@
 """
 Code for processing datasets using scikit-learn.
 """
-import logging
+
 from typing import List, Optional
 
 import numpy as np
@@ -12,10 +12,10 @@ from sklearn.linear_model import LogisticRegression, BayesianRidge
 from sklearn.linear_model import LassoCV
 from sklearn.linear_model import ElasticNetCV
 
-from deepchem.models import Model
-from deepchem.data import Dataset
-from deepchem.trans import Transformer
-from deepchem.utils.data_utils import load_from_disk, save_to_disk
+from models.Models import Model
+from Dataset.Dataset import Dataset
+#TODO: chech this files
+#from utils.data_utils import load_from_disk, save_to_disk
 
 #TODO: change models
 NON_WEIGHTED_MODELS = [

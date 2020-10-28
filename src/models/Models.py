@@ -4,6 +4,7 @@ import tempfile
 from typing import List, Optional, Sequence
 import numpy as np
 from Data.Dataset import Dataset
+from evaluator.Evaluator import Evaluator
 
 
 class Model(object):
@@ -71,14 +72,14 @@ class Model(object):
         """
         raise NotImplementedError("Each class model must implement its own reload method.")
 
-    @staticmethod
+
     def get_model_filename(model_dir: str) -> str:
         """
         Given model directory, obtain filename for the model itself.
         """
         return os.path.join(model_dir, "model.joblib")
 
-    @staticmethod
+
     def get_params_filename(model_dir: str) -> str:
         """
         Given model directory, obtain filename for the model itself.
@@ -194,3 +195,5 @@ class Model(object):
         Get number of tasks.
         """
         raise NotImplementedError()
+
+

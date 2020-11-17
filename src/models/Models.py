@@ -3,22 +3,25 @@ import shutil
 import tempfile
 from typing import List, Optional, Sequence
 import numpy as np
-from Data.Dataset import Dataset
+from Dataset.Dataset import Dataset
 from evaluator.Evaluator import Evaluator
+from metrics.Metrics import Metric
+
+from sklearn.base import BaseEstimator
 
 
-class Model(object):
+class Model(BaseEstimator):
     """
     Abstract base class for ML/DL models.
     """
 
-    def __init__(self, model_instance=None, model_dir: Optional[str]= None,  **kwargs) -> None:
+    def __init__(self, model=None, model_dir: Optional[str]= None,  **kwargs) -> None:
         """Abstract class for all models.
         This is an abstact class and should not be invoked directly.
 
         Parameters
         ----------
-        model_instance: object
+        model: object
             Wrapper around ScikitLearn/Keras/Tensorflow model object.
         model_dir: str, optional (default None)
             Path to directory where model will be stored. If not specified,
@@ -38,8 +41,8 @@ class Model(object):
             self.model_dir_is_temp = True
 
         self.model_dir = model_dir
-        self.model_instance = model_instance
-        self.model_class = model_instance.__class__
+        self.model = model
+        self.model_class = model.__class__
 
     def __del__(self):
         if 'model_dir_is_temp' in dir(self) and self.model_dir_is_temp:

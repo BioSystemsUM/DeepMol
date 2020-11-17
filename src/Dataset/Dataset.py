@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from typing import Tuple, Iterator, Optional, Sequence
+from typing import Tuple, Iterator, Optional, Sequence, List
 
 Batch = Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
 
@@ -66,6 +66,10 @@ class Dataset(object):
         """Get the features array for this dataset as a single numpy array."""
         raise NotImplementedError()
 
+    def removeNAs(self):
+        """Remove samples with NAs."""
+        raise NotImplementedError()
+
     def iterbatches(self, 
                     batch_size: Optional[int] = None,
                     epochs: int = 1,
@@ -109,6 +113,7 @@ class NumpyDataset(Dataset):
                  y: Optional[np.ndarray] = None,
                  features: Optional[np.ndarray] = None,
                  ids: Optional[np.ndarray] = None,
+                 features2keep: Optional[List] = None,
                  n_tasks: int = 1) -> None:
         """Initialize this object.
         Parameters
@@ -150,6 +155,7 @@ class NumpyDataset(Dataset):
         self.y = y
         self.features = features
         self.ids = np.array(ids, dtype=object)
+        self.features2keep = features2keep
 
     def __len__(self) -> int:
         """Get the number of elements in the dataset."""
@@ -260,6 +266,8 @@ class CSVLoader(Dataset):
 
         self.ids = self.dataset[id_field]
 
+        self.features2keep = None
+
 
         if len(self.X) > 0:
             if not isinstance(self.X, np.ndarray):
@@ -319,6 +327,26 @@ class CSVLoader(Dataset):
         """Get the features vector for this dataset as a single numpy array."""
         return self.features
 
+
+    def removeElements(self, indexes):
+        self.X = np.delete(self.X, indexes)
+        self.y = np.delete(self.y, indexes)
+        self.ids = np.delete(self.ids, indexes)
+        self.features = np.delete(self.features, indexes)
+
+    #TODO: implemtent this method also in the other subclasses
+    def removeNAs(self):
+        """Remove samples with NAs from the Dataset"""
+        j = 0
+        indexes = []
+        for i in self.features:
+            if len(i.shape)==0:
+                indexes.append(j)
+            j+=1
+        print('Elements with indexes: ', indexes, ' were removed due to the presence of NAs!')
+        print('The elements in question are: ', self.X[indexes])
+        self.removeElements(indexes)
+
     def _get_dataset(self, dataset_path, keep_fields=None, chunk_size=None):
         """Defines a generator which returns data for each shard
         Parameters
@@ -352,4 +380,5 @@ class CSVLoader(Dataset):
         y = self.y[indices]
         features = self.features[indices]
         ids = self.ids[indices]
-        return NumpyDataset(X, y, features, ids)
+        features2keep = self.features2keep
+        return NumpyDataset(X, y, features, ids, features2keep)

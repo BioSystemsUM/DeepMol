@@ -1,9 +1,14 @@
 import numpy as np
 import csv
+from typing import List
 from metrics.Metrics import Metric
+from typing import Optional, Union, Tuple, Dict
+Score = Dict[str, float]
+
+from Dataset.Dataset import Dataset
 
 
-def _process_metric_input(metrics: Metrics) -> List[Metric]:
+def _process_metric_input(metrics: Metric) -> List[Metric]:
     """A private helper method which processes metrics correctly.
     Metrics can be input as `dc.metrics.Metric` objects, lists of
     `dc.metrics.Metric` objects, or as raw metric functions or lists of
@@ -111,7 +116,7 @@ class Evaluator(object):
 
     def compute_model_performance(
         self,
-        metrics: Metrics,
+        metrics: Metric,
         csv_out: Optional[str] = None,
         stats_out: Optional[str] = None,
         per_task_metrics: bool = False,

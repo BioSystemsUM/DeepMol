@@ -47,15 +47,17 @@ class MolecularFeaturizer(object):
         for i, mol in enumerate(molecules):
             if i % log_every_n == 0:
                 print("Featurizing datapoint %i" % i)
-
             try:
                 if isinstance(mol, str):
                     # mol must be a RDKit Mol object, so parse a SMILES
-                    mol = Chem.MolFromSmiles(mol)
-                    # SMILES is unique, so set a canonical order of atoms
-                    new_order = rdmolfiles.CanonicalRankAtoms(mol)
-                    mol = rdmolops.RenumberAtoms(mol, new_order)
-
+                    molobj = Chem.MolFromSmiles(mol)
+                    try :
+                        # SMILES is unique, so set a canonical order of atoms
+                        new_order = rdmolfiles.CanonicalRankAtoms(molobj)
+                        molobj = rdmolops.RenumberAtoms(molobj, new_order)
+                        mol = molobj
+                    except Exception as e:
+                        mol = mol
                 features.append(self._featurize(mol))
             except Exception as e:
                 if isinstance(mol, Chem.rdchem.Mol):
@@ -64,8 +66,9 @@ class MolecularFeaturizer(object):
                 print("Exception message: {}".format(e))
                 #features.append(np.array([]))
 
-
         dataset.features = np.asarray(features)
+
+        dataset.removeNAs()
         return dataset
 
 

@@ -17,8 +17,10 @@ class BaseFeatureSelector(object):
         if self.__class__ == BaseFeatureSelector:
             raise Exception('Abstract class BaseFeatureSelector should not be instantiated')
 
+        self.features2keep = None
+
     def featureSelection(self, dataset: Dataset):
-        #TODO: review coments
+        #TODO: review comments
         """Perform feature selection for the molecules present in the dataset.
         Parameters
         ----------
@@ -30,11 +32,13 @@ class BaseFeatureSelector(object):
         """
         features = dataset.features
 
+        features, self.features2keep = self._featureSelector(np.stack(features, axis=0))
 
-        self._featureSelector(np.stack(features, axis=0))
+        dataset.features = np.asarray(features)
 
-        #dataset.features = np.asarray(features)
-        #return dataset
+        dataset.features2keep = self.features2keep
+
+        return dataset
 
 
 class LowVarianceFS(BaseFeatureSelector):
@@ -50,7 +54,8 @@ class LowVarianceFS(BaseFeatureSelector):
         self.param = threshold
 
     def _featureSelector(self, features):
+        """Returns indexes of features to keep."""
         vt = VarianceThreshold(threshold=self.param)
         tr = vt.fit_transform(features)
-        column_indexes = vt.get_support(indices=True)
-        print(tr)
+        return tr, vt.get_support(indices=True)
+

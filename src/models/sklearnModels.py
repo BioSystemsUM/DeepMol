@@ -23,8 +23,6 @@ NON_WEIGHTED_MODELS = [
     LassoCV, BayesianRidge
 ]
 
-logger = logging.getLogger(__name__)
-
 
 class SklearnModel(Model):
     """Wrapper class that wraps scikit-learn models as DeepChem models.
@@ -83,21 +81,20 @@ class SklearnModel(Model):
         dataset: Dataset
             The `Dataset` to train this model on.
         """
-        X = dataset.X
+        features = dataset.features
         y = np.squeeze(dataset.y)
-        w = np.squeeze(dataset.w)
         # Some scikit-learn models don't use weights.
         if self.use_weights:
-            self.model.fit(X, y, w)
+            self.model.fit(features, y)
             return
-        self.model.fit(X, y)
+        self.model.fit(features, y)
 
-    def predict_on_batch(self, X: np.ndarray) -> np.ndarray:
-        """Makes predictions on batch of data.
+    def predict(self, dataset: Dataset) -> np.ndarray:
+        """Makes predictions on dataset.
         Parameters
         ----------
-        X: np.ndarray
-          A numpy array of features.
+        dataset: Dataset
+          Dataset to make prediction on.
         Returns
         -------
         np.ndarray
@@ -106,12 +103,12 @@ class SklearnModel(Model):
           the value is always a return value of `predict_proba`.
         """
         try:
-            return self.model.predict_proba(X)
+            return self.model.predict_proba(dataset.features)
         except AttributeError:
-            return self.model.predict(X)
+            return self.model.predict(dataset.features)
 
-    def predict(self, X: Dataset) -> np.ndarray:
-        """Makes predictions on dataset.
+    def predict_on_batch(self, X: Dataset) -> np.ndarray:
+        """Makes predictions on batch of data.
         Parameters
         ----------
         dataset: Dataset

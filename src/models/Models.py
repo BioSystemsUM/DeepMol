@@ -165,8 +165,6 @@ class Model(BaseEstimator):
         be untransformed for metric evaluation.
         per_task_metrics: bool, optional (default False)
         If true, return computed metric for each task on multitask dataset.
-        use_sample_weights: bool, optional (default False)
-        If set, use per-sample weights `w`.
         n_classes: int, optional (default None)
         If specified, will use `n_classes` as the number of unique classes
         in `self.dataset`. Note that this argument will be ignored for
@@ -181,11 +179,11 @@ class Model(BaseEstimator):
         separately.
         """
         evaluator = Evaluator(self, dataset)
-        return evaluator.compute_model_performance(
-            metrics,
-            per_task_metrics=per_task_metrics,
-            use_sample_weights=use_sample_weights,
-            n_classes=n_classes)
+
+        return evaluator.compute_model_performance(metrics,
+                                                   per_task_metrics=per_task_metrics,
+                                                   use_sample_weights=use_sample_weights,
+                                                   n_classes=n_classes)
 
     def get_task_type(self) -> str:
         """

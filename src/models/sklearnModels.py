@@ -17,7 +17,7 @@ from Dataset.Dataset import Dataset
 #TODO: chech this files
 #from utils.data_utils import load_from_disk, save_to_disk
 
-#TODO: change models
+#TODO: change models (Why this models?)
 NON_WEIGHTED_MODELS = [
     LogisticRegression, PLSRegression, GaussianProcessRegressor, ElasticNetCV,
     LassoCV, BayesianRidge

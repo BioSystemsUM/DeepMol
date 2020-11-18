@@ -24,8 +24,8 @@ class Metric(object):
                  mode: Optional[str] = None,
                  n_tasks: Optional[int] = None,
                  classification_handling_mode: Optional[str] = None,
-                 threshold_value: Optional[float] = None,
-                 compute_energy_metric: Optional[bool] = None):
+                 threshold_value: Optional[float] = None):
+        #TODO: review threshold values and change to deal with a variable threshold (i.e. different from 0.5)
         """
         Parameters
         ----------
@@ -69,10 +69,6 @@ class Metric(object):
           DeepChem. Do not use.
         """
 
-        if compute_energy_metric is not None:
-            self.compute_energy_metric = compute_energy_metric
-        else:
-            self.compute_energy_metric = False
 
         self.metric = metric
         if task_averager is None:
@@ -94,7 +90,7 @@ class Metric(object):
         else:
             self.name = name
 
-        #In case the operation mode is not specified define it
+        #In case the operation mode is not specified, define it
         if mode is None:
             # These are some smart defaults
 
@@ -149,7 +145,6 @@ class Metric(object):
                        n_classes: int = 2,
                        filter_nans: bool = False,
                        per_task_metrics: bool = False,
-                       use_sample_weights: bool = False,
                        **kwargs) -> np.ndarray:
         """Compute a performance metric for each task.
         Parameters
@@ -165,9 +160,6 @@ class Metric(object):
           An np.ndarray containing predicted values for each task. Must be
           of shape `(N, n_tasks, n_classes)` if a classification metric,
           else must be of shape `(N, n_tasks)` if a regression metric.
-        w: np.ndarray, default None
-          An np.ndarray containing weights for each datapoint. If
-          specified,  must be of shape `(N, n_tasks)`.
         n_tasks: int, default None
           The number of tasks this class is expected to handle.
         n_classes: int, default 2
@@ -209,16 +201,20 @@ class Metric(object):
         #n_samples = y_true.shape[0]
 
         computed_metrics = []
+
+        #assuming this is provided with values per column for each task
+        #TODO: check this out (needs to be changed to deal with multitasking)
+        print(y_true)
+        print(y_pred)
         for task in range(n_tasks):
-            y_task = y_true[:, task]
-            y_pred_task = y_pred[:, task]
+            y_task = y_true#[:, task]
+            y_pred_task = y_pred#[:, task]
 
             metric_value = self.compute_singletask_metric(y_task,
                                                           y_pred_task,
                                                           **kwargs)
             computed_metrics.append(metric_value)
-
-        print("computed_metrics: %s" % str(computed_metrics))
+        print("%s: %s" % (str(self.metric.__name__), str(computed_metrics)))
         if n_tasks == 1:
             computed_metrics = computed_metrics[0]  # type: ignore
 

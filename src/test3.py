@@ -47,7 +47,7 @@ from sklearn.svm import SVC
 rf = RandomForestClassifier()
 svm = SVC()
 
-model = SklearnModel(model=rf)
+model = SklearnModel(model=svm)
 
 #print(model.cross_validate(ds, Metric(roc_auc_score)))
 
@@ -86,15 +86,15 @@ params_dict_svm = {'C': [1.0, 0.7],
                'kernel': ["linear", "rbf"]
               }
 
-optimizer = GridHyperparamOpt(rf_model_builder)
+optimizer = GridHyperparamOpt(svm_model_builder)
 
-best_rf, best_hyperparams, all_results = optimizer.hyperparam_search(params_dict_rf, train_dataset, valid_dataset, Metric(precision_score))
+best_svm, best_hyperparams, all_results = optimizer.hyperparam_search(params_dict_svm, train_dataset, valid_dataset, Metric(precision_score))
 
 print('#################')
 print(best_hyperparams)
-print(best_rf)
+print(best_svm)
 
 #print(best_rf.predict(test_dataset))
 print('@@@@@@@@@@@@@@@@')
-print(best_rf.evaluate(test_dataset, metrics))
+print(best_svm.evaluate(test_dataset, metrics))
 

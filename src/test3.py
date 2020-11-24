@@ -21,9 +21,18 @@ ds = MorganFingerprint().featurize(ds)
 ds = LowVarianceFS(0.15).featureSelection(ds)
 
 
+
 splitter = RandomSplitter()
 
 train_dataset, valid_dataset, test_dataset = splitter.train_valid_test_split(dataset=ds, frac_train=0.6, frac_valid=0.2, frac_test=0.2)
+
+#k_folds = splitter.k_fold_split(ds, 3)
+
+#for a, b in k_folds:
+#    print(a.get_shape())
+#    print(b.get_shape())
+#    print('############')
+
 
 #print(train_dataset.X)
 #print(train_dataset.y)
@@ -39,6 +48,10 @@ rf = RandomForestClassifier()
 svm = SVC()
 
 model = SklearnModel(model=rf)
+
+#print(model.cross_validate(ds, Metric(roc_auc_score)))
+
+
 # model training
 model.fit(train_dataset)
 

@@ -1,9 +1,11 @@
 import tempfile
 import numpy as np
 
-from typing import Tuple, List, Optional
+from typing import Tuple, List, Optional, Iterator
 
-from Dataset.Dataset import Dataset
+from Dataset.Dataset import Dataset, NumpyDataset, CSVLoader
+
+from sklearn.model_selection import KFold
 
 
 class Splitter(object):
@@ -18,10 +20,10 @@ class Splitter(object):
     subclass for your application.
     """
 
+    #TODO: Possible upgrade: add directories input to save splits to file (update code)
     def k_fold_split(self,
                      dataset: Dataset,
                      k: int,
-                     directories: Optional[List[str]] = None,
                      **kwargs) -> List[Tuple[Dataset, Dataset]]:
         """
         Parameters
@@ -38,38 +40,23 @@ class Splitter(object):
           List of length k tuples of (train, cv) where `train` and `cv` are both `Dataset`.
         """
         print("Computing K-fold split")
-        if directories is None:
-            directories = [tempfile.mkdtemp() for _ in range(2 * k)]
+
+        if isinstance(dataset, NumpyDataset) or isinstance(dataset, CSVLoader):
+            ds = dataset
         else:
-            assert len(directories) == 2 * k
-        cv_datasets = []
-        train_ds_base = None
+            ds = NumpyDataset.from_numpy(dataset.X, dataset.y, dataset.features, dataset.ids)
+
+        kf = KFold(n_splits=k)
+
         train_datasets = []
-        # rem_dataset is remaining portion of dataset
-        if isinstance(dataset, Dataset):
-            rem_dataset = dataset
-        else:
-            raise ValueError("Dataset must be a Dataset object.")
+        test_datasets = []
+        for train_index, test_index in kf.split(ds.X):
+            train_datasets.append(ds.select(train_index))
+            test_datasets.append(ds.select(test_index))
 
-        for fold in range(k):
-            # Note starts as 1/k since fold starts at 0. Ends at 1 since fold goes up
-            # to k-1.
-            frac_fold = 1. / (k - fold)
-            train_dir, cv_dir = directories[2 * fold], directories[2 * fold + 1]
-            fold_inds, rem_inds, _ = self.split(rem_dataset, frac_train= frac_fold, frac_valid=1 - frac_fold, frac_test=0, **kwargs)
-            cv_dataset = rem_dataset.select(fold_inds, select_dir=cv_dir)
-            cv_datasets.append(cv_dataset)
-            # FIXME: Incompatible types in assignment (expression has type "Dataset", variable has type "DiskDataset")
-            rem_dataset = rem_dataset.select(rem_inds)  # type: ignore
+        return list(zip(train_datasets, test_datasets))
 
-            train_ds_to_merge = filter(None, [train_ds_base, rem_dataset])
-            train_ds_to_merge = filter(lambda x: len(x) > 0, train_ds_to_merge)
-            train_dataset = Dataset.merge(train_ds_to_merge, merge_dir=train_dir)
-            train_datasets.append(train_dataset)
 
-            update_train_base_merge = filter(None, [train_ds_base, cv_dataset])
-            train_ds_base = Dataset.merge(update_train_base_merge)
-        return list(zip(train_datasets, cv_datasets))
 
     def train_valid_test_split(self,
                                dataset: Dataset,
@@ -226,3 +213,5 @@ class RandomSplitter(Splitter):
         valid_cutoff = int((frac_train + frac_valid) * num_datapoints)
         shuffled = np.random.permutation(range(num_datapoints))
         return (shuffled[:train_cutoff], shuffled[train_cutoff:valid_cutoff], shuffled[valid_cutoff:])
+
+

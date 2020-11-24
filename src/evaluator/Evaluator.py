@@ -1,11 +1,12 @@
 import numpy as np
 import csv
-from typing import List
-from metrics.Metrics import Metric
-from typing import Optional, Union, Tuple, Dict
+
+from typing import Optional, Union, Tuple, Dict, List
 Score = Dict[str, float]
 
 from Dataset.Dataset import Dataset
+from splitters.splitters import  RandomSplitter
+from metrics.Metrics import Metric
 
 
 def _process_metric_input(metrics: Metric) -> List[Metric]:
@@ -186,3 +187,5 @@ class Evaluator(object):
             return multitask_scores
         else:
             return multitask_scores, all_task_scores
+
+

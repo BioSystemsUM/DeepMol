@@ -2,7 +2,7 @@
 Code for processing datasets using scikit-learn.
 """
 
-from typing import Optional
+from typing import Optional, List
 
 import numpy as np
 from sklearn.base import BaseEstimator
@@ -14,8 +14,12 @@ from sklearn.linear_model import ElasticNetCV
 
 from models.Models import Model
 from Dataset.Dataset import Dataset
+from splitters.splitters import RandomSplitter
+from metrics.Metrics import Metric
 
 from utils.utils import load_from_disk, save_to_disk
+
+from sklearn.base import clone
 
 #TODO: change models (Why this models?)
 NON_WEIGHTED_MODELS = [
@@ -123,3 +127,42 @@ class SklearnModel(Model):
     def reload(self):
         """Loads scikit-learn model from joblib file on disk."""
         self.model = load_from_disk(self.get_model_filename(self.model_dir))
+
+    def cross_validate(self,
+                       dataset: Dataset,
+                       metric: Metric,
+                       folds: int = 3):
+
+        splitter = RandomSplitter()
+        datasets = splitter.k_fold_split(dataset, folds)
+
+        train_scores = []
+        train_score_best_model = 0
+        avg_train_score = 0
+
+        test_scores = []
+        test_score_best_model = 0
+        avg_test_score = 0
+        best_model = None
+        for train_ds, test_ds in datasets:
+            dummy_model = clone(SklearnModel(model=self.model))
+
+            dummy_model.fit(train_ds)
+
+            print('Train Score: ')
+            train_score = dummy_model.evaluate(train_ds, metric)
+            train_scores.append(train_score[metric.name])
+            avg_train_score += train_score[metric.name]
+
+            print('Test Score: ')
+            test_score = dummy_model.evaluate(test_ds, metric)
+            test_scores.append(test_score[metric.name])
+            avg_test_score += test_score[metric.name]
+
+            if test_score[metric.name] > test_score_best_model:
+                test_score_best_model = test_score[metric.name]
+                train_score_best_model = train_score[metric.name]
+                best_model = dummy_model
+
+
+        return best_model, train_score_best_model, test_score_best_model, train_scores, test_scores, avg_train_score/folds, avg_test_score/folds

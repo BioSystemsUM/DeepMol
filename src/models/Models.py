@@ -76,14 +76,14 @@ class Model(BaseEstimator):
         raise NotImplementedError("Each class model must implement its own reload method.")
 
 
-    def get_model_filename(model_dir: str) -> str:
+    def get_model_filename(self, model_dir: str) -> str:
         """
         Given model directory, obtain filename for the model itself.
         """
         return os.path.join(model_dir, "model.joblib")
 
 
-    def get_params_filename(model_dir: str) -> str:
+    def get_params_filename(self, model_dir: str) -> str:
         """
         Given model directory, obtain filename for the model itself.
         """

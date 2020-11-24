@@ -1,5 +1,6 @@
 import numpy as np
 from typing import Callable, Optional, Any
+from utils.utils import normalize_labels_shape
 
 class Metric(object):
     """Wrapper class for computing user-defined metrics.
@@ -192,6 +193,7 @@ class Metric(object):
         # This is because `normalize_weight_shape` require int value.
         assert isinstance(n_tasks, int)
 
+        #TODO: Needs to be specified to deal with multitasking
         #y_true = normalize_labels_shape(y_true, mode=self.mode, n_tasks=n_tasks, n_classes=n_classes)
         #y_pred = normalize_prediction_shape(y_pred, mode=self.mode, n_tasks=n_tasks, n_classes=n_classes)
         #if self.mode == "classification":
@@ -204,8 +206,8 @@ class Metric(object):
 
         #assuming this is provided with values per column for each task
         #TODO: check this out (needs to be changed to deal with multitasking)
-        print(y_true)
-        print(y_pred)
+        #print(y_true)
+        #print(y_pred)
         for task in range(n_tasks):
             y_task = y_true#[:, task]
             y_pred_task = y_pred#[:, task]
@@ -262,5 +264,10 @@ class Metric(object):
         else:
             raise ValueError("Only classification and regression are supported for metrics calculations.")
 
-        metric_value = self.metric(y_true, y_pred, **kwargs)
+        try :
+            metric_value = self.metric(y_true, y_pred, **kwargs)
+        except Exception as e:
+            #deal with different shapes of the otput of predict and predict_proba
+            y_pred_mod = normalize_labels_shape(y_pred)
+            metric_value = self.metric(y_true, y_pred_mod, **kwargs)
         return metric_value

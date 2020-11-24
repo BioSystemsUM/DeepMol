@@ -2,7 +2,7 @@
 Code for processing datasets using scikit-learn.
 """
 
-from typing import List, Optional
+from typing import Optional
 
 import numpy as np
 from sklearn.base import BaseEstimator
@@ -14,8 +14,8 @@ from sklearn.linear_model import ElasticNetCV
 
 from models.Models import Model
 from Dataset.Dataset import Dataset
-#TODO: chech this files
-#from utils.data_utils import load_from_disk, save_to_disk
+
+from utils.utils import load_from_disk, save_to_disk
 
 #TODO: change models (Why this models?)
 NON_WEIGHTED_MODELS = [

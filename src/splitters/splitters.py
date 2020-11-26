@@ -11,20 +11,14 @@ from sklearn.model_selection import KFold
 class Splitter(object):
     """Splitters split up Datasets into pieces for training/validation/testing.
     In machine learning applications, it's often necessary to split up a dataset
-    into training/validation/test sets. Or to k-fold split a dataset (that is,
-    divide into k equal subsets) for cross-validation. The `Splitter` class is
-    an abstract superclass for all splitters that captures the common API across
-    splitter classes.
-    Note that `Splitter` is an abstract superclass. You won't want to
-    instantiate this class directly. Rather you will want to use a concrete
-    subclass for your application.
+    into training/validation/test sets. Or to k-fold split a dataset for cross-validation.
     """
 
     #TODO: Possible upgrade: add directories input to save splits to file (update code)
     def k_fold_split(self,
                      dataset: Dataset,
                      k: int,
-                     **kwargs) -> List[Tuple[Dataset, Dataset]]:
+                     **kwargs) -> List[Tuple[Dataset, Dataset], Tuple[Dataset, Dataset], ...]:
         """
         Parameters
         ----------
@@ -32,12 +26,10 @@ class Splitter(object):
           Dataset to do a k-fold split
         k: int
           Number of folds to split `dataset` into.
-        directories: List[str], optional (default None)
-          List of length 2*k filepaths to save the result disk-datasets.
         Returns
         -------
         List[Tuple[Dataset, Dataset]]
-          List of length k tuples of (train, cv) where `train` and `cv` are both `Dataset`.
+          List of length k tuples of (train, test) where `train` and `test` are both `Dataset`.
         """
         print("Computing K-fold split")
 
@@ -66,7 +58,7 @@ class Splitter(object):
                                seed: Optional[int] = None,
                                log_every_n: int = 1000,
                                **kwargs) -> Tuple[Dataset, Dataset, Dataset]:
-        """ Splits self into train/validation/test sets.
+        """ Splits a Dataset into train/validation/test sets.
         Returns Dataset objects for train, valid, test.
         Parameters
         ----------
@@ -85,8 +77,8 @@ class Splitter(object):
           will be produced.
         Returns
         -------
-        Tuple[Dataset, Optional[Dataset], Dataset]
-          A tuple of train, valid and test datasets as dc.data.Dataset objects.
+        Tuple[Dataset, Dataset, Dataset]
+          A tuple of train, valid and test datasets as Dataset objects.
         """
 
         print("Computing train/valid/test indices")
@@ -124,7 +116,7 @@ class Splitter(object):
         Returns
         -------
         Tuple[Dataset, Dataset]
-          A tuple of train and test datasets as dc.data.Dataset objects.
+          A tuple of train and test datasets as Dataset objects.
         """
 
         train_dataset, _, test_dataset = self.train_valid_test_split(
@@ -147,7 +139,7 @@ class Splitter(object):
         """Return indices for specified split
         Parameters
         ----------
-        dataset: dc.data.Dataset
+        dataset: Dataset
           Dataset to be split.
         seed: int, optional (default None)
           Random seed to use.
@@ -163,7 +155,7 @@ class Splitter(object):
         Returns
         -------
         Tuple
-          A tuple `(train_inds, valid_inds, test_inds)` of the indices (integers) for
+          A tuple `(train_inds, valid_inds, test_inds)` of the indices for
           the various splits.
         """
         raise NotImplementedError
@@ -181,7 +173,7 @@ class RandomSplitter(Splitter):
               log_every_n: Optional[int] = None
               ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
-        Splits internal compounds randomly into train/validation/test.
+        Splits randomly into train/validation/test.
         Parameters
         ----------
         dataset: Dataset

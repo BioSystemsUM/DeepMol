@@ -10,63 +10,48 @@ from metrics.Metrics import Metric
 
 
 def _process_metric_input(metrics: Metric) -> List[Metric]:
-    """A private helper method which processes metrics correctly.
-    Metrics can be input as `dc.metrics.Metric` objects, lists of
-    `dc.metrics.Metric` objects, or as raw metric functions or lists of
-    raw metric functions. Metric functions are functions which accept
+    """Method which processes metrics correctly.
+    Metrics can be input as `metrics.Metric` objects, lists of
+    `metrics.Metric`. Metric functions are functions which accept
     two arguments `y_true, y_pred` both of which must be `np.ndarray`
     objects and return a float value. This functions normalizes these
-    different types of inputs to type `list[dc.metrics.Metric]` object
+    different types of inputs to type `list[metrics.Metric]` object
     for ease of later processing.
-    Note that raw metric functions which don't have names attached will
-    simply be named "metric-#" where # is their position in the provided
-    metric list. For example, "metric-1" or "metric-7"
+
     Parameters
     ----------
-    metrics: dc.metrics.Metric/list[dc.metrics.Metric]/metric function/ list[metric function]
+    metrics: metrics.Metric/list[dc.metrics.Metric]
         Input metrics to process.
     Returns
     -------
-    final_metrics: list[dc.metrics.Metric]
+    final_metrics: list[metrics.Metric]
         Converts all input metrics and outputs a list of
-        `dc.metrics.Metric` objects.
+        `metrics.Metric` objects.
     """
     # Make sure input is a list
     if not isinstance(metrics, list):
-        # FIXME: Incompatible types in assignment
         metrics = [metrics]  # type: ignore
 
     final_metrics = []
-    # FIXME: Argument 1 to "enumerate" has incompatible type
-    for i, metric in enumerate(metrics):  # type: ignore
-        # Ensure that metric is wrapped in a list.
+    for i, metric in enumerate(metrics):
+
         if isinstance(metric, Metric):
             final_metrics.append(metric)
-        # This case checks if input is a function then wraps a
-        # dc.metrics.Metric object around it
+
         elif callable(metric):
             wrap_metric = Metric(metric, name="metric-%d" % (i + 1))
             final_metrics.append(wrap_metric)
         else:
-            raise ValueError(
-                "metrics must be one of metric function / dc.metrics.Metric object /"
-                "list of dc.metrics.Metric or metric functions.")
+            raise ValueError("Metrics must be metrics.Metric objects.")
     return final_metrics
 
 class Evaluator(object):
     """Class that evaluates a model on a given dataset.
-    The evaluator class is used to evaluate a `dc.models.Model` class on
-    a given `dc.data.Dataset` object. The evaluator is aware of
-    `dc.trans.Transformer` objects so will automatically undo any
-    transformations which have been applied.
-    Examples
-    --------
-    Evaluators allow for a model to be evaluated directly on a Metric
-    for `sklearn`. Let's do a bit of setup constructing our dataset and
-    model.
+    The evaluator class is used to evaluate a `Model` class on
+    a given `Dataset` object.
     """
 
-    def __init__(self, model, dataset: Dataset):#, metric: Metric): #TODO: metric: Metric (remove here?)
+    def __init__(self, model, dataset: Dataset):#, metric: Metric):
 
         """Initialize this evaluator
         Parameters

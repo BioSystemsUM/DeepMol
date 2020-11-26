@@ -214,21 +214,22 @@ class NumpyDataset(Dataset):
         """Get the ids vector for this dataset as a single numpy array."""
         return self.ids
 
-
+    # TODO: adapt to deal with generators (working properly with a single dataset)
     def write_data_to_disk(data_dir: str,
                            basename: str,
                            X: Optional[np.ndarray] = None,
                            y: Optional[np.ndarray] = None,
                            features: Optional[np.ndarray] = None,
                            ids: Optional[np.ndarray] = None) -> List[Optional[str]]:
-        """Static helper method to write data to disk.
-        This helper method is used to write a shard of data to disk.
+        """Method to write data to disk.
+        This method is used to write data to disk.
         Parameters
         ----------
         data_dir: str
-          Data directory to write shard to.
+          Data directory to write data to.
         basename: str
-          Basename for the shard in question.
+          Basename for the shard in question (in case multiple portions of
+          data are written in different smaller files).
         X: np.ndarray, optional (default None)
           The samples array.
         y: np.ndarray, optional (default None)
@@ -325,16 +326,17 @@ class NumpyDataset(Dataset):
         return np.arange(self.y.shape[1])
 
     def _construct_metadata(metadata_entries: List) -> pd.DataFrame:
-        """Construct a dataframe containing metadata.
+        """Construct a dataframe containing data.
         Parameters
         ----------
         metadata_entries: List
           `metadata_entries` should have elements returned by write_data_to_disk
           above.
+          Should be in the order of columns.
         Returns
         -------
         pd.DataFrame
-          A Pandas Dataframe object contains metadata.
+          A Pandas Dataframe object contains data.
         """
         columns = ('ids', 'X', 'y', 'features', 'ids_shape', 'X_shape', 'y_shape',
                    'features_shape')
@@ -343,13 +345,13 @@ class NumpyDataset(Dataset):
 
     def _save_metadata(metadata_df: pd.DataFrame, data_dir: str,
                        tasks: Optional[Sequence]) -> None:
-        """Saves the metadata for a NumpyDataset
+        """Saves the data for a NumpyDataset
         Parameters
         ----------
         metadata_df: pd.DataFrame
           The dataframe which will be written to disk.
         data_dir: str
-          Directory to store metadata.
+          Directory to store the data.
         tasks: Sequence, optional
           Tasks of NumpyDataset. If `None`, an empty list of tasks is written to
           disk.
@@ -376,7 +378,7 @@ class NumpyDataset(Dataset):
           The new directory path to store the merged NumpyDataset.
         Returns
         -------
-        DiskDataset
+        NumpyDataset
           A merged NumpyDataset.
         """
         if merge_dir is not None:
@@ -584,8 +586,8 @@ class CSVLoader(Dataset):
 
 
     def removeElements(self, indexes):
-        """Remode elements with specific indexes from the dataset
-            Very usefull when doing feature selection or to remove NAs.
+        """Remove elements with specific indexes from the dataset
+            Very useful when doing feature selection or to remove NAs.
         """
         self.X = np.delete(self.X, indexes)
         self.y = np.delete(self.y, indexes)
@@ -623,7 +625,7 @@ class CSVLoader(Dataset):
 
 
     def merge(datasets: Sequence[Dataset]) -> 'NumpyDataset':
-        """Merge multiple NumpyDatasets.
+        """Merge multiple Datasets.
         Parameters
         ----------
         datasets: List[Dataset]

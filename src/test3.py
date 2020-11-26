@@ -20,7 +20,7 @@ ds = MorganFingerprint().featurize(ds)
 
 ds = LowVarianceFS(0.15).featureSelection(ds)
 
-
+print(ds.get_shape())
 
 splitter = RandomSplitter()
 

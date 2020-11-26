@@ -10,15 +10,11 @@ from Dataset import Dataset
 
 
 class MolecularFeaturizer(object):
-    #TODO: rewrite comments
-    """Abstract class for calculating a set of features for a
-    molecule.
+    """Abstract class for calculating a set of features for a molecule.
     A `MolecularFeaturizer` uses SMILES strings or RDKit molecule
-    objects to represent molecules. Featurizers which are subclasses of
-    this class should always process the input molecules as smiles
-    strings or RDKit molecules.
+    objects to represent molecules.
 
-    Child classes need to implement the _featurize method for
+    Subclasses need to implement the _featurize method for
     calculating features for a single molecule.
     """
 
@@ -27,19 +23,17 @@ class MolecularFeaturizer(object):
             raise Exception('Abstract class MolecularFeaturizer should not be instantiated')
 
     def featurize(self, dataset: Dataset, log_every_n=1000):
-        # TODO: rewrite comments
         """Calculate features for molecules.
         Parameters
         ----------
-        molecules: rdkit.Chem.rdchem.Mol / SMILES string / iterable
-          RDKit Mol, or SMILES string or iterable sequence of RDKit mols/SMILES
-          strings.
+        molecules: rdkit.Chem.rdchem.Mol / SMILES string
+          RDKit Mol or SMILES string
         log_every_n: int, default 1000
           Logging messages reported every `log_every_n` samples.
         Returns
         -------
-        features: np.ndarray
-          A numpy array containing a featurized representation of `datapoints`.
+        features: Dataset
+          The input Dataset containing a featurized representation of the molecules in Dataset.features.
         """
         molecules = dataset.X
 

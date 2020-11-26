@@ -19,8 +19,8 @@ def load_csv_file(input_file, keep_fields, chunk_size=None):
         The chunk size to yield at one time.
     Returns
     -------
-    Iterator[pd.DataFrame]
-        Generator which yields the dataframe which is the same chunk size.
+    pd.DataFrame
+        Dataframe with size chunk size.
     """
 
     chunk_num = 1
@@ -29,7 +29,7 @@ def load_csv_file(input_file, keep_fields, chunk_size=None):
             return pd.read_csv(input_file)
         else : return pd.read_csv(input_file)[keep_fields]
     else:
-        #TODO: fix code to return datasset divided in chunks
+        #TODO: fix code to return multiple datasset with size chunks_size
         for df in pd.read_csv(input_file, chunksize=chunk_size):
             print("Loading shard %d of size %s." % (chunk_num, str(chunk_size)))
             df = df.replace(np.nan, str(""), regex=True)
@@ -40,6 +40,8 @@ def load_csv_file(input_file, keep_fields, chunk_size=None):
 
 class Dataset(object):
     """Abstract base class for datasets
+
+    Subclasses need to implement their own based on this class methods.
     """
 
     def __init__(self) -> None:
@@ -51,16 +53,17 @@ class Dataset(object):
 
     def get_shape(self) -> Tuple[Tuple[int, ...], Tuple[int, ...], Tuple[int, ...]]:
         """Get the shape of all the elements of the dataset.
-        Returns three tuples, shape of X (number of examples), y (number of tasks) and ids arrays.
+        Returns four tuples, shape of X (number of examples), y (number of tasks),
+        features (number of features) and ids (number of ids) arrays.
         """
         raise NotImplementedError()
 
     def X(self) -> np.ndarray:
-        """Get the X (number of examples) vector for this dataset as a single numpy array."""
+        """Get the X (e.g. Smiles) vector for this dataset as a single numpy array."""
         raise NotImplementedError()
 
     def y(self) -> np.ndarray:
-        """Get the y (number of tasks) vector for this dataset as a single numpy array."""
+        """Get the y (tasks) vector for this dataset as a single numpy array."""
         raise NotImplementedError()
 
     def ids(self) -> np.ndarray:
@@ -75,25 +78,26 @@ class Dataset(object):
         """Remove samples with NAs."""
         raise NotImplementedError()
 
+    #TODO: implement this method in the susequent subclasses and make it work with all de pipeline
     def iterbatches(self, 
                     batch_size: Optional[int] = None,
                     epochs: int = 1,
                     deterministic: bool = False,
                     pad_batches: bool = False) -> Iterator[Batch]:
         """Get an object that iterates over minibatches from the dataset.
-        Each minibatch is returned as a tuple of three numpy arrays:
-        (X, y, ids).
+        Each minibatch is returned as a tuple of four numpy arrays:
+        (X, y, features, ids).
 
         Parameters
         ----------
         batch_size: int, optional (default None)
-        Number of elements in each batch.
+            Number of elements in each batch.
         epochs: int, optional (default 1)
-        Number of epochs to walk over dataset.
+            Number of epochs to walk over dataset.
         deterministic: bool, optional (default False)
-        If True, follow deterministic order.
+            If True, follow deterministic order.
         pad_batches: bool, optional (default False)
-        If True, pad each batch to `batch_size`.
+            If True, pad each batch to `batch_size`.
         Returns
         -------
         Iterator[Batch]
@@ -101,6 +105,7 @@ class Dataset(object):
         """
         raise NotImplementedError("Each dataset model must implement its own iterbatches method.")
 
+    #TODO: same as the method above
     def itersamples(self) -> Iterator[Batch]:
         """Get an object that iterates over the samples in the dataset."""
         raise NotImplementedError("Each dataset model must implement its own itersamples method.")
@@ -129,10 +134,9 @@ class Dataset(object):
 
 
 class NumpyDataset(Dataset):
-    """A Dataset defined by in-memory numpy arrays.
-      This subclass of `Dataset` stores arrays `X,y,features,ids` in memory as
-      numpy arrays. This makes it very easy to construct `NumpyDataset`
-      objects.
+    """A Dataset defined by numpy arrays.
+      This subclass of `Dataset` stores arrays X, y, features, ids in memory as
+      numpy arrays.
       """
 
     def __init__(self,
@@ -146,24 +150,22 @@ class NumpyDataset(Dataset):
         Parameters
         ----------
         X: np.ndarray
-          Input features. A numpy array of shape `(n_samples,...)`.
+          Input features. A numpy array of shape `(n_samples,)`.
         y: np.ndarray, optional (default None)
-          Labels. A numpy array of shape `(n_samples, ...)`. Note that each label can
+          Labels. A numpy array of shape `(n_samples,)`. Note that each label can
           have an arbitrary shape.
-        w: np.ndarray, optional (default None)
-          Weights. Should either be 1D array of shape `(n_samples,)` or if
-          there's more than one task, of shape `(n_samples, n_tasks)`.
+        features: np.ndarray, optional (default None)
+          Features. A numpy array of arrays of shape (n_samples, features size)
         ids: np.ndarray, optional (default None)
-          Identifiers. A numpy array of shape `(n_samples,)`
+          Identifiers. A numpy array of shape (n_samples,)
         n_tasks: int, default 1
           Number of learning tasks.
         """
         n_samples = len(X)
         if n_samples > 0:
             if y is None:
-                # Set labels to be zero, with zero weights
+                # Set labels to be zero
                 y = np.zeros((n_samples, n_tasks), np.float32)
-                w = np.zeros((n_samples, 1), np.float32)
         if ids is None:
             ids = np.arange(n_samples)
         if not isinstance(X, np.ndarray):
@@ -186,19 +188,13 @@ class NumpyDataset(Dataset):
 
     def __len__(self) -> int:
         """Get the number of elements in the dataset."""
-        return len(self.y)
+        return len(self.X)
 
     def get_shape(self) -> Tuple[Tuple[int, ...], Tuple[int, ...], Tuple[int, ...], Tuple[int, ...]]:
         """Get the shape of the dataset.
-        Returns four tuples, giving the shape of the X, y, w, and ids arrays.
+        Returns four tuples, giving the shape of the X, y, features, and ids arrays.
         """
         return self.X.shape, self.y.shape, self.features.shape, self.ids.shape
-
-    def get_task_names(self) -> np.ndarray:
-        """Get the names of the tasks associated with this dataset."""
-        if len(self.y.shape) < 2:
-            return np.array([0])
-        return np.arange(self.y.shape[1])
 
 
     def X(self) -> np.ndarray:
@@ -210,19 +206,17 @@ class NumpyDataset(Dataset):
         """Get the y vector for this dataset as a single numpy array."""
         return self.y
 
+    def features(self) -> np.ndarray:
+        """Get the features array for this dataset as a single numpy array."""
+        return self.features
 
     def ids(self) -> np.ndarray:
         """Get the ids vector for this dataset as a single numpy array."""
         return self.ids
 
 
-    def features(self) -> np.ndarray:
-        """Get the features array for this dataset as a single numpy array."""
-        return self.features
-
     def write_data_to_disk(data_dir: str,
                            basename: str,
-                           tasks: np.ndarray,
                            X: Optional[np.ndarray] = None,
                            y: Optional[np.ndarray] = None,
                            features: Optional[np.ndarray] = None,
@@ -235,8 +229,6 @@ class NumpyDataset(Dataset):
           Data directory to write shard to.
         basename: str
           Basename for the shard in question.
-        tasks: np.ndarray
-          The names of the tasks in question.
         X: np.ndarray, optional (default None)
           The samples array.
         y: np.ndarray, optional (default None)
@@ -248,10 +240,11 @@ class NumpyDataset(Dataset):
         Returns
         -------
         List[Optional[str]]
-          List with values `[out_ids, out_X, out_y, out_w, out_ids_shape,
-          out_X_shape, out_y_shape, out_w_shape]` with filenames of locations to
+          List with values `[out_ids, out_X, out_y, out_features, out_ids_shape,
+          out_X_shape, out_y_shape, out_features_shape]` with filenames of locations to
           disk which these respective arrays were written.
         """
+
         if X is not None:
             out_X: Optional[str] = "%s-X.npy" % basename
             save_to_disk(X, os.path.join(data_dir, out_X))
@@ -284,14 +277,12 @@ class NumpyDataset(Dataset):
             out_ids = None
             out_ids_shape = None
 
-        # note that this corresponds to the _construct_metadata column order
-        return [
-            out_ids, out_X, out_y, out_features, out_ids_shape, out_X_shape, out_y_shape,
-            out_features_shape
-        ]
+        return [out_ids, out_X, out_y, out_features, out_ids_shape, out_X_shape, out_y_shape,
+                out_features_shape]
 
 
 
+    #TODO: adapt to deal with generators (working properly with a single dataset)
     def create_dataset(shard_generator: Iterable[Batch],
                        data_dir: Optional[str] = None,
                        tasks: Optional[Sequence] = []) -> "NumpyDataset":
@@ -307,8 +298,8 @@ class NumpyDataset(Dataset):
           List of tasks for this dataset.
         Returns
         -------
-        DiskDataset
-          A new `DiskDataset` constructed from the given data
+        NumpyDataset
+          A new `NumpyDataset` constructed from the given data
         """
         if data_dir is None:
             data_dir = tempfile.mkdtemp()
@@ -346,7 +337,7 @@ class NumpyDataset(Dataset):
 
     def _save_metadata(metadata_df: pd.DataFrame, data_dir: str,
                        tasks: Optional[Sequence]) -> None:
-        """Saves the metadata for a DiskDataset
+        """Saves the metadata for a NumpyDataset
         Parameters
         ----------
         metadata_df: pd.DataFrame
@@ -354,7 +345,7 @@ class NumpyDataset(Dataset):
         data_dir: str
           Directory to store metadata.
         tasks: Sequence, optional
-          Tasks of DiskDataset. If `None`, an empty list of tasks is written to
+          Tasks of NumpyDataset. If `None`, an empty list of tasks is written to
           disk.
         """
         if tasks is None:
@@ -367,6 +358,7 @@ class NumpyDataset(Dataset):
             json.dump(tasks, fout)
         metadata_df.to_csv(metadata_filename, index=False, compression='gzip')
 
+    # TODO: adapt to deal with generators (working properly with a single dataset)
     def merge(datasets: Iterable["Dataset"],
               merge_dir: Optional[str] = None) -> "NumpyDataset":
         """Merges provided datasets into a merged dataset.
@@ -375,11 +367,11 @@ class NumpyDataset(Dataset):
         datasets: Iterable[Dataset]
           List of datasets to merge.
         merge_dir: str, optional (default None)
-          The new directory path to store the merged DiskDataset.
+          The new directory path to store the merged NumpyDataset.
         Returns
         -------
         DiskDataset
-          A merged DiskDataset.
+          A merged NumpyDataset.
         """
         if merge_dir is not None:
             if not os.path.exists(merge_dir):
@@ -387,14 +379,13 @@ class NumpyDataset(Dataset):
         else:
             merge_dir = tempfile.mkdtemp()
 
-        # Protect against generator exhaustion
         datasets = list(datasets)
 
-        # This ensures tasks are consistent for all datasets
+
         tasks = []
         for dataset in datasets:
             try:
-                tasks.append(dataset.tasks)  # type: ignore
+                tasks.append(dataset.tasks)
             except AttributeError:
                 pass
         if tasks:
@@ -420,7 +411,7 @@ class NumpyDataset(Dataset):
                    ids: Optional[np.ndarray] = None,
                    tasks: Optional[Sequence] = None,
                    data_dir: Optional[str] = None) -> "NumpyDataset":
-        """Creates a DiskDataset object from specified Numpy arrays.
+        """Creates a NumpyDataset object from specified Numpy arrays.
         Parameters
         ----------
         X: np.ndarray
@@ -438,27 +429,24 @@ class NumpyDataset(Dataset):
           a temporary directory instead.
         Returns
         -------
-        DiskDataset
-          A new `DiskDataset` constructed from the provided information.
+        NumpyDataset
+          A new `NumpyDataset` constructed from the provided information.
         """
-        # To unify shape handling so from_numpy behaves like NumpyDataset, we just
-        # make a NumpyDataset under the hood
+
         dataset = NumpyDataset(X, y, features, ids)
         if tasks is None:
             tasks = dataset.get_task_names()
 
-        # raw_data = (X, y, w, ids)
         return NumpyDataset.create_dataset(
             [(dataset.X, dataset.y, dataset.features, dataset.ids)],
-            data_dir=data_dir,
-            tasks=tasks)
+            data_dir=data_dir, tasks=tasks)
 
 
 
 class CSVLoader(Dataset):
-    '''
-    ...
-    '''
+    """A Dataset loaded directly from a CSV.
+      This subclass of `Dataset` stores arrays X, y, features, ids.
+      """
 
     def __init__(self, dataset_path, input_field, output_fields=None,
                  id_field=None, user_features=None, keep_all_fields=False,
@@ -469,7 +457,7 @@ class CSVLoader(Dataset):
         dataset_path: string
             path to the dataset file
         input_field: string
-            label of the input feature (smiles, inchi, etc)
+            label of the input feature (e.g. smiles, inchi)
         output_features: list of strings (optional, default: None)
             labels of the output features
         id_filed: string (optional, default: None)
@@ -477,6 +465,7 @@ class CSVLoader(Dataset):
         user_features: list of strings (optional, default: None)
             label of the user provided features
         keep_all_fields: Boolean (optional, default: False)
+            Boolean to whether or not keep all fields from the dataset
         """
 
         if not isinstance(dataset_path, str):
@@ -491,7 +480,7 @@ class CSVLoader(Dataset):
         if not isinstance(id_field, str) and id_field is not None:
             raise ValueError("Field id must be a string or None.")
 
-        #TODO: provide user features in a better way
+        #TODO: provide user features in a better way ???
         if not isinstance(user_features, list) and user_features is not None:
             raise ValueError("User features must be a list of string containing "
                              "the features fields or None.")
@@ -556,7 +545,7 @@ class CSVLoader(Dataset):
 
     def __len__(self):
         """Get the number of elements in the dataset."""
-        return len(self.y)
+        return len(self.X)
 
     def get_shape(self):
         """Get the shape of the dataset.
@@ -589,6 +578,9 @@ class CSVLoader(Dataset):
 
 
     def removeElements(self, indexes):
+        """Remode elements with specific indexes from the dataset
+            Very usefull when doing feature selection or to remove NAs.
+        """
         self.X = np.delete(self.X, indexes)
         self.y = np.delete(self.y, indexes)
         self.ids = np.delete(self.ids, indexes)
@@ -608,17 +600,17 @@ class CSVLoader(Dataset):
         self.removeElements(indexes)
 
     def _get_dataset(self, dataset_path, keep_fields=None, chunk_size=None):
-        """Defines a generator which returns data for each shard
+        """Loads data with size chunk_size.
         Parameters
         ----------
-        input_files: List[str]
-          List of filenames to process
+        input_files: str
+            Filename to process
         shard_size: int, optional
-          The size of a shard of data to process at a time.
+            The size of a shard of data to process at a time.
         Returns
         -------
-        Iterator[pd.DataFrame]
-          Iterator over shards
+        pd.DataFrame
+            Dataframe
         """
         return load_csv_file(dataset_path, keep_fields, chunk_size)
 

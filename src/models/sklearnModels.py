@@ -132,7 +132,7 @@ class SklearnModel(Model):
                        dataset: Dataset,
                        metric: Metric,
                        folds: int = 3):
-
+        #TODO: add option to choose between splitters (later, for now we only have random)
         splitter = RandomSplitter()
         datasets = splitter.k_fold_split(dataset, folds)
 

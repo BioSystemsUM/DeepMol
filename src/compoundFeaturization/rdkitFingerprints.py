@@ -39,7 +39,7 @@ class MorganFingerprint(MolecularFeaturizer):
         self.features = features
 
     def _featurize(self, mol: Any) -> np.ndarray:
-        """Calculate morgan fingerprint.
+        """Calculate morgan fingerprint for a single molecule.
         Parameters
         ----------
         mol: rdkit.Chem.rdchem.Mol

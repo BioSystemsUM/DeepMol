@@ -57,10 +57,10 @@ class Evaluator(object):
         Parameters
         ----------
         model: Model
-        Model to evaluate. Note that this must be a regression or
-        classification model and not a generative model.
+            Model to evaluate. Note that this must be a regression or
+            classification model.
         dataset: Dataset
-        Dataset object to evaluate `model` on.
+            Dataset object to evaluate `model` on.
         """
 
         self.model = model
@@ -71,23 +71,23 @@ class Evaluator(object):
         Parameters
         ----------
         scores: dict
-        Dictionary mapping names of metrics to scores.
+            Dictionary mapping names of metrics to scores.
         stats_out: str
-        Name of file to write scores to.
+            Name of file to write scores to.
         """
         with open(stats_out, "w") as statsfile:
             statsfile.write(str(scores) + "\n")
 
     def output_predictions(self, y_preds: np.ndarray, csv_out: str):
         """Writes predictions to file.
-        Writes predictions made on `self.dataset` to a specified file on
-        disk. `self.dataset.ids` are used to format predictions.
+            Writes predictions made on the dataset to a specified file.
+
         Parameters
         ----------
         y_preds: np.ndarray
-        Predictions to output
+            Predictions to output
         csv_out: str
-        Name of file to write predictions to.
+            Name of file to write predictions to.
         """
 
         data_ids = self.dataset.ids
@@ -100,48 +100,35 @@ class Evaluator(object):
             for mol_id, y_pred in zip(data_ids, y_preds):
                 csvwriter.writerow([mol_id] + list(y_pred))
 
-    def compute_model_performance(
-        self,
-        metrics: Metric,
-        csv_out: Optional[str] = None,
-        stats_out: Optional[str] = None,
-        per_task_metrics: bool = False,
-        use_sample_weights: bool = False,
-        n_classes: int = 2) -> Union[Score, Tuple[Score, Score]]:
+    #TODO: Works with singletask, check for multitask
+    def compute_model_performance(self,
+                                  metrics: Metric,
+                                  per_task_metrics: bool = False,
+                                  n_classes: int = 2) -> Union[Score, Tuple[Score, Score]]:
         """
         Computes statistics of model on test data and saves results to csv.
+
         Parameters
         ----------
-        metrics: dc.metrics.Metric/list[dc.metrics.Metric]/function
-        The set of metrics provided. This class attempts to do some
-        intelligent handling of input. If a single `dc.metrics.Metric`
-        object is provided or a list is provided, it will evaluate
-        `self.model` on these metrics. If a function is provided, it is
-        assumed to be a metric function that this method will attempt to
-        wrap in a `dc.metrics.Metric` object. A metric function must
-        accept two arguments, `y_true, y_pred` both of which are
-        `np.ndarray` objects and return a floating point score. The
-        metric function may also accept a keyword argument
-        `sample_weight` to account for per-sample weights.
-        csv_out: str, optional (DEPRECATED)
-        Filename to write CSV of model predictions.
-        stats_out: str, optional (DEPRECATED)
-        Filename to write computed statistics.
+        metrics: Metric/list[Metric]
+            The set of metrics provided. If a single `Metric`
+            object is provided or a list is provided, it will evaluate
+            `Model` on these metrics.
+
         per_task_metrics: bool, optional
-        If true, return computed metric for each task on multitask dataset.
-        use_sample_weights: bool, optional (default False)
-        If set, use per-sample weights `w`.
+            If true, return computed metric for each task on multitask dataset.
+
         n_classes: int, optional (default None)
-        If specified, will use `n_classes` as the number of unique classes
-        in `self.dataset`. Note that this argument will be ignored for
-        regression metrics.
+            If specified, will use `n_classes` as the number of unique classes
+            in the `Dataset`.
+
         Returns
         -------
         multitask_scores: dict
-        Dictionary mapping names of metrics to metric scores.
+            Dictionary mapping names of metrics to metric scores.
         all_task_scores: dict, optional
-        If `per_task_metrics == True`, then returns a second dictionary
-        of scores for each task separately.
+            If `per_task_metrics == True`, then returns a second dictionary
+            of scores for each task separately.
         """
         
          # Process input metrics

@@ -5,6 +5,16 @@ Created on Wed Feb 27 15:36:08 2019
 @author: jfsco
 """
 
+
+################################################
+
+# OLD FILE -- ONLY FOR REFERENCE
+
+# REMOVE LATER
+
+#################################################
+
+
 import pandas as pd
 import numpy as np
 import deepchem as dc

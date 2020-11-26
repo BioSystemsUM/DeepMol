@@ -1,3 +1,13 @@
+
+
+################################################
+
+# OLD FILE -- ONLY FOR REFERENCE
+
+# REMOVE LATER
+
+#################################################
+
 import deepchem as dc
 from deepchem.models.graph_models import GraphConvModel
 

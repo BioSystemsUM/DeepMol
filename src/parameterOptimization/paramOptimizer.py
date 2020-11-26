@@ -6,6 +6,16 @@ Created on Tue Apr 16 14:16:31 2019
 @author: jcorreia
 """
 
+
+################################################
+
+# OLD FILE -- ONLY FOR REFERENCE
+
+# REMOVE LATER
+
+#################################################
+
+
 import numpy as np
 import pandas as pd
 #from fingerprintGenerator import fingerprintGenerator

@@ -5,6 +5,15 @@ Created on Wed Sep  10 16:16:54 2020
 @author: jfsco
 """
 
+
+################################################
+
+# OLD FILE -- ONLY FOR REFERENCE
+
+# REMOVE LATER
+
+#################################################
+
 import pandas as pd
 import numpy as np
 import rdkit

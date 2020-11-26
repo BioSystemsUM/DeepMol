@@ -5,6 +5,16 @@ Created on Fri Sept  11 15:03:54 2020
 @author: jfsco
 """
 
+
+################################################
+
+# OLD FILE -- ONLY FOR REFERENCE
+
+# REMOVE LATER
+
+#################################################
+
+
 from molvs import Standardizer
 from rdkit import Chem
 import pandas as pd

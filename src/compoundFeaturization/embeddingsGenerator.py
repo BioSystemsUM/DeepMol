@@ -5,6 +5,16 @@ Created on Wed Mar  6 16:16:54 2019
 @author: jfsco
 """
 
+
+################################################
+
+# OLD FILE -- ONLY FOR REFERENCE
+
+# REMOVE LATER
+
+#################################################
+
+
 import numpy as np
 import pandas as pd
 from rdkit import Chem

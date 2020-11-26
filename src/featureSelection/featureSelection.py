@@ -6,6 +6,16 @@ Created on Tue Apr 23 14:38:41 2019
 @author: jcorreia
 """
 
+
+################################################
+
+# OLD FILE -- ONLY FOR REFERENCE
+
+# REMOVE LATER
+
+#################################################
+
+
 import pandas as pd
 from sklearn.feature_selection import VarianceThreshold, SelectKBest, chi2, RFECV, SelectFromModel, SelectPercentile
 from sklearn.ensemble import RandomForestClassifier

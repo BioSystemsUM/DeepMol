@@ -1,6 +1,3 @@
-"""
-Code for processing datasets using scikit-learn.
-"""
 
 from typing import Optional, List
 
@@ -21,7 +18,7 @@ from utils.utils import load_from_disk, save_to_disk
 
 from sklearn.base import clone
 
-#TODO: change models (Why this models?)
+#Some ScikitLearn non weighted models
 NON_WEIGHTED_MODELS = [
     LogisticRegression, PLSRegression, GaussianProcessRegressor, ElasticNetCV,
     LassoCV, BayesianRidge
@@ -29,19 +26,10 @@ NON_WEIGHTED_MODELS = [
 
 
 class SklearnModel(Model):
-    """Wrapper class that wraps scikit-learn models as DeepChem models.
-    When you're working with scikit-learn and DeepChem, at times it can
-    be useful to wrap a scikit-learn model as a DeepChem model. The
-    reason for this might be that you want to do an apples-to-apples
-    comparison of a scikit-learn model to another DeepChem model, or
-    perhaps you want to use the hyperparameter tuning capabilities in
-    `dc.hyper`. The `SklearnModel` class provides a wrapper around scikit-learn
+    """Wrapper class that wraps scikit-learn models.
+    The `SklearnModel` class provides a wrapper around scikit-learn
     models that allows scikit-learn models to be trained on `Dataset` objects
-    and evaluated with the same metrics as other DeepChem models.`
-    Notes
-    -----
-    All `SklearnModels` perform learning solely in memory. This means that it
-    may not be possible to train `SklearnModel` on large `Dataset`s.
+    and evaluated with the metrics in Metrics.
     """
 
     def __init__(self,
@@ -56,8 +44,6 @@ class SklearnModel(Model):
         model_dir: str, optional (default None)
           If specified the model will be stored in this directory. Else, a
           temporary directory will be used.
-        model_instance: BaseEstimator (DEPRECATED)
-          The model instance which inherits a scikit-learn `BaseEstimator` Class.
         kwargs: dict
           kwargs['use_weights'] is a bool which determines if we pass weights into
           self.model.fit().

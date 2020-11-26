@@ -9,7 +9,7 @@ class BaseFeatureSelector(object):
     to select the most important ones. FeatureSelectors which are subclasses of
     this class should always operate over Dataset Objects.
 
-    Child classes need to implement the _select_features method for
+    Subclasses need to implement the _select_features method for
     performing feature selection.
     """
 
@@ -20,15 +20,17 @@ class BaseFeatureSelector(object):
         self.features2keep = None
 
     def featureSelection(self, dataset: Dataset):
-        #TODO: review comments
         """Perform feature selection for the molecules present in the dataset.
+
         Parameters
         ----------
-        dataset: Dataset object ...
+        dataset: Dataset object
+            Dataset to perform feature selection on
         Returns
         -------
-        features: np.ndarray
-          A numpy array containing a featurized representation of `datapoints`.
+        dataset: Dataset
+          Dataset containing the selected features and indexes of the
+          features kept as 'self.features2keep'
         """
         features = dataset.features
 
@@ -42,19 +44,23 @@ class BaseFeatureSelector(object):
 
 
 class LowVarianceFS(BaseFeatureSelector):
-    '''
-    ...
-    '''
+    """Class for Low Variance feature selection.
+
+    Feature selector that removes all features with low-variance.
+    """
 
     def __init__(self, threshold: float = 0.3):
-        '''
-        :param threshold:
-        '''
+        """Initialize this Feature Selector
+        Parameters
+        ----------
+        threshold: int
+            Features with a training-set variance lower than this threshold will be removed.
+        """
 
         self.param = threshold
 
     def _featureSelector(self, features):
-        """Returns indexes of features to keep."""
+        """Returns features and indexes of features to keep."""
         vt = VarianceThreshold(threshold=self.param)
         tr = vt.fit_transform(features)
         return tr, vt.get_support(indices=True)

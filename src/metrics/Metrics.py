@@ -3,25 +3,15 @@ from typing import Callable, Optional, Any
 from utils.utils import normalize_labels_shape
 
 class Metric(object):
-    """Wrapper class for computing user-defined metrics.
-      The `Metric` class provides a wrapper for standardizing the API
-      around different classes of metrics that may be useful for DeepChem
-      models. The implementation provides a few non-standard conveniences
-      such as built-in support for multitask and multiclass metrics.
-      There are a variety of different metrics this class aims to support.
-      Metrics for classification and regression that assume that values to
-      compare are scalars are supported.
-      At present, this class doesn't support metric computation on models
-      which don't present scalar outputs. For example, if you have a
-      generative model which predicts images or molecules, you will need
-      to write a custom evaluation and metric setup.
-      """
+    """Class for computing machine learning metrics.
+
+    Metrics can be imported from scikit-learn or can be user defined functions.
+    """
 
     def __init__(self,
                  metric: Callable[..., float],
                  task_averager: Optional[Callable[..., Any]] = None,
                  name: Optional[str] = None,
-                 threshold: Optional[float] = None,
                  mode: Optional[str] = None,
                  n_tasks: Optional[int] = None,
                  classification_handling_mode: Optional[str] = None,
@@ -32,30 +22,23 @@ class Metric(object):
         ----------
         metric: function
           Function that takes args y_true, y_pred (in that order) and
-          computes desired score. If sample weights are to be considered,
-          `metric` may take in an additional keyword argument
-          `sample_weight`.
+          computes desired score.
         task_averager: function, default None
           If not None, should be a function that averages metrics across
           tasks.
         name: str, default None
           Name of this metric
-        threshold: float, default None (DEPRECATED)
-          Used for binary metrics and is the threshold for the positive
-          class.
         mode: str, default None
-          Should usually be "classification" or "regression."
+          Should be "classification" or "regression."
         n_tasks: int, default None
           The number of tasks this class is expected to handle.
         classification_handling_mode: str, default None
-          DeepChem models by default predict class probabilities for
+          Models by default predict class probabilities for
           classification problems. This means that for a given singletask
-          prediction, after shape normalization, the DeepChem prediction will be a
+          prediction, after shape normalization, the prediction will be a
           numpy array of shape `(N, n_classes)` with class probabilities.
-          `classification_handling_mode` is a string that instructs this method
-          how to handle transforming these probabilities. It can take on the
-          following values:
-          - None: default value. Pass in `y_pred` directy into `self.metric`.
+          It can take on the following values:
+          - None: default value. Pass in `y_pred` directy into the metric.
           - "threshold": Use `threshold_predictions` to threshold `y_pred`. Use
             `threshold_value` as the desired threshold.
           - "threshold-one-hot": Use `threshold_predictions` to threshold `y_pred`
@@ -63,11 +46,7 @@ class Metric(object):
         threshold_value: float, default None
           If set, and `classification_handling_mode` is "threshold" or
           "threshold-one-hot" apply a thresholding operation to values with this
-          threshold. This option is only sensible on binary classification tasks.
-          If float, this will be applied as a binary classification value.
-        compute_energy_metric: bool, default None (DEPRECATED)
-          Deprecated metric. Will be removed in a future version of
-          DeepChem. Do not use.
+          threshold.
         """
 
 
@@ -91,10 +70,8 @@ class Metric(object):
         else:
             self.name = name
 
-        #In case the operation mode is not specified, define it
         if mode is None:
-            # These are some smart defaults
-
+            # Some default metrics
             if self.metric.__name__ in ["roc_auc_score",
                                         "matthews_corrcoef",
                                         "recall_score",
@@ -110,7 +87,7 @@ class Metric(object):
                                         "jaccard_index",
                                         "pixel_error"]:
                 mode = "classification"
-                # These are some smart defaults corresponding to sklearn's required behavior
+                # Defaults sklearn's metrics with required behavior
                 if classification_handling_mode is None:
                     if self.metric.__name__ in ["matthews_corrcoef", "cohen_kappa_score", "kappa_score",
                                                 "balanced_accuracy_score", "recall_score", "jaccard_score",
@@ -144,33 +121,21 @@ class Metric(object):
                        y_pred: np.ndarray,
                        n_tasks: Optional[int] = None,
                        n_classes: int = 2,
-                       filter_nans: bool = False,
                        per_task_metrics: bool = False,
                        **kwargs) -> np.ndarray:
         """Compute a performance metric for each task.
         Parameters
         ----------
         y_true: np.ndarray
-          An np.ndarray containing true values for each task. Must be of shape
-          `(N,)` or `(N, n_tasks)` or `(N, n_tasks, n_classes)` if a
-          classification metric. If of shape `(N, n_tasks)` values can either be
-          class-labels or probabilities of the positive class for binary
-          classification problems. If a regression problem, must be of shape
-          `(N,)` or `(N, n_tasks)` or `(N, n_tasks, 1)` if a regression metric.
+          An np.ndarray containing true values for each task.
         y_pred: np.ndarray
-          An np.ndarray containing predicted values for each task. Must be
-          of shape `(N, n_tasks, n_classes)` if a classification metric,
-          else must be of shape `(N, n_tasks)` if a regression metric.
+          An np.ndarray containing predicted values for each task.
         n_tasks: int, default None
           The number of tasks this class is expected to handle.
         n_classes: int, default 2
           Number of classes in data for classification tasks.
-        filter_nans: bool, default False (DEPRECATED)
-          Remove NaN values in computed metrics
         per_task_metrics: bool, default False
           If true, return computed metric for each task on multitask dataset.
-        use_sample_weights: bool, default False
-          If set, use per-sample weights `w`.
         kwargs: dict
           Will be passed on to self.metric
         Returns
@@ -179,7 +144,6 @@ class Metric(object):
           A numpy array containing metric values for each task.
         """
 
-        # Attempt some limited shape imputation to find n_tasks
         if n_tasks is None:
             if self.n_tasks is None and isinstance(y_true, np.ndarray):
                 if len(y_true.shape) == 1:
@@ -189,9 +153,6 @@ class Metric(object):
             else:
                 n_tasks = self.n_tasks
 
-        # check whether n_tasks is int or not
-        # This is because `normalize_weight_shape` require int value.
-        assert isinstance(n_tasks, int)
 
         #TODO: Needs to be specified to deal with multitasking
         #y_true = normalize_labels_shape(y_true, mode=self.mode, n_tasks=n_tasks, n_classes=n_classes)
@@ -228,24 +189,14 @@ class Metric(object):
     def compute_singletask_metric(self,
                                   y_true: np.ndarray,
                                   y_pred: np.ndarray,
-                                  n_samples: Optional[int] = None,
                                   **kwargs) -> float:
         """Compute a metric value.
         Parameters
         ----------
         y_true: `np.ndarray`
-          True values array. This array must be of shape `(N,
-          n_classes)` if classification and `(N,)` if regression.
+          True values array.
         y_pred: `np.ndarray`
-          Predictions array. This array must be of shape `(N, n_classes)`
-          if classification and `(N,)` if regression.
-        w: `np.ndarray`, default None
-          Sample weight array. This array must be of shape `(N,)`
-        n_samples: int, default None (DEPRECATED)
-          The number of samples in the dataset. This is `N`. This argument is
-          ignored.
-        use_sample_weights: bool, default False
-          If set, use per-sample weights `w`.
+          Predictions array.
         kwargs: dict
           Will be passed on to self.metric
         Returns

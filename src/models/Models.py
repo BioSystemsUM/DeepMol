@@ -133,7 +133,6 @@ class Model(BaseEstimator):
                 dataset: Dataset,
                 metrics: List[Metric],
                 per_task_metrics: bool = False,
-                use_sample_weights: bool = False,
                 n_classes: int = 2):
         """
         Evaluates the performance of this model on specified dataset.
@@ -182,7 +181,6 @@ class Model(BaseEstimator):
 
         return evaluator.compute_model_performance(metrics,
                                                    per_task_metrics=per_task_metrics,
-                                                   use_sample_weights=use_sample_weights,
                                                    n_classes=n_classes)
 
     def get_task_type(self) -> str:

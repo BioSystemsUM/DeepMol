@@ -53,9 +53,9 @@ class Model(BaseEstimator):
         Parameters
         ----------
         X: np.ndarray
-        the inputs for the batch
+            the inputs for the batch
         y: np.ndarray
-        the labels for the batch
+            the labels for the batch
         """
         raise NotImplementedError("Each class model must implement its own fit_on_batch method.")
 
@@ -65,7 +65,7 @@ class Model(BaseEstimator):
         Parameters
         ----------
         X: np.ndarray
-        Features
+            array of features
         """
         raise NotImplementedError("Each class model must implement its own predict_on_batch method.")
 
@@ -90,7 +90,7 @@ class Model(BaseEstimator):
         return os.path.join(model_dir, "model_params.joblib")
 
     def save(self) -> None:
-        """Dispatcher function for saving.
+        """Function for saving models.
         Each subclass is responsible for overriding this method.
         """
         raise NotImplementedError("Each class model must implement its own save method.")
@@ -101,7 +101,7 @@ class Model(BaseEstimator):
         Parameters
         ----------
         dataset: Dataset
-        the Dataset to train on
+            the Dataset to train on
         """
         raise NotImplementedError("Each class model must implement its own fit method.")
 
@@ -111,12 +111,12 @@ class Model(BaseEstimator):
         Parameters
         ----------
         dataset: Dataset
-        Dataset to make prediction on
+            Dataset to make prediction on
 
         Returns
         -------
         np.ndarray
-        A numpy array of predictions the model produces.
+            A numpy array of predictions.
         """
         y_preds = []
         for (X_batch, _, _, ids_batch) in dataset.iterbatches(deterministic=True):
@@ -128,7 +128,6 @@ class Model(BaseEstimator):
         y_pred = np.concatenate(y_preds)
         return y_pred
 
-    #TODO: Implement this function with a class evaluate
     def evaluate(self,
                 dataset: Dataset,
                 metrics: List[Metric],
@@ -136,46 +135,26 @@ class Model(BaseEstimator):
                 n_classes: int = 2):
         """
         Evaluates the performance of this model on specified dataset.
-        This function uses `Evaluator` under the hood to perform model
-        evaluation. As a result, it inherits the same limitations of
-        `Evaluator`. Namely, that only regression and classification
-        models can be evaluated in this fashion. For generator models, you
-        will need to overwrite this method to perform a custom evaluation.
-        Keyword arguments specified here will be passed to
-        `Evaluator.compute_model_performance`.
+
         Parameters
         ----------
         dataset: Dataset
-        Dataset object.
-        metrics: Metric / List[Metric] / function
-        The set of metrics provided. This class attempts to do some
-        intelligent handling of input. If a single `dc.metrics.Metric`
-        object is provided or a list is provided, it will evaluate
-        `self.model` on these metrics. If a function is provided, it is
-        assumed to be a metric function that this method will attempt to
-        wrap in a `dc.metrics.Metric` object. A metric function must
-        accept two arguments, `y_true, y_pred` both of which are
-        `np.ndarray` objects and return a floating point score. The
-        metric function may also accept a keyword argument
-        `sample_weight` to account for per-sample weights.
-        transformers: List[Transformer]
-        List of `dc.trans.Transformer` objects. These transformations
-        must have been applied to `dataset` previously. The dataset will
-        be untransformed for metric evaluation.
+            Dataset object.
+        metrics: Metric / List[Metric]
+            The set of metrics provided.
         per_task_metrics: bool, optional (default False)
-        If true, return computed metric for each task on multitask dataset.
+            If true, return computed metric for each task on multitask dataset.
         n_classes: int, optional (default None)
-        If specified, will use `n_classes` as the number of unique classes
-        in `self.dataset`. Note that this argument will be ignored for
-        regression metrics.
+            If specified, will use `n_classes` as the number of unique classes.
+
         Returns
         -------
         multitask_scores: dict
-        Dictionary mapping names of metrics to metric scores.
+            Dictionary mapping names of metrics to metric scores.
         all_task_scores: dict, optional
-        If `per_task_metrics == True` is passed as a keyword argument,
-        then returns a second dictionary of scores for each task
-        separately.
+            If `per_task_metrics == True` is passed as a keyword argument,
+            then returns a second dictionary of scores for each task
+            separately.
         """
         evaluator = Evaluator(self, dataset)
 

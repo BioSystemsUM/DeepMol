@@ -318,6 +318,12 @@ class NumpyDataset(Dataset):
         print("TIMING: dataset construction took %0.3f s" % (time2 - time1))
         return NumpyDataset(data_dir)
 
+    def get_task_names(self) -> np.ndarray:
+        """Get the names of the tasks associated with this dataset."""
+        if len(self.y.shape) < 2:
+            return np.array([0])
+        return np.arange(self.y.shape[1])
+
     def _construct_metadata(metadata_entries: List) -> pd.DataFrame:
         """Construct a dataframe containing metadata.
         Parameters

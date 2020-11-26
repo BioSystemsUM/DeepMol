@@ -156,7 +156,6 @@ PubChem CID;ChEMBL ID;IUPAC Name;Alternative Name;Molecular Formula;InchiKey;Smi
 0;-;-;-;-;-;ON=CC1=CCCCCC1;0;
 0;-;-;-;-;-;ON=CC1=CCC(CC1)C(Cl)(C)C;0;
 0;-;-;-;-;-;COc1cc2CCOC(c2cc1O)COc1ccccc1;0;
-0;-;-;-;-;-;ICCCC[N](CC(=O)Nc1c(C)cccc1C)(C)C;0;
 0;-;-;-;-;-;CC[N](Cc1ccc(cc1)Cl)(CC(=O)Nc1c(C)cccc1C)CC;0;
 0;-;-;-;-;-;COC(=O)C1C(C)(C)CCC2C1(COC(=O)C)C1C(O)CC3CC1(C(=O)O2)C(=O)C3C;0;
 0;-;-;-;-;-;CC(=O)OCC12C(CCC(C2C(=O)O)(C)C)OC(=O)C23C1C(O)CC(C2)C(C3=O)C;0;
@@ -301,6 +300,7 @@ PubChem CID;ChEMBL ID;IUPAC Name;Alternative Name;Molecular Formula;InchiKey;Smi
 0;-;-;-;-;-;OCC1OC(OC(C(O)(C)C)CCC(C2CCC3(C2(C)CC(O)C2(C3CC=C3C2CCC(C3(C)C)OC2OC(COC3OC(CO)C(C(C3O)O)O)C(C(C2O)O)O)C)C)C)C(C(C1O)O)OC1OC(O)C(C(C1CO)O)O;1;
 0;-;-;-;-;-;OCC1OC(OC23CCC4C(C2)(CC3=C)CCC2C4(C)CCCC2C(=O)OC2OC(CO)C(C(C2O)O)O)C(C(C1O)OC1OC(CO)C(C(C1O)O)O)OC1OCC(C(C1O)O)O;1;
 0;-;-;-;-;-;COc1ccc2c(c1)OC1(C2c2ccccc2OC1)O;1;
+0;-;-;-;-;-;ICCCC[N](CC(=O)Nc1c(C)cccc1C)(C)C;0;
 0;-;-;-;-;-;CC1(C2CCC3(C(C2(CCC1OC4C(C(C(C(O4)C(=O)[O-])O)O)OC5C(C(C(C(O5)CO)O)O)O)C)C(=O)C=C6C3(CCC7(C6CC(CC7)(C)C(=O)O)C)C)C)C.[K+];1;
 0;-;-;-;-;-;CCOC(=O)CC(C(=O)OC)NC(=O)C(CC(=O)O)N;1;
 0;-;-;-;-;-;[KH].O1[C@H](OC2CC[C@@]3([C@H]4[C@@](CC[C@H]3C2(C)C)(C)[C@@]2(CC[C@@]3([C@H](C2=CC4=O)C[C@@](CC3)(C(O)=O)C)C)C)C)C(O[C@H]2OC(C(O)=O)C(O)C(O)C2O)C(O)C(O)C1C(O);1;

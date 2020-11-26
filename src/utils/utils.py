@@ -92,7 +92,6 @@ def normalize_labels_shape(y_pred):
     """
     labels = []
     for i in y_pred:
-        print('########## ', i)
         if i[0] > i[1]:
             labels.append(0)
         else:

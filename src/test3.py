@@ -1,4 +1,4 @@
-from compoundFeaturization.rdkitFingerprints import MorganFingerprint
+from compoundFeaturization.rdkitFingerprints import MorganFingerprint, MACCSkeysFingerprint
 from Dataset.Dataset import CSVLoader
 from featureSelection.baseFeatureSelector import LowVarianceFS
 from splitters.splitters import RandomSplitter
@@ -10,13 +10,17 @@ from parameterOptimization.HyperparameterOpt import GridHyperparamOpt
 
 #TODO: try with chunks
 
-ds = CSVLoader('preprocessed_dataset.csv', 'Smiles', ['Class'], 'PubChem CID')#, chunk_size=55)
+#TODO: solve problem with chunk size 51 --> 52
+ds = CSVLoader('preprocessed_dataset.csv', 'Smiles', ['Class'], 'PubChem CID', chunk_size=51)
+
 ds = MorganFingerprint().featurize(ds)
+#ds = MACCSkeysFingerprint().featurize(ds)
 
 #print(ds.X)
 #print(ds.y)
 #print(ds.features)
 #print(ds.get_shape())
+
 
 ds = LowVarianceFS(0.15).featureSelection(ds)
 

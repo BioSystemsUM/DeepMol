@@ -221,4 +221,5 @@ class Metric(object):
             #deal with different shapes of the otput of predict and predict_proba
             y_pred_mod = normalize_labels_shape(y_pred)
             metric_value = self.metric(y_true, y_pred_mod, **kwargs)
+        #TODO: if few data examples and when splitting there is only one class in a set the returned error is not clear
         return metric_value

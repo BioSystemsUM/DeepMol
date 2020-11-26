@@ -18,7 +18,7 @@ class Splitter(object):
     def k_fold_split(self,
                      dataset: Dataset,
                      k: int,
-                     **kwargs) -> List[Tuple[Dataset, Dataset], Tuple[Dataset, Dataset], ...]:
+                     **kwargs) -> List[Tuple[Dataset, Dataset]]:
         """
         Parameters
         ----------

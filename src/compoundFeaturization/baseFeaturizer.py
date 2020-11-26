@@ -62,6 +62,7 @@ class MolecularFeaturizer(object):
 
         dataset.features = np.asarray(features)
 
+        #TODO: where and in which manner to remove NAs????
         dataset.removeNAs()
         return dataset
 

@@ -1,5 +1,6 @@
 from compoundFeaturization.baseFeaturizer import MolecularFeaturizer
-from rdkit.Chem import rdMolDescriptors
+from rdkit.Chem import rdMolDescriptors, MACCSkeys
+from rdkit import Chem
 from rdkit.Chem.Fingerprints import FingerprintMols
 import numpy as np
 from typing import Any
@@ -58,7 +59,34 @@ class MorganFingerprint(MolecularFeaturizer):
                                                                 useBondTypes=self.bonds,
                                                                 useFeatures=self.features)
         except Exception as e:
-            #print(e)
+            print('error in smile: ' + str(mol))
+            fp = np.nan
+        fp = np.asarray(fp, dtype=np.float)
+
+        return fp
+
+
+class MACCSkeysFingerprint(MolecularFeaturizer):
+    """MACCS Keys.
+    SMARTS-based implementation of the 166 public MACCS keys.
+    """
+
+
+    def _featurize(self, mol: Any) -> np.ndarray:
+        """Calculate MACCSkeys for a single molecule.
+        Parameters
+        ----------
+        mol: rdkit.Chem.rdchem.Mol
+          RDKit Mol object
+        Returns
+        -------
+        np.ndarray
+          A numpy array of MACCSkeys.
+        """
+
+        try :
+            fp = MACCSkeys.GenMACCSKeys(mol)
+        except Exception as e:
             print('error in smile: ' + str(mol))
             fp = np.nan
         fp = np.asarray(fp, dtype=np.float)

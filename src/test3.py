@@ -2,7 +2,7 @@ from compoundFeaturization.rdkitFingerprints import MorganFingerprint, MACCSkeys
 from compoundFeaturization.rdkitFingerprints import RDKFingerprint, AtomPairFingerprint
 from compoundFeaturization.mol2vec import Mol2Vec
 from Dataset.Dataset import CSVLoader
-from featureSelection.baseFeatureSelector import LowVarianceFS
+from featureSelection.baseFeatureSelector import LowVarianceFS, KbestFS
 from splitters.splitters import RandomSplitter
 from models.sklearnModels import SklearnModel
 from metrics.Metrics import Metric
@@ -12,14 +12,14 @@ from parameterOptimization.HyperparameterOpt import GridHyperparamOpt
 
 #TODO: try with chunks
 
-ds = CSVLoader('preprocessed_dataset.csv', 'Smiles', ['Class'], 'PubChem CID', chunk_size=55)
+ds = CSVLoader('preprocessed_dataset.csv', 'Smiles', ['Class'], 'PubChem CID', chunk_size=1000)
 
-#ds = MorganFingerprint().featurize(ds)
+ds = MorganFingerprint().featurize(ds)
 #ds = MACCSkeysFingerprint().featurize(ds)
 #ds = LayeredFingerprint().featurize(ds)
 #ds = RDKFingerprint().featurize(ds)
 #ds = AtomPairFingerprint().featurize(ds)
-ds = Mol2Vec().featurize(ds)
+#ds = Mol2Vec().featurize(ds)
 
 #print(ds.X)
 #print(ds.y)
@@ -29,7 +29,8 @@ ds = Mol2Vec().featurize(ds)
 print('-----------------------------------------------------')
 print(ds.get_shape())
 
-ds = LowVarianceFS(0.15).featureSelection(ds)
+#ds = LowVarianceFS(0.15).featureSelection(ds)
+ds = KbestFS().featureSelection(ds)
 
 print(ds.get_shape())
 

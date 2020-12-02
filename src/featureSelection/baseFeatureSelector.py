@@ -1,5 +1,5 @@
 from Dataset import Dataset
-from sklearn.feature_selection import VarianceThreshold
+from sklearn.feature_selection import VarianceThreshold, SelectKBest, chi2
 import pandas as pd
 import numpy as np
 
@@ -18,6 +18,8 @@ class BaseFeatureSelector(object):
             raise Exception('Abstract class BaseFeatureSelector should not be instantiated')
 
         self.features2keep = None
+        self.features = None
+        self.y = None
 
     def featureSelection(self, dataset: Dataset):
         """Perform feature selection for the molecules present in the dataset.
@@ -32,9 +34,12 @@ class BaseFeatureSelector(object):
           Dataset containing the selected features and indexes of the
           features kept as 'self.features2keep'
         """
-        features = dataset.features
+        self.features_fs = dataset.features
 
-        features, self.features2keep = self._featureSelector(np.stack(features, axis=0))
+        self.y_fs = dataset.y
+
+        #features, self.features2keep = self._featureSelector(np.stack(self.features_fs, axis=0))
+        features, self.features2keep = self._featureSelector()
 
         dataset.features = np.asarray(features)
 
@@ -59,9 +64,35 @@ class LowVarianceFS(BaseFeatureSelector):
 
         self.param = threshold
 
-    def _featureSelector(self, features):
+    def _featureSelector(self):
         """Returns features and indexes of features to keep."""
+        fs = np.stack(self.features_fs, axis=0)
         vt = VarianceThreshold(threshold=self.param)
-        tr = vt.fit_transform(features)
+        tr = vt.fit_transform(fs)
         return tr, vt.get_support(indices=True)
+
+
+class KbestFS(BaseFeatureSelector):
+    """Class for K best feature selection.
+
+    Select features according to the k highest scores..
+    """
+
+    def __init__(self, k: int = 10, score_func: callable = chi2):
+        """Initialize this Feature Selector
+        Parameters
+        ----------
+        threshold: int
+            Features with a training-set variance lower than this threshold will be removed.
+        """
+
+        self.k = k
+        self.score_func = score_func
+
+    def _featureSelector(self):
+        """Returns features and indexes of features to keep."""
+        fs = np.stack(self.features_fs, axis=0)
+        kb = SelectKBest(self.score_func, k=self.k)
+        X_new = kb.fit_transform(fs, self.y_fs)
+        return X_new, kb.get_support(indices=True)
 

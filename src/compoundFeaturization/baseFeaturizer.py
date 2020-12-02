@@ -59,12 +59,9 @@ class MolecularFeaturizer(object):
                 print("Failed to featurize datapoint %d, %s. Appending empty array" %(i, mol))
                 print("Exception message: {}".format(e))
                 #features.append(np.array([]))
-
         dataset.features = np.asarray(features)
 
         #TODO: where and in which manner to remove NAs????
         dataset.removeNAs()
+
         return dataset
-
-
-

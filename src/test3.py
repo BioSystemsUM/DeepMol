@@ -1,4 +1,6 @@
-from compoundFeaturization.rdkitFingerprints import MorganFingerprint, MACCSkeysFingerprint, LayeredFingerprint, RDKFingerprint, AtomPairFingerprint
+from compoundFeaturization.rdkitFingerprints import MorganFingerprint, MACCSkeysFingerprint, LayeredFingerprint
+from compoundFeaturization.rdkitFingerprints import RDKFingerprint, AtomPairFingerprint
+from compoundFeaturization.mol2vec import Mol2Vec
 from Dataset.Dataset import CSVLoader
 from featureSelection.baseFeatureSelector import LowVarianceFS
 from splitters.splitters import RandomSplitter
@@ -10,19 +12,22 @@ from parameterOptimization.HyperparameterOpt import GridHyperparamOpt
 
 #TODO: try with chunks
 
-ds = CSVLoader('preprocessed_dataset.csv', 'Smiles', ['Class'], 'PubChem CID', chunk_size=1000)
+ds = CSVLoader('preprocessed_dataset.csv', 'Smiles', ['Class'], 'PubChem CID', chunk_size=55)
 
 #ds = MorganFingerprint().featurize(ds)
 #ds = MACCSkeysFingerprint().featurize(ds)
 #ds = LayeredFingerprint().featurize(ds)
 #ds = RDKFingerprint().featurize(ds)
-ds = AtomPairFingerprint().featurize(ds)
+#ds = AtomPairFingerprint().featurize(ds)
+ds = Mol2Vec().featurize(ds)
 
 #print(ds.X)
 #print(ds.y)
 #print(ds.features)
 #print(ds.get_shape())
 
+print('-----------------------------------------------------')
+print(ds.get_shape())
 
 ds = LowVarianceFS(0.15).featureSelection(ds)
 

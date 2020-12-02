@@ -603,9 +603,10 @@ class CSVLoader(Dataset):
             if len(i.shape)==0:
                 indexes.append(j)
             j+=1
-        print('Elements with indexes: ', indexes, ' were removed due to the presence of NAs!')
-        print('The elements in question are: ', self.X[indexes])
-        self.removeElements(indexes)
+        if len(indexes) > 0:
+            print('Elements with indexes: ', indexes, ' were removed due to the presence of NAs!')
+            print('The elements in question are: ', self.X[indexes])
+            self.removeElements(indexes)
 
     def _get_dataset(self, dataset_path, keep_fields=None, chunk_size=None):
         """Loads data with size chunk_size.

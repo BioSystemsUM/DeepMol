@@ -2,7 +2,7 @@ from compoundFeaturization.rdkitFingerprints import MorganFingerprint, MACCSkeys
 from compoundFeaturization.rdkitFingerprints import RDKFingerprint, AtomPairFingerprint
 from compoundFeaturization.mol2vec import Mol2Vec
 from Dataset.Dataset import CSVLoader
-from featureSelection.baseFeatureSelector import LowVarianceFS, KbestFS
+from featureSelection.baseFeatureSelector import LowVarianceFS, KbestFS, PercentilFS
 from splitters.splitters import RandomSplitter
 from models.sklearnModels import SklearnModel
 from metrics.Metrics import Metric
@@ -30,7 +30,8 @@ print('-----------------------------------------------------')
 print(ds.get_shape())
 
 #ds = LowVarianceFS(0.15).featureSelection(ds)
-ds = KbestFS().featureSelection(ds)
+#ds = KbestFS().featureSelection(ds)
+ds = PercentilFS().featureSelection(ds)
 
 print(ds.get_shape())
 

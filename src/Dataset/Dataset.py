@@ -450,6 +450,30 @@ class NumpyDataset(Dataset):
             data_dir=data_dir, tasks=tasks)
 
 
+    def removeElements(self, indexes):
+        """Remove elements with specific indexes from the dataset
+            Very useful when doing feature selection or to remove NAs.
+        """
+        self.X = np.delete(self.X, indexes)
+        self.y = np.delete(self.y, indexes)
+        self.ids = np.delete(self.ids, indexes)
+        self.features = np.delete(self.features, indexes)
+
+
+    def removeNAs(self):
+        """Remove samples with NAs from the Dataset"""
+        j = 0
+        indexes = []
+        for i in self.features:
+            if len(i.shape)==0:
+                indexes.append(j)
+            j+=1
+        if len(indexes) > 0:
+            print('Elements with indexes: ', indexes, ' were removed due to the presence of NAs!')
+            print('The elements in question are: ', self.X[indexes])
+            self.removeElements(indexes)
+
+
 
 class CSVLoader(Dataset):
     """A Dataset loaded directly from a CSV.
@@ -513,9 +537,11 @@ class CSVLoader(Dataset):
                 columns.append(field)
             if user_features is None:
                 self.dataset = self._get_dataset(dataset_path, keep_fields=columns, chunk_size = self.chunk_size)
+                self.features = np.empty(0)
             else:
                 columns = columns + user_features
                 self.dataset = self._get_dataset(dataset_path, keep_fields=columns, chunk_size = self.chunk_size)
+                self.features = self.dataset[user_features]
 
         self.X = self.dataset[input_field]
 
@@ -559,6 +585,7 @@ class CSVLoader(Dataset):
         """Get the shape of the dataset.
         Returns four tuples, giving the shape of the X, y, features, and ids arrays.
         """
+        print(self.X.shape, self.y.shape, self.features.shape, self.ids.shape)
         return self.X.shape, self.y.shape, self.features.shape, self.ids.shape
 
     def get_task_names(self):
@@ -594,7 +621,7 @@ class CSVLoader(Dataset):
         self.ids = np.delete(self.ids, indexes)
         self.features = np.delete(self.features, indexes)
 
-    #TODO: implemtent this method also in the other subclasses
+
     def removeNAs(self):
         """Remove samples with NAs from the Dataset"""
         j = 0

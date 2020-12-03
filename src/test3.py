@@ -1,18 +1,22 @@
 from compoundFeaturization.rdkitFingerprints import MorganFingerprint, MACCSkeysFingerprint, LayeredFingerprint
 from compoundFeaturization.rdkitFingerprints import RDKFingerprint, AtomPairFingerprint
 from compoundFeaturization.mol2vec import Mol2Vec
-from Dataset.Dataset import CSVLoader
+from Dataset.Dataset import CSVLoader, NumpyDataset
 from featureSelection.baseFeatureSelector import LowVarianceFS, KbestFS, PercentilFS, RFECVFS, SelectFromModelFS
 from splitters.splitters import RandomSplitter
 from models.sklearnModels import SklearnModel
 from metrics.Metrics import Metric
 from metrics.metricsFunctions import roc_auc_score, precision_score
 from parameterOptimization.HyperparameterOpt import GridHyperparamOpt
+import preprocessing as preproc
 
+#pp_ds, path = preproc.preprocess(path='data/dataset_last_version2.csv', smiles_header='Smiles', sep=';', header=0, n=None)
 
-#TODO: try with chunks
+#ds = NumpyDataset(X=pp_ds.Standardized_Smiles, y=pp_ds.Class)
 
-ds = CSVLoader('preprocessed_dataset.csv', 'Smiles', ['Class'], 'PubChem CID', chunk_size=1000)
+ds = CSVLoader('preprocessed_dataset.csv', 'Smiles', ['Class'], 'PubChem CID')#, chunk_size=1000)
+
+ds.get_shape()
 
 ds = MorganFingerprint().featurize(ds)
 #ds = MACCSkeysFingerprint().featurize(ds)
@@ -27,7 +31,7 @@ ds = MorganFingerprint().featurize(ds)
 #print(ds.get_shape())
 
 print('-----------------------------------------------------')
-print(ds.get_shape())
+ds.get_shape()
 
 ds = LowVarianceFS(0.15).featureSelection(ds)
 #ds = KbestFS().featureSelection(ds)
@@ -35,7 +39,7 @@ ds = LowVarianceFS(0.15).featureSelection(ds)
 #ds = RFECVFS().featureSelection(ds)
 #ds = SelectFromModelFS().featureSelection(ds)
 
-print(ds.get_shape())
+ds.get_shape()
 
 splitter = RandomSplitter()
 
@@ -62,7 +66,7 @@ from sklearn.svm import SVC
 rf = RandomForestClassifier()
 svm = SVC()
 
-model = SklearnModel(model=svm)
+model = SklearnModel(model=rf)
 
 #print(model.cross_validate(ds, Metric(roc_auc_score)))
 
@@ -74,7 +78,6 @@ valid_preds = model.predict(valid_dataset)
 test_preds = model.predict(test_dataset)
 
 
-#TODO: Chech the problem with the metrics
 metrics = [Metric(roc_auc_score), Metric(precision_score)]
 # evaluate the model
 #print('Training Dataset: ')

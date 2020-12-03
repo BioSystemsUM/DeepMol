@@ -10,6 +10,7 @@ import tempfile
 from functools import reduce
 from operator import mul
 import itertools
+import random
 
 
 def _convert_hyperparam_dict_to_filename(hyper_params: Dict[str, Any]) -> str:
@@ -107,6 +108,7 @@ class GridHyperparamOpt(HyperparamOpt):
                           train_dataset: Dataset,
                           valid_dataset: Dataset,
                           metric: Metric,
+                          n_iter_search: int = 15,
                           use_max: bool = True,
                           logdir: Optional[str] = None,
                           **kwargs):
@@ -124,6 +126,8 @@ class GridHyperparamOpt(HyperparamOpt):
           dataset used for validation(optimization on valid scores)
         metric: Metric
           metric used for evaluation
+        n_iter_search: int or None, optional
+            Number of random combinations of parameters to test, if None performs complete grid search
         use_max: bool, optional
           If True, return the model with the highest score.
         logdir: str, optional
@@ -133,6 +137,7 @@ class GridHyperparamOpt(HyperparamOpt):
         -------
         Tuple[`best_model`, `best_hyperparams`, `all_scores`]
         """
+
         hyperparams = params_dict.keys()
         hyperparam_vals = params_dict.values()
         for hyperparam_list in params_dict.values():
@@ -145,56 +150,67 @@ class GridHyperparamOpt(HyperparamOpt):
         else:
             best_validation_score = np.inf
 
+        # To make sure that the number of iterations is lower or equal to the number of max hypaparameter combinations
+        len_params = sum(1 for x in itertools.product(*params_dict.values()))
+        if n_iter_search is None or len_params < n_iter_search:
+                n_iter_search = len_params
+        print(len_params, n_iter_search)
+        random_inds = random.sample(range(0, len_params), k=n_iter_search)
+        print('??????????????????????', random_inds)
         best_hyperparams = None
         best_model, best_model_dir = None, None
         all_scores = {}
+        j = 0
+        print("Fitting %d random models from a space of %d possible models." % (len(random_inds), number_combinations))
         for ind, hyperparameter_tuple in enumerate(itertools.product(*hyperparam_vals)):
-            model_params = {}
-            print("Fitting model %d/%d" % (ind + 1, number_combinations))
-            hyper_params = dict(zip(hyperparams, hyperparameter_tuple))
-            for hyperparam, hyperparam_val in zip(hyperparams, hyperparameter_tuple):
-                model_params[hyperparam] = hyperparam_val
-            print("hyperparameters: %s" % str(model_params))
+            if ind in random_inds:
+                j+=1
+                model_params = {}
+                print("Fitting model %d/%d" % (j, len(random_inds)))
+                hyper_params = dict(zip(hyperparams, hyperparameter_tuple))
+                for hyperparam, hyperparam_val in zip(hyperparams, hyperparameter_tuple):
+                    model_params[hyperparam] = hyperparam_val
+                print("hyperparameters: %s" % str(model_params))
 
-            if logdir is not None:
-                model_dir = os.path.join(logdir, str(ind))
-                print("model_dir is %s" % model_dir)
+                if logdir is not None:
+                    model_dir = os.path.join(logdir, str(ind))
+                    print("model_dir is %s" % model_dir)
+                    try:
+                        os.makedirs(model_dir)
+                    except OSError:
+                        if not os.path.isdir(model_dir):
+                            print("Error creating model_dir, using tempfile directory")
+                            model_dir = tempfile.mkdtemp()
+                else:
+                    model_dir = tempfile.mkdtemp()
+
+                model_params['model_dir'] = model_dir
+                model = self.model_builder(**model_params)
+                model.fit(train_dataset)
                 try:
-                    os.makedirs(model_dir)
-                except OSError:
-                    if not os.path.isdir(model_dir):
-                        print("Error creating model_dir, using tempfile directory")
-                        model_dir = tempfile.mkdtemp()
-            else:
-                model_dir = tempfile.mkdtemp()
+                    model.save()
+                except NotImplementedError:
+                    pass
 
-            model_params['model_dir'] = model_dir
-            model = self.model_builder(**model_params)
-            model.fit(train_dataset)
-            try:
-                model.save()
-            except NotImplementedError:
-                pass
+                multitask_scores = model.evaluate(valid_dataset, [metric])
+                valid_score = multitask_scores[metric.name]
+                hp_str = _convert_hyperparam_dict_to_filename(hyper_params)
+                all_scores[hp_str] = valid_score
 
-            multitask_scores = model.evaluate(valid_dataset, [metric])
-            valid_score = multitask_scores[metric.name]
-            hp_str = _convert_hyperparam_dict_to_filename(hyper_params)
-            all_scores[hp_str] = valid_score
+                if (use_max and valid_score >= best_validation_score) or (
+                        not use_max and valid_score <= best_validation_score):
+                    best_validation_score = valid_score
+                    best_hyperparams = hyperparameter_tuple
+                    if best_model_dir is not None:
+                        shutil.rmtree(best_model_dir)
+                    best_model_dir = model_dir
+                    best_model = model
+                else:
+                    shutil.rmtree(model_dir)
 
-            if (use_max and valid_score >= best_validation_score) or (
-                    not use_max and valid_score <= best_validation_score):
-                best_validation_score = valid_score
-                best_hyperparams = hyperparameter_tuple
-                if best_model_dir is not None:
-                    shutil.rmtree(best_model_dir)
-                best_model_dir = model_dir
-                best_model = model
-            else:
-                shutil.rmtree(model_dir)
-
-            print("Model %d/%d, Metric %s, Validation set %s: %f" % (
-            ind + 1, number_combinations, metric.name, ind, valid_score))
-            print("\tbest_validation_score so far: %f" % best_validation_score)
+                print("Model %d/%d, Metric %s, Validation set %s: %f" % (
+                j, len(random_inds), metric.name, j, valid_score))
+                print("\tbest_validation_score so far: %f" % best_validation_score)
 
         if best_model is None:
             print("No models trained correctly.")

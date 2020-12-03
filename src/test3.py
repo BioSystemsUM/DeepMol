@@ -11,10 +11,20 @@ from parameterOptimization.HyperparameterOpt import GridHyperparamOpt
 import preprocessing as preproc
 
 #pp_ds, path = preproc.preprocess(path='data/dataset_last_version2.csv', smiles_header='Smiles', sep=';', header=0, n=None)
+#pp_ds, path = preproc.preprocess(path='data/datset_wFooDB.csv',
+#                                 smiles_header='SMILES',
+#                                 class_header='sweet',
+#                                 ids_header='compound id',
+#                                 sep='\t',
+#                                 header=0,
+#                                 n=None,
+#                                 save_path='preprocessed_dataset_wfoodb.csv')
 
 #ds = NumpyDataset(X=pp_ds.Standardized_Smiles, y=pp_ds.Class)
 
-ds = CSVLoader('preprocessed_dataset.csv', 'Smiles', ['Class'], 'PubChem CID')#, chunk_size=1000)
+#ds = CSVLoader('preprocessed_dataset.csv', 'Smiles', ['Class'], 'PubChem CID')#, chunk_size=1000)
+
+ds = CSVLoader('preprocessed_dataset_wfoodb.csv', 'Smiles', ['Class'], 'ID')#, chunk_size=1000)
 
 ds.get_shape()
 
@@ -104,15 +114,17 @@ params_dict_svm = {'C': [1.0, 0.7, 0.5, 0.3, 0.1],
                'kernel': ["linear", "rbf"]
               }
 
-optimizer = GridHyperparamOpt(svm_model_builder)
+optimizer = GridHyperparamOpt(rf_model_builder)
 
-best_svm, best_hyperparams, all_results = optimizer.hyperparam_search(params_dict_svm, train_dataset, valid_dataset, Metric(precision_score))
+best_rf, best_hyperparams, all_results = optimizer.hyperparam_search(params_dict_rf, train_dataset, valid_dataset, Metric(precision_score))
 
 print('#################')
 print(best_hyperparams)
-print(best_svm)
+print(best_rf)
 
 #print(best_rf.predict(test_dataset))
 print('@@@@@@@@@@@@@@@@')
-print(best_svm.evaluate(test_dataset, metrics))
+print(best_rf.evaluate(test_dataset, metrics))
+
+print(best_rf.predict(test_dataset))
 

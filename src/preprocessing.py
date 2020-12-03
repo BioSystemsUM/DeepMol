@@ -43,9 +43,25 @@ def same_mol(m1, m2):
     return m1==m2
 
 
-def preprocess(path, smiles_header, sep=',', header=0, n=None, save=True, save_path='preprocessed_dataset.csv'):
+def preprocess(path,
+               smiles_header,
+               class_header=None,
+               ids_header=None,
+               sep=',',
+               header=0,
+               n=None,
+               save=True,
+               save_path='preprocessed_dataset.csv'):
 
     dataset = pd.read_csv(path, sep=sep, header=header)
+
+    dataset.rename(columns={smiles_header: 'Smiles'}, inplace=True)
+
+    if class_header is not None:
+        dataset.rename(columns={class_header: 'Class'}, inplace=True)
+
+    if ids_header is not None:
+        dataset.rename(columns={ids_header: 'ID'}, inplace=True)
 
     if n is not None:
         dataset = dataset.sample(n=n)

@@ -2,7 +2,7 @@ from compoundFeaturization.rdkitFingerprints import MorganFingerprint, MACCSkeys
 from compoundFeaturization.rdkitFingerprints import RDKFingerprint, AtomPairFingerprint
 from compoundFeaturization.mol2vec import Mol2Vec
 from Dataset.Dataset import CSVLoader
-from featureSelection.baseFeatureSelector import LowVarianceFS, KbestFS, PercentilFS
+from featureSelection.baseFeatureSelector import LowVarianceFS, KbestFS, PercentilFS, RFECVFS, SelectFromModelFS
 from splitters.splitters import RandomSplitter
 from models.sklearnModels import SklearnModel
 from metrics.Metrics import Metric
@@ -29,9 +29,11 @@ ds = MorganFingerprint().featurize(ds)
 print('-----------------------------------------------------')
 print(ds.get_shape())
 
-#ds = LowVarianceFS(0.15).featureSelection(ds)
+ds = LowVarianceFS(0.15).featureSelection(ds)
 #ds = KbestFS().featureSelection(ds)
-ds = PercentilFS().featureSelection(ds)
+#ds = PercentilFS().featureSelection(ds)
+#ds = RFECVFS().featureSelection(ds)
+#ds = SelectFromModelFS().featureSelection(ds)
 
 print(ds.get_shape())
 
@@ -94,7 +96,7 @@ def svm_model_builder(C, gamma, kernel, model_dir=None):
     svm_model = SVC(C=C, gamma=gamma, kernel=kernel)
     return SklearnModel(svm_model, model_dir)
 
-params_dict_svm = {'C': [1.0, 0.7],
+params_dict_svm = {'C': [1.0, 0.7, 0.5, 0.3, 0.1],
                'gamma': ["scale", "auto"],
                'kernel': ["linear", "rbf"]
               }

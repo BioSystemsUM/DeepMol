@@ -1,5 +1,5 @@
 from Dataset import Dataset
-from sklearn.feature_selection import VarianceThreshold, SelectKBest, chi2
+from sklearn.feature_selection import VarianceThreshold, SelectKBest, chi2, SelectPercentile
 import pandas as pd
 import numpy as np
 
@@ -75,15 +75,18 @@ class LowVarianceFS(BaseFeatureSelector):
 class KbestFS(BaseFeatureSelector):
     """Class for K best feature selection.
 
-    Select features according to the k highest scores..
+    Select features according to the k highest scores.
     """
 
     def __init__(self, k: int = 10, score_func: callable = chi2):
         """Initialize this Feature Selector
         Parameters
         ----------
-        threshold: int
-            Features with a training-set variance lower than this threshold will be removed.
+        k: int
+            Number of top features to select.
+        score_func: callable
+            Function taking two arrays X and y, and returning a pair of arrays (scores, pvalues)
+            or a single array with scores.
         """
 
         self.k = k
@@ -95,4 +98,32 @@ class KbestFS(BaseFeatureSelector):
         kb = SelectKBest(self.score_func, k=self.k)
         X_new = kb.fit_transform(fs, self.y_fs)
         return X_new, kb.get_support(indices=True)
+
+
+class PercentilFS(BaseFeatureSelector):
+    """Class for percentil feature selection.
+
+    Select features according to a percentile of the highest scores.
+    """
+
+    def __init__(self, percentil: int = 10, score_func: callable = chi2):
+        """Initialize this Feature Selector
+        Parameters
+        ----------
+        percentil: int
+            Percent of features to keep.
+        score_func: callable
+            Function taking two arrays X and y, and returning a pair of arrays (scores, pvalues)
+            or a single array with scores.
+        """
+
+        self.percentil = percentil
+        self.score_func = score_func
+
+    def _featureSelector(self):
+        """Returns features and indexes of features to keep."""
+        fs = np.stack(self.features_fs, axis=0)
+        sp = SelectPercentile(self.score_func, percentile=self.percentil)
+        X_new = sp.fit_transform(fs, self.y_fs)
+        return X_new, sp.get_support(indices=True)
 

@@ -128,6 +128,7 @@ class PercentilFS(BaseFeatureSelector):
         X_new = sp.fit_transform(fs, self.y_fs)
         return X_new, sp.get_support(indices=True)
 
+#TODO: takes too long to run, check if its normal or a code problem
 class RFECVFS(BaseFeatureSelector):
     """Class for RFECV feature selection.
 

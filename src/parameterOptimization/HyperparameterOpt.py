@@ -153,10 +153,8 @@ class GridHyperparamOpt(HyperparamOpt):
         # To make sure that the number of iterations is lower or equal to the number of max hypaparameter combinations
         len_params = sum(1 for x in itertools.product(*params_dict.values()))
         if n_iter_search is None or len_params < n_iter_search:
-                n_iter_search = len_params
-        print(len_params, n_iter_search)
+            n_iter_search = len_params
         random_inds = random.sample(range(0, len_params), k=n_iter_search)
-        print('??????????????????????', random_inds)
         best_hyperparams = None
         best_model, best_model_dir = None, None
         all_scores = {}

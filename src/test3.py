@@ -6,7 +6,7 @@ from featureSelection.baseFeatureSelector import LowVarianceFS, KbestFS, Percent
 from splitters.splitters import RandomSplitter
 from models.sklearnModels import SklearnModel
 from metrics.Metrics import Metric
-from metrics.metricsFunctions import roc_auc_score, precision_score
+from metrics.metricsFunctions import roc_auc_score, precision_score, accuracy_score
 from parameterOptimization.HyperparameterOpt import GridHyperparamOpt
 import preprocessing as preproc
 
@@ -88,7 +88,7 @@ valid_preds = model.predict(valid_dataset)
 test_preds = model.predict(test_dataset)
 
 
-metrics = [Metric(roc_auc_score), Metric(precision_score)]
+metrics = [Metric(roc_auc_score), Metric(precision_score), Metric(accuracy_score)]
 # evaluate the model
 #print('Training Dataset: ')
 train_score = model.evaluate(train_dataset, metrics)

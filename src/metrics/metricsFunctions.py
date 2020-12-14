@@ -29,5 +29,5 @@ from sklearn.metrics import mean_squared_error
 from sklearn.metrics import mean_squared_log_error
 from sklearn.metrics import median_absolute_error
 from sklearn.metrics import r2_score
-from sklearn.metrics import mean_poissom_deviance
+from sklearn.metrics import mean_poisson_deviance
 from sklearn.metrics import mean_gamma_deviance

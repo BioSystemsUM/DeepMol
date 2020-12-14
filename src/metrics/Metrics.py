@@ -186,6 +186,7 @@ class Metric(object):
         else:
             return self.task_averager(computed_metrics), computed_metrics
 
+    # TODO: implement to multitask
     def compute_singletask_metric(self,
                                   y_true: np.ndarray,
                                   y_pred: np.ndarray,

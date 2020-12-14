@@ -11,8 +11,7 @@ from sklearn.base import BaseEstimator
 
 
 class Model(BaseEstimator):
-    """
-    Abstract base class for ML/DL models.
+    """Abstract base class for ML/DL models.
     """
 
     def __init__(self, model=None, model_dir: Optional[str]= None,  **kwargs) -> None:

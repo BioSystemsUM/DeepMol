@@ -5,7 +5,7 @@ from typing import Optional, Union, Tuple, Dict, List
 Score = Dict[str, float]
 
 from Dataset.Dataset import Dataset
-from splitters.splitters import  RandomSplitter
+from splitters.splitters import RandomSplitter
 from metrics.Metrics import Metric
 
 
@@ -100,7 +100,7 @@ class Evaluator(object):
             for mol_id, y_pred in zip(data_ids, y_preds):
                 csvwriter.writerow([mol_id] + list(y_pred))
 
-    #TODO: Works with singletask, check for multitask
+    # TODO: Works with singletask, check for multitask
     def compute_model_performance(self,
                                   metrics: Metric,
                                   per_task_metrics: bool = False,

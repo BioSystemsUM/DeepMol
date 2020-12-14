@@ -9,6 +9,7 @@ from metrics.Metrics import Metric
 from metrics.metricsFunctions import roc_auc_score, precision_score, accuracy_score
 from parameterOptimization.HyperparameterOpt import GridHyperparamOpt
 import preprocessing as preproc
+from imbalanced_learn.ImbalancedLearn import RandomOverSampler
 
 #pp_ds, path = preproc.preprocess(path='data/dataset_last_version2.csv', smiles_header='Smiles', sep=';', header=0, n=None)
 #pp_ds, path = preproc.preprocess(path='data/datset_wFooDB.csv',
@@ -55,6 +56,9 @@ splitter = RandomSplitter()
 
 train_dataset, valid_dataset, test_dataset = splitter.train_valid_test_split(dataset=ds, frac_train=0.6, frac_valid=0.2, frac_test=0.2)
 
+train_dataset = RandomOverSampler().sample(train_dataset)
+
+
 #k_folds = splitter.k_fold_split(ds, 3)
 
 #for a, b in k_folds:
@@ -97,13 +101,14 @@ valid_score = model.evaluate(valid_dataset, metrics)
 #print('Test Dataset: ')
 test_score = model.evaluate(test_dataset, metrics)
 
-def rf_model_builder(n_estimators, max_features, model_dir=None):
-    rf_model = RandomForestClassifier(n_estimators=n_estimators, max_features=max_features)
+def rf_model_builder(n_estimators, max_features, class_weight, model_dir=None):
+    rf_model = RandomForestClassifier(n_estimators=n_estimators, max_features=max_features, class_weight=class_weight)
     return SklearnModel(rf_model, model_dir)
 
 params_dict_rf = {"n_estimators": [10, 100],
-               "max_features": ["auto", "sqrt", "log2", None]
-               }
+                  "max_features": ["auto", "sqrt", "log2", None],
+                  "class_weight": [{0: 1., 1: 1.}, {0: 1., 1: 5}, {0: 1., 1: 10}]
+                  }
 
 def svm_model_builder(C, gamma, kernel, model_dir=None):
     svm_model = SVC(C=C, gamma=gamma, kernel=kernel)
@@ -116,7 +121,7 @@ params_dict_svm = {'C': [1.0, 0.7, 0.5, 0.3, 0.1],
 
 optimizer = GridHyperparamOpt(rf_model_builder)
 
-best_rf, best_hyperparams, all_results = optimizer.hyperparam_search(params_dict_rf, train_dataset, valid_dataset, Metric(precision_score))
+best_rf, best_hyperparams, all_results = optimizer.hyperparam_search(params_dict_rf, train_dataset, valid_dataset, Metric(roc_auc_score))
 
 print('#################')
 print(best_hyperparams)
@@ -127,4 +132,3 @@ print('@@@@@@@@@@@@@@@@')
 print(best_rf.evaluate(test_dataset, metrics))
 
 print(best_rf.predict(test_dataset))
-

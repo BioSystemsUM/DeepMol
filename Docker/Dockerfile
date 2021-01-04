@@ -46,6 +46,7 @@ RUN conda install -y python=${python_version} && \
       joblib \
       pillow \
       mordred \
+      plotly==4.14.1 \
       molvs \
       git+https://github.com/samoturk/mol2vec \
 #      --pre deepchem  \

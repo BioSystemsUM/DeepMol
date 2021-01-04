@@ -65,3 +65,7 @@ class MolecularFeaturizer(object):
         dataset.removeNAs()
 
         return dataset
+
+    # TODO: implement
+    def load_fp(self):
+        pass

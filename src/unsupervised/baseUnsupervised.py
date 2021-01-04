@@ -4,9 +4,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-from sklearn.cluster import KMeans
-from sklearn.decomposition import PCA
-from sklearn.manifold import TSNE
+from sklearn import cluster, decomposition, manifold
 
 
 class UnsupervisedLearn(object):
@@ -23,11 +21,11 @@ class UnsupervisedLearn(object):
 
         self.features = None
 
-    def runUnsupervised(self, dataset: Dataset):
+    def runUnsupervised(self, dataset: Dataset, plot=True):
 
         self.features = dataset.features
 
-        x = self._runUnsupervised()
+        x = self._runUnsupervised(plot=plot)
 
         return x
 
@@ -121,28 +119,37 @@ class PCA(UnsupervisedLearn):
         self.random_state = random_state
 
 
-    def _runUnsupervised(self):
+    def _runUnsupervised(self, plot=True):
         """Fit the model with X and apply the dimensionality reduction on X."""
-        pca = PCA(n_components=self.n_components,
-                  copy=self.copy,
-                  whiten=self.whiten,
-                  svd_solver=self.svd_solver,
-                  tol=self.tol,
-                  iterated_power=self.iterated_power,
-                  random_state=self.random_state)
-        self.pca = pca.fit_transform(self.features)
-        return pca
+        pca = decomposition.PCA(n_components=self.n_components,
+                                copy=self.copy,
+                                whiten=self.whiten,
+                                svd_solver=self.svd_solver,
+                                tol=self.tol,
+                                iterated_power=self.iterated_power,
+                                random_state=self.random_state)
 
-    # TODO: re-implement
-    def plot(self, colors="tomato"):
+        pca.fit_transform(self.features)
+        self.pca = pca
+        print('asdasd')
+        print('pca_components: ', self.pca.components_)
+        print('explained_variance_ratio: ', self.pca.explained_variance_ratio_)
+
+        if plot:
+            self._plot()
+
+
+    def _plot(self, colors="tomato", n_components=5):
 
         pca = self.pca
 
-        xLabels = ["PC " + str(x + 1) for x in range(14)]
+        print('????????????')
+        print('!!!!!!!!!!!')
+        xLabels = ["PC " + str(x + 1) for x in range(n_components)]
         yLabels = [x for x in range(0, 100, 5)]
 
         explica = pca.explained_variance_ratio_ * 100
-        explica = pd.DataFrame(explica[:14], index=xLabels, columns=["Explained Variance"])
+        explica = pd.DataFrame(explica[:n_components], index=xLabels, columns=["Explained Variance"])
 
         fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(20, 15))
 
@@ -153,9 +160,9 @@ class PCA(UnsupervisedLearn):
         ax[0].set_yticks(yLabels)
         ax[0].set_ylabel("%")
 
-        print("2 Principal Components explain", round(np.cumsum(explica.values)[1], 2), "% of the data variance.")
+        print("2 Principal Components explain", np.cumsum(pca.explained_variance_ratio_), "% of the data variance.")
 
-
+        print(pca)
         # plt.figure(figsize=(20,8))
         ax[1].scatter(pca[:, 0], pca[:, 1], marker='.', c=colors)
 
@@ -178,6 +185,7 @@ class PCA(UnsupervisedLearn):
 
         plt.xlabel("PC 1")
         plt.ylabel("PC 2")
+        '''
 
 
 class TSNE(UnsupervisedLearn):
@@ -297,20 +305,20 @@ class TSNE(UnsupervisedLearn):
 
     def _runUnsupervised(self):
         """Fit X into an embedded space and return that transformed output."""
-        X_embedded = TSNE(n_components=self.n_components,
-                          perplexity=self.perplexity,
-                          early_exaggeration=self.early_exaggeration,
-                          learning_rate=self.learning_rate,
-                          n_iter=self.n_iter,
-                          n_iter_without_progress=self.n_iter_without_progress,
-                          min_grad_norm=self.min_grad_norm,
-                          metric=self.metric,
-                          init=self.init,
-                          verbose=self.verbose,
-                          random_state=self.random_state,
-                          method=self.method,
-                          angle=self.angle,
-                          n_jobs=self.n_jobs)
+        X_embedded = manifold.TSNE(n_components=self.n_components,
+                                   perplexity=self.perplexity,
+                                   early_exaggeration=self.early_exaggeration,
+                                   learning_rate=self.learning_rate,
+                                   n_iter=self.n_iter,
+                                   n_iter_without_progress=self.n_iter_without_progress,
+                                   min_grad_norm=self.min_grad_norm,
+                                   metric=self.metric,
+                                   init=self.init,
+                                   verbose=self.verbose,
+                                   random_state=self.random_state,
+                                   method=self.method,
+                                   angle=self.angle,
+                                   n_jobs=self.n_jobs)
         return X_embedded.fit_transform(self.features)
 
     # TODO: implement
@@ -399,15 +407,15 @@ class KMeans(UnsupervisedLearn):
 
     def _runUnsupervised(self):
         """Compute cluster centers and predict cluster index for each sample."""
-        k_means = KMeans(n_clusters=self.n_clusters,
-                          init=self.init,
-                          n_init=self.n_init,
-                          max_iter=self.max_iter,
-                          tol=self.tol,
-                          verbose=self.verbose,
-                          random_state=self.random_state,
-                          copy_x=self.copy_x,
-                          algorithm=self.algorithm)
+        k_means = cluster.KMeans(n_clusters=self.n_clusters,
+                                 init=self.init,
+                                 n_init=self.n_init,
+                                 max_iter=self.max_iter,
+                                 tol=self.tol,
+                                 verbose=self.verbose,
+                                 random_state=self.random_state,
+                                 copy_x=self.copy_x,
+                                 algorithm=self.algorithm)
         return k_means.fit_predict(self.features)
 
     # TODO: implement

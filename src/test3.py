@@ -3,13 +3,15 @@ from compoundFeaturization.rdkitFingerprints import RDKFingerprint, AtomPairFing
 from compoundFeaturization.mol2vec import Mol2Vec
 from Dataset.Dataset import CSVLoader, NumpyDataset
 from featureSelection.baseFeatureSelector import LowVarianceFS, KbestFS, PercentilFS, RFECVFS, SelectFromModelFS
-from splitters.splitters import RandomSplitter
+from splitters.splitters import SingletaskStratifiedSplitter, RandomSplitter
 from models.sklearnModels import SklearnModel
 from metrics.Metrics import Metric
-from metrics.metricsFunctions import roc_auc_score, precision_score, accuracy_score
+from metrics.metricsFunctions import roc_auc_score, precision_score, accuracy_score, confusion_matrix, classification_report
 from parameterOptimization.HyperparameterOpt import GridHyperparamOpt
 import preprocessing as preproc
-from imbalanced_learn.ImbalancedLearn import RandomOverSampler
+from imbalanced_learn.ImbalancedLearn import RandomOverSampler, SMOTEENN
+import numpy as np
+from unsupervised.baseUnsupervised import PCA
 
 #pp_ds, path = preproc.preprocess(path='data/dataset_last_version2.csv', smiles_header='Smiles', sep=';', header=0, n=None)
 #pp_ds, path = preproc.preprocess(path='data/datset_wFooDB.csv',
@@ -25,7 +27,7 @@ from imbalanced_learn.ImbalancedLearn import RandomOverSampler
 
 #ds = CSVLoader('preprocessed_dataset.csv', 'Smiles', ['Class'], 'PubChem CID')#, chunk_size=1000)
 
-ds = CSVLoader('preprocessed_dataset_wfoodb.csv', 'Smiles', ['Class'], 'ID')#, chunk_size=1000)
+ds = CSVLoader('preprocessed_dataset_wfoodb.csv', 'Smiles', ['Class'], 'ID', chunk_size=5000)
 
 ds.get_shape()
 
@@ -36,13 +38,13 @@ ds = MorganFingerprint().featurize(ds)
 #ds = AtomPairFingerprint().featurize(ds)
 #ds = Mol2Vec().featurize(ds)
 
-#print(ds.X)
-#print(ds.y)
-#print(ds.features)
-#print(ds.get_shape())
+print(ds.X)
+print(ds.y)
+print(ds.features)
+print(ds.get_shape())
+
 
 print('-----------------------------------------------------')
-ds.get_shape()
 
 ds = LowVarianceFS(0.15).featureSelection(ds)
 #ds = KbestFS().featureSelection(ds)
@@ -51,12 +53,23 @@ ds = LowVarianceFS(0.15).featureSelection(ds)
 #ds = SelectFromModelFS().featureSelection(ds)
 
 ds.get_shape()
+print(len(np.where(ds.y==0)[0]), len(np.where(ds.y==1)[0]))
 
-splitter = RandomSplitter()
+pca = PCA().runUnsupervised(ds)
+
+'''
+splitter = SingletaskStratifiedSplitter()
 
 train_dataset, valid_dataset, test_dataset = splitter.train_valid_test_split(dataset=ds, frac_train=0.6, frac_valid=0.2, frac_test=0.2)
 
-train_dataset = RandomOverSampler().sample(train_dataset)
+
+print(len(np.where(train_dataset.y==0)[0]), len(np.where(train_dataset.y==1)[0]))
+
+#train_dataset = RandomOverSampler().sample(train_dataset)
+train_dataset = SMOTEENN().sample(train_dataset)
+
+
+print(len(np.where(train_dataset.y==0)[0]), len(np.where(train_dataset.y==1)[0]))
 
 
 #k_folds = splitter.k_fold_split(ds, 3)
@@ -76,7 +89,6 @@ train_dataset = RandomOverSampler().sample(train_dataset)
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 
-#TODO: deal with metrics that do not accept predict_proba output (ex: in rf)
 rf = RandomForestClassifier()
 svm = SVC()
 
@@ -84,22 +96,29 @@ model = SklearnModel(model=rf)
 
 #print(model.cross_validate(ds, Metric(roc_auc_score)))
 
-
+print("#############################")
 # model training
+print('Fiting Model: ')
 model.fit(train_dataset)
+print("#############################")
 
 valid_preds = model.predict(valid_dataset)
 test_preds = model.predict(test_dataset)
 
 
-metrics = [Metric(roc_auc_score), Metric(precision_score), Metric(accuracy_score)]
+metrics = [Metric(roc_auc_score), Metric(precision_score), Metric(accuracy_score), Metric(confusion_matrix),
+           Metric(classification_report)]
+print("#############################")
 # evaluate the model
-#print('Training Dataset: ')
+print('Training Dataset: ')
 train_score = model.evaluate(train_dataset, metrics)
-#print('Validation Dataset: ')
+print("#############################")
+print('Validation Dataset: ')
 valid_score = model.evaluate(valid_dataset, metrics)
-#print('Test Dataset: ')
+print("#############################")
+print('Test Dataset: ')
 test_score = model.evaluate(test_dataset, metrics)
+print("#############################")
 
 def rf_model_builder(n_estimators, max_features, class_weight, model_dir=None):
     rf_model = RandomForestClassifier(n_estimators=n_estimators, max_features=max_features, class_weight=class_weight)
@@ -107,8 +126,8 @@ def rf_model_builder(n_estimators, max_features, class_weight, model_dir=None):
 
 params_dict_rf = {"n_estimators": [10, 100],
                   "max_features": ["auto", "sqrt", "log2", None],
-                  "class_weight": [{0: 1., 1: 1.}, {0: 1., 1: 5}, {0: 1., 1: 10}]
-                  }
+                  "class_weight": [{0: 1., 1: 1.}]}#, {0: 1., 1: 5}, {0: 1., 1: 10}]
+                  #}
 
 def svm_model_builder(C, gamma, kernel, model_dir=None):
     svm_model = SVC(C=C, gamma=gamma, kernel=kernel)
@@ -129,6 +148,6 @@ print(best_rf)
 
 #print(best_rf.predict(test_dataset))
 print('@@@@@@@@@@@@@@@@')
-print(best_rf.evaluate(test_dataset, metrics))
+best_rf.evaluate(test_dataset, metrics)
 
-print(best_rf.predict(test_dataset))
+'''

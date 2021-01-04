@@ -7,6 +7,8 @@ from Dataset.Dataset import Dataset, NumpyDataset, CSVLoader
 
 from sklearn.model_selection import KFold
 
+from collections import Counter
+
 
 class Splitter(object):
     """Splitters split up Datasets into pieces for training/validation/testing.
@@ -82,14 +84,12 @@ class Splitter(object):
         """
 
         print("Computing train/valid/test indices")
-        train_inds, valid_inds, test_inds = self.split(
-            dataset,
-            frac_train=frac_train,
-            frac_test=frac_test,
-            frac_valid=frac_valid,
-            seed=seed,
-            log_every_n=log_every_n)
-
+        train_inds, valid_inds, test_inds = self.split(dataset,
+                                                       frac_train=frac_train,
+                                                       frac_test=frac_test,
+                                                       frac_valid=frac_valid,
+                                                       seed=seed,
+                                                       log_every_n=log_every_n)
         train_dataset = dataset.select(train_inds)
         valid_dataset = dataset.select(valid_inds)
         test_dataset = dataset.select(test_inds)
@@ -205,5 +205,124 @@ class RandomSplitter(Splitter):
         valid_cutoff = int((frac_train + frac_valid) * num_datapoints)
         shuffled = np.random.permutation(range(num_datapoints))
         return (shuffled[:train_cutoff], shuffled[train_cutoff:valid_cutoff], shuffled[valid_cutoff:])
+
+
+class SingletaskStratifiedSplitter(Splitter):
+    # TODO: comments
+    """Class for doing data splits by stratification on a single task.
+    Examples
+    --------
+    n_samples = 100
+    n_features = 10
+    n_tasks = 10
+    X = np.random.rand(n_samples, n_features)
+    y = np.random.rand(n_samples, n_tasks)
+    w = np.ones_like(y)
+    dataset = DiskDataset.from_numpy(np.ones((100,n_tasks)), np.ones((100,n_tasks)))
+    splitter = SingletaskStratifiedSplitter(task_number=5)
+    train_dataset, test_dataset = splitter.train_test_split(dataset)
+    """
+
+    # FIXME: Signature of "k_fold_split" incompatible with supertype "Splitter"
+    def k_fold_split(self,
+                     dataset: Dataset,
+                     k: int,
+                     seed: Optional[int] = None,
+                     log_every_n: Optional[int] = None,
+                     **kwargs) -> List[Dataset]:
+        # TODO: comments
+        """
+        Splits compounds into k-folds using stratified sampling.
+        Overriding base class k_fold_split.
+        Parameters
+        ----------
+        dataset: Dataset
+          Dataset to be split.
+        k: int
+          Number of folds to split `dataset` into.
+        seed: int, optional (default None)
+          Random seed to use.
+        log_every_n: int, optional (default None)
+          Log every n examples (not currently used).
+        Returns
+        -------
+        fold_datasets: List[Dataset]
+          List of dc.data.Dataset objects
+        """
+
+        print("Computing K-fold split")
+
+        sortidx = np.argsort(dataset.y)
+        sortidx_list = np.array_split(sortidx, k)
+
+        fold_datasets = []
+        for fold in range(k):
+            fold_ind = sortidx_list[fold]
+            fold_dataset = dataset.select(fold_ind)
+            fold_datasets.append(fold_dataset)
+        return fold_datasets
+
+    def split(self,
+              dataset: Dataset,
+              frac_train: float = 0.8,
+              frac_valid: float = 0.1,
+              frac_test: float = 0.1,
+              seed: Optional[int] = None,
+              log_every_n: Optional[int] = None
+              ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        # TODO: comments
+        """
+        Splits compounds into train/validation/test using stratified sampling.
+        Parameters
+        ----------
+        dataset: Dataset
+          Dataset to be split.
+        frac_train: float, optional (default 0.8)
+          Fraction of dataset put into training data.
+        frac_valid: float, optional (default 0.1)
+          Fraction of dataset put into validation data.
+        frac_test: float, optional (default 0.1)
+          Fraction of dataset put into test data.
+        seed: int, optional (default None)
+          Random seed to use.
+        log_every_n: int, optional (default None)
+          Log every n examples (not currently used).
+        Returns
+        -------
+        Tuple[np.ndarray, np.ndarray, np.ndarray]
+          A tuple of train indices, valid indices, and test indices.
+          Each indices is a numpy array.
+        """
+        # JSG Assert that split fractions can be written as proper fractions over 10.
+        # This can be generalized in the future with some common demoninator determination.
+        # This will work for 80/20 train/test or 80/10/10 train/valid/test (most use cases).
+        np.testing.assert_equal(frac_train + frac_valid + frac_test, 1.)
+        np.testing.assert_equal(10 * frac_train + 10 * frac_valid + 10 * frac_test, 10.)
+
+        if seed is not None:
+            np.random.seed(seed)
+
+        sortidx = np.argsort(dataset.y)
+
+        split_cd = 10
+        train_cutoff = int(np.round(frac_train * split_cd))
+        valid_cutoff = int(np.round(frac_valid * split_cd)) + train_cutoff
+
+        train_idx = np.array([])
+        valid_idx = np.array([])
+        test_idx = np.array([])
+
+        while sortidx.shape[0] >= split_cd:
+            sortidx_split, sortidx = np.split(sortidx, [split_cd])
+            shuffled = np.random.permutation(range(split_cd))
+            train_idx = np.hstack([train_idx, sortidx_split[shuffled[:train_cutoff]]])
+            valid_idx = np.hstack([valid_idx, sortidx_split[shuffled[train_cutoff:valid_cutoff]]])
+            test_idx = np.hstack([test_idx, sortidx_split[shuffled[valid_cutoff:]]])
+
+        # Append remaining examples to train
+        if sortidx.shape[0] > 0:
+            np.hstack([train_idx, sortidx])
+
+        return (list(map(int, train_idx)), list(map(int, valid_idx)), list(map(int, test_idx)))
 
 

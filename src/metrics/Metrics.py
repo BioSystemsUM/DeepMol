@@ -69,7 +69,6 @@ class Metric(object):
                     self.name = "unknown metric"
         else:
             self.name = name
-
         if mode is None:
             # Some default metrics
             if self.metric.__name__ in ["roc_auc_score",
@@ -85,7 +84,9 @@ class Metric(object):
                                         "bedroc_score",
                                         "jaccard_score",
                                         "jaccard_index",
-                                        "pixel_error"]:
+                                        "pixel_error",
+                                        "confusion_matrix",
+                                        "classification_report"]:
                 mode = "classification"
                 # Defaults sklearn's metrics with required behavior
                 if classification_handling_mode is None:
@@ -177,12 +178,15 @@ class Metric(object):
                                                           y_pred_task,
                                                           **kwargs)
             computed_metrics.append(metric_value)
-        print("%s: %s" % (str(self.metric.__name__), str(computed_metrics)))
+        print(str(self.metric.__name__)+': \n', computed_metrics[0])
         if n_tasks == 1:
             computed_metrics = computed_metrics[0]  # type: ignore
 
         if not per_task_metrics:
-            return self.task_averager(computed_metrics)
+            try:
+                return self.task_averager(computed_metrics)
+            except Exception as e:
+                print('ERROR in task averager: ', e)
         else:
             return self.task_averager(computed_metrics), computed_metrics
 

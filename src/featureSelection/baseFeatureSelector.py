@@ -39,7 +39,6 @@ class BaseFeatureSelector(object):
 
         self.y_fs = dataset.y
 
-        #features, self.features2keep = self._featureSelector(np.stack(self.features_fs, axis=0))
         features, self.features2keep = self._featureSelector()
 
         dataset.features = np.asarray(features)

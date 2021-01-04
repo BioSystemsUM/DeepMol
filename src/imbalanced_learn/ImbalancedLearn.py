@@ -371,7 +371,7 @@ class SMOTEENN(ImbalancedLearn):
         """Returns features resampled and y resampled."""
         ros = combine.SMOTEENN(sampling_strategy=self.sampling_strategy,
                                random_state=self.random_state,
-                               smote=self.replacement,
+                               smote=self.smote,
                                enn=self.enn,
                                n_jobs=self.n_jobs)
         return ros.fit_resample(self.features, self.y)

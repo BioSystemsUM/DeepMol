@@ -3,10 +3,11 @@ from Dataset.Dataset import Dataset
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import plotly.express as px
 
 from sklearn import cluster, decomposition, manifold
 
-
+# TODO: plot legends and labels are made for sweet vs non sweet --> change it to be general
 class UnsupervisedLearn(object):
     """Class for unsupervised learning.
 
@@ -23,7 +24,12 @@ class UnsupervisedLearn(object):
 
     def runUnsupervised(self, dataset: Dataset, plot=True):
 
+        self.dataset = dataset
+
+
         self.features = dataset.features
+
+
 
         x = self._runUnsupervised(plot=plot)
 
@@ -130,62 +136,96 @@ class PCA(UnsupervisedLearn):
                                 random_state=self.random_state)
 
         pca.fit_transform(self.features)
+
         self.pca = pca
-        print('asdasd')
-        print('pca_components: ', self.pca.components_)
-        print('explained_variance_ratio: ', self.pca.explained_variance_ratio_)
 
         if plot:
             self._plot()
 
 
-    def _plot(self, colors="tomato", n_components=5):
+    def _plot(self):
 
-        pca = self.pca
+        print('2 Components PCA: ')
+        pca2comps = decomposition.PCA(n_components=2,
+                                      copy=self.copy,
+                                      whiten=self.whiten,
+                                      svd_solver=self.svd_solver,
+                                      tol=self.tol,
+                                      iterated_power=self.iterated_power,
+                                      random_state=self.random_state)
+        components = pca2comps.fit_transform(self.features)
 
-        print('????????????')
-        print('!!!!!!!!!!!')
-        xLabels = ["PC " + str(x + 1) for x in range(n_components)]
-        yLabels = [x for x in range(0, 100, 5)]
+        dic = {0: "Not Sweet", 1: "Sweet"}
+        colors_map = []
+        for elem in self.dataset.y:
+            colors_map.append(dic[elem])
 
-        explica = pca.explained_variance_ratio_ * 100
-        explica = pd.DataFrame(explica[:n_components], index=xLabels, columns=["Explained Variance"])
+        total_var = pca2comps.explained_variance_ratio_.sum() * 100
 
-        fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(20, 15))
+        fig = px.scatter(components, x=0, y=1, color=colors_map,
+                         title=f'Total Explained Variance: {total_var:.2f}%',
+                         labels={'0': 'PC 1', '1': 'PC 2'})
+        fig.show()
 
-        explica.plot(kind="bar", ax=ax[0], color="deepskyblue", zorder=3, edgecolor="teal")
+        print('\n \n')
+        print('2 Components PCA: ')
+        pca3comps = decomposition.PCA(n_components=3,
+                                      copy=self.copy,
+                                      whiten=self.whiten,
+                                      svd_solver=self.svd_solver,
+                                      tol=self.tol,
+                                      iterated_power=self.iterated_power,
+                                      random_state=self.random_state)
+        components = pca3comps.fit_transform(self.features)
 
-        ax[0].grid(b=True, axis='y', zorder=0, color='lightcoral')
+        total_var = pca3comps.explained_variance_ratio_.sum() * 100
 
-        ax[0].set_yticks(yLabels)
-        ax[0].set_ylabel("%")
+        fig = px.scatter_3d(components,
+                            x=0, y=1, z=2, color=colors_map,
+                            title=f'Total Explained Variance: {total_var:.2f}%',
+                            labels={'0': 'PC 1', '1': 'PC 2', '2': 'PC 3'}
+                            )
+        fig.show()
 
-        print("2 Principal Components explain", np.cumsum(pca.explained_variance_ratio_), "% of the data variance.")
+        print('\n \n')
 
-        print(pca)
-        # plt.figure(figsize=(20,8))
-        ax[1].scatter(pca[:, 0], pca[:, 1], marker='.', c=colors)
+        print('%i Components PCA: ' %(self.n_components))
 
-        mean_X = np.mean(pca[:, 0])
-        std_X = np.std(pca[:, 0])
-        max_X = mean_X + 3 * std_X
-        min_X = mean_X - 3 * std_X
-        if np.max(pca[:, 0]) < max_X: max_X = np.max(pca[:, 0])
-        if np.min(pca[:, 0]) > min_X: min_X = np.min(pca[:, 0])
+        pca_all = decomposition.PCA(n_components=self.n_components,
+                                      copy=self.copy,
+                                      whiten=self.whiten,
+                                      svd_solver=self.svd_solver,
+                                      tol=self.tol,
+                                      iterated_power=self.iterated_power,
+                                      random_state=self.random_state)
+        components_all = pca_all.fit_transform(self.features)
 
-        mean_Y = np.mean(pca[:, 1])
-        std_Y = np.std(pca[:, 1])
-        max_Y = mean_Y + 3 * std_Y
-        min_Y = mean_Y - 3 * std_Y
-        if np.max(pca[:, 1]) < max_Y: max_Y = np.max(pca[:, 1])
-        if np.min(pca[:, 1]) > min_Y: min_Y = np.min(pca[:, 1])
+        total_var = pca_all.explained_variance_ratio_.sum() * 100
 
-        plt.xlim([min_X, max_X])
-        plt.ylim([min_Y, max_Y])
+        labels = {str(i): f"PC {i + 1}" for i in range(self.n_components)}
 
-        plt.xlabel("PC 1")
-        plt.ylabel("PC 2")
-        '''
+        fig = px.scatter_matrix(components_all,
+                                color=colors_map,
+                                dimensions=range(self.n_components),
+                                labels=labels,
+                                title=f'Total Explained Variance: {total_var:.2f}%',
+                                )
+        fig.update_traces(diagonal_visible=False)
+        fig.show()
+
+        print('\n \n')
+        print('Explained Variance: ')
+        pca_comp = decomposition.PCA()
+        pca_comp.fit(self.features)
+        exp_var_cumul = np.cumsum(pca_comp.explained_variance_ratio_)
+
+        fig = px.area(x=range(1, exp_var_cumul.shape[0] + 1),
+                      y=exp_var_cumul,
+                      labels={"x": "# Components", "y": "Explained Variance"}
+                      )
+
+        fig.show()
+
 
 
 class TSNE(UnsupervisedLearn):
@@ -303,7 +343,7 @@ class TSNE(UnsupervisedLearn):
         self.n_jobs = n_jobs
 
 
-    def _runUnsupervised(self):
+    def _runUnsupervised(self, plot=True):
         """Fit X into an embedded space and return that transformed output."""
         X_embedded = manifold.TSNE(n_components=self.n_components,
                                    perplexity=self.perplexity,
@@ -319,11 +359,67 @@ class TSNE(UnsupervisedLearn):
                                    method=self.method,
                                    angle=self.angle,
                                    n_jobs=self.n_jobs)
+
+        if plot:
+            self._plot()
+
         return X_embedded.fit_transform(self.features)
 
-    # TODO: implement
-    def plot(self):
-        pass
+
+    def _plot(self):
+        dic = {0: "Not Sweet", 1: "Sweet"}
+        colors_map = []
+        for elem in self.dataset.y:
+            colors_map.append(dic[elem])
+
+        print('2 Components t-SNE: ')
+        tsne2comp = manifold.TSNE(n_components=2,
+                                  perplexity=self.perplexity,
+                                  early_exaggeration=self.early_exaggeration,
+                                  learning_rate=self.learning_rate,
+                                  n_iter=self.n_iter,
+                                  n_iter_without_progress=self.n_iter_without_progress,
+                                  min_grad_norm=self.min_grad_norm,
+                                  metric=self.metric,
+                                  init=self.init,
+                                  verbose=self.verbose,
+                                  random_state=self.random_state,
+                                  method=self.method,
+                                  angle=self.angle,
+                                  n_jobs=self.n_jobs)
+
+        projections2comp = tsne2comp.fit_transform(self.features)
+
+        fig = px.scatter(projections2comp, x=0, y=1,
+                         color=colors_map, labels={'color': 'Class'}
+                         )
+        fig.show()
+
+        print('\n \n')
+        print('3 Components t-SNE: ')
+        tsne3comp = manifold.TSNE(n_components=3,
+                                  perplexity=self.perplexity,
+                                  early_exaggeration=self.early_exaggeration,
+                                  learning_rate=self.learning_rate,
+                                  n_iter=self.n_iter,
+                                  n_iter_without_progress=self.n_iter_without_progress,
+                                  min_grad_norm=self.min_grad_norm,
+                                  metric=self.metric,
+                                  init=self.init,
+                                  verbose=self.verbose,
+                                  random_state=self.random_state,
+                                  method=self.method,
+                                  angle=self.angle,
+                                  n_jobs=self.n_jobs)
+
+        projections3comp = tsne3comp.fit_transform(self.features)
+
+        fig = px.scatter_3d(projections3comp, x=0, y=1, z=2,
+                            color=colors_map, labels={'color': 'species'}
+                            )
+        fig.update_traces(marker_size=8)
+
+        fig.show()
 
 
 class KMeans(UnsupervisedLearn):
@@ -335,7 +431,7 @@ class KMeans(UnsupervisedLearn):
     """
 
     def __init__(self,
-                 n_clusters=8,
+                 n_clusters='elbow',
                  init='k-means++',
                  n_init=10,
                  max_iter=300,
@@ -347,8 +443,9 @@ class KMeans(UnsupervisedLearn):
         """
         Parameters
         ----------
-        n_clusters: int, default=8
+        n_clusters: int, 'calculate', default=8
             The number of clusters to form as well as the number of centroids to generate.
+            'wlbow' uses the elbow method to determine the most suited number of clusters.
 
         init: {‘k-means++’, ‘random’, ndarray, callable}, default=’k-means++’
             Method for initialization:
@@ -394,7 +491,10 @@ class KMeans(UnsupervisedLearn):
             intensive due to the allocation of an extra array of shape (n_samples, n_clusters).
 
         """
-        self.n_clusters = n_clusters
+        if self.n_clusters=='elbow':
+            self.n_clusters = self.elbow()
+        else:
+            self.n_clusters = n_clusters
         self.init = init
         self.n_init = n_init
         self.max_iter = max_iter
@@ -405,7 +505,7 @@ class KMeans(UnsupervisedLearn):
         self.algorithm = algorithm
 
 
-    def _runUnsupervised(self):
+    def _runUnsupervised(self, plot=True):
         """Compute cluster centers and predict cluster index for each sample."""
         k_means = cluster.KMeans(n_clusters=self.n_clusters,
                                  init=self.init,
@@ -416,8 +516,34 @@ class KMeans(UnsupervisedLearn):
                                  random_state=self.random_state,
                                  copy_x=self.copy_x,
                                  algorithm=self.algorithm)
+
+        if plot:
+            self._plot()
         return k_means.fit_predict(self.features)
 
+    def elbow(self):
+        wcss = []
+        for i in range(1, 11):
+            kmeans_elbow = cluster.KMeans(n_clusters=i,
+                                          init=self.init,
+                                          n_init=self.n_init,
+                                          max_iter=self.max_iter,
+                                          tol=self.tol,
+                                          verbose=self.verbose,
+                                          random_state=self.random_state,
+                                          copy_x=self.copy_x,
+                                          algorithm=self.algorithm)
+            kmeans_elbow.fit(self.features)
+            wcss.append(kmeans_elbow.inertia_)
+        print(wcss)
+        plt.plot(range(1, 11), wcss)
+        plt.title('The Elbow Method Graph')
+        plt.xlabel('Number of clusters')
+        plt.ylabel('WCSS')
+        plt.show()
+
+
+
     # TODO: implement
-    def plot(self):
+    def _plot(self):
         pass

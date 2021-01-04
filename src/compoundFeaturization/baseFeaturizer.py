@@ -60,7 +60,6 @@ class MolecularFeaturizer(object):
                 print("Exception message: {}".format(e))
                 #features.append(np.array([]))
         dataset.features = np.asarray(features)
-
         #TODO: where and in which manner to remove NAs????
         dataset.removeNAs()
 

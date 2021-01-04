@@ -5,6 +5,9 @@ from rdkit.Chem.Fingerprints import FingerprintMols
 import numpy as np
 from typing import Any
 
+# TODO: final output of featurization (<class 'numpy.ndarray'> of  <class 'numpy.ndarray'>) and
+#  feature selection (<class 'numpy.ndarray'> of <class 'numpy.ndarray'>) but when printed are not the same ?????
+#  even the shape of the output is different
 class MorganFingerprint(MolecularFeaturizer):
     """Morgan fingerprints.
     Extended Connectivity Circular Fingerprints compute a bag-of-words style
@@ -40,7 +43,7 @@ class MorganFingerprint(MolecularFeaturizer):
         self.features = features
 
     def _featurize(self, mol: Any) -> np.ndarray:
-        """Calculate morgan fingerprint for a single molecule.
+        """Calculate morgan fingerprint for a single molecule.fre
         Parameters
         ----------
         mol: rdkit.Chem.rdchem.Mol
@@ -60,7 +63,9 @@ class MorganFingerprint(MolecularFeaturizer):
                                                                 useFeatures=self.features)
         except Exception as e:
             print('error in smile: ' + str(mol))
-            fp = np.nan
+            #fp = np.nan
+            fp = np.empty(self.size, dtype=float)
+            fp[:] = np.NaN
         fp = np.asarray(fp, dtype=np.float)
 
         return fp

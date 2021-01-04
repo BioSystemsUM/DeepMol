@@ -74,9 +74,28 @@ class Dataset(object):
         """Get the features array for this dataset as a single numpy array."""
         raise NotImplementedError()
 
+    def removeElements(self, indexes):
+        """Remove elements with specific indexes from the dataset
+            Very useful when doing feature selection or to remove NAs.
+        """
+        self.X = np.delete(self.X, indexes)
+        self.y = np.delete(self.y, indexes)
+        self.ids = np.delete(self.ids, indexes)
+        self.features = np.delete(self.features, indexes, axis=0)
+
+
     def removeNAs(self):
-        """Remove samples with NAs."""
-        raise NotImplementedError()
+        """Remove samples with NAs from the Dataset"""
+        j = 0
+        indexes = []
+        for i in self.features:
+            if np.isnan(i[0]):
+                indexes.append(j)
+            j+=1
+        if len(indexes) > 0:
+            print('Elements with indexes: ', indexes, ' were removed due to the presence of NAs!')
+            print('The elements in question are: ', self.X[indexes])
+            self.removeElements(indexes)
 
     #TODO: implement this method in the susequent subclasses and make it work with all de pipeline
     def iterbatches(self, 
@@ -450,29 +469,6 @@ class NumpyDataset(Dataset):
             data_dir=data_dir, tasks=tasks)
 
 
-    def removeElements(self, indexes):
-        """Remove elements with specific indexes from the dataset
-            Very useful when doing feature selection or to remove NAs.
-        """
-        self.X = np.delete(self.X, indexes)
-        self.y = np.delete(self.y, indexes)
-        self.ids = np.delete(self.ids, indexes)
-        self.features = np.delete(self.features, indexes)
-
-
-    def removeNAs(self):
-        """Remove samples with NAs from the Dataset"""
-        j = 0
-        indexes = []
-        for i in self.features:
-            if len(i.shape)==0:
-                indexes.append(j)
-            j+=1
-        if len(indexes) > 0:
-            print('Elements with indexes: ', indexes, ' were removed due to the presence of NAs!')
-            print('The elements in question are: ', self.X[indexes])
-            self.removeElements(indexes)
-
 
 
 class CSVLoader(Dataset):
@@ -610,30 +606,6 @@ class CSVLoader(Dataset):
     def features(self):
         """Get the features vector for this dataset as a single numpy array."""
         return self.features
-
-
-    def removeElements(self, indexes):
-        """Remove elements with specific indexes from the dataset
-            Very useful when doing feature selection or to remove NAs.
-        """
-        self.X = np.delete(self.X, indexes)
-        self.y = np.delete(self.y, indexes)
-        self.ids = np.delete(self.ids, indexes)
-        self.features = np.delete(self.features, indexes)
-
-
-    def removeNAs(self):
-        """Remove samples with NAs from the Dataset"""
-        j = 0
-        indexes = []
-        for i in self.features:
-            if len(i.shape)==0:
-                indexes.append(j)
-            j+=1
-        if len(indexes) > 0:
-            print('Elements with indexes: ', indexes, ' were removed due to the presence of NAs!')
-            print('The elements in question are: ', self.X[indexes])
-            self.removeElements(indexes)
 
     def _get_dataset(self, dataset_path, keep_fields=None, chunk_size=None):
         """Loads data with size chunk_size.

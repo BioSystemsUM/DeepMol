@@ -223,7 +223,7 @@ class SingletaskStratifiedSplitter(Splitter):
     train_dataset, test_dataset = splitter.train_test_split(dataset)
     """
 
-    # FIXME: Signature of "k_fold_split" incompatible with supertype "Splitter"
+    #TODO: not working properly
     def k_fold_split(self,
                      dataset: Dataset,
                      k: int,
@@ -260,6 +260,7 @@ class SingletaskStratifiedSplitter(Splitter):
             fold_ind = sortidx_list[fold]
             fold_dataset = dataset.select(fold_ind)
             fold_datasets.append(fold_dataset)
+        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         return fold_datasets
 
     def split(self,

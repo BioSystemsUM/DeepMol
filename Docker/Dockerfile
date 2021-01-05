@@ -47,6 +47,8 @@ RUN conda install -y python=${python_version} && \
       pillow \
       mordred \
       plotly==4.14.1 \
+      kneed \
+      seaborn==0.11.1 \
       molvs \
       git+https://github.com/samoturk/mol2vec \
 #      --pre deepchem  \

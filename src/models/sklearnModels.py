@@ -11,7 +11,7 @@ from sklearn.linear_model import ElasticNetCV
 
 from models.Models import Model
 from Dataset.Dataset import Dataset
-from splitters.splitters import RandomSplitter
+from splitters.splitters import RandomSplitter, SingletaskStratifiedSplitter
 from metrics.Metrics import Metric
 
 from utils.utils import load_from_disk, save_to_disk
@@ -120,6 +120,7 @@ class SklearnModel(Model):
                        folds: int = 3):
         #TODO: add option to choose between splitters (later, for now we only have random)
         splitter = RandomSplitter()
+        #splitter = SingletaskStratifiedSplitter()
         datasets = splitter.k_fold_split(dataset, folds)
 
         train_scores = []
@@ -133,6 +134,7 @@ class SklearnModel(Model):
         for train_ds, test_ds in datasets:
             dummy_model = clone(SklearnModel(model=self.model))
 
+            dummy_model.fit(train_ds)
             dummy_model.fit(train_ds)
 
             print('Train Score: ')

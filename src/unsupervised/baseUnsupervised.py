@@ -1,9 +1,11 @@
-from Dataset.Dataset import Dataset
+from Dataset.Dataset import Dataset, NumpyDataset
 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import plotly.express as px
+from kneed import KneeLocator
+import seaborn as sns
 
 from sklearn import cluster, decomposition, manifold
 
@@ -134,13 +136,10 @@ class PCA(UnsupervisedLearn):
                                 tol=self.tol,
                                 iterated_power=self.iterated_power,
                                 random_state=self.random_state)
-
-        pca.fit_transform(self.features)
-
-        self.pca = pca
-
         if plot:
             self._plot()
+
+        return NumpyDataset(X=self.dataset.X, y=self.dataset.y, features=pca.fit_transform(self.features))
 
 
     def _plot(self):
@@ -168,7 +167,7 @@ class PCA(UnsupervisedLearn):
         fig.show()
 
         print('\n \n')
-        print('2 Components PCA: ')
+        print('3 Components PCA: ')
         pca3comps = decomposition.PCA(n_components=3,
                                       copy=self.copy,
                                       whiten=self.whiten,
@@ -363,7 +362,7 @@ class TSNE(UnsupervisedLearn):
         if plot:
             self._plot()
 
-        return X_embedded.fit_transform(self.features)
+        return NumpyDataset(X=self.dataset.X, y=self.dataset.y, features=X_embedded.fit_transform(self.features))
 
 
     def _plot(self):
@@ -445,7 +444,7 @@ class KMeans(UnsupervisedLearn):
         ----------
         n_clusters: int, 'calculate', default=8
             The number of clusters to form as well as the number of centroids to generate.
-            'wlbow' uses the elbow method to determine the most suited number of clusters.
+            'elbow' uses the elbow method to determine the most suited number of clusters.
 
         init: {‘k-means++’, ‘random’, ndarray, callable}, default=’k-means++’
             Method for initialization:
@@ -491,10 +490,7 @@ class KMeans(UnsupervisedLearn):
             intensive due to the allocation of an extra array of shape (n_samples, n_clusters).
 
         """
-        if self.n_clusters=='elbow':
-            self.n_clusters = self.elbow()
-        else:
-            self.n_clusters = n_clusters
+        self.n_clusters = n_clusters
         self.init = init
         self.n_init = n_init
         self.max_iter = max_iter
@@ -507,6 +503,10 @@ class KMeans(UnsupervisedLearn):
 
     def _runUnsupervised(self, plot=True):
         """Compute cluster centers and predict cluster index for each sample."""
+
+        if self.n_clusters == 'elbow':
+            self.n_clusters = self.elbow()
+
         k_means = cluster.KMeans(n_clusters=self.n_clusters,
                                  init=self.init,
                                  n_init=self.n_init,
@@ -519,7 +519,9 @@ class KMeans(UnsupervisedLearn):
 
         if plot:
             self._plot()
-        return k_means.fit_predict(self.features)
+
+        k_means.fit_predict(self.features)
+        return k_means.labels_
 
     def elbow(self):
         wcss = []
@@ -535,15 +537,50 @@ class KMeans(UnsupervisedLearn):
                                           algorithm=self.algorithm)
             kmeans_elbow.fit(self.features)
             wcss.append(kmeans_elbow.inertia_)
-        print(wcss)
         plt.plot(range(1, 11), wcss)
         plt.title('The Elbow Method Graph')
         plt.xlabel('Number of clusters')
         plt.ylabel('WCSS')
         plt.show()
 
+        clusters_df = pd.DataFrame({"cluster_errors": wcss, "num_clusters": range(1, 11)})
+        elbow = KneeLocator(clusters_df.num_clusters.values,
+                            clusters_df.cluster_errors.values,
+                            S=1.0,
+                            curve='convex',
+                            direction='decreasing')
+
+        print('Creating a K-means cluster with ' + str(elbow.knee) + ' clusters...')
+        return elbow.knee
+
 
 
     # TODO: implement
     def _plot(self):
-        pass
+        #TODO: check the best approach to this problem
+        if self.features.shape[1] > 11:
+            print('Reduce the number of features to less than ten to get plot interpretability!')
+        else :
+            kmeans = cluster.KMeans(n_clusters=self.n_clusters,
+                                    init=self.init,
+                                    n_init=self.n_init,
+                                    max_iter=self.max_iter,
+                                    tol=self.tol,
+                                    verbose=self.verbose,
+                                    random_state=self.random_state,
+                                    copy_x=self.copy_x,
+                                    algorithm=self.algorithm)
+            kmeans.fit(self.features)
+            kmeans.predict(self.features)
+            labels = kmeans.labels_
+
+            labels = pd.DataFrame(labels)
+            labels = labels.rename({0: 'labels'}, axis=1)
+            ds = pd.concat((pd.DataFrame(self.features), labels), axis=1)
+            sns.pairplot(ds, hue='labels')
+
+            classes = pd.DataFrame(self.dataset.y)
+            classes = classes.rename({0: 'classes'}, axis=1)
+            ds = pd.concat((pd.DataFrame(self.features), classes), axis=1)
+            sns.pairplot(ds, hue='classes')
+

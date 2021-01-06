@@ -5,7 +5,7 @@ from typing import Tuple, List, Optional, Iterator
 
 from Dataset.Dataset import Dataset, NumpyDataset, CSVLoader
 
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold, StratifiedKFold
 
 from collections import Counter
 
@@ -223,7 +223,6 @@ class SingletaskStratifiedSplitter(Splitter):
     train_dataset, test_dataset = splitter.train_test_split(dataset)
     """
 
-    #TODO: not working properly
     def k_fold_split(self,
                      dataset: Dataset,
                      k: int,
@@ -250,18 +249,23 @@ class SingletaskStratifiedSplitter(Splitter):
           List of dc.data.Dataset objects
         """
 
-        print("Computing K-fold split")
+        print("Computing Stratified K-fold split")
 
-        sortidx = np.argsort(dataset.y)
-        sortidx_list = np.array_split(sortidx, k)
+        if isinstance(dataset, NumpyDataset) or isinstance(dataset, CSVLoader):
+            ds = dataset
+        else:
+            ds = NumpyDataset.from_numpy(dataset.X, dataset.y, dataset.features, dataset.ids)
 
-        fold_datasets = []
-        for fold in range(k):
-            fold_ind = sortidx_list[fold]
-            fold_dataset = dataset.select(fold_ind)
-            fold_datasets.append(fold_dataset)
-        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        return fold_datasets
+        skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=None)
+
+        train_datasets = []
+        test_datasets = []
+        for train_index, test_index in skf.split(ds.X, ds.y):
+            train_datasets.append(ds.select(train_index))
+            test_datasets.append(ds.select(test_index))
+
+        return list(zip(train_datasets, test_datasets))
+
 
     def split(self,
               dataset: Dataset,
@@ -271,7 +275,6 @@ class SingletaskStratifiedSplitter(Splitter):
               seed: Optional[int] = None,
               log_every_n: Optional[int] = None
               ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        # TODO: comments
         """
         Splits compounds into train/validation/test using stratified sampling.
         Parameters
@@ -294,9 +297,7 @@ class SingletaskStratifiedSplitter(Splitter):
           A tuple of train indices, valid indices, and test indices.
           Each indices is a numpy array.
         """
-        # JSG Assert that split fractions can be written as proper fractions over 10.
-        # This can be generalized in the future with some common demoninator determination.
-        # This will work for 80/20 train/test or 80/10/10 train/valid/test (most use cases).
+
         np.testing.assert_equal(frac_train + frac_valid + frac_test, 1.)
         np.testing.assert_equal(10 * frac_train + 10 * frac_valid + 10 * frac_test, 10.)
 

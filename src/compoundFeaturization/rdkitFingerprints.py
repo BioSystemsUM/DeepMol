@@ -93,7 +93,8 @@ class MACCSkeysFingerprint(MolecularFeaturizer):
             fp = MACCSkeys.GenMACCSKeys(mol)
         except Exception as e:
             print('error in smile: ' + str(mol))
-            fp = np.nan
+            fp = np.empty(167, dtype=float)
+            fp[:] = np.NaN
         fp = np.asarray(fp, dtype=np.float)
 
         return fp
@@ -168,7 +169,8 @@ class LayeredFingerprint(MolecularFeaturizer):
                                              branchedPaths = self.branchedPaths)
         except Exception as e:
             print('error in smile: ' + str(mol))
-            fp = np.nan
+            fp = np.empty(self.fpsize, dtype=float)
+            fp[:] = np.NaN
         fp = np.asarray(fp, dtype=np.float)
 
         return fp
@@ -259,7 +261,8 @@ class RDKFingerprint(MolecularFeaturizer):
 
         except Exception as e:
             print('error in smile: ' + str(mol))
-            fp = np.nan
+            fp = np.empty(self.fpsize, dtype=float)
+            fp[:] = np.NaN
         fp = np.asarray(fp, dtype=np.float)
 
         return fp
@@ -320,7 +323,8 @@ class AtomPairFingerprint(MolecularFeaturizer):
 
         except Exception as e:
             print('error in smile: ' + str(mol))
-            fp = np.nan
+            fp = np.empty(self.nBits, dtype=float)
+            fp[:] = np.NaN
         fp = np.asarray(fp, dtype=np.float)
 
         return fp

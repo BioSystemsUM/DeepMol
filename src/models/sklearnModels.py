@@ -119,8 +119,8 @@ class SklearnModel(Model):
                        metric: Metric,
                        folds: int = 3):
         #TODO: add option to choose between splitters (later, for now we only have random)
-        splitter = RandomSplitter()
-        #splitter = SingletaskStratifiedSplitter()
+        #splitter = RandomSplitter()
+        splitter = SingletaskStratifiedSplitter()
         datasets = splitter.k_fold_split(dataset, folds)
 
         train_scores = []

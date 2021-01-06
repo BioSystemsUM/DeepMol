@@ -186,7 +186,7 @@ class Metric(object):
             try:
                 return self.task_averager(computed_metrics)
             except Exception as e:
-                print('ERROR in task averager: ', e)
+                print('WARNING: task averager ', e)
         else:
             return self.task_averager(computed_metrics), computed_metrics
 

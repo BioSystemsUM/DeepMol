@@ -145,10 +145,22 @@ class Dataset(object):
         """
 
         X = self.X[indices]
-        y = self.y[indices]
-        features = self.features[indices]
-        ids = self.ids[indices]
+
+        if len(self.y)!=0:
+            y = self.y[indices]
+        else: y = self.y
+
+        if len(self.features)!=0:
+            features = self.features[indices]
+        else : features = self.features
+
+        if len(self.ids)!=0:
+            ids = self.ids[indices]
+        else : ids = self.ids
+
+        #TODO: check if features2keep needs to be selected by indices (look for bugs here by testing multiple cases)
         features2keep = self.features2keep
+
         return NumpyDataset(X, y, features, ids, features2keep)
 
 
@@ -385,6 +397,56 @@ class NumpyDataset(Dataset):
             json.dump(tasks, fout)
         metadata_df.to_csv(metadata_filename, index=False, compression='gzip')
 
+    # TODO: Test merge method for different length features, etc
+    def merge(self,
+              datasets: Iterable["Dataset"],
+              merge_dir: Optional[str] = None) -> "NumpyDataset":
+        """Merges provided datasets into a merged dataset.
+        Parameters
+        ----------
+        datasets: Iterable[Dataset]
+            List of datasets to merge.
+        merge_dir: str, optional (default None)
+            The new directory path to store the merged NumpyDataset.
+        Returns
+        -------
+        NumpyDataset
+            A merged NumpyDataset.
+        """
+        if merge_dir is not None:
+            if not os.path.exists(merge_dir):
+                os.makedirs(merge_dir)
+        else:
+            merge_dir = tempfile.mkdtemp()
+
+        datasets = list(datasets)
+
+        X = self.X
+        y = self.y
+        ids = self.ids
+        features = self.features
+        if len(features) != 0:
+            flag = True
+        else: flag = False
+        for ds in datasets:
+            X = np.append(X, ds.X, axis=0)
+            y = np.append(y, ds.y, axis=0)
+            ids = np.append(ids, ds.ids, axis=0)
+            if flag and len(features[0])==len(ds.features[0]):
+                features = np.append(features, ds.features, axis=0)
+            else:
+                flag2 = False
+                print('Features are not the same length/type... '
+                      '\nRecalculate features for all inputs! '
+                      '\nAppending empty array in dataset features!')
+        if flag2:
+            return NumpyDataset(X, y, np.empty(), ids)
+        else:
+            return NumpyDataset(X, y, features, ids, self.features2keep)
+
+
+
+    '''
     # TODO: adapt to deal with generators (working properly with a single dataset)
     def merge(datasets: Iterable["Dataset"],
               merge_dir: Optional[str] = None) -> "NumpyDataset":
@@ -431,6 +493,7 @@ class NumpyDataset(Dataset):
                 yield (X, y, features, ids)
 
         return NumpyDataset.create_dataset(generator(), data_dir=merge_dir, tasks=merge_tasks)
+        '''
 
     def from_numpy(X: np.ndarray,
                    y: Optional[np.ndarray] = None,
@@ -622,8 +685,8 @@ class CSVLoader(Dataset):
         """
         return load_csv_file(dataset_path, keep_fields, chunk_size)
 
-
-
+    # TODO: Check merge method
+    '''
     def merge(datasets: Sequence[Dataset]) -> 'NumpyDataset':
         """Merge multiple Datasets.
         Parameters
@@ -646,3 +709,4 @@ class CSVLoader(Dataset):
             )
 
         return NumpyDataset(X, y, features, ids, n_tasks=y.shape[1])
+        '''

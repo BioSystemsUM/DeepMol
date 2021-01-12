@@ -83,7 +83,7 @@ class Splitter(object):
           A tuple of train, valid and test datasets as Dataset objects.
         """
 
-        print("Computing train/valid/test indices")
+        #print("Computing train/valid/test indices")
         train_inds, valid_inds, test_inds = self.split(dataset,
                                                        frac_train=frac_train,
                                                        frac_test=frac_test,

@@ -425,6 +425,7 @@ class NumpyDataset(Dataset):
         y = self.y
         ids = self.ids
         features = self.features
+
         if len(features) != 0:
             flag = True
         else: flag = False
@@ -432,14 +433,15 @@ class NumpyDataset(Dataset):
             X = np.append(X, ds.X, axis=0)
             y = np.append(y, ds.y, axis=0)
             ids = np.append(ids, ds.ids, axis=0)
-            if flag and len(features[0])==len(ds.features[0]):
-                features = np.append(features, ds.features, axis=0)
+            if flag:
+                if len(features[0])==len(ds.features[0]):
+                    features = np.append(features, ds.features, axis=0)
             else:
                 flag2 = False
-                print('Features are not the same length/type... '
-                      '\nRecalculate features for all inputs! '
-                      '\nAppending empty array in dataset features!')
         if flag2:
+            print('Features are not the same length/type... '
+                  '\nRecalculate features for all inputs! '
+                  '\nAppending empty array in dataset features!')
             return NumpyDataset(X, y, np.empty(), ids)
         else:
             return NumpyDataset(X, y, features, ids, self.features2keep)

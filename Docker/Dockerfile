@@ -1,4 +1,5 @@
-FROM tensorflow/tensorflow:2.2.1-gpu-py3
+#FROM tensorflow/tensorflow:2.2.1-gpu-py3
+FROM tensorflow/tensorflow:2.2.2-gpu-py3
 
 # Install system packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -45,8 +46,8 @@ RUN conda install -y python=${python_version} && \
       keras \
       joblib \
       pillow \
-      mordred \
       plotly==4.14.1 \
+      mordred \
       kneed \
       seaborn==0.11.1 \
       molvs \
@@ -63,6 +64,7 @@ RUN conda install -y python=${python_version} && \
       cntk-gpu \
       && \
     conda install \
+#      tensorflow-gpu==2.3.0 \
       scikit-learn==0.23.2 \
       rdkit deepchem==2.3.0 \
       bcolz \
@@ -85,6 +87,7 @@ RUN conda install -y python=${python_version} && \
       bunch \
       gensim \
       imbalanced-learn \
+      tensorflow-gpu \
       && \
 #    git clone git://github.com/keras-team/keras.git /src && pip install -e /src[tests] && \
 #    pip install git+git://github.com/keras-team/keras.git && \

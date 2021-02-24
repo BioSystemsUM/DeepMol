@@ -1,7 +1,7 @@
 import numpy as np
 import csv
 
-from typing import Optional, Union, Tuple, Dict, List
+from typing import Optional, Union, Tuple, Dict, List, Iterable, Any
 Score = Dict[str, float]
 
 from Dataset.Dataset import Dataset
@@ -161,3 +161,161 @@ class Evaluator(object):
             return multitask_scores, all_task_scores
 
 
+class GeneratorEvaluator(object):
+    #TODO: comments
+    '''Evaluate models on a stream of data.
+    This class is a partner class to `Evaluator`. Instead of operating
+    over datasets this class operates over a generator which yields
+    batches of data to feed into provided model.
+    Examples
+    --------
+    # import deepchem as dc
+    # import numpy as np
+    # X = np.random.rand(10, 5)
+    # y = np.random.rand(10, 1)
+    # dataset = dc.data.NumpyDataset(X, y)
+    # model = dc.models.MultitaskRegressor(1, 5)
+    # generator = model.default_generator(dataset, pad_batches=False)
+    # transformers = []
+    # Then you can evaluate this model as follows
+    # import sklearn
+    # evaluator = GeneratorEvaluator(model, generator, transformers)
+    # multitask_scores = evaluator.compute_model_performance(sklearn.metrics.mean_absolute_error)
+    Evaluators can also be used with `dc.metrics.Metric` objects as well
+    in case you want to customize your metric further. (Note that a given
+    generator can only be used once so we have to redefine the generator here.)
+    # generator = model.default_generator(dataset, pad_batches=False)
+    # evaluator = GeneratorEvaluator(model, generator, transformers)
+    # metric = dc.metrics.Metric(dc.metrics.mae_score)
+    # multitask_scores = evaluator.compute_model_performance(metric)
+    '''
+
+    def __init__(self,
+                 model,
+                 generator: Iterable[Tuple[Any, Any, Any]],
+                 labels: Optional[List] = None):#,
+                 #weights: Optional[List] = None):
+        """
+        Parameters
+        ----------
+        model: Model
+          Model to evaluate.
+        generator: generator
+          Generator which yields batches to feed into the model. For a
+          KerasModel, it should be a tuple of the form (inputs, labels,
+          weights). The "correct" way to create this generator is to use
+          `model.default_generator` as shown in the example above.
+        labels: list of Layer
+          layers which are keys in the generator to compare to outputs
+        weights: list of Layer
+          layers which are keys in the generator for weight matrices
+        """
+
+        self.model = model
+        self.generator = generator
+        #self.output_transformers = [
+        #    transformer for transformer in transformers if transformer.transform_y
+        #]
+        self.label_keys = labels
+        #self.weights = weights
+        if labels is not None and len(labels) != 1:
+            raise ValueError("GeneratorEvaluator currently only supports one label")
+
+    def compute_model_performance(self,
+                                  metrics: Metric,
+                                  per_task_metrics: bool = False,
+                                  use_sample_weights: bool = False,
+                                  n_classes: int = 2) -> Union[Score, Tuple[Score, Score]]:
+        """
+        Computes statistics of model on test data and saves results to csv.
+        Parameters
+        ----------
+        metrics: dc.metrics.Metric/list[dc.metrics.Metric]/function
+          The set of metrics provided. This class attempts to do some
+          intelligent handling of input. If a single `dc.metrics.Metric`
+          object is provided or a list is provided, it will evaluate
+          `self.model` on these metrics. If a function is provided, it is
+          assumed to be a metric function that this method will attempt to
+          wrap in a `dc.metrics.Metric` object. A metric function must
+          accept two arguments, `y_true, y_pred` both of which are
+          `np.ndarray` objects and return a floating point score.
+        per_task_metrics: bool, optional
+          If true, return computed metric for each task on multitask
+          dataset.
+        use_sample_weights: bool, optional (default False)
+          If set, use per-sample weights `w`.
+        n_classes: int, optional (default None)
+          If specified, will assume that all `metrics` are classification
+          metrics and will use `n_classes` as the number of unique classes
+          in `self.dataset`.
+        Returns
+        -------
+        multitask_scores: dict
+          Dictionary mapping names of metrics to metric scores.
+        all_task_scores: dict, optional
+          If `per_task_metrics == True`, then returns a second dictionary
+          of scores for each task separately.
+        """
+        metrics = _process_metric_input(metrics)
+
+        # We use y/w to aggregate labels/weights across generator.
+        y = []
+        #w = []
+
+        # GENERATOR CLOSURE
+        def generator_closure():
+            """This function is used to pull true labels/weights out as we iterate over the generator."""
+            if self.label_keys is None:
+                #weights = None
+                # This is a KerasModel.
+                for batch in self.generator:
+                    # Some datasets have weights
+                    try:
+                        #inputs, labels, weights = batch
+                        inputs, labels = batch
+                    except ValueError:
+                        try:
+                            #inputs, labels, weights, ids = batch
+                            inputs, labels, ids = batch
+                        except ValueError:
+                            raise ValueError(
+                                "Generator must yield values of form (input, labels) or (input, labels, ids)"
+                            )
+                    y.append(labels[0])
+                    #if len(weights) > 0:
+                    #    w.append(weights[0])
+                    #yield (inputs, labels, weights)
+                    yield (inputs, labels)
+
+        # Process predictions and populate y/w lists
+        y_pred = self.model.predict_on_generator(generator_closure())
+
+        # Combine labels/weights
+        y = np.concatenate(y, axis=0)
+        #w = np.concatenate(w, axis=0)
+
+        multitask_scores = {}
+        all_task_scores = {}
+
+        # Undo data transformations.
+        #y = dc.trans.undo_transforms(y, self.output_transformers)
+        #y_pred = dc.trans.undo_transforms(y_pred, self.output_transformers)
+
+        # Compute multitask metrics
+        for metric in metrics:
+            results = metric.compute_metric(y,
+                                            y_pred,
+                                            #w,
+                                            per_task_metrics=per_task_metrics,
+                                            n_classes=n_classes,
+                                            use_sample_weights=use_sample_weights)
+            if per_task_metrics:
+                multitask_scores[metric.name], computed_metrics = results
+                all_task_scores[metric.name] = computed_metrics
+            else:
+                multitask_scores[metric.name] = results
+
+        if not per_task_metrics:
+            return multitask_scores
+        else:
+            return multitask_scores, all_task_scores

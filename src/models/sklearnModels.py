@@ -17,13 +17,13 @@ from metrics.Metrics import Metric
 from utils.utils import load_from_disk, save_to_disk
 
 from sklearn.base import clone
-
+'''
 #Some ScikitLearn non weighted models
 NON_WEIGHTED_MODELS = [
     LogisticRegression, PLSRegression, GaussianProcessRegressor, ElasticNetCV,
     LassoCV, BayesianRidge
 ]
-
+'''
 
 class SklearnModel(Model):
     """Wrapper class that wraps scikit-learn models.
@@ -56,6 +56,7 @@ class SklearnModel(Model):
             model = model_instance
 
         super(SklearnModel, self).__init__(model, model_dir, **kwargs)
+        '''
         if 'use_weights' in kwargs:
             self.use_weights = kwargs['use_weights']
         else:
@@ -63,6 +64,7 @@ class SklearnModel(Model):
         for model in NON_WEIGHTED_MODELS:
             if isinstance(self.model, model):
                 self.use_weights = False
+        '''
 
     def fit(self, dataset: Dataset) -> None:
         """Fits scikit-learn model to data.
@@ -73,11 +75,14 @@ class SklearnModel(Model):
         """
         features = dataset.features
         y = np.squeeze(dataset.y)
+        '''
         # Some scikit-learn models don't use weights.
         if self.use_weights:
             self.model.fit(features, y)
             return
         self.model.fit(features, y)
+        '''
+        return self.model.fit(features, y)
 
     def predict(self, dataset: Dataset) -> np.ndarray:
         """Makes predictions on dataset.
@@ -118,7 +123,7 @@ class SklearnModel(Model):
                        dataset: Dataset,
                        metric: Metric,
                        folds: int = 3):
-        #TODO: add option to choose between splitters (later, for now we only have random)
+        #TODO: add option to choose between splitters
         #splitter = RandomSplitter()
         splitter = SingletaskStratifiedSplitter()
         datasets = splitter.k_fold_split(dataset, folds)

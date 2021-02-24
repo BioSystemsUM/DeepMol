@@ -155,6 +155,7 @@ class Model(BaseEstimator):
             then returns a second dictionary of scores for each task
             separately.
         """
+        print('Models Class line 158 --> evaluator')
         evaluator = Evaluator(self, dataset)
 
         return evaluator.compute_model_performance(metrics,

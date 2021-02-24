@@ -38,6 +38,79 @@ def load_csv_file(input_file, keep_fields, chunk_size=None):
                 return df
             else : return df[keep_fields]
 
+#TODO: comments
+def pad_batch(batch_size: int,
+              X_b: np.ndarray,
+              y_b: np.ndarray,
+              features_b: np.ndarray,
+              ids_b: np.ndarray) -> Batch:
+    """Pads batch to have size precisely batch_size elements.
+    Given arrays of features `X_b`, labels `y_b`, weights `w_b`, and
+    identifiers `ids_b` all with length less than or equal to
+    batch-size, pads them to `batch_size` length. It does this by
+    repeating the original entries in tiled fashion. Note that `X_b,
+    y_b, w_b, ids_b` must all have the same length.
+    Parameters
+    ----------
+    batch_size: int
+        The number of datapoints in a batch
+    X_b: np.ndarray
+        Must be such that `len(X_b) <= batch_size`
+    y_b: np.ndarray
+        Must be such that `len(y_b) <= batch_size`
+    w_b: np.ndarray
+        Must be such that `len(w_b) <= batch_size`
+    ids_b: np.ndarray
+        Must be such that `len(ids_b) <= batch_size`
+    Returns
+    -------
+    Batch
+        The batch is a tuple of `(X_out, y_out, w_out, ids_out)`,
+        all numpy arrays with length `batch_size`.
+    """
+
+    num_samples = len(X_b)
+    if num_samples == batch_size:
+        return (X_b, y_b, features_b, ids_b)
+    # By invariant of when this is called, can assume num_samples > 0
+    # and num_samples < batch_size
+    if len(features_b.shape) > 1:
+        feature_shape = features_b.shape[1:]
+        features_out = np.zeros((batch_size,) + feature_shape, dtype=features_b.dtype)
+    else:
+        features_out = np.zeros((batch_size,), dtype=features_b.dtype)
+
+    if y_b is None:
+        y_out = None
+    elif len(y_b.shape) < 2:
+        y_out = np.zeros(batch_size, dtype=y_b.dtype)
+    else:
+        y_out = np.zeros((batch_size,) + y_b.shape[1:], dtype=y_b.dtype)
+
+    X_out = np.zeros((batch_size,), dtype=X_b.dtype)
+
+    ids_out = np.zeros((batch_size,), dtype=ids_b.dtype)
+
+    # Fill in batch arrays
+    start = 0
+
+    while start < batch_size:
+        num_left = batch_size - start
+        if num_left < num_samples:
+            increment = num_left
+        else:
+            increment = num_samples
+        features_out[start:start + increment] = features_b[:increment]
+
+        if y_out is not None:
+            y_out[start:start + increment] = y_b[:increment]
+
+        ids_out[start:start + increment] = ids_b[:increment]
+        X_out[start:start + increment] = X_b[:increment]
+        start += increment
+
+    return (X_out, y_out, features_out, ids_out)
+
 class Dataset(object):
     """Abstract base class for datasets
 
@@ -532,6 +605,64 @@ class NumpyDataset(Dataset):
         return NumpyDataset.create_dataset(
             [(dataset.X, dataset.y, dataset.features, dataset.ids)],
             data_dir=data_dir, tasks=tasks)
+
+
+
+    def iterbatches(self,
+                    batch_size: Optional[int] = None,
+                    epochs: int = 1,
+                    deterministic: bool = False,
+                    pad_batches: bool = False) -> Iterator[Batch]:
+        """Get an object that iterates over minibatches from the dataset.
+        Each minibatch is returned as a tuple of four numpy arrays:
+        `(X, y, w, ids)`.
+        Parameters
+        ----------
+        batch_size: int, optional (default None)
+          Number of elements in each batch.
+        epochs: int, default 1
+          Number of epochs to walk over dataset.
+        deterministic: bool, optional (default False)
+          If True, follow deterministic order.
+        pad_batches: bool, optional (default False)
+          If True, pad each batch to `batch_size`.
+        Returns
+        -------
+        Iterator[Batch]
+          Generator which yields tuples of four numpy arrays `(X, y, w, ids)`.
+        """
+
+        def iterate(dataset: NumpyDataset,
+                    batch_size: Optional[int],
+                    epochs: int,
+                    deterministic: bool,
+                    pad_batches: bool):
+            n_samples = dataset.X.shape[0]
+            if deterministic:
+                sample_perm = np.arange(n_samples)
+            if batch_size is None:
+                batch_size = n_samples
+            for epoch in range(epochs):
+                if not deterministic:
+                    sample_perm = np.random.permutation(n_samples)
+                batch_idx = 0
+                num_batches = np.math.ceil(n_samples / batch_size)
+                while batch_idx < num_batches:
+                    start = batch_idx * batch_size
+                    end = min(n_samples, (batch_idx + 1) * batch_size)
+                    indices = range(start, end)
+                    perm_indices = sample_perm[indices]
+                    X_batch = dataset.X[perm_indices]
+                    y_batch = dataset.y[perm_indices]
+                    ids_batch = dataset.ids[perm_indices]
+                    features_batch = dataset.features[perm_indices]
+                    if pad_batches:
+                        (X_batch, y_batch, features_batch, ids_batch) = pad_batch(
+                            batch_size, X_batch, y_batch, features_batch, ids_batch)
+                    batch_idx += 1
+                    yield (X_batch, y_batch, features_batch, ids_batch)
+
+        return iterate(self, batch_size, epochs, deterministic, pad_batches)
 
 
 

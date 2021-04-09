@@ -38,7 +38,7 @@ class Splitter(object):
         if isinstance(dataset, NumpyDataset):
             ds = dataset
         else:
-            ds = NumpyDataset.from_numpy(dataset.X, dataset.y, dataset.features, dataset.ids)
+            ds = NumpyDataset(dataset.mols, dataset.X, dataset.y, dataset.ids, dataset.features2keep, dataset.n_tasks)
 
         kf = KFold(n_splits=k)
 
@@ -254,7 +254,7 @@ class SingletaskStratifiedSplitter(Splitter):
         if isinstance(dataset, NumpyDataset):
             ds = dataset
         else:
-            ds = NumpyDataset.from_numpy(dataset.X, dataset.y, dataset.features, dataset.ids)
+            ds = NumpyDataset(dataset.mols, dataset.X, dataset.y, dataset.ids, dataset.features2keep, dataset.n_tasks)
 
         skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=None)
 

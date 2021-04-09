@@ -33,7 +33,7 @@ class MolecularFeaturizer(object):
         Returns
         -------
         features: Dataset
-          The input Dataset containing a featurized representation of the molecules in Dataset.features.
+          The input Dataset containing a featurized representation of the molecules in Dataset.X.
         """
         molecules = dataset.mols
 

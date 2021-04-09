@@ -1,7 +1,7 @@
 from models.Models import Model
 from models.kerasModels import KerasModel
 from metrics.Metrics import Metric
-from Dataset.Dataset import Dataset
+from Datasets.Datasets import Dataset
 import sklearn
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV, StratifiedKFold
 from keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
@@ -321,8 +321,8 @@ class GridHyperparamOpt(HyperparamOpt):
             grid = GridSearchCV(estimator = model, param_grid = params_dict,
                                 scoring = metrics, n_jobs=n_jobs, cv=StratifiedKFold(n_splits=cv), verbose=verbose)
 
-        print(train_dataset.features.shape, train_dataset.features.shape[0]/cv)
-        grid_result = grid.fit(train_dataset.features, train_dataset.y)
+        print(train_dataset.X.shape, train_dataset.X.shape[0]/cv)
+        grid_result = grid.fit(train_dataset.X, train_dataset.y)
 
         print("\n \n Best %s: %f using %s" % (metrics, grid_result.best_score_, grid_result.best_params_))
         means = grid_result.cv_results_['mean_test_score']

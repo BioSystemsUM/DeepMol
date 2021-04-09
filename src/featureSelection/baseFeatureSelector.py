@@ -1,4 +1,4 @@
-from Dataset import Dataset
+from Datasets.Datasets import Dataset
 from sklearn.feature_selection import VarianceThreshold, SelectKBest, chi2, SelectPercentile, RFECV, SelectFromModel
 from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
@@ -35,13 +35,13 @@ class BaseFeatureSelector(object):
           Dataset containing the selected features and indexes of the
           features kept as 'self.features2keep'
         """
-        self.features_fs = dataset.features
+        self.features_fs = dataset.X
 
         self.y_fs = dataset.y
 
         features, self.features2keep = self._featureSelector()
 
-        dataset.features = np.asarray(features)
+        dataset.X = np.asarray(features)
 
         dataset.features2keep = self.features2keep
 

@@ -3,7 +3,7 @@ import numpy as np
 
 from typing import Tuple, List, Optional, Iterator
 
-from Dataset.Dataset import Dataset, NumpyDataset, CSVLoader
+from Datasets.Datasets import Dataset, NumpyDataset
 
 from sklearn.model_selection import KFold, StratifiedKFold
 
@@ -35,7 +35,7 @@ class Splitter(object):
         """
         print("Computing K-fold split")
 
-        if isinstance(dataset, NumpyDataset) or isinstance(dataset, CSVLoader):
+        if isinstance(dataset, NumpyDataset):
             ds = dataset
         else:
             ds = NumpyDataset.from_numpy(dataset.X, dataset.y, dataset.features, dataset.ids)
@@ -251,7 +251,7 @@ class SingletaskStratifiedSplitter(Splitter):
 
         print("Computing Stratified K-fold split")
 
-        if isinstance(dataset, NumpyDataset) or isinstance(dataset, CSVLoader):
+        if isinstance(dataset, NumpyDataset):
             ds = dataset
         else:
             ds = NumpyDataset.from_numpy(dataset.X, dataset.y, dataset.features, dataset.ids)

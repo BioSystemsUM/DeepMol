@@ -10,7 +10,7 @@ from sklearn.linear_model import LassoCV
 from sklearn.linear_model import ElasticNetCV
 
 from models.Models import Model
-from Dataset.Dataset import Dataset
+from Datasets.Datasets import Dataset
 from splitters.splitters import RandomSplitter, SingletaskStratifiedSplitter
 from metrics.Metrics import Metric
 
@@ -73,7 +73,7 @@ class SklearnModel(Model):
         dataset: Dataset
             The `Dataset` to train this model on.
         """
-        features = dataset.features
+        features = dataset.X
         y = np.squeeze(dataset.y)
         '''
         # Some scikit-learn models don't use weights.
@@ -98,9 +98,9 @@ class SklearnModel(Model):
           the value is always a return value of `predict_proba`.
         """
         try:
-            return self.model.predict_proba(dataset.features)
+            return self.model.predict_proba(dataset.X)
         except AttributeError:
-            return self.model.predict(dataset.features)
+            return self.model.predict(dataset.X)
 
     def predict_on_batch(self, X: Dataset) -> np.ndarray:
         """Makes predictions on batch of data.

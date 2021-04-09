@@ -1,4 +1,4 @@
-from Dataset.Dataset import Dataset, NumpyDataset
+from Datasets.Datasets import Dataset, NumpyDataset
 
 import pandas as pd
 import numpy as np
@@ -29,7 +29,7 @@ class UnsupervisedLearn(object):
         self.dataset = dataset
 
 
-        self.features = dataset.features
+        self.features = dataset.X
 
 
 
@@ -139,7 +139,12 @@ class PCA(UnsupervisedLearn):
         if plot:
             self._plot()
 
-        return NumpyDataset(X=self.dataset.X, y=self.dataset.y, features=pca.fit_transform(self.features))
+        return NumpyDataset(mols=self.dataset.mols,
+                            X=pca.fit_transform(self.features),
+                            y=self.dataset.y,
+                            ids=self.dataset.ids,
+                            features2keep=self.dataset.features2keep,
+                            n_tasks=self.dataset.n_tasks)
 
 
     def _plot(self):
@@ -188,7 +193,11 @@ class PCA(UnsupervisedLearn):
 
         print('\n \n')
 
-        print('%i Components PCA: ' %(self.n_components))
+        if self.n_components is None:
+            self.n_components = self.dataset.X.shape[1]
+            print('%i Components PCA: ' %(self.n_components))
+        else:
+            print('%i Components PCA: ' %(self.n_components))
 
         pca_all = decomposition.PCA(n_components=self.n_components,
                                       copy=self.copy,
@@ -362,7 +371,12 @@ class TSNE(UnsupervisedLearn):
         if plot:
             self._plot()
 
-        return NumpyDataset(X=self.dataset.X, y=self.dataset.y, features=X_embedded.fit_transform(self.features))
+        return NumpyDataset(mols = self.dataset.mols,
+                            X=X_embedded.fit_transform(self.features),
+                            y=self.dataset.y,
+                            ids=self.dataset.ids,
+                            features2keep=self.dataset.features2keep,
+                            n_tasks=self.dataset.n_tasks)
 
 
     def _plot(self):

@@ -6,7 +6,7 @@ from rdkit.Chem import rdmolfiles
 from rdkit.Chem import rdmolops
 from rdkit.Chem.rdchem import Mol
 
-from Dataset import Dataset
+from Datasets.Datasets import Dataset
 
 
 class MolecularFeaturizer(object):
@@ -35,7 +35,7 @@ class MolecularFeaturizer(object):
         features: Dataset
           The input Dataset containing a featurized representation of the molecules in Dataset.features.
         """
-        molecules = dataset.X
+        molecules = dataset.mols
 
         features = []
         for i, mol in enumerate(molecules):
@@ -58,7 +58,7 @@ class MolecularFeaturizer(object):
                     mol = Chem.MolToSmiles(mol)
                 print("Failed to featurize datapoint %d, %s. Appending empty array" %(i, mol))
                 print("Exception message: {}".format(e))
-        dataset.features = np.asarray(features)
+        dataset.X = np.asarray(features)
 
         #if anyNA:
         #TODO: where and in which manner to remove NAs????

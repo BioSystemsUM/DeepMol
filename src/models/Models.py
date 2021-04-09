@@ -3,7 +3,7 @@ import shutil
 import tempfile
 from typing import List, Optional, Sequence
 import numpy as np
-from Dataset.Dataset import Dataset
+from Datasets.Datasets import Dataset
 from evaluator.Evaluator import Evaluator
 from metrics.Metrics import Metric
 
@@ -155,7 +155,7 @@ class Model(BaseEstimator):
             then returns a second dictionary of scores for each task
             separately.
         """
-        print('Models Class line 158 --> evaluator')
+
         evaluator = Evaluator(self, dataset)
 
         return evaluator.compute_model_performance(metrics,

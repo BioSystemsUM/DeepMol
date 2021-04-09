@@ -6,7 +6,7 @@ from typing import Optional, List, Callable
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
 import numpy as np
-from Dataset.Dataset import Dataset
+from Datasets.Datasets import Dataset
 
 #Only for sequential single input models
 class KerasModel(Model):
@@ -63,7 +63,7 @@ class KerasModel(Model):
         """
         print('kerasModels fit!')
         print(self.model)
-        features = dataset.features
+        features = dataset.X
         y = np.squeeze(dataset.y)
         self.model.fit(features, y)
 
@@ -81,11 +81,11 @@ class KerasModel(Model):
           the value is always a return value of `predict_proba`.
         """
         try:
-            return self.model.predict_proba(dataset.features)
+            return self.model.predict_proba(dataset.X)
         except AttributeError:
             print(self.model)
             print(type(self.model))
-            return self.model.predict(dataset.features)
+            return self.model.predict(dataset.X)
 
     def predict_on_batch(self, X: Dataset) -> np.ndarray:
         """Makes predictions on batch of data.

@@ -4,7 +4,7 @@ import csv
 from typing import Optional, Union, Tuple, Dict, List, Iterable, Any
 Score = Dict[str, float]
 
-from Dataset.Dataset import Dataset
+from Datasets.Datasets import Dataset
 from splitters.splitters import RandomSplitter
 from metrics.Metrics import Metric
 
@@ -137,7 +137,7 @@ class Evaluator(object):
         y = self.dataset.y
 
         y_pred = self.model.predict(self.dataset)
-        n_tasks = len(self.dataset.get_task_names())
+        n_tasks = self.dataset.n_tasks
 
         multitask_scores = {}
         all_task_scores = {}

@@ -1,7 +1,7 @@
 from compoundFeaturization.rdkitFingerprints import MorganFingerprint, MACCSkeysFingerprint, LayeredFingerprint
 from compoundFeaturization.rdkitFingerprints import RDKFingerprint, AtomPairFingerprint
 from compoundFeaturization.mol2vec import Mol2Vec
-from Dataset.Dataset import CSVLoader, NumpyDataset
+from loaders.Loaders import CSVLoader
 from featureSelection.baseFeatureSelector import LowVarianceFS, KbestFS, PercentilFS, RFECVFS, SelectFromModelFS
 from splitters.splitters import SingletaskStratifiedSplitter, RandomSplitter
 from models.sklearnModels import SklearnModel
@@ -27,7 +27,8 @@ from unsupervised.baseUnsupervised import PCA
 
 #ds = CSVLoader('preprocessed_dataset.csv', 'Smiles', ['Class'], 'PubChem CID')#, chunk_size=1000)
 
-ds = CSVLoader('preprocessed_dataset_wfoodb.csv', 'Smiles', ['Class'], 'ID', chunk_size=5000)
+ds = CSVLoader(dataset_path='preprocessed_dataset_wfoodb.csv', mols_field='Smiles', labels_fields='Class', id_field='ID', shard_size=5000)
+ds = ds.create_dataset()
 
 ds.get_shape()
 
@@ -40,7 +41,7 @@ ds = MorganFingerprint().featurize(ds)
 
 print(ds.X)
 print(ds.y)
-print(ds.features)
+print(ds.mols)
 print(ds.get_shape())
 
 
@@ -57,7 +58,7 @@ print(len(np.where(ds.y==0)[0]), len(np.where(ds.y==1)[0]))
 
 pca = PCA().runUnsupervised(ds)
 
-'''
+
 splitter = SingletaskStratifiedSplitter()
 
 train_dataset, valid_dataset, test_dataset = splitter.train_valid_test_split(dataset=ds, frac_train=0.6, frac_valid=0.2, frac_test=0.2)
@@ -150,4 +151,3 @@ print(best_rf)
 print('@@@@@@@@@@@@@@@@')
 best_rf.evaluate(test_dataset, metrics)
 
-'''

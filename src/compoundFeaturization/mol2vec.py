@@ -41,7 +41,7 @@ class Mol2Vec(MolecularFeaturizer):
         self.sentences2vec = sentences2vec
         self.mol2alt_sentence = mol2alt_sentence
         if pretrain_model_path is None:
-            pretrain_model_path = 'compoundFeaturization/mol2vec_models/model_300dim.pkl'
+            pretrain_model_path = 'mol2vec_models/model_300dim.pkl'
         self.model = word2vec.Word2Vec.load(pretrain_model_path)
 
     def _featurize(self, mol: Any) -> np.ndarray:

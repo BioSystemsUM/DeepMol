@@ -18,7 +18,7 @@ def svm_model_builder(C=1, gamma='auto', kernel='rfb'):
     svm_model = SVC(C=C, gamma=gamma, kernel=kernel)
     return svm_model
 
-def create_dense_model(input_dim,
+def create_dense_model(input_dim=1024,
                        n_hidden_layers = 1,
                        layers_units = [12, 8, 1],
                        dropouts = [0.5, 0.5],
@@ -46,7 +46,7 @@ def create_dense_model(input_dim,
     model.compile(loss=loss, optimizer=optimizer, metrics=metrics)
     return model
 
-def make_cnn_model(input_dim,
+def make_cnn_model(input_dim=1024,
                    g_noise = 0.05,
                    DENSE=128,
                    DROPOUT=0.5,

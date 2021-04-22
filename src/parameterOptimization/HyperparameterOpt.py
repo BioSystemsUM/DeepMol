@@ -1,21 +1,24 @@
+"""Hyperparameter Optimization Class"""
+
+import sklearn
 from models.Models import Model
+from models.sklearnModels import SklearnModel
 from models.kerasModels import KerasModel
 from metrics.Metrics import Metric
 from Datasets.Datasets import Dataset
-import sklearn
-from sklearn.model_selection import GridSearchCV, RandomizedSearchCV, StratifiedKFold
-from keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
-from sklearn.metrics import make_scorer
 from typing import Dict, Any, Optional, Tuple
-import collections
-import numpy as np
-import os
-import shutil
-import tempfile
 from functools import reduce
 from operator import mul
 import itertools
+import collections
+import numpy as np
 import random
+import shutil
+import tempfile
+import os
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV, StratifiedKFold
+from keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
+
 
 
 def _convert_hyperparam_dict_to_filename(hyper_params: Dict[str, Any]) -> str:
@@ -43,12 +46,35 @@ def _convert_hyperparam_dict_to_filename(hyper_params: Dict[str, Any]) -> str:
     return filename
 
 
-#TODO: MAYBE(?) implement class similar to metrics for scorers
+def validate_metrics(metrics):
+    '''Validate single and multi metrics'''
+    if isinstance(metrics, dict):
+        all_metrics = []
+        for m in metrics.values():
+            if m in sklearn.metrics.SCORERS.keys() or isinstance(m, sklearn.metrics._scorer._PredictScorer):
+                all_metrics.append(m)
+            else:
+                print(m, ' is not a valid scoring function. Use sorted(sklearn.metrics.SCORERS.keys()) '
+                         'to get valid options.')
+    else:
+        if metrics in sklearn.metrics.SCORERS.keys() or isinstance(metrics, sklearn.metrics._scorer._PredictScorer):
+            all_metrics = metrics
+        else:
+            print('WARNING: ', metrics, ' is not a valid scoring function. '
+                                       'Use sorted(sklearn.metrics.SCORERS.keys()) to get valid options.')
+
+    if not metrics:
+        metrics = 'accuracy'
+        print('Using accuracy instead and ', metrics, ' on validation!\n \n')
+
+    return metrics
+
+
 class HyperparamOpt(object):
     """Abstract superclass for hyperparameter search classes.
     """
 
-    def __init__(self, model_builder: Model):
+    def __init__(self, model_builder: Model, mode: str = None):
         """Initialize Hyperparameter Optimizer.
         Note this is an abstract constructor which should only be used by subclasses.
 
@@ -64,6 +90,7 @@ class HyperparamOpt(object):
             raise ValueError("HyperparamOpt is an abstract superclass and cannot be directly instantiated. "
                              "You probably want to instantiate a concrete subclass instead.")
         self.model_builder = model_builder
+        self.mode = mode
 
 
     def hyperparam_search(self,
@@ -103,7 +130,7 @@ class HyperparamOpt(object):
       raise NotImplementedError
 
 
-class GridHyperparamOpt(HyperparamOpt):
+class HyperparamOpt_Valid(HyperparamOpt):
     """
     Provides simple grid hyperparameter search capabilities.
     This class performs a grid hyperparameter search over the specified
@@ -115,7 +142,6 @@ class GridHyperparamOpt(HyperparamOpt):
                           train_dataset: Dataset,
                           valid_dataset: Dataset,
                           metric: Metric,
-                          cv: int = 3,
                           n_iter_search: int = 15,
                           n_jobs: int = 1,
                           verbose: int = 0,
@@ -123,66 +149,47 @@ class GridHyperparamOpt(HyperparamOpt):
                           logdir: Optional[str] = None,
                           **kwargs):
 
-        try:
-            #TODO: check initial prints when it is supposed to run the exception
-            #TODO: try to do the hyperparamoptimization with sklearn functions for hyperparam_search_sklearn
-            return self.hyperparam_search_sklearn(params_dict,
-                                                  train_dataset,
-                                                  valid_dataset,
-                                                  metric,
-                                                  n_iter_search,
-                                                  use_max,
-                                                  logdir,
-                                                  **kwargs)
-        except Exception:
-            return self.hyperparam_search_keras(params_dict,
-                                                train_dataset,
-                                                valid_dataset,
-                                                metric,
-                                                cv,
-                                                n_iter_search,
-                                                n_jobs,
-                                                verbose,
-                                                use_max,
-                                                logdir,
-                                                **kwargs)
-
-
-    def hyperparam_search_sklearn(self,
-                          params_dict: Dict,
-                          train_dataset: Dataset,
-                          valid_dataset: Dataset,
-                          metric: Metric,
-                          n_iter_search: int = 15,
-                          use_max: bool = True,
-                          logdir: Optional[str] = None,
-                          **kwargs):
         """Perform hyperparams search according to params_dict.
         Each key to hyperparams_dict is a model_param. The values should
         be a list of potential values for that hyperparam.
         Parameters
         ----------
         params_dict: Dict
-          Maps hyperparameter names (strings) to lists of possible
-          parameter values.
+            Maps hyperparameter names (strings) to lists of possible
+            parameter values.
         train_dataset: Dataset
-          dataset used for training
+            dataset used for training
         valid_dataset: Dataset
-          dataset used for validation(optimization on valid scores)
+            dataset used for validation(optimization on valid scores)
         metric: Metric
-          metric used for evaluation
+            metric used for evaluation
         n_iter_search: int or None, optional
             Number of random combinations of parameters to test, if None performs complete grid search
         use_max: bool, optional
-          If True, return the model with the highest score.
+            If True, return the model with the highest score.
         logdir: str, optional
-          The directory in which to store created models. If not set, will
-          use a temporary directory.
+            The directory in which to store created models. If not set, will
+            use a temporary directory.
         Returns
         -------
         Tuple[`best_model`, `best_hyperparams`, `all_scores`]
         """
 
+        if self.mode is None:
+            #TODO: better way of doint this
+            if len(set(train_dataset.y)) > 2:
+                model = KerasRegressor(build_fn=self.model_builder, **kwargs)
+                self.mode = 'regression'
+            else:
+                model = KerasClassifier(build_fn=self.model_builder, **kwargs)
+                self.mode = 'classification'
+        elif self.mode == 'classification':
+            model = KerasClassifier(build_fn=self.model_builder, **kwargs)
+        elif self.mode == 'regression':
+            model = KerasRegressor(build_fn=self.model_builder, **kwargs)
+        else : raise ValueError('Model operation mode can only be classification or regression!')
+
+        print('MODE: ', self.mode)
         hyperparams = params_dict.keys()
         hyperparam_vals = params_dict.values()
         for hyperparam_list in params_dict.values():
@@ -204,10 +211,11 @@ class GridHyperparamOpt(HyperparamOpt):
         best_model, best_model_dir = None, None
         all_scores = {}
         j = 0
-        print("Fitting %d random models from a space of %d possible models." % (len(random_inds), number_combinations))
+        print("Fitting %d random models from a space of %d possible models." % (
+        len(random_inds), number_combinations))
         for ind, hyperparameter_tuple in enumerate(itertools.product(*hyperparam_vals)):
             if ind in random_inds:
-                j+=1
+                j += 1
                 model_params = {}
                 print("Fitting model %d/%d" % (j, len(random_inds)))
                 hyper_params = dict(zip(hyperparams, hyperparameter_tuple))
@@ -227,8 +235,12 @@ class GridHyperparamOpt(HyperparamOpt):
                 else:
                     model_dir = tempfile.mkdtemp()
 
-                model_params['model_dir'] = model_dir
-                model = self.model_builder(**model_params)
+                try :
+                    model = SklearnModel(self.model_builder(**model_params), model_dir)
+
+                except Exception as e:
+                    model = KerasModel(self.model_builder(**model_params), model_dir)
+
                 model.fit(train_dataset)
 
                 try:
@@ -253,7 +265,7 @@ class GridHyperparamOpt(HyperparamOpt):
                     shutil.rmtree(model_dir)
 
                 print("Model %d/%d, Metric %s, Validation set %s: %f" % (
-                j, len(random_inds), metric.name, j, valid_score))
+                    j, len(random_inds), metric.name, j, valid_score))
                 print("\tbest_validation_score so far: %f" % best_validation_score)
 
         if best_model is None:
@@ -269,61 +281,98 @@ class GridHyperparamOpt(HyperparamOpt):
         print("validation_score: %f" % best_validation_score)
         return best_model, best_hyperparams, all_scores
 
-    def hyperparam_search_keras(self,
-                                params_dict: Dict,
-                                train_dataset: Dataset,
-                                valid_dataset: Dataset,
-                                metric: Metric,
-                                cv: int = 3,
-                                n_iter_search: int = 15,
-                                n_jobs: int = 1,
-                                verbose: int = 0,
-                                use_max: bool = True,
-                                logdir: Optional[str] = None,
-                                **kwargs):
+
+
+class HyperparamOpt_CV(HyperparamOpt):
+    """
+    Provides simple grid hyperparameter search capabilities.
+    This class performs a grid hyperparameter search over the specified
+    hyperparameter space.
+    """
+
+    def hyperparam_search(self,
+                          model_type: str,
+                          params_dict: Dict,
+                          train_dataset: Dataset,
+                          metric: Metric,
+                          cv: int = 3,
+                          n_iter_search: int = 15,
+                          n_jobs: int = 1,
+                          verbose: int = 0,
+                          logdir: Optional[str] = None,
+                          **kwargs):
+
+        """Perform hyperparams search according to params_dict.
+        Each key to hyperparams_dict is a model_param. The values should
+        be a list of potential values for that hyperparam.
+        Parameters
+        ----------
+        model_type: str
+            string identifying the type of model (sklearn or keras)
+        params_dict: Dict
+            Maps hyperparameter names (strings) to lists of possible
+            parameter values.
+        train_dataset: Dataset
+            dataset used for training
+        metric: Metric
+            metric used for evaluation
+        cv: int
+            number of folds to perform in the cross validation
+        n_iter_search: int or None, optional
+            Number of random combinations of parameters to test, if None performs complete grid search
+        logdir: str, optional
+            The directory in which to store created models. If not set, will
+            use a temporary directory.
+        Returns
+        -------
+        Tuple['best_model', 'best_hyperparams', 'all_scores']
         """
+        # TODO: better way of doing this
+        if self.mode is None:
+            if len(set(train_dataset.y)) > 2:
+                self.mode = 'regression'
+            else:
+                self.mode = 'classification'
+        print('MODEL TYPE: ', model_type)
+        #diferentiate sklearn model from keras model
+        if model_type == 'keras':
+            if self.mode == 'classification':
+                model = KerasClassifier(build_fn=self.model_builder, **kwargs)
 
-        :param params_dict:
-        :return:
-        """
+            elif self.mode == 'regression':
+                model = KerasRegressor(build_fn=self.model_builder, **kwargs)
 
-        print(type(metric))
-        print('METRIC: ', metric)
-        metrics = False
-        if isinstance(metric, dict):
-            metrics = []
-            for m in metric.values():
-                if m in sklearn.metrics.SCORERS.keys() or isinstance(m, sklearn.metrics._scorer._PredictScorer):
-                    metrics.append(m)
-                else :
-                    print(m, ' is not a valid scoring function. Use sorted(sklearn.metrics.SCORERS.keys()) '
-                                  'to get valid options.')
-        else :
-            if metric in sklearn.metrics.SCORERS.keys() or isinstance(metric, sklearn.metrics._scorer._PredictScorer):
-                metrics = metric
-            else :
-                print('WARNING: ', metric, ' is not a valid scoring function. '
-                                                'Use sorted(sklearn.metrics.SCORERS.keys()) to get valid options.')
+            else : raise ValueError('Model operation mode can only be classification or regression!')
 
-        if not metrics:
-            metrics = 'accuracy'
-            print('Using accuracy instead and ', metric, ' on validation!\n \n')
+        elif model_type == 'sklearn':
+            print('asdasdas')
+            model = self.model_builder()
+            #model = SklearnModel(self.model_builder, self.mode)
 
-        model = KerasClassifier(build_fn=self.model_builder, **kwargs)
+        else : raise ValueError('Only keras and sklearn models are accepted.')
+
+        metrics = validate_metrics(metric)
 
         number_combinations = reduce(mul, [len(vals) for vals in params_dict.values()])
         if number_combinations > n_iter_search:
             print("Fitting %d random models from a space of %d possible models." % (n_iter_search, number_combinations))
-            grid = RandomizedSearchCV(estimator = model, param_distributions = params_dict,
-                                      scoring = metrics, n_jobs=n_jobs, cv=StratifiedKFold(n_splits=cv),
-                                      verbose=verbose, n_iter = n_iter_search)
+            if self.mode == 'classification':
+                grid = RandomizedSearchCV(estimator = model, param_distributions = params_dict,
+                                          scoring = metrics, n_jobs=n_jobs, cv=StratifiedKFold(n_splits=cv),
+                                          verbose=verbose, n_iter = n_iter_search)
+            else: grid = RandomizedSearchCV(estimator = model, param_distributions = params_dict,
+                                            scoring = metrics, n_jobs=n_jobs, cv=cv,
+                                            verbose=verbose, n_iter = n_iter_search)
         else :
-            grid = GridSearchCV(estimator = model, param_grid = params_dict,
-                                scoring = metrics, n_jobs=n_jobs, cv=StratifiedKFold(n_splits=cv), verbose=verbose)
+            if self.mode == 'classification':
+                grid = GridSearchCV(estimator = model, param_grid = params_dict,
+                                    scoring = metrics, n_jobs=n_jobs, cv=StratifiedKFold(n_splits=cv), verbose=verbose)
+            else: grid = RandomizedSearchCV(estimator = model, param_distributions = params_dict,
+                                            scoring = metrics, n_jobs=n_jobs, cv=cv,
+                                            verbose=verbose, n_iter = n_iter_search)
 
-        print(train_dataset.X.shape, train_dataset.X.shape[0]/cv)
+        #print(train_dataset.X.shape, train_dataset.X.shape[0]/cv)
         grid_result = grid.fit(train_dataset.X, train_dataset.y)
-
         print("\n \n Best %s: %f using %s" % (metrics, grid_result.best_score_, grid_result.best_params_))
         means = grid_result.cv_results_['mean_test_score']
         stds = grid_result.cv_results_['std_test_score']
@@ -331,6 +380,9 @@ class GridHyperparamOpt(HyperparamOpt):
         for mean, stdev, param in zip(means, stds, params):
             print("\n %s: %f (%f) with: %r \n" % (metrics, mean, stdev, param))
 
-        return grid_result.best_estimator_, grid_result.best_params_, grid_result.cv_results_
-
+        if model_type == 'keras':
+            #TODO: pass from kerasclassifier/regressor to kerasmodel to have evaluate method
+            return grid_result.best_estimator_, grid_result.best_params_, grid_result.cv_results_
+        elif model_type == 'sklearn':
+            return SklearnModel(grid_result.best_estimator_, mode=self.mode), grid_result.best_params_, grid_result.cv_results_
 

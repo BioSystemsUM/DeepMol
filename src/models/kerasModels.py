@@ -1,12 +1,12 @@
 from models.Models import Model
 from models.sklearnModels import SklearnModel
-import tensorflow as tf
-
-from typing import Optional, List, Callable
-from tensorflow.keras.optimizers import Adam
+from metrics.Metrics import Metric
+from splitters.splitters import RandomSplitter, SingletaskStratifiedSplitter
+from typing import Optional, Callable
 from tensorflow.keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
 import numpy as np
 from Datasets.Datasets import Dataset
+from sklearn.base import clone
 
 #Only for sequential single input models
 class KerasModel(Model):
@@ -17,8 +17,8 @@ class KerasModel(Model):
 
     def __init__(self,
                  model_builder: Callable,
-                 model_dir: Optional[str] = None,
                  mode: Optional[str] = 'classification',
+                 model_dir: Optional[str] = None,
                  loss: Optional[str] = 'binary_crossentropy',
                  optimizer: Optional[str] = 'adam',
                  learning_rate: Optional[float] = 0.001,
@@ -46,12 +46,13 @@ class KerasModel(Model):
         self.loss = loss
         self.optimizer = optimizer
         self.learning_rate = learning_rate
+        self.model_type = 'keras'
 
         if mode == 'classification':
             self.model = KerasClassifier(build_fn=model_builder, epochs=epochs, batch_size=batch_size, verbose=verbose, **kwargs)
-        else : #regression
-            print('Regression mode not fully implemented yet!')
+        elif mode == 'regression':
             self.model = KerasRegressor(build_fn=model_builder, epochs=epochs, batch_size=batch_size, verbose=verbose, **kwargs)
+        else: raise ValueError('Only classification or regression is accepted.')
 
 
     def fit(self, dataset: Dataset) -> None:
@@ -105,14 +106,18 @@ class KerasModel(Model):
     def reload(self):
         """Loads scikit-learn model from joblib file on disk."""
         self.model = load_from_disk(self.get_model_filename(self.model_dir))
-
+    '''
     def cross_validate(self,
                        dataset: Dataset,
                        metric: Metric,
                        folds: int = 3):
+
         #TODO: add option to choose between splitters
-        #splitter = RandomSplitter()
-        splitter = SingletaskStratifiedSplitter()
+        if self.mode == 'classification':
+            splitter = SingletaskStratifiedSplitter()
+        if self.mode == 'regression':
+            splitter = RandomSplitter()
+
         datasets = splitter.k_fold_split(dataset, folds)
 
         train_scores = []
@@ -126,7 +131,6 @@ class KerasModel(Model):
         for train_ds, test_ds in datasets:
             dummy_model = clone(SklearnModel(model=self.model))
 
-            dummy_model.fit(train_ds)
             dummy_model.fit(train_ds)
 
             print('Train Score: ')
@@ -146,4 +150,3 @@ class KerasModel(Model):
 
 
         return best_model, train_score_best_model, test_score_best_model, train_scores, test_scores, avg_train_score/folds, avg_test_score/folds
-        '''

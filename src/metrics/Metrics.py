@@ -103,7 +103,8 @@ class Metric(object):
                         classification_handling_mode = None
 
             elif self.metric.__name__ in ["pearson_r2_score", "r2_score", "mean_squared_error",
-                                          "mean_absolute_error", "rms_score", "mae_score", "pearsonr"]:
+                                          "mean_absolute_error", "rms_score", "mae_score", "pearsonr",
+                                          "median_absolute_error"]:
                 mode = "regression"
         else:
             raise ValueError("Please specify the mode of this metric. mode must be 'regression' or 'classification'")
@@ -153,7 +154,6 @@ class Metric(object):
                     n_tasks = y_true.shape[1]
             else:
                 n_tasks = self.n_tasks
-
 
         #TODO: Needs to be specified to deal with multitasking
         #y_true = normalize_labels_shape(y_true, mode=self.mode, n_tasks=n_tasks, n_classes=n_classes)
@@ -221,10 +221,10 @@ class Metric(object):
             raise ValueError("Only classification and regression are supported for metrics calculations.")
 
         try :
+            #TODO: check strange error related with some metrics
             metric_value = self.metric(y_true, y_pred, **kwargs)
         except Exception as e:
             #deal with different shapes of the otput of predict and predict_proba
             y_pred_mod = normalize_labels_shape(y_pred)
             metric_value = self.metric(y_true, y_pred_mod, **kwargs)
-        #TODO: if few data examples and when splitting there is only one class in a set the returned error is not clear
         return metric_value

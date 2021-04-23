@@ -359,17 +359,18 @@ class HyperparamOpt_CV(HyperparamOpt):
             if self.mode == 'classification':
                 grid = RandomizedSearchCV(estimator = model, param_distributions = params_dict,
                                           scoring = metrics, n_jobs=n_jobs, cv=StratifiedKFold(n_splits=cv),
-                                          verbose=verbose, n_iter = n_iter_search)
+                                          verbose=verbose, n_iter = n_iter_search, refit=False)
             else: grid = RandomizedSearchCV(estimator = model, param_distributions = params_dict,
                                             scoring = metrics, n_jobs=n_jobs, cv=cv,
-                                            verbose=verbose, n_iter = n_iter_search)
+                                            verbose=verbose, n_iter = n_iter_search, refit=False)
         else :
             if self.mode == 'classification':
                 grid = GridSearchCV(estimator = model, param_grid = params_dict,
-                                    scoring = metrics, n_jobs=n_jobs, cv=StratifiedKFold(n_splits=cv), verbose=verbose)
+                                    scoring = metrics, n_jobs=n_jobs, cv=StratifiedKFold(n_splits=cv), verbose=verbose,
+                                    refit=False)
             else: grid = RandomizedSearchCV(estimator = model, param_distributions = params_dict,
                                             scoring = metrics, n_jobs=n_jobs, cv=cv,
-                                            verbose=verbose, n_iter = n_iter_search)
+                                            verbose=verbose, n_iter = n_iter_search, refit=False)
 
         #print(train_dataset.X.shape, train_dataset.X.shape[0]/cv)
         grid_result = grid.fit(train_dataset.X, train_dataset.y)

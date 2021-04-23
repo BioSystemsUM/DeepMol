@@ -381,8 +381,9 @@ class HyperparamOpt_CV(HyperparamOpt):
             print("\n %s: %f (%f) with: %r \n" % (metrics, mean, stdev, param))
 
         if model_type == 'keras':
-            #TODO: pass from kerasclassifier/regressor to kerasmodel to have evaluate method
-            return grid_result.best_estimator_, grid_result.best_params_, grid_result.cv_results_
+            best_model = KerasModel(self.model_builder, self.mode, **grid_result.best_params_)
+            best_model.fit(train_dataset)
+            return best_model, grid_result.best_params_, grid_result.cv_results_
         elif model_type == 'sklearn':
             return SklearnModel(grid_result.best_estimator_, mode=self.mode), grid_result.best_params_, grid_result.cv_results_
 

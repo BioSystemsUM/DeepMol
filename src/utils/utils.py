@@ -92,8 +92,11 @@ def normalize_labels_shape(y_pred):
     """
     labels = []
     for i in y_pred:
-        if i[0] > i[1]:
-            labels.append(0)
-        else:
-            labels.append(1)
+        if len(i) == 2:
+            if i[0] > i[1]:
+                labels.append(0)
+            else:
+                labels.append(1)
+        if len(i) == 1:
+            labels.append(int(round(i[0])))
     return np.array(labels)

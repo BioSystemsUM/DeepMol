@@ -62,8 +62,6 @@ class KerasModel(Model):
         dataset: Dataset
             The `Dataset` to train this model on.
         """
-        print('kerasModels fit!')
-        print(self.model)
         features = dataset.X
         y = np.squeeze(dataset.y)
         self.model.fit(features, y)

@@ -221,7 +221,6 @@ class Metric(object):
             raise ValueError("Only classification and regression are supported for metrics calculations.")
 
         try :
-            #TODO: check strange error related with some metrics
             metric_value = self.metric(y_true, y_pred, **kwargs)
         except Exception as e:
             #deal with different shapes of the otput of predict and predict_proba

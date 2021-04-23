@@ -383,6 +383,7 @@ class HyperparamOpt_CV(HyperparamOpt):
 
         if model_type == 'keras':
             best_model = KerasModel(self.model_builder, self.mode, **grid_result.best_params_)
+            print('Fitting best model!')
             best_model.fit(train_dataset)
             return best_model, grid_result.best_params_, grid_result.cv_results_
         elif model_type == 'sklearn':

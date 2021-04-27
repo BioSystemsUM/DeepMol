@@ -26,13 +26,13 @@ class MolecularFeaturizer(object):
         """Calculate features for molecules.
         Parameters
         ----------
-        molecules: rdkit.Chem.rdchem.Mol / SMILES string
-          RDKit Mol or SMILES string
+        dataset: Dataset object
+          Dataset containing molecules to featurize
         log_every_n: int, default 1000
           Logging messages reported every `log_every_n` samples.
         Returns
         -------
-        features: Dataset
+        dataset: Dataset object
           The input Dataset containing a featurized representation of the molecules in Dataset.X.
         """
         molecules = dataset.mols

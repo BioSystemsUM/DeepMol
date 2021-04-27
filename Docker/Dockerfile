@@ -94,6 +94,7 @@ RUN conda install -y python=${python_version} && \
       gensim \
       imbalanced-learn \
       tensorflow-gpu \
+      chembl_structure_pipeline \
       && \
 #    git clone git://github.com/keras-team/keras.git /src && pip install -e /src[tests] && \
 #    pip install git+git://github.com/keras-team/keras.git && \

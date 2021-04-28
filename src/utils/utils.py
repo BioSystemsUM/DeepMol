@@ -100,3 +100,49 @@ def normalize_labels_shape(y_pred):
         if len(i) == 1:
             labels.append(int(round(i[0])))
     return np.array(labels)
+
+
+'''author: Bruno Pereira
+date: 28/04/2021
+'''
+
+from deepchem.trans import DAGTransformer, IRVTransformer
+from deepchem.data import NumpyDataset
+from Dataset import Dataset
+
+def dag_transformation(dataset: Dataset, max_atoms: int = 10):
+    '''Function to transform ConvMol adjacency lists to DAG calculation orders.
+    Adapted from deepchem'''
+    new_dataset = NumpyDataset(
+        X=dataset.X,
+        y=dataset.y,
+        ids=dataset.mols)
+
+    transformer = DAGTransformer(max_atoms=max_atoms)
+    res = transformer.transform(new_dataset)
+    dataset.mols = res.ids
+    dataset.X = res.X
+    dataset.y = res.y
+
+    return dataset
+
+
+def irv_transformation(dataset: Dataset, K: int = 10, n_tasks: int = 1):
+    '''Function to transfrom ECFP to IRV features, used by MultitaskIRVClassifier as preprocessing step
+    Adapted from deepchem'''
+    try:
+        dummy_y = dataset.y[:, n_tasks]
+    except IndexError:
+        dataset.y = np.reshape(dataset.y, (np.shape(dataset.y)[0], n_tasks))
+    new_dataset = NumpyDataset(
+        X=dataset.X,
+        y=dataset.y,
+        ids=dataset.mols)
+
+    transformer = IRVTransformer(K, n_tasks, new_dataset)
+    res = transformer.transform(new_dataset)
+    dataset.mols = res.ids
+    dataset.X = res.X
+    dataset.y = np.reshape(res.y, (np.shape(res.y)[0],))
+
+    return dataset

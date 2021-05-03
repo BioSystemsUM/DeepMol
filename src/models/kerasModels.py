@@ -51,7 +51,7 @@ class KerasModel(Model):
         if mode == 'classification':
             self.model = KerasClassifier(build_fn=model_builder, epochs=epochs, batch_size=batch_size, verbose=verbose, **kwargs)
         elif mode == 'regression':
-            self.model = KerasRegressor(build_fn=model_builder, epochs=epochs, batch_size=batch_size, verbose=verbose, **kwargs)
+            self.model = KerasRegressor(build_fn=model_builder, nb_epoch=epochs, batch_size=batch_size, verbose=verbose, **kwargs)
         else: raise ValueError('Only classification or regression is accepted.')
 
 

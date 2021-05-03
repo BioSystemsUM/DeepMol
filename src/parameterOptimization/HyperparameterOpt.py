@@ -345,7 +345,6 @@ class HyperparamOpt_CV(HyperparamOpt):
             else : raise ValueError('Model operation mode can only be classification or regression!')
 
         elif model_type == 'sklearn':
-            print('asdasdas')
             model = self.model_builder()
             #model = SklearnModel(self.model_builder, self.mode)
 
@@ -359,21 +358,24 @@ class HyperparamOpt_CV(HyperparamOpt):
             if self.mode == 'classification':
                 grid = RandomizedSearchCV(estimator = model, param_distributions = params_dict,
                                           scoring = metrics, n_jobs=n_jobs, cv=StratifiedKFold(n_splits=cv),
-                                          verbose=verbose, n_iter = n_iter_search, refit=False)
+                                          verbose=verbose, n_iter = n_iter_search, refit=True)
+
             else: grid = RandomizedSearchCV(estimator = model, param_distributions = params_dict,
                                             scoring = metrics, n_jobs=n_jobs, cv=cv,
-                                            verbose=verbose, n_iter = n_iter_search, refit=False)
+                                            verbose=verbose, n_iter = n_iter_search, refit=True)
         else :
             if self.mode == 'classification':
                 grid = GridSearchCV(estimator = model, param_grid = params_dict,
                                     scoring = metrics, n_jobs=n_jobs, cv=StratifiedKFold(n_splits=cv), verbose=verbose,
-                                    refit=False)
+                                    refit=True)
+
             else: grid = RandomizedSearchCV(estimator = model, param_distributions = params_dict,
                                             scoring = metrics, n_jobs=n_jobs, cv=cv,
-                                            verbose=verbose, n_iter = n_iter_search, refit=False)
+                                            verbose=verbose, n_iter = n_iter_search, refit=True)
 
         #print(train_dataset.X.shape, train_dataset.X.shape[0]/cv)
         grid_result = grid.fit(train_dataset.X, train_dataset.y)
+        print(grid_result.best_estimator_)
         print("\n \n Best %s: %f using %s" % (metrics, grid_result.best_score_, grid_result.best_params_))
         means = grid_result.cv_results_['mean_test_score']
         stds = grid_result.cv_results_['std_test_score']
@@ -387,5 +389,6 @@ class HyperparamOpt_CV(HyperparamOpt):
             best_model.fit(train_dataset)
             return best_model, grid_result.best_params_, grid_result.cv_results_
         elif model_type == 'sklearn':
+            print(grid_result.best_estimator_)
             return SklearnModel(grid_result.best_estimator_, mode=self.mode), grid_result.best_params_, grid_result.cv_results_
 

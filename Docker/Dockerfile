@@ -1,5 +1,6 @@
-#FROM tensorflow/tensorflow:2.2.1-gpu-py3
-FROM tensorflow/tensorflow:2.2.2-gpu-py3
+
+
+FROM tensorflow/tensorflow:2.4.1-gpu
 
 # Install system packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -13,20 +14,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       wget && \
     rm -rf /var/lib/apt/lists/*
 
+
 # Install conda
 ENV CONDA_DIR /opt/conda
 ENV PATH $CONDA_DIR/bin:$PATH
 
-#RUN wget --quiet --no-check-certificate https://repo.continuum.io/miniconda/Miniconda3-4.7.12.1-Linux-x86_64.sh && \
-#    echo "bfe34e1fa28d6d75a7ad05fd02fa5472275673d5f5621b77380898dee1be15d2 *Miniconda3-4.7.12.1-Linux-x86_64.sh" | sha256sum -c - && \
-#    /bin/bash /Miniconda3-4.7.12.1-Linux-x86_64.sh -f -b -p $CONDA_DIR && \
-#    rm Miniconda3-4.7.12.1-Linux-x86_64.sh && \
-#    echo export PATH=$CONDA_DIR/bin:'$PATH' > /etc/profile.d/conda.sh
-
-RUN wget --quiet --no-check-certificate https://repo.continuum.io/miniconda/Miniconda3-4.2.12-Linux-x86_64.sh && \
-    echo "c59b3dd3cad550ac7596e0d599b91e75d88826db132e4146030ef471bb434e9a *Miniconda3-4.2.12-Linux-x86_64.sh" | sha256sum -c - && \
-    /bin/bash /Miniconda3-4.2.12-Linux-x86_64.sh -f -b -p $CONDA_DIR && \
-    rm Miniconda3-4.2.12-Linux-x86_64.sh && \
+RUN wget --quiet --no-check-certificate https://repo.continuum.io/miniconda/Miniconda3-4.7.12.1-Linux-x86_64.sh && \
+    echo "bfe34e1fa28d6d75a7ad05fd02fa5472275673d5f5621b77380898dee1be15d2 *Miniconda3-4.7.12.1-Linux-x86_64.sh" | sha256sum -c - && \
+    /bin/bash /Miniconda3-4.7.12.1-Linux-x86_64.sh -f -b -p $CONDA_DIR && \
+    rm Miniconda3-4.7.12.1-Linux-x86_64.sh && \
     echo export PATH=$CONDA_DIR/bin:'$PATH' > /etc/profile.d/conda.sh
 
 
@@ -49,58 +45,31 @@ RUN conda config --append channels conda-forge
 RUN conda install -y python=${python_version} && \
     pip install --upgrade pip --ignore-installed six --upgrade cython && \
     pip install \
-      keras \
       joblib \
       pillow \
-      plotly==4.14.1 \
-      mordred \
+      #tensorflow-gpu==2.4.1 \
+      h5py \
+      keras==2.4.0 \
+      plotly \
+      seaborn \
       kneed \
-      seaborn==0.11.1 \
-      molvs \
-      git+https://github.com/samoturk/mol2vec \
-#      --pre deepchem  \
-#      setuptools \
-#      lockfile \
-#      pyyaml \
-#      ConfigSpace \
-#      pynisher \
-#      pyrfr \
-#      smac \
-#      auto-sklearn \
-      cntk-gpu \
+      deepchem==2.5.0 \
       && \
     conda install \
-#      tensorflow-gpu==2.3.0 \
       scikit-learn==0.23.2 \
-      rdkit deepchem==2.3.0 \
-      bcolz \
-      h5py \
+      chembl_structure_pipeline \
       matplotlib \
-      mkl \
-      nose \
       notebook \
-      Pillow \
       pandas \
       pydot \
-      pygpu \
       pyyaml \
-      six \
-      theano \
-      mkdocs \
-      rdkit \
+      rdkit==2021.03.1 \
       tqdm \
       joblib \
-      bunch \
-      gensim \
       imbalanced-learn \
-      tensorflow-gpu \
-      chembl_structure_pipeline \
       && \
-#    git clone git://github.com/keras-team/keras.git /src && pip install -e /src[tests] && \
-#    pip install git+git://github.com/keras-team/keras.git && \
     conda clean -yt
 
-ADD theanorc /home/keras/.theanorc
 
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8

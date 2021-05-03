@@ -108,7 +108,7 @@ date: 28/04/2021
 
 from deepchem.trans import DAGTransformer, IRVTransformer
 from deepchem.data import NumpyDataset
-from Dataset import Dataset
+from Datasets.Datasets import Dataset
 
 def dag_transformation(dataset: Dataset, max_atoms: int = 10):
     '''Function to transform ConvMol adjacency lists to DAG calculation orders.

@@ -3,12 +3,13 @@ date: 28/04/2021
 '''
 
 
-from typing import Optional, List
+from typing import Optional, List, Type
 from copy import deepcopy
 import numpy as np
 from models.Models import Model
-from Dataset.Dataset import Dataset, CSVLoader
-from splitters.splitters import RandomSplitter
+from Datasets.Datasets import Dataset
+from loaders.Loaders import CSVLoader
+from splitters.splitters import RandomSplitter, Splitter
 from metrics.Metrics import Metric
 from deepchem.models import Model as deep_model
 from deepchem.models import SeqToSeq, WGAN, GATModel, GCNModel, AttentiveFPModel, LCNNModel, MultitaskIRVClassifier
@@ -64,7 +65,7 @@ class DeepChemModel(Model):
             if model is not None:
                 raise ValueError("Can not use both model and model_instance argument at the same time.")
 
-            model = model_instance
+            model = self.model_instance
 
         super(DeepChemModel, self).__init__(model, model_dir, **kwargs)
         if 'use_weights' in kwargs:
@@ -86,9 +87,8 @@ class DeepChemModel(Model):
         else:
             self.epochs = 30
 
-
     def fit(self, dataset: Dataset) -> None:
-        """Fits scikit-learn model to data.
+        """Fits DeepChemModel to data.
         Parameters
         ----------
         dataset: Dataset
@@ -109,8 +109,7 @@ class DeepChemModel(Model):
             # TODO: Wait for the implementation of iterbactches
             # self.model.fit_gan(dataset.iterbatches(5000))
         else:
-            self.model.fit(new_dataset)
-        return
+            self.model.fit(new_dataset, nb_epoch=self.epochs)
 
     def predict(self, dataset: Dataset,
                 transformers: List[dc.trans.NormalizationTransformer] = []) -> np.ndarray:
@@ -136,9 +135,11 @@ class DeepChemModel(Model):
                 ids=dataset.mols)
 
         res =  self.model.predict(new_dataset,transformers)
-        
+
         if isinstance(self.model, (GATModel,GCNModel,AttentiveFPModel,LCNNModel)):
             return res
+        elif len(res.shape) == 2:
+            new_res = np.squeeze(res)
         else:
             new_res = np.reshape(res,(res.shape[0],res.shape[2]))
         
@@ -165,10 +166,11 @@ class DeepChemModel(Model):
     def cross_validate(self,
                        dataset: Dataset,
                        metric: Metric,
+                       splitter: Type[Splitter],
                        transformers: List[dc.trans.NormalizationTransformer] = [],
                        folds: int = 3):
         #TODO: add option to choose between splitters (later, for now we only have random)
-        splitter = RandomSplitter()
+        #splitter = RandomSplitter()
         datasets = splitter.k_fold_split(dataset, folds)
 
         train_scores = []

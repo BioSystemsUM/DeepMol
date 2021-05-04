@@ -5,7 +5,7 @@ date: 28/04/2021
 
 import numpy as np
 import deepchem as dc
-from Dataset import Dataset
+from Datasets.Datasets import Dataset
 from deepchem.utils.conformers import ConformerGenerator
 from  deepchem.feat import RDKitDescriptors, SmilesToImage, SmilesToSeq, CoulombMatrix, CoulombMatrixEig, ConvMolFeaturizer, WeaveFeaturizer, MolGraphConvFeaturizer
 from compoundFeaturization.baseFeaturizer import MolecularFeaturizer
@@ -95,7 +95,7 @@ class ConvMolFeat(MolecularFeaturizer):
                 use_chirality = self.use_chirality,
                 atom_properties = self.atom_properties,
                 per_atom_fragmentation = self.per_atom_fragmentation).featurize(new_smiles)
-        
+
         #identify which rows did not get featurized
         indexes = []
         for i, feat in enumerate(dataset.X):

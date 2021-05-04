@@ -148,7 +148,8 @@ class NumpyDataset(Dataset):
         self.mols = np.delete(self.mols, indexes)
         self.X = np.delete(self.X, indexes, axis=0)
         self.y = np.delete(self.y, indexes)
-        self.ids = np.delete(self.ids, indexes)
+        if self.ids is not None:
+            self.ids = np.delete(self.ids, indexes)
 
     #TODO: test this
     def selectFeatures(self, indexes):

@@ -6,7 +6,7 @@ from models.sklearnModels import SklearnModel
 from models.kerasModels import KerasModel
 from metrics.Metrics import Metric
 from Datasets.Datasets import Dataset
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional, Tuple, Type
 from functools import reduce
 from operator import mul
 import itertools
@@ -18,6 +18,8 @@ import tempfile
 import os
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV, StratifiedKFold
 from keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
+from parameterOptimization.deepchem_hyperparamopt import DeepchemGridSearchCV, DeepchemRandomSearchCV
+from splitters.splitters import SingletaskStratifiedSplitter, RandomSplitter
 
 
 
@@ -74,7 +76,7 @@ class HyperparamOpt(object):
     """Abstract superclass for hyperparameter search classes.
     """
 
-    def __init__(self, model_builder: Model, mode: str = None):
+    def __init__(self, model_builder: Type[Model], mode: str = None):
         """Initialize Hyperparameter Optimizer.
         Note this is an abstract constructor which should only be used by subclasses.
 
@@ -333,6 +335,10 @@ class HyperparamOpt_CV(HyperparamOpt):
                 self.mode = 'regression'
             else:
                 self.mode = 'classification'
+
+        if self.mode == 'classification' and model_type != 'deepchem':
+            cv = StratifiedKFold(n_splits=cv)
+
         print('MODEL TYPE: ', model_type)
         #diferentiate sklearn model from keras model
         if model_type == 'keras':
@@ -345,35 +351,52 @@ class HyperparamOpt_CV(HyperparamOpt):
             else : raise ValueError('Model operation mode can only be classification or regression!')
 
         elif model_type == 'sklearn':
-            print('asdasdas')
             model = self.model_builder()
             #model = SklearnModel(self.model_builder, self.mode)
-
-        else : raise ValueError('Only keras and sklearn models are accepted.')
+        elif model_type == 'deepchem':
+            model = self.model_builder # because I don't want to call the function yet
+        else : raise ValueError('Only keras, sklearn and deepchem models are accepted.')
 
         metrics = validate_metrics(metric)
 
         number_combinations = reduce(mul, [len(vals) for vals in params_dict.values()])
         if number_combinations > n_iter_search:
             print("Fitting %d random models from a space of %d possible models." % (n_iter_search, number_combinations))
-            if self.mode == 'classification':
-                grid = RandomizedSearchCV(estimator = model, param_distributions = params_dict,
-                                          scoring = metrics, n_jobs=n_jobs, cv=StratifiedKFold(n_splits=cv),
-                                          verbose=verbose, n_iter = n_iter_search, refit=False)
-            else: grid = RandomizedSearchCV(estimator = model, param_distributions = params_dict,
-                                            scoring = metrics, n_jobs=n_jobs, cv=cv,
-                                            verbose=verbose, n_iter = n_iter_search, refit=False)
+            # if self.mode == 'classification':
+            #     grid = RandomizedSearchCV(estimator = model, param_distributions = params_dict,
+            #                               scoring = metrics, n_jobs=n_jobs, cv=StratifiedKFold(n_splits=cv),
+            #                               verbose=verbose, n_iter = n_iter_search, refit=False)
+            # else: grid = RandomizedSearchCV(estimator = model, param_distributions = params_dict,
+            #                                 scoring = metrics, n_jobs=n_jobs, cv=cv,
+            #                                 verbose=verbose, n_iter = n_iter_search, refit=False)
+            if model_type == 'deepchem':
+                grid = DeepchemRandomSearchCV(model_build_fn=model, param_distributions=params_dict, scoring = metrics,
+                                              cv=cv, mode=self.mode, n_iter = n_iter_search, refit=False)
+            else:
+                grid = RandomizedSearchCV(estimator=model, param_distributions=params_dict, scoring = metrics,
+                                          n_jobs=n_jobs, cv=cv, verbose=verbose, n_iter = n_iter_search, refit=False)
         else :
-            if self.mode == 'classification':
-                grid = GridSearchCV(estimator = model, param_grid = params_dict,
-                                    scoring = metrics, n_jobs=n_jobs, cv=StratifiedKFold(n_splits=cv), verbose=verbose,
-                                    refit=False)
-            else: grid = RandomizedSearchCV(estimator = model, param_distributions = params_dict,
-                                            scoring = metrics, n_jobs=n_jobs, cv=cv,
-                                            verbose=verbose, n_iter = n_iter_search, refit=False)
+            # if self.mode == 'classification':
+            #     grid = GridSearchCV(estimator = model, param_grid = params_dict,
+            #                         scoring = metrics, n_jobs=n_jobs, cv=StratifiedKFold(n_splits=cv), verbose=verbose,
+            #                         refit=False)
+            # else: grid = RandomizedSearchCV(estimator = model, param_distributions = params_dict,
+            #                                 scoring = metrics, n_jobs=n_jobs, cv=cv,
+            #                                 verbose=verbose, n_iter = n_iter_search, refit=False)
+            if model_type == 'deepchem':
+                grid = DeepchemGridSearchCV(model_build_fn= model, param_grid = params_dict, scoring = metrics,
+                                            cv=cv, mode=self.mode, refit=False)
+            else:
+                grid = GridSearchCV(estimator=model, param_grid=params_dict, scoring=metrics, n_jobs=n_jobs,
+                                    cv=cv, verbose=verbose, refit=False)
+
 
         #print(train_dataset.X.shape, train_dataset.X.shape[0]/cv)
-        grid_result = grid.fit(train_dataset.X, train_dataset.y)
+        if model_type == 'deepchem':
+            grid.fit(train_dataset)
+            grid_result = grid
+        else:
+            grid_result = grid.fit(train_dataset.X, train_dataset.y)
         print("\n \n Best %s: %f using %s" % (metrics, grid_result.best_score_, grid_result.best_params_))
         means = grid_result.cv_results_['mean_test_score']
         stds = grid_result.cv_results_['std_test_score']
@@ -388,4 +411,7 @@ class HyperparamOpt_CV(HyperparamOpt):
             return best_model, grid_result.best_params_, grid_result.cv_results_
         elif model_type == 'sklearn':
             return SklearnModel(grid_result.best_estimator_, mode=self.mode), grid_result.best_params_, grid_result.cv_results_
-
+        else: # DeepchemModel
+            best_model = grid_result.best_estimator_
+            best_model.fit(train_dataset)
+            return best_model, grid_result.best_params_, grid_result.cv_results_

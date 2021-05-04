@@ -90,6 +90,7 @@ class NumpyDataset(Dataset):
         self.n_tasks = n_tasks
 
         if features2keep is not None:
+            print(self.len_X())
             if len(features2keep) != self.len_X()[1]:
                 try:
                     self.selectFeatures(features2keep)

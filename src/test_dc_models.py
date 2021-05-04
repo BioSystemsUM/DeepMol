@@ -3,25 +3,26 @@ date: 28/04/2021
 '''
 
 from compoundFeaturization.rdkitFingerprints import MorganFingerprint, MACCSkeysFingerprint, LayeredFingerprint
-from compoundFeaturization.rdkitFingerprints import RDKFingerprint, AtomPairFingerprint
+#from compoundFeaturization.rdkitFingerprints import RDKFingerprint, AtomPairFingerprint
 from compoundFeaturization.deepChemFeaturizers import ConvMolFeat, WeaveFeat, CoulombFeat, SmileImageFeat, SmilesSeqFeat, MolGraphConvFeat
-from compoundFeaturization.mol2vec import Mol2Vec
-from Dataset.Dataset import CSVLoader, NumpyDataset
+#from compoundFeaturization.mol2vec import Mol2Vec
+#from Datasets.Datasets import NumpyDataset
+from loaders.Loaders import CSVLoader
 from featureSelection.baseFeatureSelector import LowVarianceFS, KbestFS, PercentilFS, RFECVFS, SelectFromModelFS
 from splitters.splitters import RandomSplitter, SingletaskStratifiedSplitter
-from models.sklearnModels import SklearnModel
+#from models.sklearnModels import SklearnModel
 from models.DeepChemModels import DeepChemModel
 from metrics.Metrics import Metric
 from metrics.metricsFunctions import roc_auc_score, precision_score, accuracy_score
-from parameterOptimization.HyperparameterOpt import GridHyperparamOpt
+from parameterOptimization.HyperparameterOpt import HyperparamOpt_Valid
 #import preprocessing as preproc
 from utils import utils as preproc
-from imbalanced_learn.ImbalancedLearn import RandomOverSampler
-from deepchem.feat import WeaveFeaturizer, CoulombMatrix
-from deepchem.utils.conformers import ConformerGenerator
-from deepchem.trans import IRVTransformer
+#from imbalanced_learn.ImbalancedLearn import RandomOverSampler
+#from deepchem.feat import WeaveFeaturizer, CoulombMatrix
+#from deepchem.utils.conformers import ConformerGenerator
+#from deepchem.trans import IRVTransformer
 import numpy as np
-from rdkit import Chem
+#from rdkit import Chem
 
 
 #ds = MorganFingerprint().featurize(ds)
@@ -103,7 +104,7 @@ def multitaskclass(dataset):
     ds = LowVarianceFS(0.15).featureSelection(ds)
     splitter = SingletaskStratifiedSplitter()
     train_dataset, valid_dataset, test_dataset = splitter.train_valid_test_split(dataset=ds, frac_train=0.6, frac_valid=0.2, frac_test=0.2)
-    multitask = MultitaskClassifier(n_tasks=1, n_features=np.shape(train_dataset.features)[1], layer_sizes=[1000])
+    multitask = MultitaskClassifier(n_tasks=1, n_features=np.shape(train_dataset.X)[1], layer_sizes=[1000])
     model_multi = DeepChemModel(multitask)
     # Model training
     model_multi.fit(train_dataset)
@@ -208,7 +209,7 @@ def cnnmodel(dataset):
     ds = SmileImageFeat().featurize(dataset)
     splitter = SingletaskStratifiedSplitter()
     train_dataset, valid_dataset, test_dataset = splitter.train_valid_test_split(dataset=ds, frac_train=0.6, frac_valid=0.2, frac_test=0.2)
-    cnn = CNNModel(n_tasks = 1, n_features = np.shape(ds.features)[1], dims = 1)
+    cnn = CNNModel(n_tasks = 1, n_features = np.shape(ds.X)[1], dims = 1)
     model_cnn = DeepChemModel(cnn)
     # Model training
     model_cnn.fit(train_dataset)
@@ -374,7 +375,7 @@ def hyperoptimgraph(dataset):
             'dense_layer_size':[128,144,198],
             'dropout':[0.0,0.25,0.5]}
 
-    optimizer = GridHyperparamOpt(graphconvbuilder)
+    optimizer = HyperparamOpt_Valid(graphconvbuilder)
     
     best_rf, best_hyperparams, all_results = optimizer.hyperparam_search(params, train_dataset, valid_dataset, Metric(roc_auc_score))
     
@@ -409,7 +410,7 @@ def hyperoptimmpnn(dataset):
             'M':[1,10],
             'dropout':[0.0,0.25,0.5]}
 
-    optimizer = GridHyperparamOpt(mpnnbuilder)
+    optimizer = HyperparamOpt_Val(mpnnbuilder)
     
     best_rf, best_hyperparams, all_results = optimizer.hyperparam_search(params, train_dataset, valid_dataset, Metric(roc_auc_score))
     
@@ -443,7 +444,7 @@ def hyperoptimgat(dataset):
             'predictor_hidden_feats':[128,256],
             'predictor_dropout':[0.0,0.25],
             'number_atom_features':[30,45]}
-    optimizer = GridHyperparamOpt(gatbuilder)
+    optimizer = HyperparamOpt_Valid(gatbuilder)
     
     best_rf, best_hyperparams, all_results = optimizer.hyperparam_search(params, train_dataset, valid_dataset, Metric(roc_auc_score))
     
@@ -477,7 +478,7 @@ def hyperoptimgcn(dataset):
             'predictor_dropout':[0.0,0.25],
             'number_atom_features':[30,45],
             'learning_rate':[0.001,0.01]}
-    optimizer = GridHyperparamOpt(gcnbuilder)
+    optimizer = HyperparamOpt_Valid(gcnbuilder)
     
     best_rf, best_hyperparams, all_results = optimizer.hyperparam_search(params, train_dataset, valid_dataset, Metric(roc_auc_score))
     
@@ -505,14 +506,14 @@ def hyperoptimcnn(dataset):
     splitter = SingletaskStratifiedSplitter()
     train_dataset, valid_dataset, test_dataset = splitter.train_valid_test_split(dataset=ds, frac_train=0.6, frac_valid=0.2, frac_test=0.2)
     
-    params = {'n_features':np.shape(ds.features)[1],
+    params = {'n_features':np.shape(ds.X)[1],
             'layer_filters':[[100],[150],[200]],
             'kernel_size':[5,10],
             'weight_init_stddevs':[0.02,0.04],
             'bias_init_consts':[1.0,2.0],
             'weight_decay_penalty':[0.0,0.25],
             'dropouts':[0.25,0.5,0.75]}
-    optimizer = GridHyperparamOpt(cnnbuilder)
+    optimizer = HyperparamOpt_Valid(cnnbuilder)
     
     best_rf, best_hyperparams, all_results = optimizer.hyperparam_search(params, train_dataset, valid_dataset, Metric(roc_auc_score))
     
@@ -564,18 +565,22 @@ def menu():
         opt = int(input('Option: '))
         if opt == 1:
             if ds is None:
-                ds = CSVLoader('preprocessed_dataset_wfoodb.csv', 'Smiles', ['Class'], 'ID')#, chunk_size=1000)
+                dataset = CSVLoader(dataset_path='preprocessed_dataset_wfoodb.csv',
+                                    mols_field='Smiles',
+                                    labels_fields='Class',
+                                    id_field='ID')  # , shard_size=4000)
+                ds = dataset.create_dataset()
                 print('Dataset established')
             else: print('Dataset already read')
         elif opt == 2:
             if ds is None:
                 print('A dataset has to be read first')
             else:
-                X, y, features, ids = ds.get_shape()
-                print('X: ', X)
-                print('y: ', y)
-                print('features: ', features)
-                print('ids: ', ids)
+                ds.get_shape()
+                #print('X: ', X)
+                #print('y: ', y)
+                #print('features: ', features)
+                #print('ids: ', ids)
         elif opt == 3 and ds is not None:
             print(substring)
             opt2 = input('Model (letter): ')

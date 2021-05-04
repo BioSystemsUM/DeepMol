@@ -200,7 +200,7 @@ class RandomSplitter(Splitter):
         np.testing.assert_almost_equal(frac_train + frac_valid + frac_test, 1.)
         if seed is not None:
             np.random.seed(seed)
-        num_datapoints = len(dataset)
+        num_datapoints = len(dataset.mols)
         train_cutoff = int(frac_train * num_datapoints)
         valid_cutoff = int((frac_train + frac_valid) * num_datapoints)
         shuffled = np.random.permutation(range(num_datapoints))

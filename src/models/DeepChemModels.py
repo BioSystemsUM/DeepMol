@@ -7,11 +7,13 @@ from typing import Optional, List
 from copy import deepcopy
 import numpy as np
 from models.Models import Model
-from Dataset.Dataset import Dataset, CSVLoader
+from Datasets.Datasets import Dataset
+from loaders.Loaders import CSVLoader
 from splitters.splitters import RandomSplitter
 from metrics.Metrics import Metric
 from deepchem.models import Model as deep_model
-from deepchem.models import SeqToSeq, WGAN, GATModel, GCNModel, AttentiveFPModel, LCNNModel, MultitaskIRVClassifier
+#from deepchem.models import SeqToSeq, WGAN, GATModel, GCNModel, AttentiveFPModel, LCNNModel, MultitaskIRVClassifier
+from deepchem.models import SeqToSeq, WGAN, MultitaskIRVClassifier
 from deepchem.data import NumpyDataset, DiskDataset
 import deepchem as dc
 #from deepchem.trans import Transformer
@@ -137,7 +139,8 @@ class DeepChemModel(Model):
 
         res =  self.model.predict(new_dataset,transformers)
         
-        if isinstance(self.model, (GATModel,GCNModel,AttentiveFPModel,LCNNModel)):
+        #if isinstance(self.model, (GATModel,GCNModel,AttentiveFPModel,LCNNModel)):
+        if not isinstance(self.model, (SeqToSeq, WGAN, MultitaskIRVClassifier)):
             return res
         else:
             new_res = np.reshape(res,(res.shape[0],res.shape[2]))

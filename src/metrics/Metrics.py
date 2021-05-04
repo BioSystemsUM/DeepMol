@@ -224,6 +224,13 @@ class Metric(object):
             metric_value = self.metric(y_true, y_pred, **kwargs)
         except Exception as e:
             #deal with different shapes of the otput of predict and predict_proba
-            y_pred_mod = normalize_labels_shape(y_pred)
-            metric_value = self.metric(y_true, y_pred_mod, **kwargs)
+            if len(y_pred.shape)==3: #output of the deepchem MultitaskClassifier model
+                y_pred_2 = []
+                for p in y_pred:
+                    y_pred_2.append(p[0])
+                y_pred_mod = normalize_labels_shape(y_pred_2)
+                metric_value = self.metric(y_true, y_pred_mod, **kwargs)
+            else :
+                y_pred_mod = normalize_labels_shape(y_pred)
+                metric_value = self.metric(y_true, y_pred_mod, **kwargs)
         return metric_value

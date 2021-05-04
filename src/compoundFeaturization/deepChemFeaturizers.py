@@ -5,7 +5,7 @@ date: 28/04/2021
 
 import numpy as np
 import deepchem as dc
-from Dataset import Dataset
+from Datasets.Datasets import Dataset
 from deepchem.utils.conformers import ConformerGenerator
 from  deepchem.feat import RDKitDescriptors, SmilesToImage, SmilesToSeq, CoulombMatrix, CoulombMatrixEig, ConvMolFeaturizer, WeaveFeaturizer, MolGraphConvFeaturizer
 from compoundFeaturization.baseFeaturizer import MolecularFeaturizer

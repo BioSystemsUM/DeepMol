@@ -98,6 +98,7 @@ def normalize_labels_shape(y_pred):
             else:
                 labels.append(1)
         if len(i) == 1:
+            print(i)
             labels.append(int(round(i[0])))
     return np.array(labels)
 

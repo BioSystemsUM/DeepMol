@@ -224,7 +224,9 @@ class NumpyDataset(Dataset):
         for ds in datasets:
             mols = np.append(mols, ds.mols, axis=0)
             y = np.append(y, ds.y, axis=0)
-            ids = np.append(ids, ds.ids, axis=0)
+            # ids = np.append(ids, ds.ids, axis=0)
+            if ids is not None:
+                ids = np.append(ids, ds.ids, axis=0) # changed this
             if X is not None:
                 if len(X[0])==len(ds.X[0]):
                     X = np.append(X, ds.X, axis=0)

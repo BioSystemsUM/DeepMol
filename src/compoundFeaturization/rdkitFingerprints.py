@@ -1,4 +1,4 @@
-from compoundFeaturization.baseFeaturizer import MolecularFeaturizer
+from src.compoundFeaturization.baseFeaturizer import MolecularFeaturizer
 from rdkit.Chem import rdMolDescriptors, MACCSkeys, rdmolops
 from rdkit import Chem
 from rdkit.Chem.Fingerprints import FingerprintMols

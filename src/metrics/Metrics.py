@@ -1,6 +1,6 @@
 import numpy as np
 from typing import Callable, Optional, Any
-from utils.utils import normalize_labels_shape
+from src.utils.utils import normalize_labels_shape
 
 class Metric(object):
     """Class for computing machine learning metrics.
@@ -106,8 +106,8 @@ class Metric(object):
                                           "mean_absolute_error", "rms_score", "mae_score", "pearsonr",
                                           "median_absolute_error"]:
                 mode = "regression"
-        else:
-            raise ValueError("Please specify the mode of this metric. mode must be 'regression' or 'classification'")
+            else:
+                raise ValueError("Please specify the mode of this metric. mode must be 'regression' or 'classification'")
 
         self.mode = mode
         self.n_tasks = n_tasks

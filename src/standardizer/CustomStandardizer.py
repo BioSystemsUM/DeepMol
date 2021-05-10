@@ -1,6 +1,6 @@
 from rdkit.Chem import Cleanup, SanitizeMol, SanitizeFlags
 from rdkit.Chem.AllChem import AssignStereochemistry
-from standardizer.utils_standardization import remove_isotope_info, uncharge, remove_stereo, kekulize, \
+from src.standardizer.utils_standardization import remove_isotope_info, uncharge, remove_stereo, kekulize, \
     keep_biggest, add_hydrogens, remove_hydrogens
 
 from standardizer.MolecularStandardizer import MolecularStandardizer

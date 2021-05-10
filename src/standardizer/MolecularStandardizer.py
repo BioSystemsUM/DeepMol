@@ -1,5 +1,5 @@
 from rdkit import Chem
-from Datasets.Datasets import Dataset
+from src.Datasets.Datasets import Dataset
 from rdkit.Chem import rdmolfiles
 from rdkit.Chem import rdmolops
 import numpy as np

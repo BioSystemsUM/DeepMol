@@ -1,5 +1,5 @@
 from chembl_structure_pipeline import standardizer
-from standardizer.MolecularStandardizer import MolecularStandardizer
+from src.standardizer.MolecularStandardizer import MolecularStandardizer
 from typing import Any
 
 class ChEMBLStandardizer(MolecularStandardizer):

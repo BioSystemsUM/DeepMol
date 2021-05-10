@@ -1,11 +1,11 @@
-from models.Models import Model
-from models.sklearnModels import SklearnModel
-from metrics.Metrics import Metric
-from splitters.splitters import RandomSplitter, SingletaskStratifiedSplitter
+from src.models.Models import Model
+from src.models.sklearnModels import SklearnModel
+from src.metrics.Metrics import Metric
+from src.splitters.splitters import RandomSplitter, SingletaskStratifiedSplitter
 from typing import Optional, Callable
 from tensorflow.keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
 import numpy as np
-from Datasets.Datasets import Dataset
+from src.Datasets.Datasets import Dataset
 from sklearn.base import clone
 
 #Only for sequential single input models

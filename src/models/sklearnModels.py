@@ -4,12 +4,12 @@ from typing import Optional
 import numpy as np
 from sklearn.base import BaseEstimator
 
-from models.Models import Model
-from Datasets.Datasets import Dataset
-from splitters.splitters import RandomSplitter, SingletaskStratifiedSplitter
-from metrics.Metrics import Metric
+from src.models.Models import Model
+from src.Datasets.Datasets import Dataset
+from src.splitters.splitters import RandomSplitter, SingletaskStratifiedSplitter
+from src.metrics.Metrics import Metric
 
-from utils.utils import load_from_disk, save_to_disk
+from src.utils.utils import load_from_disk, save_to_disk
 
 from sklearn.base import clone
 '''

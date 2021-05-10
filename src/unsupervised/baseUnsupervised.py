@@ -1,4 +1,4 @@
-from Datasets.Datasets import Dataset, NumpyDataset
+from src.Datasets.Datasets import Dataset, NumpyDataset
 
 import pandas as pd
 import numpy as np

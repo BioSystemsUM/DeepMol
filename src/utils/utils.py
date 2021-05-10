@@ -8,7 +8,7 @@ import numpy as np
 
 from deepchem.trans import DAGTransformer, IRVTransformer
 from deepchem.data import NumpyDataset
-from Datasets.Datasets import Dataset
+from src.Datasets.Datasets import Dataset
 
 
 def load_pickle_file(input_file: str) -> Any:

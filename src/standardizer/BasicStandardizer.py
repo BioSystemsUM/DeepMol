@@ -1,4 +1,4 @@
-from standardizer.MolecularStandardizer import MolecularStandardizer
+from src.standardizer.MolecularStandardizer import MolecularStandardizer
 from rdkit.Chem import SanitizeMol
 from typing import Any
 

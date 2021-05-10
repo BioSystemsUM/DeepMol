@@ -1,6 +1,6 @@
 import numpy as np
 from typing import Any, Optional
-from compoundFeaturization.baseFeaturizer import MolecularFeaturizer
+from src.compoundFeaturization.baseFeaturizer import MolecularFeaturizer
 from gensim.models import word2vec
 from mol2vec.features import mol2alt_sentence, sentences2vec
 import os, sys

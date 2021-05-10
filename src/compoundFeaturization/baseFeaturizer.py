@@ -6,7 +6,7 @@ from rdkit.Chem import rdmolfiles
 from rdkit.Chem import rdmolops
 from rdkit.Chem.rdchem import Mol
 
-from Datasets.Datasets import Dataset
+from src.Datasets.Datasets import Dataset
 
 
 class MolecularFeaturizer(object):

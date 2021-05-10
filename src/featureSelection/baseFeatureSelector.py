@@ -1,4 +1,4 @@
-from Datasets.Datasets import Dataset
+from src.Datasets.Datasets import Dataset
 from sklearn.feature_selection import VarianceThreshold, SelectKBest, chi2, SelectPercentile, RFECV, SelectFromModel
 from sklearn.ensemble import RandomForestClassifier
 import pandas as pd

@@ -1,11 +1,11 @@
 """Hyperparameter Optimization Class"""
 
 import sklearn
-from models.Models import Model
-from models.sklearnModels import SklearnModel
-from models.kerasModels import KerasModel
-from metrics.Metrics import Metric
-from Datasets.Datasets import Dataset
+from src.models.Models import Model
+from src.models.sklearnModels import SklearnModel
+from src.models.kerasModels import KerasModel
+from src.metrics.Metrics import Metric
+from src.Datasets.Datasets import Dataset
 from typing import Dict, Any, Optional, Tuple, Type
 from functools import reduce
 from operator import mul
@@ -16,11 +16,9 @@ import random
 import shutil
 import tempfile
 import os
-from sklearn.model_selection import GridSearchCV, RandomizedSearchCV, StratifiedKFold
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV, StratifiedKFold, KFold
 from keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
-from parameterOptimization.deepchem_hyperparamopt import DeepchemGridSearchCV, DeepchemRandomSearchCV
-from splitters.splitters import SingletaskStratifiedSplitter, RandomSplitter
-
+from src.parameterOptimization.deepchem_hyperparamopt import DeepchemGridSearchCV, DeepchemRandomSearchCV
 
 
 def _convert_hyperparam_dict_to_filename(hyper_params: Dict[str, Any]) -> str:
@@ -302,6 +300,7 @@ class HyperparamOpt_CV(HyperparamOpt):
                           n_jobs: int = 1,
                           verbose: int = 0,
                           logdir: Optional[str] = None,
+                          seed: Optional[int] = None,
                           **kwargs):
 
         """Perform hyperparams search according to params_dict.
@@ -336,25 +335,25 @@ class HyperparamOpt_CV(HyperparamOpt):
             else:
                 self.mode = 'classification'
 
-        if self.mode == 'classification' and model_type != 'deepchem':
-            cv = StratifiedKFold(n_splits=cv)
+        if model_type != 'deepchem':
+            if self.mode == 'classification':
+                cv = StratifiedKFold(n_splits=cv, shuffle=True, random_state=seed) # changed this so that we can set seed here and shuffle data by default
+            else:
+                cv = KFold(n_splits=cv, shuffle=True, random_state=seed) # added this so that data is shuffled before splitting
 
         print('MODEL TYPE: ', model_type)
         #diferentiate sklearn model from keras model
         if model_type == 'keras':
             if self.mode == 'classification':
                 model = KerasClassifier(build_fn=self.model_builder, **kwargs)
-
             elif self.mode == 'regression':
                 model = KerasRegressor(build_fn=self.model_builder, **kwargs)
-
             else : raise ValueError('Model operation mode can only be classification or regression!')
-
         elif model_type == 'sklearn':
             model = self.model_builder()
             #model = SklearnModel(self.model_builder, self.mode)
         elif model_type == 'deepchem':
-            model = self.model_builder # because I don't want to call the function yet
+            model = self.model_builder # because we don't want to call the function yet
         else : raise ValueError('Only keras, sklearn and deepchem models are accepted.')
 
         metrics = validate_metrics(metric)
@@ -371,10 +370,12 @@ class HyperparamOpt_CV(HyperparamOpt):
             #                                 verbose=verbose, n_iter = n_iter_search, refit=False)
             if model_type == 'deepchem':
                 grid = DeepchemRandomSearchCV(model_build_fn=model, param_distributions=params_dict, scoring = metrics,
-                                              cv=cv, mode=self.mode, n_iter = n_iter_search, refit=False)
+                                              cv=cv, mode=self.mode, n_iter = n_iter_search, refit=True,
+                                              random_state=seed)
             else:
                 grid = RandomizedSearchCV(estimator=model, param_distributions=params_dict, scoring = metrics,
-                                          n_jobs=n_jobs, cv=cv, verbose=verbose, n_iter = n_iter_search, refit=False)
+                                          n_jobs=n_jobs, cv=cv, verbose=verbose, n_iter = n_iter_search, refit=False,
+                                          random_state=seed)
         else :
             # if self.mode == 'classification':
             #     grid = GridSearchCV(estimator = model, param_grid = params_dict,
@@ -385,7 +386,7 @@ class HyperparamOpt_CV(HyperparamOpt):
             #                                 verbose=verbose, n_iter = n_iter_search, refit=False)
             if model_type == 'deepchem':
                 grid = DeepchemGridSearchCV(model_build_fn= model, param_grid = params_dict, scoring = metrics,
-                                            cv=cv, mode=self.mode, refit=False)
+                                            cv=cv, mode=self.mode, refit=True, random_state=seed)
             else:
                 grid = GridSearchCV(estimator=model, param_grid=params_dict, scoring=metrics, n_jobs=n_jobs,
                                     cv=cv, verbose=verbose, refit=False)
@@ -394,7 +395,7 @@ class HyperparamOpt_CV(HyperparamOpt):
         #print(train_dataset.X.shape, train_dataset.X.shape[0]/cv)
         if model_type == 'deepchem':
             grid.fit(train_dataset)
-            grid_result = grid
+            grid_result = grid # because fit here doesn't return the object
         else:
             grid_result = grid.fit(train_dataset.X, train_dataset.y)
         print("\n \n Best %s: %f using %s" % (metrics, grid_result.best_score_, grid_result.best_params_))
@@ -412,6 +413,4 @@ class HyperparamOpt_CV(HyperparamOpt):
         elif model_type == 'sklearn':
             return SklearnModel(grid_result.best_estimator_, mode=self.mode), grid_result.best_params_, grid_result.cv_results_
         else: # DeepchemModel
-            best_model = grid_result.best_estimator_
-            best_model.fit(train_dataset)
-            return best_model, grid_result.best_params_, grid_result.cv_results_
+            return grid_result.best_estimator_, grid_result.best_params_, grid_result.cv_results_

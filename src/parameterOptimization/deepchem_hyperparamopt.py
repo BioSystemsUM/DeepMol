@@ -4,15 +4,16 @@ from collections import defaultdict
 import numpy as np
 from sklearn.model_selection import ParameterGrid, ParameterSampler
 from sklearn.metrics._scorer import SCORERS
-from metrics.Metrics import Metric
-from splitters.splitters import RandomSplitter, SingletaskStratifiedSplitter
+from src.metrics.Metrics import Metric
+from src.splitters.splitters import RandomSplitter, SingletaskStratifiedSplitter
 
 
 # TODO: it would probably be better if we tried to create a scikit-learn wrapper for DeepchemModel models,
 #  similar to KerasRegressor and KerasClassifier (not sure it would work though)
 class DeepchemBaseSearchCV(object):
 
-    def __init__(self, model_build_fn, param_grid, scoring, refit, cv, mode, return_train_score=False):
+    def __init__(self, model_build_fn, param_grid, scoring, refit, cv, mode, random_state=None,
+                 return_train_score=False):
         self.build_fn = model_build_fn
         self.param_grid = param_grid
         # TODO: it would be easier if we could just pass a Metric object instead
@@ -30,6 +31,7 @@ class DeepchemBaseSearchCV(object):
         self.mode = mode
         self.refit = refit
         self.cv = cv
+        self.random_state = random_state
         self.return_train_score = return_train_score
 
         self.best_score_ = None
@@ -46,7 +48,7 @@ class DeepchemBaseSearchCV(object):
         else:
             splitter = RandomSplitter()
 
-        datasets = splitter.k_fold_split(dataset, self.cv)
+        datasets = splitter.k_fold_split(dataset, k=self.cv, seed=self.random_state)
         for param_combination in self.param_grid:
             results_dict['params'].append(param_combination)
 
@@ -81,22 +83,27 @@ class DeepchemBaseSearchCV(object):
                     self.best_score_ = mean_test_score
                     self.best_params_ = param_combination
 
-        self.best_estimator_ = self.build_fn(**self.best_params_) # self.build_fn returns a DeepchemModel instance
         self.cv_results_ = results_dict
+        self.best_estimator_ = self.build_fn(**self.best_params_)
+
+        if self.refit:
+            print('Fitting best model!')
+            self.best_estimator_.fit(dataset)
 
 
 class DeepchemGridSearchCV(DeepchemBaseSearchCV):
 
-    def __init__(self, model_build_fn, param_grid, scoring, refit, cv, mode, return_train_score=False):
+    def __init__(self, model_build_fn, param_grid, scoring, refit, cv, mode, random_state=None,
+                 return_train_score=False):
         self.param_grid = ParameterGrid(param_grid)
         super().__init__(model_build_fn=model_build_fn, param_grid=self.param_grid, scoring=scoring, refit=refit, cv=cv,
-                         mode=mode, return_train_score=return_train_score)
+                         mode=mode, random_state=random_state, return_train_score=return_train_score)
 
 
 class DeepchemRandomSearchCV(DeepchemBaseSearchCV):
 
-    def __init__(self, model_build_fn, param_distributions, scoring, refit, cv, mode, return_train_score=False,
-                 n_iter=20, random_state=None):
+    def __init__(self, model_build_fn, param_distributions, scoring, refit, cv, mode, random_state=None,
+                 return_train_score=False, n_iter=20):
         self.param_grid = list(ParameterSampler(param_distributions, n_iter, random_state))
         super().__init__(model_build_fn=model_build_fn, param_grid=self.param_grid, scoring=scoring, refit=refit, cv=cv,
-                         mode=mode, return_train_score=return_train_score)
+                         mode=mode, random_state=random_state, return_train_score=return_train_score)

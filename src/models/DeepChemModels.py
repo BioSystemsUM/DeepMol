@@ -6,11 +6,11 @@ date: 28/04/2021
 from typing import Optional, List, Type
 from copy import deepcopy
 import numpy as np
-from models.Models import Model
-from Datasets.Datasets import Dataset
-from loaders.Loaders import CSVLoader
-from splitters.splitters import RandomSplitter, Splitter
-from metrics.Metrics import Metric
+from src.models.Models import Model
+from src.Datasets.Datasets import Dataset
+from src.loaders.Loaders import CSVLoader
+from src.splitters.splitters import RandomSplitter, Splitter
+from src.metrics.Metrics import Metric
 from deepchem.models import Model as deep_model
 from deepchem.models import SeqToSeq, WGAN, GATModel, GCNModel, AttentiveFPModel, LCNNModel, MultitaskIRVClassifier
 from deepchem.data import NumpyDataset, DiskDataset
@@ -18,7 +18,7 @@ import deepchem as dc
 #from deepchem.trans import Transformer
 
 
-from utils.utils import load_from_disk, save_to_disk
+from src.utils.utils import load_from_disk, save_to_disk
 
 
 def generate_sequences(epochs, train_smiles):
@@ -140,8 +140,10 @@ class DeepChemModel(Model):
             return res
         elif len(res.shape) == 2:
             new_res = np.squeeze(res)
+        # else:
+        #     new_res = np.reshape(res,(res.shape[0],res.shape[2]))
         else:
-            new_res = np.reshape(res,(res.shape[0],res.shape[2]))
+            new_res = np.squeeze(res) # TODO: confirm that this does what the commented code above does. This way it would be more general, and it would work for regression models
         
         return new_res
 

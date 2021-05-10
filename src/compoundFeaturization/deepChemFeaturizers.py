@@ -5,10 +5,11 @@ date: 28/04/2021
 
 import numpy as np
 import deepchem as dc
-from Datasets.Datasets import Dataset
+from src.Datasets.Datasets import Dataset
 from deepchem.utils.conformers import ConformerGenerator
-from  deepchem.feat import RDKitDescriptors, SmilesToImage, SmilesToSeq, CoulombMatrix, CoulombMatrixEig, ConvMolFeaturizer, WeaveFeaturizer, MolGraphConvFeaturizer
-from compoundFeaturization.baseFeaturizer import MolecularFeaturizer
+from deepchem.feat import RDKitDescriptors, SmilesToImage, SmilesToSeq, CoulombMatrix, CoulombMatrixEig, \
+    ConvMolFeaturizer, WeaveFeaturizer, MolGraphConvFeaturizer, RawFeaturizer
+from src.compoundFeaturization.baseFeaturizer import MolecularFeaturizer
 from rdkit import Chem
 from typing import List, Any, Optional, Dict, Iterable
 
@@ -509,6 +510,12 @@ class CGCNNFeat():
             raise ImportError("This class requires pymatgen to be installed")
         
         pass
-        
 
 
+class RawFeat(MolecularFeaturizer):
+
+    def featurize(self, dataset: Dataset, log_every_n=1000):
+        print('Featurizing datapoints')
+        dataset.X = RawFeaturizer().featurize(dataset.mols)
+        dataset.ids = dataset.mols # this is needed when calling the build_char_dict method (TextCNNModel)
+        return dataset

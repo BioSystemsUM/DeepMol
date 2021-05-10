@@ -3,7 +3,7 @@ import numpy as np
 
 from typing import Tuple, List, Optional, Iterator, Type
 
-from Datasets.Datasets import Dataset, NumpyDataset
+from src.Datasets.Datasets import Dataset, NumpyDataset
 
 from sklearn.model_selection import KFold, StratifiedKFold
 
@@ -20,6 +20,7 @@ class Splitter(object):
     def k_fold_split(self,
                      dataset: Dataset,
                      k: int,
+                     seed: Optional[int] = None, # added
                      **kwargs) -> List[Tuple[Dataset, Dataset]]:
         """
         Parameters
@@ -40,7 +41,8 @@ class Splitter(object):
         else:
             ds = NumpyDataset(dataset.mols, dataset.X, dataset.y, dataset.ids, dataset.features2keep, dataset.n_tasks)
 
-        kf = KFold(n_splits=k)
+        # kf = KFold(n_splits=k)
+        kf = KFold(n_splits=k, shuffle=True, random_state=seed)
 
         train_datasets = []
         test_datasets = []
@@ -257,7 +259,7 @@ class SingletaskStratifiedSplitter(Splitter):
         else:
             ds = NumpyDataset(dataset.mols, dataset.X, dataset.y, dataset.ids, dataset.features2keep, dataset.n_tasks)
 
-        skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=None)
+        skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=seed) # changed so that users can define the seed
 
         train_datasets = []
         test_datasets = []

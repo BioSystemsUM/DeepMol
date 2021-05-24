@@ -248,6 +248,20 @@ class NumpyDataset(Dataset):
         df.to_csv(path)
 
 
+    # TODO: test load and save
+    def load_features(self, path, sep=',', header=0):
+        df = pd.read_csv(path, sep=sep, header=header)
+        return df.to_numpy()
+
+    def save_features(self, path=''):
+        if self.dataset.X is not None:
+            columns_names = ['feat_' + str(i + 1) for i in range(self.dataset.X.shape[1])]
+            df = pd.DataFrame(self.dataset.X, columns=columns_names)
+            df.to_csv(path, index=False)
+        else:
+            raise ValueError('No fingerprint was already calculated!')
+
+
 
 '''
 #TODO: implement a Dataset subclass to use/deal with datasets in disk instead of in-memory

@@ -1,10 +1,9 @@
 import numpy as np
-from typing import Iterable, Any
+import pandas as pd
 
 from rdkit import Chem
 from rdkit.Chem import rdmolfiles
 from rdkit.Chem import rdmolops
-from rdkit.Chem.rdchem import Mol
 
 from Datasets.Datasets import Dataset
 
@@ -65,7 +64,3 @@ class MolecularFeaturizer(object):
         dataset.removeNAs()
 
         return dataset
-
-    # TODO: implement
-    def load_fp(self):
-        pass

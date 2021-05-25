@@ -147,9 +147,12 @@ class NumpyDataset(Dataset):
             Very useful when doing feature selection or to remove NAs.
         """
         self.mols = np.delete(self.mols, indexes)
-        self.X = np.delete(self.X, indexes, axis=0)
-        self.y = np.delete(self.y, indexes)
-        self.ids = np.delete(self.ids, indexes)
+        if self.X is not None:
+            self.X = np.delete(self.X, indexes, axis=0)
+        if self.y is not None:
+            self.y = np.delete(self.y, indexes)
+        if self.ids is not None:
+            self.ids = np.delete(self.ids, indexes)
 
     #TODO: test this
     def selectFeatures(self, indexes):
@@ -251,9 +254,9 @@ class NumpyDataset(Dataset):
     # TODO: test load and save
     def load_features(self, path, sep=',', header=0):
         df = pd.read_csv(path, sep=sep, header=header)
-        return df.to_numpy()
+        self.dataset.X = df.to_numpy()
 
-    def save_features(self, path=''):
+    def save_features(self, path='fingerprints.csv'):
         if self.dataset.X is not None:
             columns_names = ['feat_' + str(i + 1) for i in range(self.dataset.X.shape[1])]
             df = pd.DataFrame(self.dataset.X, columns=columns_names)

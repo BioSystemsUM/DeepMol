@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 
-def load_csv_file(input_file, fields, chunk_size=None):
+def load_csv_file(input_file, fields, sep=',', header = 0, chunk_size=None):
     """Load data as pandas dataframe from CSV files.
     Parameters
     ----------
@@ -25,7 +25,7 @@ def load_csv_file(input_file, fields, chunk_size=None):
     """
 
     if chunk_size is None:
-        return pd.read_csv(input_file)[fields]
+        return pd.read_csv(input_file, sep=sep, header=header)[fields]
     else:
         df = pd.read_csv(input_file)
         print("Loading shard of size %s." % (str(chunk_size)))
@@ -147,8 +147,8 @@ class CSVLoader(object):
         self.fields2keep = fields2keep
 
 
-
-    def _get_dataset(self, dataset_path, fields=None, chunk_size=None):
+    #TODO: update comments
+    def _get_dataset(self, dataset_path, fields=None, sep=',', header=0, chunk_size=None):
         """Loads data with size chunk_size.
         Parameters
         ----------
@@ -161,11 +161,11 @@ class CSVLoader(object):
         pd.DataFrame
             Dataframe
         """
-        return load_csv_file(dataset_path, fields, chunk_size)
+        return load_csv_file(dataset_path, fields, sep, header, chunk_size)
 
-    def create_dataset(self, in_memory=True):
+    def create_dataset(self, sep=',', header=0, in_memory=True):
         if in_memory:
-            dataset = self._get_dataset(self.dataset_path, fields = self.fields2keep, chunk_size = self.shard_size)
+            dataset = self._get_dataset(self.dataset_path, fields = self.fields2keep, sep=sep, header=header, chunk_size = self.shard_size)
 
             mols = dataset[self.mols_field].to_numpy()
 

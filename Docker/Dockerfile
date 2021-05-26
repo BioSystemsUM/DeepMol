@@ -67,6 +67,7 @@ RUN conda install -y python=${python_version} && \
       tqdm \
       joblib \
       imbalanced-learn \
+      shap==0.39.0 \
       && \
     conda clean -yt
 

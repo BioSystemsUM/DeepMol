@@ -1,18 +1,22 @@
 from ast import literal_eval
 
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Input, Dropout, Dense, BatchNormalization, Activation
-from tensorflow.keras.regularizers import l1_l2
-from tensorflow.keras.optimizers import Adam
-
 from deepchem.models import GraphConvModel, TextCNNModel, WeaveModel, MPNNModel
+from deepchem.models import torch_models
+from tensorflow.keras.layers import Input, Dropout, Dense, BatchNormalization, Activation
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.regularizers import l1_l2
+
 from src.models.DeepChemModels import DeepChemModel
 
 
-def graphconv_builder(graph_conv_layers, dense_layer_size, dropout, learning_rate, task_type, batch_size=256, epochs=100):
+def graphconv_builder(graph_conv_layers, dense_layer_size, dropout, learning_rate, task_type, batch_size=256,
+                      epochs=100):
     graph = GraphConvModel(n_tasks=1, graph_conv_layers=graph_conv_layers, dense_layer_size=dense_layer_size,
                            dropout=dropout, batch_size=batch_size, learning_rate=learning_rate, mode=task_type)
     return DeepChemModel(graph, epochs=epochs, use_weights=False, model_dir=None)
+
+
 # optimizer = Adam by default in DeepChem and loss=L2Loss() by default for regression (it's the same as MSE loss)
 
 
@@ -38,6 +42,42 @@ def mpnn_builder(n_hidden, T, M, learning_rate, task_type, batch_size=256,
                      learning_rate=learning_rate, batch_size=batch_size, mode=task_type)
     # the dropout arg isn't actually used in the DeepChem code for MPNNModel!
     return DeepChemModel(mpnn, epochs=epochs, use_weights=False, model_dir=None)
+
+
+def gcn_builder(graph_conv_layers, dropout, predictor_hidden_feats, predictor_dropout, learning_rate, task_type,
+                batch_size=256, epochs=100):
+    gcn = torch_models.GCNModel(n_tasks=1, graph_conv_layers=graph_conv_layers, activation=None,
+                                # if activation=None, DGLLife defaults to ReLU
+                                residual=True, batchnorm=False, predictor_hidden_feats=predictor_hidden_feats,
+                                dropout=dropout, predictor_dropout=predictor_dropout, learning_rate=learning_rate,
+                                batch_size=batch_size, mode=task_type)
+    return DeepChemModel(gcn, epochs=epochs, use_weights=False, model_dir=None)
+
+
+def gat_builder(graph_attention_layers, n_attention_heads, dropout, predictor_hidden_feats,
+                predictor_dropout, learning_rate, task_type, batch_size=256, epochs=100):
+    gat = torch_models.GATModel(n_tasks=1, graph_attention_layers=graph_attention_layers,
+                                n_attention_heads=n_attention_heads, dropout=dropout,
+                                predictor_hidden_feats=predictor_hidden_feats, predictor_dropout=predictor_dropout,
+                                learning_rate=learning_rate, batch_size=batch_size, mode=task_type)
+    return DeepChemModel(gat, epochs=epochs, use_weights=False, model_dir=None)
+
+
+def attentivefp_builder(num_layers, num_timesteps, graph_feat_size, dropout, learning_rate, task_type, batch_size=256,
+                        epochs=100):
+    attentivefp = torch_models.AttentiveFPModel(n_tasks=1, num_layers=num_layers, num_timesteps=num_timesteps,
+                                                graph_feat_size=graph_feat_size, dropout=dropout,
+                                                learning_rate=learning_rate, batch_size=batch_size, mode=task_type)
+    return DeepChemModel(attentivefp, epoch=epochs, use_weights=False, model_dir=None)
+
+
+def torchmpnn_builder(node_out_feats, edge_hidden_feats, num_step_message_passing, num_step_set2set, num_layer_set2set,
+                      learning_rate, task_type, batch_size=256, epochs=100):
+    mpnn = torch_models.MPNNModel(n_tasks=1, node_out_feats=node_out_feats, edge_hidden_feats=edge_hidden_feats,
+                                  num_step_message_passing=num_step_message_passing, num_step_set2set=num_step_set2set,
+                                  num_layer_set2set=num_layer_set2set, learning_rate=learning_rate,
+                                  batch_size=batch_size, mode=task_type)
+    return DeepChemModel(mpnn, epoch=epochs, use_weights=False, model_dir=None)
 
 
 def dense_builder(input_dim=None, task_type=None, hlayers_sizes='[10]', initializer='he_normal',
@@ -85,4 +125,10 @@ BUILDERS = {'GraphConv': graphconv_builder,
             'Weave': weave_builder,
             'MACCS': dense_builder,
             'RDKitFP': dense_builder,
-            'MPNN': mpnn_builder}
+            'MPNN': mpnn_builder,
+            'GCN': gcn_builder,
+            'GAT': gat_builder,
+            'AttentiveFP': attentivefp_builder,
+            'TorchMPNN': torchmpnn_builder,
+            'AtomPair': dense_builder,
+            'LayeredFP': dense_builder}

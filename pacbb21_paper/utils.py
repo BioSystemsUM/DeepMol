@@ -37,7 +37,13 @@ def get_featurizer(model_name):
                         'Mol2vec': mol2vec.Mol2Vec(pretrain_model_path='model_300dim.pkl'),
                         'MACCS': rdkitFingerprints.MACCSkeysFingerprint(),
                         'RDKitFP': rdkitFingerprints.RDKFingerprint(fpSize=1024),
-                        'MPNN': deepChemFeaturizers.WeaveFeat()}
+                        'MPNN': deepChemFeaturizers.WeaveFeat(),
+                        'GCN': deepChemFeaturizers.MolGraphConvFeat(),
+                        'GAT': deepChemFeaturizers.MolGraphConvFeat(),
+                        'AttentiveFP': deepChemFeaturizers.MolGraphConvFeat(use_edges=True),
+                        'TorchMPNN': deepChemFeaturizers.MolGraphConvFeat(use_edges=True),
+                        'AtomPair': rdkitFingerprints.AtomPairFingerprint(nBits=1024),
+                        'LayeredFP': rdkitFingerprints.LayeredFingerprint(fpSize=1024)}
     return featurizers_dict[model_name]
 
 
@@ -105,5 +111,45 @@ def get_default_param_grid(model_name):
                   'MPNN': {'n_hidden': [128, 256, 100], # 100 is DeepChem's default value
                            'T': [3, 4, 5, 6, 7, 8], # as mentioned in the Gilmer et al, 2017 paper
                            'M': [1, 2, 3, 4, 5, 6, 7, 8, 9, 12], # as mentioned in the Gilmer et al, 2017 paper
-                           'learning_rate': [1e-5, 1e-4, 1e-3]}} # because Gilmer et al, 2017 paper mentions lower values
+                           'learning_rate': [1e-5, 1e-4, 1e-3]}, # because Gilmer et al, 2017 paper mentions lower values
+                  'GCN': {'graph_conv_layers': [[32, 32], [64, 64], [128, 128],
+                                                [32, 32, 32], [64, 64, 64], [128, 128, 128],
+                                                [32, 32, 32, 32], [64, 64, 64, 64], [128, 128, 128, 128]],
+                          'predictor_hidden_feats': [256, 128, 64],
+                          'dropout': [0.0, 0.25, 0.5],
+                          'predictor_dropout': [0.0, 0.25, 0.5],
+                          'learning_rate': [1e-4, 1e-3, 1e-2]},
+                  'GAT': {'graph_attention_layers': [[8, 8], [16, 16], [32, 32],
+                                                     [8, 8, 8], [16, 16, 16], [32, 32, 32]],
+                          'n_attention_heads': [4, 8],
+                          'predictor_hidden_feats': [256, 128, 64],
+                          'dropout': [0.0, 0.25, 0.5],
+                          'predictor_dropout': [0.0, 0.25, 0.5],
+                          'learning_rate': [1e-4, 1e-3, 1e-2]},
+                  'AttentiveFP': {'num_layers': [1, 2, 3, 4],
+                                  'num_timesteps': [2, 3, 4],
+                                  'graph_feat_size': [32, 64, 128, 256, 512, 200], # 200 is the default value in DeepChem
+                                  'dropout': [0, 0.25, 0.5],
+                                  'learning_rate': [1e-4, 1e-3, 1e-2]},
+                  'TorchMPNN': {'node_out_feats': [64, 128],
+                                'edge_hidden_feats': [128, 256],
+                                'num_step_message_passing': [3, 4, 5, 6, 7, 8],
+                                'num_step_set2set': [2, 4, 6, 8],
+                                'num_layer_set2set': [2, 3],
+                                'learning_rate': [1e-5, 1e-4, 1e-3]},
+                  'AtomPair': {'hlayers_sizes': ['[512, 256]', '[256, 128]', '[128, 64]', '[64, 32]',
+                                              '[512, 256, 128]', '[256, 128, 64]', '[128, 64, 32]',
+                                              '[512, 256, 128, 64]', '[256, 128, 64, 32]'],
+                              'l2': [0.0, 1e-4, 1e-3, 1e-2],
+                              'hidden_dropout': [0.0, 0.25, 0.5],
+                              'batchnorm': [True, False],
+                              'learning_rate': [1e-4, 1e-3, 1e-2]},
+                  'LayeredFP': {'hlayers_sizes': ['[512, 256]', '[256, 128]', '[128, 64]', '[64, 32]',
+                                              '[512, 256, 128]', '[256, 128, 64]', '[128, 64, 32]',
+                                              '[512, 256, 128, 64]', '[256, 128, 64, 32]'],
+                              'l2': [0.0, 1e-4, 1e-3, 1e-2],
+                              'hidden_dropout': [0.0, 0.25, 0.5],
+                              'batchnorm': [True, False],
+                              'learning_rate': [1e-4, 1e-3, 1e-2]}
+                  }
     return grids_dict[model_name]

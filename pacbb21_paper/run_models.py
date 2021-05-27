@@ -4,6 +4,7 @@ from datetime import datetime
 
 import pandas as pd
 import tensorflow as tf
+import torch
 from deepchem.models import TextCNNModel
 
 from src.loaders.Loaders import CSVLoader
@@ -19,6 +20,7 @@ from utils import get_featurizer, save_evaluation_results, get_default_param_gri
 def main(dataset_dir, model_name, gpu):
     print(tf.__version__)
     print(tf.test.is_built_with_cuda())
+    #print(torch.cuda.is_available())
     # gpus = tf.config.list_physical_devices('GPU')
     # if gpus:
     #     try:
@@ -29,7 +31,7 @@ def main(dataset_dir, model_name, gpu):
 
     os.environ['CUDA_VISIBLE_DEVICES'] = gpu
     print(os.environ['CUDA_VISIBLE_DEVICES'])
-    # os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
+    os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
     # print(tf.reduce_sum(tf.random.normal([1000, 1000])))
 
     output_dir = os.path.join('..', 'pacbb21_paper', 'results', datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
@@ -100,10 +102,11 @@ def main(dataset_dir, model_name, gpu):
 
     optimizer = HyperparamOpt_CV(builder, mode=mode)
 
-    if model_name in ['GraphConv', 'TextCNN', 'Weave', 'MPNN']:
+    if model_name in ['GraphConv', 'TextCNN', 'Weave', 'MPNN', 'GCN', 'GAT', 'AttentiveFP', 'TorchMPNN']:
         model_type = 'deepchem'
     else:
         model_type = 'keras'
+    print(model_type)
 
     best_model, best_hyperparams, all_results = optimizer.hyperparam_search(model_type,
                                                                             params_dict,

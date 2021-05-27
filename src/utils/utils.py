@@ -405,18 +405,30 @@ from rdkit.Chem import rdMolDescriptors, rdDepictor
 from rdkit.Chem import Draw
 from IPython.display import SVG
 
-def draw_morgan_bits(smiles, bits):
+def draw_morgan_bits(smiles, bits, radius=2, nBits=2048):
     bi = {}
 
     mol = Chem.MolFromSmiles(smiles)
-    fp = rdMolDescriptors.GetMorganFingerprintAsBitVect(mol, radius=2, nBits=1024, bitInfo=bi)
+    fp = rdMolDescriptors.GetMorganFingerprintAsBitVect(mol, radius=radius, nBits=nBits, bitInfo=bi)
 
     if isinstance(bits, int):
-        return Draw.DrawMorganBit(mol, bits)
+        if bits not in bi.keys():
+            print('Bits ON: ', bi.keys())
+            raise ValueError('Bit is off! Select a on bit')
+        return Draw.DrawMorganBit(mol, bits, bi)
 
     elif isinstance(bits, list):
-        tpls = [(mol, x, bi) for x in bits]
-        return Draw.DrawMorganBits(tpls, molsPerRow=5, legends=['bit_'+str(x) for x in bits])
+        bits_on = []
+        for b in bits:
+            if b in bi.keys():
+                bits_on.append(b)
+            else: print('Bit %d is off!' %(b))
+        if len(bits_on)==0:
+            raise ValueError('All the selected bits are off! Select on bits!')
+        elif len(bits_on)!=len(bits):
+            print('Using only bits ON: ', bits_on)
+        tpls = [(mol, x, bi) for x in bits_on]
+        return Draw.DrawMorganBits(tpls, molsPerRow=5, legends=['bit_'+str(x) for x in bits_on])
 
     elif bits=='ON':
         tpls = [(mol, x, bi) for x in fp.GetOnBits()]
@@ -492,11 +504,24 @@ def draw_rdk_bits(smiles, bits, minPath=2, maxPath=7, fpSize=2048):
     fp = RDKFingerprint(mol, minPath=minPath, maxPath=maxPath, fpSize=fpSize, bitInfo=rdkbi)
 
     if isinstance(bits, int):
+        if bits not in rdkbi.keys():
+            print('Bits ON: ', rdkbi.keys())
+            raise ValueError('Bit is off! Select a on bit')
         return Draw.DrawRDKitBit(mol, bits, rdkbi)
 
     elif isinstance(bits, list):
-        tpls = [(mol, x, rdkbi) for x in bits]
-        return Draw.DrawRDKitBits(tpls, molsPerRow=5, legends=['bit_'+str(x) for x in bits])
+        bits_on = []
+        for b in bits:
+            if b in rdkbi.keys():
+                bits_on.append(b)
+            else:
+                print('Bit %d is off!' % (b))
+        if len(bits_on) == 0:
+            raise ValueError('All the selected bits are off! Select on bits!')
+        elif len(bits_on) != len(bits):
+            print('Using only bits ON: ', bits_on)
+        tpls = [(mol, x, rdkbi) for x in bits_on]
+        return Draw.DrawRDKitBits(tpls, molsPerRow=5, legends=['bit_'+str(x) for x in bits_on])
 
     elif bits=='ON':
         tpls = [(mol, x, rdkbi) for x in fp.GetOnBits()]

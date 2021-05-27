@@ -17,7 +17,7 @@ class MorganFingerprint(MolecularFeaturizer):
 
     def __init__(self,
                  radius: int = 2,
-                 size: int = 1024,
+                 size: int = 2048,
                  chiral: bool = False,
                  bonds: bool = True,
                  features: bool = False):
@@ -26,7 +26,7 @@ class MorganFingerprint(MolecularFeaturizer):
         ----------
         radius: int, optional (default 2)
           Fingerprint radius.
-        size: int, optional (default 1024)
+        size: int, optional (default 2048)
           Length of generated bit vector.
         chiral: bool, optional (default False)
           Whether to consider chirality in fingerprint generation.
@@ -261,7 +261,7 @@ class RDKFingerprint(MolecularFeaturizer):
 
         except Exception as e:
             print('error in smile: ' + str(mol))
-            fp = np.empty(self.fpsize, dtype=float)
+            fp = np.empty(self.fpSize, dtype=float)
             fp[:] = np.NaN
         fp = np.asarray(fp, dtype=np.float)
 

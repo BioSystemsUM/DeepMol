@@ -147,9 +147,12 @@ class NumpyDataset(Dataset):
             Very useful when doing feature selection or to remove NAs.
         """
         self.mols = np.delete(self.mols, indexes)
-        self.X = np.delete(self.X, indexes, axis=0)
-        self.y = np.delete(self.y, indexes)
-        self.ids = np.delete(self.ids, indexes)
+        if self.X is not None:
+            self.X = np.delete(self.X, indexes, axis=0)
+        if self.y is not None:
+            self.y = np.delete(self.y, indexes)
+        if self.ids is not None:
+            self.ids = np.delete(self.ids, indexes)
 
     #TODO: test this
     def selectFeatures(self, indexes):
@@ -241,11 +244,33 @@ class NumpyDataset(Dataset):
 
     def save_to_csv(self, path):
         df = pd.DataFrame()
-        df['ids'] = pd.Series(self.ids)
+        if self.ids is not None:
+            df['ids'] = pd.Series(self.ids)
         df['mols'] = pd.Series(self.mols)
-        df['X'] = pd.Series(self.X)
-        df['y'] = pd.Series(self.y)
-        df.to_csv(path)
+        if self.y is not None:
+            df['y'] = pd.Series(self.y)
+        if self.X is not None:
+            columns_names = ['feat_' + str(i + 1) for i in range(self.X.shape[1])]
+            df_x = pd.DataFrame(self.X, columns=columns_names)
+            df = pd.concat([df, df_x], axis=1)
+
+        df.to_csv(path, index=False)
+
+
+    # TODO: test load and save
+    def load_features(self, path, sep=',', header=0):
+        df = pd.read_csv(path, sep=sep, header=header)
+        self.dataset.X = df.to_numpy()
+
+    # TODO: Order of the features compared with the initial mols/y's is lost because some features cannot be computed
+    #  due to smiles invalidity (use only the function save_to_csv? or think about other implementation?)
+    def save_features(self, path='fingerprints.csv'):
+        if self.X is not None:
+            columns_names = ['feat_' + str(i + 1) for i in range(self.X.shape[1])]
+            df = pd.DataFrame(self.X, columns=columns_names)
+            df.to_csv(path, index=False)
+        else:
+            raise ValueError('No fingerprint was already calculated!')
 
 
 

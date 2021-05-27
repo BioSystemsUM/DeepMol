@@ -472,6 +472,8 @@ def draw_morgan_bit_on_molecule(mol_smiles, bit, radius=2, nBits=2048, molSize=(
         print('Bits ON: ', info.keys())
         raise ValueError('Bit is off! Select a on bit')
 
+    print('Bit %d with %d hits!' % (bit, len(info[bit])))
+
     aid, rad = info[bit][0]
     return getSubstructDepiction(mol, aid, rad, molSize=molSize)
 
@@ -490,7 +492,7 @@ def draw_rdk_bits(smiles, bits, minPath=2, maxPath=7, fpSize=2048):
     fp = RDKFingerprint(mol, minPath=minPath, maxPath=maxPath, fpSize=fpSize, bitInfo=rdkbi)
 
     if isinstance(bits, int):
-        return Draw.DrawRDKitBit(mol, bits)
+        return Draw.DrawRDKitBit(mol, bits, rdkbi)
 
     elif isinstance(bits, list):
         tpls = [(mol, x, rdkbi) for x in bits]
@@ -498,13 +500,14 @@ def draw_rdk_bits(smiles, bits, minPath=2, maxPath=7, fpSize=2048):
 
     elif bits=='ON':
         tpls = [(mol, x, rdkbi) for x in fp.GetOnBits()]
-        return Draw.DrawMorganBits(tpls, molsPerRow=5, legends=[str(x) for x in fp.GetOnBits()])
+        return Draw.DrawRDKitBits(tpls, molsPerRow=5, legends=[str(x) for x in fp.GetOnBits()])
 
     else:
         raise ValueError('Bits must be intenger, list of integers or ON!')
 
 
-def draw_rdk_bit_on_molecule(mol_smiles, bit, minPath=1, maxPath=7, fpSize=2048, molSize=(450,200)):
+from IPython.display import display
+def draw_rdk_bit_on_molecule(mol_smiles, bit, minPath=1, maxPath=7, fpSize=2048, path_dir=None, molSize=(450,200)):
     try:
         mol = Chem.MolFromSmiles(mol_smiles)
     except Exception as e:
@@ -512,8 +515,25 @@ def draw_rdk_bit_on_molecule(mol_smiles, bit, minPath=1, maxPath=7, fpSize=2048,
 
     info = {}
     RDKFingerprint(mol, minPath=minPath, maxPath=maxPath, fpSize=fpSize, bitInfo=info)
+
     if bit not in info.keys():
         print('Bits ON: ', info.keys())
         raise ValueError('Bit is off! Select a on bit')
-    aid, rad = info[bit][0]
-    return getSubstructDepiction(mol, aid, rad, molSize=molSize)
+
+    print('Bit %d with %d hits!' % (bit, len(info[bit])))
+
+    images = []
+    for i in range(len(info[bit])):
+        d = rdMolDraw2D.MolDraw2DCairo(molSize[0], molSize[1])
+        rdMolDraw2D.PrepareAndDrawMolecule(d, mol, highlightBonds=info[bit][i])
+        d.FinishDrawing()
+        if path_dir == None:
+            with tempfile.TemporaryDirectory() as tmpdirname:
+                d.WriteDrawingText(tmpdirname + 'mol_'+str(i)+'.png')
+                im = Image.open(tmpdirname + 'mol_'+str(i)+'.png')
+                images.append(im)
+        else :
+            d.WriteDrawingText(path_dir+'mol_'+str(i)+'.png')
+            im = Image.open(path_dir + 'mol_' + str(i) + '.png')
+            images.append(im)
+    return display(*images)

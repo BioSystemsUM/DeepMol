@@ -261,7 +261,7 @@ class RDKFingerprint(MolecularFeaturizer):
 
         except Exception as e:
             print('error in smile: ' + str(mol))
-            fp = np.empty(self.fpsize, dtype=float)
+            fp = np.empty(self.fpSize, dtype=float)
             fp[:] = np.NaN
         fp = np.asarray(fp, dtype=np.float)
 

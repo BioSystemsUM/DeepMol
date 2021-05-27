@@ -12,7 +12,7 @@ from src.loaders.Loaders import CSVLoader
 from src.splitters.splitters import RandomSplitter, Splitter
 from src.metrics.Metrics import Metric
 from deepchem.models import Model as deep_model
-from deepchem.models import SeqToSeq, WGAN, GATModel, GCNModel, AttentiveFPModel, LCNNModel, MultitaskIRVClassifier
+from deepchem.models import SeqToSeq, WGAN, GATModel, GCNModel, AttentiveFPModel, LCNNModel, MultitaskIRVClassifier, TorchModel
 from deepchem.data import NumpyDataset, DiskDataset
 import deepchem as dc
 #from deepchem.trans import Transformer
@@ -95,13 +95,18 @@ class DeepChemModel(Model):
             The `Dataset` to train this model on.
         """
         # Afraid of model.fit not recognizes the input dataset as a deepchem.data.datasets.Dataset
-        
-
-        new_dataset = NumpyDataset(
+        if isinstance(self.model, TorchModel) and self.model.model.mode == 'regression':
+            y = np.expand_dims(dataset.y, axis=-1)  # need to do this so that the loss is calculated correctly
+            new_dataset = NumpyDataset(
                 X=dataset.X,
-                y=dataset.y,
-                #w = np.ones((np.shape(dataset.features)[0])),
+                y=y,
                 ids=dataset.mols)
+        else:
+            new_dataset = NumpyDataset(
+                    X=dataset.X,
+                    y=dataset.y,
+                    #w = np.ones((np.shape(dataset.features)[0])),
+                    ids=dataset.mols)
         if isinstance(self.model, SeqToSeq):
             self.model.fit_sequences(generate_sequences(epochs=self.model.epochs, train_smiles=dataset.ids))
         elif isinstance(self.model, WGAN):
@@ -134,16 +139,18 @@ class DeepChemModel(Model):
                 #w = np.ones((np.shape(dataset.features)[0],self.n_tasks)),
                 ids=dataset.mols)
 
-        res =  self.model.predict(new_dataset,transformers)
+        res = self.model.predict(new_dataset,transformers)
 
-        if isinstance(self.model, (GATModel,GCNModel,AttentiveFPModel,LCNNModel)):
-            return res
-        elif len(res.shape) == 2:
-            new_res = np.squeeze(res)
+        # if isinstance(self.model, (GATModel,GCNModel,AttentiveFPModel,LCNNModel)):
+        #     return res
+        # elif len(res.shape) == 2:
+        #     new_res = np.squeeze(res)
         # else:
         #     new_res = np.reshape(res,(res.shape[0],res.shape[2]))
+        if isinstance(self.model, TorchModel) and self.model.model.mode == 'classification':
+            return res
         else:
-            new_res = np.squeeze(res) # TODO: confirm that this does what the commented code above does. This way it would be more general, and it would work for regression models
+            new_res = np.squeeze(res) # this works for all regression models (Keras and PyTorch) and is more general than the commented code above
         
         return new_res
 

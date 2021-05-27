@@ -68,6 +68,7 @@ RUN conda install -y python=${python_version} && \
       joblib \
       imbalanced-learn \
       shap==0.39.0 \
+      umap-learn==0.5.1 \
       && \
     conda clean -yt
 

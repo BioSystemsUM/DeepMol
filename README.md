@@ -14,6 +14,7 @@ operations on molecular data.
     - [Pip](#pip)
     - [Docker](#docker)
 - [Getting Started](#getting-started)
+    - [Load dataset from csv](#load-a-dataset-from-a-csv)
 - [About Us](#about-us)
 - [Citing DeepMol](#citing-deepmol)
 

@@ -29,6 +29,7 @@ operations on molecular data.
 
 ## Getting Started
 
+### Load a dataset from a CSV
 ```python
 from loaders.Loaders import CSVLoader
 
@@ -46,6 +47,43 @@ dataset.get_shape()
 
 <p align="left">
   <img src="https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/src/docs/imgs/load_csv_output.png?token=AGEFRGJBJDLT7RC27OPU5PDAXJRZC" width="800" />
+</p>
+
+### Compound Featurization
+
+```python
+from compoundFeaturization.rdkitFingerprints import MorganFingerprint
+
+#Compute morgan fingerprints for molecules in the previous loaded dataset
+dataset = MorganFingerprint(radius=2, size=1024).featurize(dataset)
+```
+
+<p align="left">
+  <img src="https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/src/docs/imgs/featurization_output.png?token=AGEFRGODQDHUOPFRH5NV3P3AXJSZQ" width="800" />
+</p>
+
+```python
+#print shape of the dataset to see difference in the X shape
+dataset.get_shape()
+```
+
+<p align="left">
+  <img src="https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/src/docs/imgs/get_shape_output.png?token=AGEFRGOEO6GO33NT7DX3VNLAXJTEE" width="800" />
+</p>
+
+### Feature Selection
+```python
+from featureSelection.baseFeatureSelector import LowVarianceFS
+
+#Feature Selection to remove features with low variance across molecules
+dataset = LowVarianceFS(0.15).featureSelection(dataset)
+
+#print shape of the dataset to see difference in the X shape (less features)
+dataset.get_shape()
+```
+
+<p align="left">
+  <img src="https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/src/docs/imgs/get_shape_output_2.png?token=AGEFRGKWWJ6JAGUYWQ3FQX3AXJUSC" width="800" />
 </p>
 
 ## About Us

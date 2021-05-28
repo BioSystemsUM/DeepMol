@@ -45,7 +45,7 @@ dataset.get_shape()
 ```
 
 <p align="left">
-  <img src="" width="800" />
+  <img src="https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/src/docs/imgs/load_csv_output.png?token=AGEFRGJBJDLT7RC27OPU5PDAXJRZC" width="800" />
 </p>
 
 ## About Us

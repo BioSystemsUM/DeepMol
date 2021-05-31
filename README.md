@@ -1,5 +1,8 @@
 # DeepMol
 
+**[README UNDER CONSTRUCTION!]**
+
+### Description
 DeepMol is a python-based machine and deep learning framework for drug discovery. 
 It offers a variety of functionalities that enable a smoother approach to many 
 drug discovery and chemoinformatics problems. It uses Tensorflow, Keras, 
@@ -27,20 +30,88 @@ operations on molecular data.
 - [About Us](#about-us)
 - [Citing DeepMol](#citing-deepmol)
 
+
 ## Requirements
 
+- rdkit
+- tensorflow
+- keras
+- scikit-learn
+- deepchem
+- chembl_structure_pipeline
+- shap
+- imbalanced-learn
+- umap-learn
+- etc
+  
 
 ## Installation
 
 ### Pip
 
+Install DeepMol via pip or conda:
+
+```bash
+pip install deepmol #just for example (not working)
+```
+
+or
+
+```bash
+conda install -c conda-forge deepmol #just for example (not working)
+```
+
 ### Docker
 
+(IN PREPARATION - NOT FUNCTIONAL YET!)
+1. Install [docker](https://docs.docker.com/install/).
+2. Pull an existing image (X.XGb to download) from DockerHub:
+
+```bash
+docker pull XXX
+```
+
+or clone the repository and build it manually:
+
+```bash
+git clone https://github.com/BioSystemsUM/DeepMol.git
+docker build ...
+```
+
+3. Create a container:
+```bash
+docker run ...
+```
+
+### Manually
+
+(IN PREPARATION - NOT FUNCTIONAL YET!)
+
+Alternatively, install dependencies and DeepMol manually.
+
+1. Clone the repository:
+```bash
+git clone https://github.com/BioSystemsUM/DeepMol.git
+```
+
+3. Install dependencies:
+```bash
+python setup.py install
+```
 
 ## Getting Started
 
 DeepMol is built in a modular way allowing the use of its methods for 
-multiple tasks. ...
+multiple tasks. It offers a complete workflow to perform ML and DL tasks 
+using molecules represented as SMILES. It has modules that perform 
+standard tasks such as the loading and standardization of the data, computing 
+molecular features like molecular fingerprints, performing feature selection 
+and data splitting. It also provides  methods to deal with unbalanced datasets, 
+do unsupervised exploration of the data and compute feature importance as 
+shap values.
+
+The DeepMol framework is still under development and it is currently at a 
+pre-release version. New models and features will be added in the future.
 
 
 ### Load a dataset from a CSV
@@ -106,9 +177,9 @@ standardizer3 = ChEMBLStandardizer().standardize(dataset)
 
 It is possible to compute multiple types of molecular fingerprints like Morgan
 Fingerprints, MACCS Keys, Layered Fingerprints, RDK Fingerprints and AtomPair 
-Fingerprints. Molecular embeddings like the Mol2Vec can also be computed. More
-complex molecular embeddings like the Seq2Seq and transformer-based are in 
-development and will be soon added.
+Fingerprints. Featurizers from DeepChem and molecular embeddings like the 
+Mol2Vec can also be computed. More complex molecular embeddings like the 
+Seq2Seq and transformer-based are in  development and will be added soon.
 
 ```python
 from compoundFeaturization.rdkitFingerprints import MorganFingerprint
@@ -253,12 +324,9 @@ Example of how to build and wrap a keras model using the KerasModel module.
 **Full jupyter notebook here! (put link)**
 
 ```python
-from tensorflow.keras.wrappers.scikit_learn import KerasClassifier
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout
-from sklearn.model_selection import StratifiedKFold
-from sklearn.model_selection import cross_val_score
-import numpy as np
+from metrics.Metrics import Metric
 
 
 input_dim = train_dataset.X.shape[1]
@@ -303,7 +371,31 @@ Using DeepChem models:
 
 **Full jupyter notebook here! (put link)**
 
-...
+```python
+from compoundFeaturization.deepChemFeaturizers import WeaveFeat
+from deepchem.models import MPNNModel
+from models.DeepChemModels import DeepChemModel
+from metrics.Metrics import Metric
+from splitters.splitters import SingletaskStratifiedSplitter
+
+ds = WeaveFeat().featurize(dataset)
+splitter = SingletaskStratifiedSplitter()
+train_dataset, valid_dataset, test_dataset = splitter.train_valid_test_split(dataset=ds, frac_train=0.6, frac_valid=0.2, frac_test=0.2)
+mpnn = MPNNModel(n_tasks = 1, n_pair_feat=14, n_atom_feat=75, n_hidden=75, T=1, M=1,  mode='classification')
+model_mpnn = DeepChemModel(mpnn)
+# Model training
+model_mpnn.fit(train_dataset)
+valid_preds = model_mpnn.predict(valid_dataset)
+test_preds = model_mpnn.predict(test_dataset)
+# Evaluation
+metrics = [Metric(roc_auc_score), Metric(precision_score), Metric(accuracy_score)]
+print('Training Dataset: ')
+train_score = model_mpnn.evaluate(train_dataset, metrics)
+print('Valid Dataset: ')
+valid_score = model_mpnn.evaluate(valid_dataset, metrics)
+print('Test Dataset: ')
+test_score = model_mpnn.evaluate(test_dataset, metrics)    
+```
 
 ### Hyperparameter Optimization
 
@@ -331,7 +423,10 @@ best_model.evaluate(test_dataset, metrics)
 
 ### Feature Importance (Shap Values)
 
-...
+Explain the output of a machine learning model can be done using SHAP (SHapley 
+Additive exPlanations) package. The features that most influenced (positively or
+negatively) a certain prediction can be calculated and visualized in different 
+ways:
 
 ```python
 from featureImportance.shapValues import ShapValues
@@ -391,14 +486,15 @@ draw_MACCS_Pattern(smi, patt_number)
 
 ### Unbalanced Datasets
 
-...
+Multiple methods to deal with unbalanced datasets can be used to do oversampling,
+undersampling or a mixture of both (Random, SMOTE, SMOTEENN, SMOTETomek and 
+ClusterCentroids). 
 
 ```python
 from imbalanced_learn.ImbalancedLearn import SMOTEENN
 
 train_dataset = SMOTEENN().sample(train_dataset)
 ```
-
 
 
 ## About Us
@@ -409,3 +505,7 @@ at the Centre of Biological Engineering, University of Minho.
 ## Citing DeepMol
 
 Manuscript under preparation.
+
+## Licensing
+
+DeepMol is under [BSD-2-Clause License](https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/LICENSE).

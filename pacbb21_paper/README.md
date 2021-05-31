@@ -35,12 +35,12 @@ End-to-end Deep Learning Models: [TextCNN](https://arxiv.org/abs/1408.5882), [Gr
 
 ## Reproducing the analysis
 To reproduce our analysis, first build a DeepMol Docker image according to the instructions provided in the repository
-README file. Run the docker image and then navigate to the pacbb21_paper directory:
+README file. Then run the Docker image:
 ```
-cd pacbb21_paper
+docker run --privileged -it --rm --env KERAS_BACKEND=tensorflow deepmol bash
 ```
 
-To train and evaluate a model on a dataset, run the run_models.py script:
+To train and evaluate a model on a dataset, run the run_models.py script. Example:
 ```
 python run_models.py --dataset-dir data/split_datasets/PC-3 --output-filepath results.csv --model-name ECFP4 --gpu 0
 ```

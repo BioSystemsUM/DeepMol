@@ -38,6 +38,7 @@ class Splitter(object):
         if isinstance(dataset, NumpyDataset):
             ds = dataset
         else:
+
             ds = NumpyDataset(dataset.mols, dataset.X, dataset.y, dataset.ids, dataset.features2keep, dataset.n_tasks)
 
         kf = KFold(n_splits=k)

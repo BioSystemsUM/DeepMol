@@ -45,15 +45,16 @@ multiple tasks. ...
 
 ### Load a dataset from a CSV
 
-For now it is only possible to load data directly from CSV files. Modules to 
+For now, it is only possible to load data directly from CSV files. Modules to 
 load data from different file types and sources will be implemented in the 
-future. These include from JSON, SDF and FASTA files and directly from our 
+future. These include JSON, SDF and FASTA files and directly from our 
 databases.
 
-To load data from a CSV its only required to provide the math and molecules 
-field name. Optionaly it is also possible to provide a field with some ids, 
-the labels fields, features fields, features to keep (usefull for instance 
-to select only the features kept after feature selection)
+To load data from a CSV it's only required to provide the math and molecules 
+field name. Optionally, it is also possible to provide a field with some ids, 
+the labels fields, features fields, features to keep (useful for instance 
+to select only the features kept after feature selection) and the number of 
+samples to load (by default loads the entire dataset).
 
 ```python
 from loaders.Loaders import CSVLoader
@@ -76,11 +77,38 @@ dataset.get_shape()
 
 ### Compound Standardization
 
-bla bla
+It is possible to standardize the loaded molecules using three option. Using
+a basic standardizer that only does sanitization (Kekulize, check valencies, 
+set aromaticity, conjugation and hybridization). A more complex standardizer can
+be costumized by choosing or not to perform specific tasks such as sanitization, 
+remove isotope information, neutralize charges, remove stereochemistry and remove
+smaller fragments. Another possibility is to use the ChEMBL Standardizer.
 
+```python
+# Option 1: Basic Standardizer
+standardizer = BasicStandardizer().standardize(dataset)
+
+# Option 2: Custom Standardizer
+heavy_standardisation = {
+    'REMOVE_ISOTOPE': True,
+    'NEUTRALISE_CHARGE': True,
+    'REMOVE_STEREO': True,
+    'KEEP_BIGGEST': True,
+    'ADD_HYDROGEN': True,
+    'KEKULIZE': False,
+    'NEUTRALISE_CHARGE_LATE': True}
+standardizer2 = CustomStandardizer(heavy_standardisation).standardize(dataset)
+
+# Option 3: ChEMBL Standardizer
+standardizer3 = ChEMBLStandardizer().standardize(dataset)
+```
 ### Compound Featurization
 
-morgan, mol2vec, etc
+It is possible to compute multiple types of molecular fingerprints like Morgan
+Fingerprints, MACCS Keys, Layered Fingerprints, RDK Fingerprints and AtomPair 
+Fingerprints. Molecular embeddings like the Mol2Vec can also be computed. More
+complex molecular embeddings like the Seq2Seq and transformer-based are in 
+development and will be soon added.
 
 ```python
 from compoundFeaturization.rdkitFingerprints import MorganFingerprint
@@ -104,7 +132,9 @@ dataset.get_shape()
 
 ### Feature Selection
 
-LowVariance, FromModel, ...
+Regarding feature selection it is possible to do Low Variance Feature Selection, 
+KBest, Percentile, Recursive Feature Elimination and selecting features based on 
+importance weights.
 
 ```python
 from featureSelection.baseFeatureSelector import LowVarianceFS
@@ -122,7 +152,8 @@ dataset.get_shape()
 
 ### Unsupervised Exploration
 
-PCA, tSNE, Kmeans, UMAP ...
+It is possible to do unsupervised exploration of the datasets using PCA, tSNE,
+KMeans and UMAP.
 
 ```python
 from unsupervised.umap import UMAP
@@ -136,7 +167,8 @@ ump = UMAP().runUnsupervised(dataset)
 
 ### Data Split
 
-bla bla 
+Data can be split randomly or using stratified splitters. K-fold split, train-test
+split and train-validation-test split can be used.
 
 ```python
 from splitters.splitters import SingletaskStratifiedSplitter
@@ -159,12 +191,16 @@ test_dataset.get_shape()
 
 ### Build, train and evaluate a model
 
-bla bla
+It is possible use pre-built models from Scikit-Learn and DeepChem or build new
+ones using keras layers. Wrappers for Scikit-Learn, Keras and DeepChem were 
+implemented allowing evaluation of the models under a common workspace.
 
 #### Scikit-Learn model example
 
-Full jupyter notebook here! (put link)
+Models can be imported from scikit-learn and wrapped using the SKlearnModel
+module.
 
+**Full jupyter notebook here! (put link)**
 ```python
 from sklearn.ensemble import RandomForestClassifier
 from models.sklearnModels import SklearnModel
@@ -212,7 +248,9 @@ test_score = model.evaluate(test_dataset, metrics)
 
 #### Keras model example
 
-Full jupyter notebook here! (put link)
+Example of how to build and wrap a keras model using the KerasModel module.
+
+**Full jupyter notebook here! (put link)**
 
 ```python
 from tensorflow.keras.wrappers.scikit_learn import KerasClassifier
@@ -261,13 +299,16 @@ print('Test set score:', model.evaluate(test_dataset, metrics))
 
 #### DeepChem model example
 
-Full jupyter notebook here! (put link)
+Using DeepChem models:
+
+**Full jupyter notebook here! (put link)**
 
 ...
 
 ### Hyperparameter Optimization
 
-bla bla
+Grid and randomized hyperparameter optimization is provided using cross-validation
+or a held-out validation set.
 
 ```python
 from parameterOptimization.HyperparameterOpt import HyperparamOpt_Valid, HyperparamOpt_CV
@@ -290,18 +331,72 @@ best_model.evaluate(test_dataset, metrics)
 
 ### Feature Importance (Shap Values)
 
-```python
-from unsupervised.umap import UMAP
+...
 
-ump = UMAP().runUnsupervised(dataset)
+```python
+from featureImportance.shapValues import ShapValues
+
+shap_calc = ShapValues(test_dataset, model)
+shap_calc.computePermutationShap()
 ```
+
+<p align="left">
+  <img src="https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/src/docs/imgs/calc_shap_output.png" width="800" />
+</p>
+
+```python
+shap_calc.plotSampleExplanation(index=1, plot_type='waterfall')
+```
+
+<p align="left">
+  <img src="https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/src/docs/imgs/sample_explanation_output.png" width="800" />
+</p>
+
+```python
+shap_calc.plotFeatureExplanation(index=115)
+```
+
+<p align="left">
+  <img src="https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/src/docs/imgs/feature_explanation_output.png" width="800" />
+</p>
+
+#### Draw relevant features
+
+It is possible to plot the ON bits (or some of them) in a molecule for MACCS Keys,
+Morgan and RDK Fingeprints. IT is also possible to draw those bits on the 
+respective molecule. This can be allied with the Shap Values calculation to 
+highlight the zone of the molecule that most contributed to a certain prediction,
+for instance, the substructure in the molecule that most contributed to its 
+classification as an active or inactive molecule against a receptor.
+
+
+```python
+from utils.utils import draw_MACCS_Pattern
+
+patt_number = 54
+mol_number = 1
+
+prediction = model.predict(test_dataset)[mol_number]
+actual_value = test_dataset.y[mol_number]
+print('Prediction: ', prediction)
+print('Actual Value: ', actual_value)
+smi = test_dataset.mols[mol_number]
+
+draw_MACCS_Pattern(smi, patt_number)
+```
+<p align="left">
+  <img src="https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/src/docs/imgs/draw_maccs_output.png" width="800" />
+</p>
+
 
 ### Unbalanced Datasets
 
+...
+
 ```python
-from 
+from imbalanced_learn.ImbalancedLearn import SMOTEENN
 
-
+train_dataset = SMOTEENN().sample(train_dataset)
 ```
 
 

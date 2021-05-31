@@ -17,7 +17,7 @@ from model_build_functions import BUILDERS
 from utils import get_featurizer, save_evaluation_results, get_default_param_grid
 
 
-def main(dataset_dir, model_name, gpu):
+def main(dataset_dir, output_filepath, model_name, gpu):
     print(tf.__version__)
     print(tf.test.is_built_with_cuda())
     #print(torch.cuda.is_available())
@@ -128,8 +128,10 @@ def main(dataset_dir, model_name, gpu):
     print('Evaluating model on test set')
     train_scores = best_model.evaluate(train_dataset, metrics)
     test_scores = best_model.evaluate(test_dataset, metrics)
+    if output_filepath is None:
+        output_filepath = os.path.join('..', 'pacbb21_paper', 'results', '%s_evaluation_results.csv' % dataset_name)
     save_evaluation_results(test_scores, train_scores, best_hyperparams, model_name, model_dir=output_dir,
-                            output_filepath='../pacbb21_paper/results/%s_evaluation_results.csv' % dataset_name)
+                            output_filepath=output_filepath)
 
 
 if __name__ == '__main__':
@@ -138,6 +140,10 @@ if __name__ == '__main__':
                         '--dataset-dir',
                         type=str,
                         help='Path to the directory where the train and test sets are stored for a particular dataset')
+    parser.add_argument('-o',
+                        '--output-filepath',
+                        type=str,
+                        help='Results filename')
     parser.add_argument('-m',
                         '--model-name',
                         type=str,

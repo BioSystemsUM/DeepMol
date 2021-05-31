@@ -9,9 +9,9 @@ different compound representation methods on 5 anti-cancer drug sensitivity data
 |-----------|-----------|-------------------------|----------------|
 | NCI 1     | 3466      | sensitive/not sensitive | classification |
 | NCI 109   | 3431      | sensitive/not sensitive | classification |
-| PC-3      | 4294      | log(IC<sub>50</sub>)    | regression     |
-| CCRF-CEM  | 3047      | log(IC<sub>50</sub>)    | regression     |
-| A549/ATCC | 20730     | log(GI<sub>50</sub>)    | regression     |
+| PC-3      | 4294      | -log(IC<sub>50</sub>)    | regression     |
+| CCRF-CEM  | 3047      | -log(IC<sub>50</sub>)    | regression     |
+| A549/ATCC | 20730     | -log(GI<sub>50</sub>)    | regression     |
 
 
 ## Models

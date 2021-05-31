@@ -1,7 +1,10 @@
+__author__ = 'BiSBII CEB University of Minho'
+__email__ = 'jfscorreia95@gmail.com'
+__version__ = '1.0'
+
 import src.compoundFeaturization
 import src.Datasets
 import src.evaluator
-import src.featureImportance
 import src.featureSelection
 import src.imbalanced_learn
 import src.loaders

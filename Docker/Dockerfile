@@ -85,16 +85,19 @@ RUN python3 -m pip -q --no-cache-dir install --upgrade pip
 RUN python3 -m pip -q --no-cache-dir install git+https://github.com/samoturk/mol2vec
 RUN python3 -m pip -q --no-cache-dir install cntk-gpu
 RUN python3 -m pip -q --no-cache-dir install tensorflow-probability==0.10.1
+RUN python3 -m pip -q --no-cache-dir install git+https://github.com/BioSystemsUM/DeepMol.git@pacbb21
 
-ADD theanorc /home/keras/.theanorc
+ADD /Docker/theanorc /home/keras/.theanorc
+
+ADD /pacbb21_paper /home/pacbb21_paper
+WORKDIR /home/pacbb21_paper
+
+# RUN git clone https://github.com/BioSystemsUM/DeepMol.git --branch pacbb21
+# WORKDIR /DeepMol
+# RUN python3 -m pip -q --no-cache-dir install .
 
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
-
-#ENV PYTHONPATH='/src/:$PYTHONPATH'
-
-#WORKDIR /data3
-#WORKDIR /data
 
 EXPOSE 8882
 

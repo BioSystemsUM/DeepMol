@@ -35,7 +35,7 @@ End-to-end Deep Learning Models: [TextCNN](https://arxiv.org/abs/1408.5882), [Gr
 
 ## Reproducing the analysis
 To reproduce our analysis, first build a DeepMol Docker image according to the instructions provided in the repository
-README file. Then run the Docker image:
+README file. Then run the Docker image as a container:
 ```
 docker run --privileged -it --rm --env KERAS_BACKEND=tensorflow deepmol bash
 ```

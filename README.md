@@ -436,7 +436,7 @@ shap_calc.computePermutationShap()
 ```
 
 <p align="left">
-  <img src="https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/src/docs/imgs/calc_shap_output.png" width="800" />
+  <img src="https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/src/docs/imgs/calc_shap_output.png?token=AGEFRGJLVT53EUXH5MKZU23AX4YPU" width="800" />
 </p>
 
 ```python
@@ -444,7 +444,7 @@ shap_calc.plotSampleExplanation(index=1, plot_type='waterfall')
 ```
 
 <p align="left">
-  <img src="https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/src/docs/imgs/sample_explanation_output.png" width="800" />
+  <img src="https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/src/docs/imgs/sample_explanation_output.png?token=AGEFRGO6OLU4S7ONBQLJC6TAX4YRW" width="800" />
 </p>
 
 ```python
@@ -452,7 +452,7 @@ shap_calc.plotFeatureExplanation(index=115)
 ```
 
 <p align="left">
-  <img src="https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/src/docs/imgs/feature_explanation_output.png" width="800" />
+  <img src="https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/src/docs/imgs/feature_explanation_output.png?token=AGEFRGOFBTBJJ2ZRR7WSKPLAX4YTG" width="800" />
 </p>
 
 #### Draw relevant features
@@ -480,7 +480,7 @@ smi = test_dataset.mols[mol_number]
 draw_MACCS_Pattern(smi, patt_number)
 ```
 <p align="left">
-  <img src="https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/src/docs/imgs/draw_maccs_output.png" width="800" />
+  <img src="https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/src/docs/imgs/draw_maccs_output.png?token=AGEFRGJU6BFUED72D7W6BX3AX4YVE" width="800" />
 </p>
 
 

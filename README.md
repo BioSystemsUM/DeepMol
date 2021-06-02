@@ -271,7 +271,8 @@ implemented allowing evaluation of the models under a common workspace.
 Models can be imported from scikit-learn and wrapped using the SKlearnModel
 module.
 
-**Full jupyter notebook here! (put link)**
+Check this **[jupyter notebook](https://github.com/BioSystemsUM/DeepMol/blob/master/src/tests/RandomForestTest.ipynb)** for a complete example!
+
 ```python
 from sklearn.ensemble import RandomForestClassifier
 from models.sklearnModels import SklearnModel
@@ -321,7 +322,7 @@ test_score = model.evaluate(test_dataset, metrics)
 
 Example of how to build and wrap a keras model using the KerasModel module.
 
-**Full jupyter notebook here! (put link)**
+Check this **[jupyter notebook](https://github.com/BioSystemsUM/DeepMol/blob/master/src/tests/test_keras.ipynb)** for a complete example!
 
 ```python
 from tensorflow.keras.models import Sequential
@@ -369,7 +370,7 @@ print('Test set score:', model.evaluate(test_dataset, metrics))
 
 Using DeepChem models:
 
-**Full jupyter notebook here! (put link)**
+Check this **[jupyter notebook]()** for a complete example!
 
 ```python
 from compoundFeaturization.deepChemFeaturizers import WeaveFeat

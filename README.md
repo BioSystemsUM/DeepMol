@@ -370,7 +370,7 @@ print('Test set score:', model.evaluate(test_dataset, metrics))
 
 Using DeepChem models:
 
-Check this **[jupyter notebook]()** for a complete example!
+Check this **[jupyter notebook](https://github.com/BioSystemsUM/DeepMol/blob/master/src/tests/deepchem_test.ipynb)** for a complete example!
 
 ```python
 from compoundFeaturization.deepChemFeaturizers import WeaveFeat

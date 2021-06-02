@@ -1,6 +1,3 @@
-import numpy as np
-import pandas as pd
-
 '''
 Abstract class for porcessing a set of molecular representations SMILES 
 '''

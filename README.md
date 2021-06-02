@@ -1,7 +1,5 @@
 # DeepMol
 
-**[README UNDER CONSTRUCTION!]**
-
 ### Description
 DeepMol is a python-based machine and deep learning framework for drug discovery. 
 It offers a variety of functionalities that enable a smoother approach to many 
@@ -47,56 +45,19 @@ operations on molecular data.
 
 ## Installation
 
-### Pip
-
-Install DeepMol via pip or conda:
-
-```bash
-pip install deepmol #just for example (not working)
-```
-
-or
-
-```bash
-conda install -c conda-forge deepmol #just for example (not working)
-```
-
 ### Docker
 
-(IN PREPARATION - NOT FUNCTIONAL YET!)
 1. Install [docker](https://docs.docker.com/install/).
-2. Pull an existing image (X.XGb to download) from DockerHub:
-
-```bash
-docker pull XXX
-```
-
-or clone the repository and build it manually:
-
+2. Clone the repository and build a DeepMol Docker image manually:
 ```bash
 git clone https://github.com/BioSystemsUM/DeepMol.git
-docker build ...
+
+docker build --squash -t deepmol --build-arg python_version=3.6 -f Docker/Dockerfile .
 ```
 
 3. Create a container:
 ```bash
-docker run ...
-```
-
-### Manually
-
-(IN PREPARATION - NOT FUNCTIONAL YET!)
-
-Alternatively, install dependencies and DeepMol manually.
-
-1. Clone the repository:
-```bash
-git clone https://github.com/BioSystemsUM/DeepMol.git
-```
-
-3. Install dependencies:
-```bash
-python setup.py install
+docker run --privileged -it --rm --env KERAS_BACKEND=tensorflow deepmol bash
 ```
 
 ## Getting Started
@@ -271,7 +232,8 @@ implemented allowing evaluation of the models under a common workspace.
 Models can be imported from scikit-learn and wrapped using the SKlearnModel
 module.
 
-**Full jupyter notebook here! (put link)**
+Check this **[jupyter notebook](https://github.com/BioSystemsUM/DeepMol/blob/master/src/tests/RandomForestTest.ipynb)** for a complete example!
+
 ```python
 from sklearn.ensemble import RandomForestClassifier
 from models.sklearnModels import SklearnModel
@@ -321,7 +283,7 @@ test_score = model.evaluate(test_dataset, metrics)
 
 Example of how to build and wrap a keras model using the KerasModel module.
 
-**Full jupyter notebook here! (put link)**
+Check this **[jupyter notebook](https://github.com/BioSystemsUM/DeepMol/blob/master/src/tests/test_keras.ipynb)** for a complete example!
 
 ```python
 from tensorflow.keras.models import Sequential
@@ -369,7 +331,7 @@ print('Test set score:', model.evaluate(test_dataset, metrics))
 
 Using DeepChem models:
 
-**Full jupyter notebook here! (put link)**
+Check this **[jupyter notebook](https://github.com/BioSystemsUM/DeepMol/blob/master/src/tests/deepchem_test.ipynb)** for a complete example!
 
 ```python
 from compoundFeaturization.deepChemFeaturizers import WeaveFeat

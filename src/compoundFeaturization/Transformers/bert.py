@@ -20,7 +20,7 @@ class Transformer(object):
                                                  output_attentions = False,    # whether the model returns attentions weights
                                                  output_hidden_states = False) # whether the model returns all hidden-states
         # maximum length (number of tokens) of a SMILES 
-        self.sequece_length = sequence_length
+        self.sequence_length = sequence_length
 
     '''
     Handle the tokenization of a sequence of tokens

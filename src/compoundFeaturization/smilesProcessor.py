@@ -1,5 +1,5 @@
 '''
-Abstract class for porcessing a set of molecular representations SMILES 
+Abstract class for processing a set of molecular representations SMILES 
 '''
 class SmilesProcessor():
 

@@ -56,5 +56,6 @@ class Transformer(object):
         for smiles in tqdm(molecules):
             embedding = self.get_embedding(smiles)
             embeddings.append(embedding)
-        dataset.X = np.asarray(embeddings)
+        embeddings = np.asarray(embeddings)
+        dataset.X = [",".join(item) for item in embeddings.astype(str)]
         return dataset

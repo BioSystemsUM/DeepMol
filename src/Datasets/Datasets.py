@@ -247,6 +247,14 @@ class NumpyDataset(Dataset):
         df['y'] = pd.Series(self.y)
         df.to_csv(path)
 
+    '''
+    Split features in string format to an array
+    '''
+    def splitFeatures(self):
+        features = []
+        for feature in self.X:
+            features.append(np.fromstring(feature, dtype=float, sep=','))
+        self.X = np.array(features)
 
 
 '''

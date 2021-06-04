@@ -21,7 +21,7 @@ class Mol2Vec():
     '''
 
     def __init__(self):
-        self.model = word2vec.Word2Vec.load('/content/model_300dim.pkl')
+        self.model = word2vec.Word2Vec.load('compoundFeaturization/mol2vec_models/model_300dim.pkl')
         
     
     def featurize(self, dataset: Dataset, log_every_n=1000):

@@ -26,7 +26,7 @@ Módulos:
 Testes:
 
 - https://github.com/BioSystemsUM/DeepMol/tree/AA2Group5/src/Mol2vec_Tests
-- Testes Seq2Seq
+- https://github.com/BioSystemsUM/DeepMol/tree/AA2Group5/src/Seq2Seq_Tests
 - https://github.com/BioSystemsUM/DeepMol/tree/AA2Group5/src/TransformersTests
 
 Relatório:

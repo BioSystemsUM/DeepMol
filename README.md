@@ -19,8 +19,8 @@ Os ficheiros a serem considerados são os seguintes:
 Módulos:
 
 - https://github.com/BioSystemsUM/DeepMol/blob/AA2Group5/src/compoundFeaturization/smilesProcessor.py
-- Módulo Seq2Seq
 - https://github.com/BioSystemsUM/DeepMol/blob/AA2Group5/src/compoundFeaturization/Mol2vec
+- https://github.com/BioSystemsUM/DeepMol/tree/AA2Group5/src/compoundFeaturization/Seq2Seq
 - https://github.com/BioSystemsUM/DeepMol/blob/AA2Group5/src/compoundFeaturization/Transformers
 
 Testes:

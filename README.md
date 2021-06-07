@@ -189,7 +189,7 @@ dataset = MorganFingerprint(radius=2, size=1024).featurize(dataset)
 ```
 
 <p align="left">
-  <img src="https://github.com/BioSystemsUM/DeepMol/blob/f392e01156625c2b81eede3c8e95a501faded30e/src/docs/imgs/get_shape_output.png" width="800" />
+  <img src="https://github.com/BioSystemsUM/DeepMol/blob/83360de6c79efec561f6a06ad7db755bbcf42f07/src/docs/imgs/featurization_output.png" width="800" />
 </p>
 
 ```python
@@ -198,7 +198,7 @@ dataset.get_shape()
 ```
 
 <p align="left">
-  <img src="https://github.com/BioSystemsUM/DeepMol/blob/f392e01156625c2b81eede3c8e95a501faded30e/src/docs/imgs/get_shape_output_2.png" width="800" />
+  <img src="https://github.com/BioSystemsUM/DeepMol/blob/f392e01156625c2b81eede3c8e95a501faded30e/src/docs/imgs/get_shape_output.png" width="800" />
 </p>
 
 ### Feature Selection

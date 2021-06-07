@@ -31,4 +31,4 @@ Testes:
 
 Relatório:
 
-- URL do relatório
+- https://github.com/BioSystemsUM/DeepMol/blob/AA2Group5/relatorioFinal.pdf

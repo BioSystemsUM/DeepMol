@@ -143,7 +143,7 @@ dataset.get_shape()
 ```
 
 <p align="left">
-  <img src="https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/src/docs/imgs/load_csv_output.png?token=AGEFRGJBJDLT7RC27OPU5PDAXJRZC" width="800" />
+  <img src="https://github.com/BioSystemsUM/DeepMol/blob/be82712fbba9d2beab506f147862f3a6279ec594/src/docs/imgs/load_csv_output.png" width="800" />
 </p>
 
 ### Compound Standardization

@@ -14,5 +14,5 @@ O grupo decidiu começar pela exploração dos seguintes algoritmos:
 - Seq2Seq2 Fingerprint
 - SMILES Transformer
 
-Nesta fase inicial, o algoritmo que melhores resultados obteve, numa óptica de implementação e de integração com o DeepMol, foi o SMILES Transformer.
+Os ficheiros a serem considerados são os seguintes: 
 

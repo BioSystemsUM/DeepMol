@@ -32,3 +32,5 @@ Testes:
 Relatório:
 
 - https://github.com/BioSystemsUM/DeepMol/blob/AA2Group5/relatorioFinal.pdf
+
+Nota: No módulo Datasets/Datasets.py foi adicionado um método para a implementação do SMILES Transformer.

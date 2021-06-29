@@ -21,16 +21,20 @@ Embeddings: [Mol2vec](https://pubs.acs.org/doi/10.1021/acs.jcim.7b00616)
 
 End-to-end Deep Learning Models: [TextCNN](https://arxiv.org/abs/1408.5882), [GraphConv](https://arxiv.org/abs/1509.09292), [GCN](https://arxiv.org/abs/1609.02907), [GAT](https://arxiv.org/abs/1710.10903), [AttentiveFP](https://pubs.acs.org/doi/10.1021/acs.jmedchem.9b00959)
 
+## Modeling workflow
+General data preprocessing and machine learning steps followed in this work:
+![workflow](figures/PACBB21_workflow.png)
+
 
 ## Results
 (The full benchmark results can be found in the "results" folder.)
 
 ### Classification tasks
-![classification results](results/classification_results.jpg)
+![classification results](figures/classification_results.png)
 
 
 ### Regression tasks
-![regression results](results/regression_results.jpg)
+![regression results](figures/regression_results.png)
 
 
 ## Reproducing the analysis

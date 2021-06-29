@@ -27,7 +27,7 @@ General data preprocessing and machine learning steps followed in this work:
 
 
 ## Results
-(The full benchmark results can be found in the "results" folder.)
+The full benchmark results (with additional scoring metrics) can be found in the "results" folder.
 
 ### Classification tasks
 ![classification results](figures/classification_results.png)

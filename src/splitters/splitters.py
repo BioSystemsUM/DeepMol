@@ -1,7 +1,7 @@
 import tempfile
 import numpy as np
 
-from typing import Tuple, List, Optional, Iterator
+from typing import Tuple, List, Optional, Iterator, Type
 
 from Datasets.Datasets import Dataset, NumpyDataset
 
@@ -20,6 +20,7 @@ class Splitter(object):
     def k_fold_split(self,
                      dataset: Dataset,
                      k: int,
+                     seed: Optional[int] = None, # added
                      **kwargs) -> List[Tuple[Dataset, Dataset]]:
         """
         Parameters
@@ -38,9 +39,11 @@ class Splitter(object):
         if isinstance(dataset, NumpyDataset):
             ds = dataset
         else:
+
             ds = NumpyDataset(dataset.mols, dataset.X, dataset.y, dataset.ids, dataset.features2keep, dataset.n_tasks)
 
-        kf = KFold(n_splits=k)
+        # kf = KFold(n_splits=k)
+        kf = KFold(n_splits=k, shuffle=True, random_state=seed)
 
         train_datasets = []
         test_datasets = []
@@ -165,7 +168,7 @@ class RandomSplitter(Splitter):
     """Class for doing random data splits."""
 
     def split(self,
-              dataset: Dataset,
+              dataset: Type[Dataset],
               frac_train: float = 0.8,
               frac_valid: float = 0.1,
               frac_test: float = 0.1,
@@ -200,7 +203,8 @@ class RandomSplitter(Splitter):
         np.testing.assert_almost_equal(frac_train + frac_valid + frac_test, 1.)
         if seed is not None:
             np.random.seed(seed)
-        num_datapoints = len(dataset.mols)
+        #num_datapoints = len(dataset)
+        num_datapoints = dataset.len_mols()
         train_cutoff = int(frac_train * num_datapoints)
         valid_cutoff = int((frac_train + frac_valid) * num_datapoints)
         shuffled = np.random.permutation(range(num_datapoints))
@@ -256,7 +260,7 @@ class SingletaskStratifiedSplitter(Splitter):
         else:
             ds = NumpyDataset(dataset.mols, dataset.X, dataset.y, dataset.ids, dataset.features2keep, dataset.n_tasks)
 
-        skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=None)
+        skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=seed) # changed so that users can define the seed
 
         train_datasets = []
         test_datasets = []

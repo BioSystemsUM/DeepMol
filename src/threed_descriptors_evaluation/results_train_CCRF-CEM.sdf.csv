@@ -1,0 +1,2 @@
+model,model_dir,test_mean_squared_error,test_pearson_score,test_r2_score,test_spearman_score,train_mean_squared_error,train_pearson_score,train_r2_score,train_spearman_score,batch_size,batchnorm,epochs,hidden_dropout,hlayers_sizes,input_dim,l2,learning_rate,task_type
+All3DDescriptors,,3.8714861858865204,-0.04348937203007834,-1.6067025812727151,-0.004792726070182863,3.3670847223616986,0.056250573572537085,-1.4071581460647549,0.0893731402085144,256,False,10,0.25,"[128, 64, 32]",639,1e-3,1e-4,regression

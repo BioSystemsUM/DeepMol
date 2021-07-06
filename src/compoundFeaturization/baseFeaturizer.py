@@ -1,10 +1,10 @@
 import numpy as np
-from typing import Iterable, Any
 
 from rdkit import Chem
 from rdkit.Chem import rdmolfiles
 from rdkit.Chem import rdmolops
 from rdkit.Chem.rdchem import Mol
+from sklearn.preprocessing import StandardScaler
 
 from Datasets.Datasets import Dataset
 
@@ -22,7 +22,7 @@ class MolecularFeaturizer(object):
         if self.__class__ == MolecularFeaturizer:
             raise Exception('Abstract class MolecularFeaturizer should not be instantiated')
 
-    def featurize(self, dataset: Dataset, log_every_n=1000):
+    def featurize(self, dataset: Dataset, log_every_n=1000, scale=False):
         """Calculate features for molecules.
         Parameters
         ----------
@@ -30,6 +30,8 @@ class MolecularFeaturizer(object):
           Dataset containing molecules to featurize
         log_every_n: int, default 1000
           Logging messages reported every `log_every_n` samples.
+        scale: bool, default False
+          Scale the data: y = (x – mean) / standard_deviation
         Returns
         -------
         dataset: Dataset object
@@ -45,7 +47,7 @@ class MolecularFeaturizer(object):
                 if isinstance(mol, str):
                     # mol must be a RDKit Mol object, so parse a SMILES
                     molobj = Chem.MolFromSmiles(mol)
-                    try :
+                    try:
                         # SMILES is unique, so set a canonical order of atoms
                         new_order = rdmolfiles.CanonicalRankAtoms(molobj)
                         molobj = rdmolops.RenumberAtoms(molobj, new_order)
@@ -56,16 +58,24 @@ class MolecularFeaturizer(object):
             except Exception as e:
                 if isinstance(mol, Chem.rdchem.Mol):
                     mol = Chem.MolToSmiles(mol)
-                print("Failed to featurize datapoint %d, %s. Appending empty array" %(i, mol))
+                print("Failed to featurize datapoint %d, %s. Appending empty array" % (i, mol))
                 print("Exception message: {}".format(e))
         dataset.X = np.asarray(features)
 
-        #if anyNA:
-        #TODO: where and in which manner to remove NAs????
+        # if anyNA:
+        # TODO: where and in which manner to remove NAs????
         dataset.removeNAs()
+
+        if scale:
+            scaler = StandardScaler()
+            # transform data
+            dataset.X = scaler.fit_transform(dataset.X)
 
         return dataset
 
     # TODO: implement
     def load_fp(self):
+        pass
+
+    def _featurize(self, mol):
         pass

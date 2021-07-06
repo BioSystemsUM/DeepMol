@@ -3,12 +3,15 @@ Classes for processing input data into a format suitable for machine learning.
 """
 
 from typing import Optional, Union, List
+
+from rdkit.Chem import SDMolSupplier
+
 from Datasets.Datasets import NumpyDataset
 import numpy as np
 import pandas as pd
 
 
-def load_csv_file(input_file, fields, chunk_size=None):
+def load_csv_file(input_file, fields, sep=',', header = 0, chunk_size=None):
     """Load data as pandas dataframe from CSV files.
     Parameters
     ----------
@@ -25,12 +28,25 @@ def load_csv_file(input_file, fields, chunk_size=None):
     """
 
     if chunk_size is None:
-        return pd.read_csv(input_file)[fields]
+        return pd.read_csv(input_file, sep=sep, header=header)[fields]
     else:
         df = pd.read_csv(input_file)
         print("Loading shard of size %s." % (str(chunk_size)))
         df = df.replace(np.nan, str(""), regex=True)
         return df[fields].sample(chunk_size)
+
+
+def load_sdf_file(input_file):
+    supplier = SDMolSupplier(input_file)
+    mols, attempts = [], 0
+
+    while not mols and attempts < 10:
+        mols = list(supplier)
+        attempts += 1
+    print(f"Loaded {len(mols)} molecules after {attempts} attempts.")
+
+    return mols
+
 
 """
 class BaseDataLoader(object):
@@ -82,12 +98,13 @@ class BaseDataLoader(object):
 
 """
 
+
 class CSVLoader(object):
     """A Loader to directly read data from a CSV.
-    Assumes a coma sepparated with header file!
+    Assumes a coma separated with header file!
     """
 
-    def __init__(self, 
+    def __init__(self,
                  dataset_path: str,
                  mols_field: str,
                  id_field: Optional[str] = None,
@@ -115,7 +132,8 @@ class CSVLoader(object):
         if not isinstance(id_field, str) and id_field is not None:
             raise ValueError("Field id must be a string or None.")
 
-        if (not isinstance(features_fields, list) and not isinstance(features_fields, str)) and features_fields is not None:
+        if (not isinstance(features_fields, list) and not isinstance(features_fields,
+                                                                     str)) and features_fields is not None:
             raise ValueError("User features must be a list of string containing "
                              "the features fields or None.")
 
@@ -135,20 +153,22 @@ class CSVLoader(object):
             self.n_tasks = len(labels_fields)
             if isinstance(labels_fields, list):
                 [fields2keep.append(x) for x in labels_fields]
-            else: 
+            else:
                 fields2keep.append(labels_fields)
-        else: self.n_tasks = 0
+        else:
+            self.n_tasks = 0
 
         if features_fields is not None:
             if isinstance(features_fields, list):
                 [fields2keep.append(x) for x in features_fields]
-            else: fields2keep.append(features_fields)
+            else:
+                fields2keep.append(features_fields)
 
         self.fields2keep = fields2keep
 
 
-
-    def _get_dataset(self, dataset_path, fields=None, chunk_size=None):
+    #TODO: update comments
+    def _get_dataset(self, dataset_path, fields=None, sep=',', header=0, chunk_size=None):
         """Loads data with size chunk_size.
         Parameters
         ----------
@@ -161,34 +181,218 @@ class CSVLoader(object):
         pd.DataFrame
             Dataframe
         """
-        return load_csv_file(dataset_path, fields, chunk_size)
+        return load_csv_file(dataset_path, fields, sep, header, chunk_size)
 
-    def create_dataset(self, in_memory=True):
+    def create_dataset(self, sep=',', header=0, in_memory=True):
         if in_memory:
-            dataset = self._get_dataset(self.dataset_path, fields = self.fields2keep, chunk_size = self.shard_size)
+            dataset = self._get_dataset(self.dataset_path, fields = self.fields2keep, sep=sep, header=header, chunk_size = self.shard_size)
 
             mols = dataset[self.mols_field].to_numpy()
 
             if self.features_fields is not None:
                 X = dataset[self.features_fields].to_numpy()
-            else : X = None
+            else:
+                X = None
 
             if self.labels_fields is not None:
                 y = dataset[self.labels_fields].to_numpy()
-            else : y = None
+            else:
+                y = None
 
             if self.id_field is not None:
                 ids = dataset[self.id_field].to_numpy()
-            else: ids = None
+            else:
+                ids = None
 
             return NumpyDataset(mols=mols,
-                                X = X,
-                                y = y,
-                                ids = ids,
-                                features2keep = self.features2keep,
-                                n_tasks = self.n_tasks)
-                                
-        else: raise NotImplementedError
+                                X=X,
+                                y=y,
+                                ids=ids,
+                                features2keep=self.features2keep,
+                                n_tasks=self.n_tasks)
+
+        else:
+            raise NotImplementedError
+
+
+class SDFLoader(object):
+    """A Loader to directly read data from a SDF.
+        """
+
+    def __init__(self,
+                 dataset_path: str,
+                 id_field: Optional[str] = None,
+                 labels_fields: Optional[Union[List[str], str]] = None,
+                 features_fields: Optional[Union[List[str], str]] = None,
+                 features2keep: Optional[np.ndarray] = None,
+                 shard_size: Optional[int] = None):
+        """Initialize this object.
+        Parameters
+        ----------
+        dataset_path: string
+            path to the dataset file
+        ...
+        """
+
+        if not isinstance(dataset_path, str):
+            raise ValueError("Dataset path must be a string")
+
+        if (not isinstance(labels_fields, list) and not isinstance(labels_fields, str)) and labels_fields is not None:
+            raise ValueError("Labels fields must be a str, list or None.")
+
+        if not isinstance(id_field, str) and id_field is not None:
+            raise ValueError("Field id must be a string or None.")
+
+        if (not isinstance(features_fields, list) and not isinstance(features_fields,
+                                                                     str)) and features_fields is not None:
+            raise ValueError("User features must be a list of string containing "
+                             "the features fields or None.")
+
+        self.dataset_path = dataset_path
+        self.id_field = id_field
+        self.labels_fields = labels_fields
+        self.features_fields = features_fields
+        self.features2keep = features2keep
+        self.shard_size = shard_size
+
+        fields2keep = []
+
+        if id_field is not None: fields2keep.append(id_field)
+
+        if labels_fields is not None:
+            self.n_tasks = len(labels_fields)
+            if isinstance(labels_fields, list):
+                [fields2keep.append(x) for x in labels_fields]
+            else:
+                fields2keep.append(labels_fields)
+        else:
+            self.n_tasks = 0
+
+        if features_fields is not None:
+            if isinstance(features_fields, list):
+                [fields2keep.append(x) for x in features_fields]
+            else:
+                fields2keep.append(features_fields)
+
+        self.fields2keep = fields2keep
+
+    @property
+    def mols_handler(self):
+        return self._mols_handler
+
+    @mols_handler.setter
+    def mols_handler(self, value):
+        self._mols_handler = value
+
+    def _get_dataset(self, dataset_path):
+        """Loads data with size chunk_size.
+        Parameters
+        ----------
+        input_files: str
+            Filename to process
+        shard_size: int, optional
+            The size of a shard of data to process at a time.
+        Returns
+        -------
+        pd.DataFrame
+            Dataframe
+        """
+        return load_sdf_file(dataset_path)
+
+    def check_atoms_coordinates(self, mol):
+        '''
+            Function to check if a molecule contains zero coordinates in all atoms.
+            Then this molecule must be eliminated.
+            Returns True if molecules is OK and False if molecule contains zero coordinates.
+            Example:
+                # Load  test set to a frame
+                sdf = 'miniset.sdf'
+                df = pt.LoadSDF(sdf, molColName='mol3DProt')
+                ## Checking if molecule contains only ZERO coordinates,
+               ##  then remove that molecules from dataset
+                df['check_coordinates'] = [checkAtomsCoordinates(x) for x in df.mol3DProt]
+                df_eliminated_mols = dfl[df.check_coordinates == False]
+                df = df[df.check_coordinates == True]
+                df.drop(columns=['check_coordinates'], inplace=True)
+                print('final minitest set:', df.shape[0])
+                print('minitest eliminated:', df_eliminated_mols.shape[0])
+        '''
+        conf = mol.GetConformer()
+        position = []
+        for i in range(conf.GetNumAtoms()):
+            pos = conf.GetAtomPosition(i)
+            position.append([pos.x, pos.y, pos.z])
+        position = np.array(position)
+        if not np.any(position):
+            return False
+        else:
+            return True
+
+    def create_dataset(self, in_memory=True):
+        if in_memory:
+            self.mols_handler = self._get_dataset(self.dataset_path)
+            X = []
+            y = []
+            ids = []
+            mols = []
+            for mol in self.mols_handler:
+
+                viable = self.check_atoms_coordinates(mol)
+
+                if viable:
+                    mols.append(mol)
+                    mol_feature = []
+                    if self.features_fields is not None:
+
+                        for feature in self.features_fields:
+                            mol_feature.append(mol.GetProp(feature))
+
+                        X.append(mol_feature)
+
+                    else:
+                        mol_feature = None
+                        X.append(mol_feature)
+
+                    if self.labels_fields is not None:
+
+                        if isinstance(self.labels_fields, list):
+                            if len(self.labels_fields) == 1:
+                                y.append(float(mol.GetProp(self.labels_fields[0])))
+
+                            else:
+                                mol_ys = []
+                                for label in self.labels_fields:
+                                    mol_ys.append(float(mol.GetProp(label)))
+
+                                y.append(mol_ys)
+                        else:
+                            y.append(float(mol.GetProp(self.labels_fields)))
+                    else:
+                        mol_y = None
+                        y.append(mol_y)
+
+                    if self.id_field is not None:
+                        mol_id = mol.GetProp(self.id_field)
+                        ids.append(mol_id)
+                    else:
+                        mol_id = None
+                        ids.append(mol_id)
+
+            X = np.array(X)
+            y = np.array(y)
+            ids = np.array(ids)
+            mols = np.array(mols)
+
+            return NumpyDataset(mols=mols,
+                                X=X,
+                                y=y,
+                                ids=ids,
+                                features2keep=self.features2keep,
+                                n_tasks=self.n_tasks)
+
+        else:
+            raise NotImplementedError
+
 
 """
 class DatabaseLoader(BaseDataLoader):
@@ -230,4 +434,3 @@ class ImageLoader(BaseDataLoader):
         super().__init__()
 
 """
-    

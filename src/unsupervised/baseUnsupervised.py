@@ -380,7 +380,7 @@ class TSNE(UnsupervisedLearn):
 
 
     def _plot(self):
-        dic = {0: "Not Sweet", 1: "Sweet"}
+        dic = {0: "Not Active (0)", 1: "Active (1)"}
         colors_map = []
         for elem in self.dataset.y:
             colors_map.append(dic[elem])
@@ -569,7 +569,6 @@ class KMeans(UnsupervisedLearn):
 
 
 
-    # TODO: implement
     def _plot(self):
         #TODO: check the best approach to this problem
         if self.features.shape[1] > 11:

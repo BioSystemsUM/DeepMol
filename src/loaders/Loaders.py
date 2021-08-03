@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 
 
-def load_csv_file(input_file, fields, sep=',', header = 0, chunk_size=None):
+def load_csv_file(input_file, fields, sep=',', header=0, chunk_size=None):
     """Load data as pandas dataframe from CSV files.
     Parameters
     ----------
@@ -147,7 +147,8 @@ class CSVLoader(object):
 
         fields2keep = [mols_field]
 
-        if id_field is not None: fields2keep.append(id_field)
+        if id_field is not None:
+            fields2keep.append(id_field)
 
         if labels_fields is not None:
             self.n_tasks = len(labels_fields)
@@ -166,8 +167,7 @@ class CSVLoader(object):
 
         self.fields2keep = fields2keep
 
-
-    #TODO: update comments
+    # TODO: update comments
     def _get_dataset(self, dataset_path, fields=None, sep=',', header=0, chunk_size=None):
         """Loads data with size chunk_size.
         Parameters
@@ -185,7 +185,8 @@ class CSVLoader(object):
 
     def create_dataset(self, sep=',', header=0, in_memory=True):
         if in_memory:
-            dataset = self._get_dataset(self.dataset_path, fields = self.fields2keep, sep=sep, header=header, chunk_size = self.shard_size)
+            dataset = self._get_dataset(self.dataset_path, fields=self.fields2keep, sep=sep, header=header,
+                                        chunk_size=self.shard_size)
 
             mols = dataset[self.mols_field].to_numpy()
 
@@ -257,7 +258,8 @@ class SDFLoader(object):
 
         fields2keep = []
 
-        if id_field is not None: fields2keep.append(id_field)
+        if id_field is not None:
+            fields2keep.append(id_field)
 
         if labels_fields is not None:
             self.n_tasks = len(labels_fields)
@@ -278,20 +280,19 @@ class SDFLoader(object):
 
     @property
     def mols_handler(self):
-        return self._mols_handler
+        return self.mols_handler
 
     @mols_handler.setter
     def mols_handler(self, value):
-        self._mols_handler = value
+        self.mols_handler = value
 
-    def _get_dataset(self, dataset_path):
-        """Loads data with size chunk_size.
+    @staticmethod
+    def _get_dataset(dataset_path):
+        """Loads data from path.
         Parameters
         ----------
-        input_files: str
+        dataset_path: str
             Filename to process
-        shard_size: int, optional
-            The size of a shard of data to process at a time.
         Returns
         -------
         pd.DataFrame
@@ -299,8 +300,9 @@ class SDFLoader(object):
         """
         return load_sdf_file(dataset_path)
 
-    def check_atoms_coordinates(self, mol):
-        '''
+    @staticmethod
+    def check_atoms_coordinates(mol):
+        """
             Function to check if a molecule contains zero coordinates in all atoms.
             Then this molecule must be eliminated.
             Returns True if molecules is OK and False if molecule contains zero coordinates.
@@ -316,7 +318,7 @@ class SDFLoader(object):
                 df.drop(columns=['check_coordinates'], inplace=True)
                 print('final minitest set:', df.shape[0])
                 print('minitest eliminated:', df_eliminated_mols.shape[0])
-        '''
+        """
         conf = mol.GetConformer()
         position = []
         for i in range(conf.GetNumAtoms()):

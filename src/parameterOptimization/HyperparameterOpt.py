@@ -411,7 +411,10 @@ class HyperparamOpt_CV(HyperparamOpt):
             best_model.fit(train_dataset)
             return best_model, grid_result.best_params_, grid_result.cv_results_
         elif model_type == 'sklearn':
-            print(grid_result.best_estimator_)
-            return SklearnModel(grid_result.best_estimator_, mode=self.mode), grid_result.best_params_, grid_result.cv_results_
+            best_model = SklearnModel(self.model_builder(**grid_result.best_params_), self.mode)
+            print('Fitting best model!')
+            best_model.fit(train_dataset)
+            print(best_model)
+            return best_model, grid_result.best_params_, grid_result.cv_results_
         else: # DeepchemModel
             return grid_result.best_estimator_, grid_result.best_params_, grid_result.cv_results_

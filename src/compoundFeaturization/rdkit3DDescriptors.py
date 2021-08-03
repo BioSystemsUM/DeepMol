@@ -1,10 +1,12 @@
 import inspect
 import queue
 from threading import Thread
+from typing import Union
 
 from rdkit import Chem
-from rdkit.Chem import Mol, rdMolDescriptors, AllChem
+from rdkit.Chem import Mol, rdMolDescriptors, AllChem, MolFromSmiles
 from rdkit.Chem.rdForceFieldHelpers import UFFOptimizeMoleculeConfs
+from rdkit.Chem.rdmolops import RemoveHs
 
 from Datasets.Datasets import Dataset
 from compoundFeaturization.baseFeaturizer import MolecularFeaturizer
@@ -72,14 +74,42 @@ def get_all_3D_descriptors(mol):
 class ThreeDimensionalMoleculeGenerator:
 
     def __init__(self, n_conformations: int = 20,
-                 max_iterations: int = 2000, threads: int = 1, timeout_per_molecule: int = 12):
+                 max_iterations: int = 2000,
+                 threads: int = 1,
+                 timeout_per_molecule: int = 12):
+        """
+        Class to generate three dimensional conformers and optimize them
+
+        Parameters
+        ----------
+        n_conformations: int
+          Number of conformations to be generated per molecule
+        max_iterations: int
+          maximum of iterations when optimizing molecular geometry
+        threads: int
+          number of threads to be used
+        timeout_per_molecule: int
+          time to be spent in each molecule
+
+        """
 
         self.max_iterations = max_iterations
         self.n_conformations = n_conformations
         self.threads = threads
         self.timeout_per_molecule = timeout_per_molecule
 
-    def generate_and_align_conformers(self, new_mol: Mol, ETKDG_version: int = 1, **kwargs):
+    def generate_conformers(self, new_mol: Mol, ETKDG_version: int = 1, **kwargs):
+        """
+        method to generate three dimensional conformers
+
+        Parameters
+        ----------
+        new_mol: Mol
+          Mol object from rdkit
+        ETKDG_version: int
+          version of the experimental-torsion-knowledge distance geometry (ETKDG) algorithm
+
+        """
 
         new_mol = Chem.AddHs(new_mol)
 
@@ -99,9 +129,23 @@ class ThreeDimensionalMoleculeGenerator:
             print("Choose ETKDG's valid version (1,2 or 3)")
             return None
 
+        new_mol = RemoveHs(new_mol)
+
         return new_mol
 
     def optimize_molecular_geometry(self, mol: Mol, mode: str = "MMFF94"):
+
+        """
+        Class to generate three dimensional conformers
+
+        Parameters
+        ----------
+        mol: Mol
+          Mol object from rdkit
+        mode: int
+          mode for the molecular geometry optimization (MMFF or UFF)
+
+        """
 
         if "MMFF" in mode:
             AllChem.MMFFOptimizeMoleculeConfs(mol,
@@ -115,10 +159,10 @@ class ThreeDimensionalMoleculeGenerator:
 
         return mol
 
-
+#TODO : check whether sdf file is being correctly exported for multi-class classification
 def generate_conformers_to_sdf_file(dataset: Dataset, file_path: str, n_conformations: int = 20,
                                     max_iterations: int = 2000, threads: int = 1, timeout_per_molecule: int = 12,
-                                    **kwargs):
+                                    ETKG_version: int = 1, optimization_mode: str = "MMFF94"):
     """
     Generate conformers using the experimental-torsion-knowledge distance geometry (ETKDG) algorithm from RDKit,
     optimize them and save in a SDF file
@@ -137,7 +181,10 @@ def generate_conformers_to_sdf_file(dataset: Dataset, file_path: str, n_conforma
           number of threads
         timeout_per_molecule: int
           the number of seconds in which the conformers are to be generated
-
+        ETKG_version: int
+          version of the experimental-torsion-knowledge distance geometry (ETKDG) algorithm
+        optimization_mode: str
+          mode for the molecular geometry optimization (MMFF or UFF)
     """
 
     generator = ThreeDimensionalMoleculeGenerator(max_iterations, n_conformations, threads, timeout_per_molecule)
@@ -151,26 +198,30 @@ def generate_conformers_to_sdf_file(dataset: Dataset, file_path: str, n_conforma
         return wrapper
 
     @store_in_queue
-    def generate_conformers(new_mol, **kwargs):
+    def generate_conformers(new_mol: Union[Mol, str], ETKG_version: int = 1, optimization_mode: str = "MMFF94"):
+
+        if isinstance(new_mol, str):
+            new_mol = MolFromSmiles(new_mol)
+
         new_mol = Chem.AddHs(new_mol)
 
-        new_mol = generator.generate_and_align_conformers(new_mol, **kwargs)
-        new_mol = generator.optimize_molecular_geometry(new_mol)
+        new_mol = generator.generate_conformers(new_mol, ETKG_version)
+        new_mol = generator.optimize_molecular_geometry(new_mol, optimization_mode)
 
         return new_mol
 
-    mol_set = dataset.mols()
+    mol_set = dataset.mols
 
     final_set_with_conformations = []
 
     for i in range(mol_set.shape[0]):
-        action_thread = Thread(target=generate_conformers, args=(mol_set[i], kwargs,))
+        action_thread = Thread(target=generate_conformers, args=(mol_set[i], ETKG_version, optimization_mode, ))
         action_thread.start()
 
         m2 = my_queue.get(True, timeout=timeout_per_molecule)
 
-        label = dataset.y()[i]
-        mol_id = dataset.ids()[i]
+        label = dataset.y[i]
+        mol_id = dataset.ids[i]
         m2.SetProp("_Class", "%f" % label)
         m2.SetProp("_ID", "%f" % mol_id)
 
@@ -201,7 +252,7 @@ class All3DDescriptors(MolecularFeaturizer):
           A numpy array of all 3D featurizers from rdkit
         """
 
-        size = 973
+        size = 639
 
         try:
             fp = get_all_3D_descriptors(mol)
@@ -392,43 +443,6 @@ class WHIM(MolecularFeaturizer):
 
             _no_conformers_message(e)
             fp = np.empty(114, dtype=float)
-            fp[:] = np.NaN
-        fp = np.asarray(fp, dtype=np.float)
-
-        return fp
-
-
-class GETAWAY(MolecularFeaturizer):
-    """
-    GETAWAY descriptors vector
-    Todeschini and Consoni “Descriptors from Molecular Geometry” Handbook of Chemoinformatics
-    https://doi.org/10.1002/9783527618279.ch37
-    """
-
-    def __init__(self):
-
-        super().__init__()
-
-    def _featurize(self, mol: Mol) -> np.ndarray:
-        """ GETAWAY descriptors calculation (length of 273)
-        Parameters
-        ----------
-        mol: rdkit.Chem.rdchem.Mol
-          RDKit Mol object
-        Returns
-        -------
-        np.ndarray
-          A numpy array of GETAWAY descriptors
-        """
-
-        try:
-            fp = rdMolDescriptors.CalcGETAWAY(mol)
-
-        except Exception as e:
-            print('error in smile: ' + str(mol))
-
-            _no_conformers_message(e)
-            fp = np.empty(273, dtype=float)
             fp[:] = np.NaN
         fp = np.asarray(fp, dtype=np.float)
 

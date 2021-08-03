@@ -1,7 +1,7 @@
 from unittest import TestCase
 
-from deepchem.models import MultitaskClassifier, MultitaskIRVClassifier
-from mordred import get_descriptors_in_module, CPSA, GravitationalIndex, GeometricalIndex
+from deepchem.models import MultitaskClassifier
+from rdkit.Chem.rdMolAlign import AlignMol
 from rdkit.Chem.rdmolfiles import MolFromSmiles
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import roc_auc_score, classification_report, precision_score, accuracy_score, confusion_matrix
@@ -10,31 +10,31 @@ from tensorflow.python.keras import Sequential
 from tensorflow.python.keras.layers import Dense, Dropout, GaussianNoise, Reshape, Conv1D, Flatten
 from tensorflow.keras.optimizers import Adadelta, Adam, RMSprop
 
-from compoundFeaturization import mordredDescriptors
 from compoundFeaturization.mixedDescriptors import MixedFeaturizer
-from compoundFeaturization.mordredDescriptors import MordredFeaturizer, Mordred3DFeaturizer, ChargedPartialSurfaceArea, \
-    MolecularGravitationalIndex, MolecularGeometricalIndex, MolecularMomentOfInertia
 from compoundFeaturization.rdkit3DDescriptors import AutoCorr3D, All3DDescriptors, RadialDistributionFunction, \
     PlaneOfBestFit, MORSE, WHIM, RadiusOfGyration, InertialShapeFactor, Eccentricity, Asphericity, \
-    SpherocityIndex, PrincipalMomentsOfInertia, NormalizedPrincipalMomentsRatios, GETAWAY, \
-    ThreeDimensionalMoleculeGenerator
+    SpherocityIndex, PrincipalMomentsOfInertia, NormalizedPrincipalMomentsRatios, \
+    ThreeDimensionalMoleculeGenerator, generate_conformers_to_sdf_file
+from compoundFeaturization.rdkitFingerprints import MorganFingerprint
 from loaders.Loaders import SDFLoader, CSVLoader
 from metrics.Metrics import Metric
 from models.DeepChemModels import DeepChemModel
 from models.kerasModels import KerasModel
 from models.sklearnModels import SklearnModel
 from splitters.splitters import SingletaskStratifiedSplitter
-from utils import utils as preproc
+
+import pandas as pd
+
 
 class Test3DGeneration(TestCase):
 
     def test_align(self):
-
         generator = ThreeDimensionalMoleculeGenerator()
 
         mol = MolFromSmiles("Cc1cc2-c3c(O)cc(cc3OC3(Oc4cc(O)ccc4-c(c1O)c23)c1ccc(O)cc1O)-c1cc2cccc(O)c2o1")
 
-        generator.generate_and_align_conformers(mol)
+        generator.generate_conformers(mol)
+
 
 class TestSdfImporter(TestCase):
 
@@ -51,7 +51,7 @@ class TestRdkit3DDescriptors(TestCase):
 
     def setUp(self) -> None:
         self.test_dataset_sdf = "../data/dataset_sweet_3D_to_test.sdf"
-        self.test_dataset_to_fail = "../preprocessed_dataset_wfoodb.csv"
+        self.test_dataset_to_fail = "../data/preprocessed_dataset_wfoodb.csv"
 
     def test_autocorr3D(self):
         loader = SDFLoader(self.test_dataset_sdf, "_SourceID", labels_fields=["_SWEET"])
@@ -164,29 +164,6 @@ class TestRdkit3DDescriptors(TestCase):
 
         with self.assertRaises(SystemExit) as cm:
             WHIM().featurize(dataset)
-
-        self.assertEqual(cm.exception.code, 1)
-
-    def test_GETAWAY(self):
-        loader = SDFLoader(self.test_dataset_sdf, "_SourceID", labels_fields=["_SWEET"])
-        dataset = loader.create_dataset()
-
-        dataset = GETAWAY().featurize(dataset)
-
-        assert len(dataset.X) == 100
-        assert isinstance(dataset.X[0][0], float)
-        assert len(dataset.X[0]) == 273
-
-    def test_GETAWAY_to_fail(self):
-        loader = CSVLoader(self.test_dataset_to_fail,
-                           mols_field='Smiles',
-                           labels_fields='Class',
-                           id_field='ID')
-
-        dataset = loader.create_dataset()
-
-        with self.assertRaises(SystemExit) as cm:
-            GETAWAY().featurize(dataset)
 
         self.assertEqual(cm.exception.code, 1)
 
@@ -374,168 +351,31 @@ class TestRdkit3DDescriptors(TestCase):
         self.assertEqual(cm.exception.code, 1)
 
 
-class TestMordredDescriptors(TestCase):
-
-    def setUp(self) -> None:
-        self.test_dataset_sdf = "../data/dataset_sweet_3D_to_test.sdf"
-        self.test_dataset_to_fail = "../preprocessed_dataset_wfoodb.csv"
-
-    def test_all_mordred_descriptors(self):
-        loader = SDFLoader(self.test_dataset_sdf, "_SourceID", labels_fields=["_SWEET"])
-        dataset = loader.create_dataset()
-
-        dataset = MordredFeaturizer().featurize(dataset)
-
-        assert len(dataset.X) == 100
-        assert dataset.X.shape[1] != 1826
-
-    def test_ChargedPartialSurfaceArea(self):
-        loader = SDFLoader(self.test_dataset_sdf, "_SourceID", labels_fields=["_SWEET"])
-        dataset = loader.create_dataset()
-
-        dataset = ChargedPartialSurfaceArea().featurize(dataset)
-
-        assert len(dataset.X) == 100
-        assert isinstance(dataset.X[0][0], float)
-        assert len(dataset.X[0]) == 43
-
-    def test_MolecularGravitationalIndex(self):
-        loader = SDFLoader(self.test_dataset_sdf, "_SourceID", labels_fields=["_SWEET"])
-        dataset = loader.create_dataset()
-
-        dataset = MolecularGravitationalIndex().featurize(dataset)
-
-        assert len(dataset.X) == 100
-        assert isinstance(dataset.X[0][0], float)
-        assert len(dataset.X[0]) == 2
-
-    def test_MORSE(self):
-        loader = SDFLoader(self.test_dataset_sdf, "_SourceID", labels_fields=["_SWEET"])
-        dataset = loader.create_dataset()
-
-        dataset = mordredDescriptors.MORSE().featurize(dataset)
-
-        assert len(dataset.X) == 100
-        assert isinstance(dataset.X[0][0], float)
-        assert len(dataset.X[0]) == 5
-
-    def test_GeometricalIndex(self):
-        loader = SDFLoader(self.test_dataset_sdf, "_SourceID", labels_fields=["_SWEET"])
-        dataset = loader.create_dataset()
-
-        dataset = MolecularGeometricalIndex().featurize(dataset)
-
-        assert len(dataset.X) == 100
-        assert isinstance(dataset.X[0][0], float)
-        assert len(dataset.X[0]) == 4
-
-    def test_MolecularMomentOfInertia(self):
-        loader = SDFLoader(self.test_dataset_sdf, "_SourceID", labels_fields=["_SWEET"])
-        dataset = loader.create_dataset()
-
-        dataset = MolecularMomentOfInertia().featurize(dataset)
-
-        assert len(dataset.X) == 100
-        assert isinstance(dataset.X[0][0], float)
-        print(len(dataset.X[0]))
-        assert len(dataset.X[0]) == 3
-
-    def test_PlaneOfBestFit(self):
-        loader = SDFLoader(self.test_dataset_sdf, "_SourceID", labels_fields=["_SWEET"])
-        dataset = loader.create_dataset()
-
-        dataset = MolecularMomentOfInertia().featurize(dataset)
-
-        assert len(dataset.X) == 100
-        assert isinstance(dataset.X[0][0], float)
-        assert len(dataset.X[0]) == 3
-
-    def test_3d_mordred_descriptors(self):
-        loader = SDFLoader(self.test_dataset_sdf, "_SourceID", labels_fields=["_SWEET"])
-        dataset = loader.create_dataset()
-
-        dataset = Mordred3DFeaturizer().featurize(dataset)
-
-        assert len(dataset.X) == 100
-
-
 class TestMixedDescriptors(TestCase):
 
     def setUp(self) -> None:
         self.test_dataset_sdf = "../data/dataset_sweet_3D_to_test.sdf"
         self.test_dataset_to_fail = "../preprocessed_dataset_wfoodb.csv"
 
-    def test_mixed_descriptors_mordred_rdkit1(self):
-        loader = SDFLoader(self.test_dataset_sdf, "_SourceID", labels_fields=["_SWEET"])
+    def test_mixed_descriptors_fingerprints_rdkit(self):
+        loader = SDFLoader("../data/dataset_sweet_3D_to_test.sdf", "_SourceID", labels_fields=["_SWEET"])
         dataset = loader.create_dataset()
 
-        cpsa = get_descriptors_in_module(CPSA)
-        grav = get_descriptors_in_module(GravitationalIndex)
-        geo_index = get_descriptors_in_module(GeometricalIndex)
-
-        cpsa_featurizer = MordredFeaturizer(class_descriptors=cpsa)
-        grav_featurizer = MordredFeaturizer(class_descriptors=grav)
-        geo_index_featurizer = MordredFeaturizer(class_descriptors=geo_index)
-        descriptors = [All3DDescriptors(), cpsa_featurizer, grav_featurizer, geo_index_featurizer]
+        descriptors = [All3DDescriptors(), MorganFingerprint()]
 
         dataset = MixedFeaturizer(featurizers=descriptors).featurize(dataset)
 
         assert len(dataset.X) == 100
-        assert len(dataset.X[0]) == 961
-
-    def test_mixed_descriptors_mordred_rdkit2(self):
-        loader = SDFLoader("../data/dataset_sweet_3D_test.sdf", "_SourceID", labels_fields=["_SWEET"])
-        dataset = loader.create_dataset()
-
-        cpsa_featurizer = ChargedPartialSurfaceArea()
-        grav_featurizer = MolecularGravitationalIndex()
-        geo_index_featurizer = MolecularGeometricalIndex()
-        descriptors = [All3DDescriptors(), cpsa_featurizer, grav_featurizer, geo_index_featurizer]
-
-        dataset = MixedFeaturizer(featurizers=descriptors).featurize(dataset)
-
-        assert len(dataset.X) == 100
-        assert len(dataset.X[0]) == 961
-
-    def test_mixed_descriptors_mordred_rdkit3(self):
-        loader = SDFLoader("../data/dataset_sweet_3D.sdf", "_SourceID", labels_fields=["_SWEET"])
-        dataset = loader.create_dataset()
-
-        autocorr = AutoCorr3D()
-        rdf = RadialDistributionFunction()
-        pbf = PlaneOfBestFit()
-        morse = MORSE()
-        whim = WHIM()
-        get_away = GETAWAY()
-        rg = RadiusOfGyration()
-        isf = InertialShapeFactor()
-        eccentricity = Eccentricity()
-        asph = Asphericity()
-        spher = SpherocityIndex()
-        pmi = PrincipalMomentsOfInertia()
-        npmr = NormalizedPrincipalMomentsRatios()
-
-        cpsa_featurizer = ChargedPartialSurfaceArea()
-        grav_featurizer = MolecularGravitationalIndex()
-        geo_index_featurizer = MolecularGeometricalIndex()
-        descriptors = [autocorr, rdf, pbf, morse, rg, isf, eccentricity, asph, spher, pmi, npmr, whim, get_away,
-                       cpsa_featurizer, grav_featurizer, geo_index_featurizer]
-
-        dataset = MixedFeaturizer(featurizers=descriptors).featurize(dataset)
-
-        assert len(dataset.X) == 100
-        assert len(dataset.X[0]) == 961
+        assert len(dataset.X[0]) == 2687
 
 
 class TestModels3DDescriptors(TestCase):
 
     def setUp(self) -> None:
-        loader = SDFLoader("../data/dataset_sweet_3D.sdf", "_SourceID", labels_fields=["_SWEET"])
+        loader = SDFLoader("../data/dataset_sweet_3d_balanced.sdf", "_SourceID", labels_fields=["_SWEET"])
         self.dataset = loader.create_dataset()
 
-        self.dataset.sample_part(0, 1800)
-
-        self.dataset = All3DDescriptors().featurize(self.dataset)
+        self.dataset = All3DDescriptors().featurize(self.dataset, scale=True)
 
         splitter = SingletaskStratifiedSplitter()
         self.train_dataset, self.valid_dataset, self.test_dataset = splitter.train_valid_test_split(
@@ -543,13 +383,6 @@ class TestModels3DDescriptors(TestCase):
             frac_train=0.6,
             frac_valid=0.2,
             frac_test=0.2)
-
-        loader = CSVLoader("../preprocessed_dataset.csv",
-                           mols_field='Smiles',
-                           labels_fields='Class',
-                           id_field='PubChem CID')
-
-        self.test_dataset_to_fail = loader.create_dataset()
 
     def test_svm_3d_descriptors(self):
         svm = SVC()
@@ -568,15 +401,15 @@ class TestModels3DDescriptors(TestCase):
         # evaluate the model
         print('Training Dataset: ')
         train_score = model.evaluate(self.train_dataset, metrics)
-        self.assertAlmostEqual(train_score["accuracy_score"], 0.51, delta=0.02)
+        self.assertAlmostEqual(train_score["accuracy_score"], 0.86, delta=0.05)
         print("#############################")
         print('Validation Dataset: ')
         valid_score = model.evaluate(self.valid_dataset, metrics)
-        self.assertAlmostEqual(valid_score["accuracy_score"], 0.51, delta=0.02)
+        self.assertAlmostEqual(valid_score["accuracy_score"], 0.80, delta=0.1)
         print("#############################")
         print('Test Dataset: ')
         test_score = model.evaluate(self.test_dataset, metrics)
-        self.assertAlmostEqual(test_score["accuracy_score"], 0.51, delta=0.02)
+        self.assertAlmostEqual(test_score["accuracy_score"], 0.80, delta=0.1)
         print("#############################")
 
     def test_rf_3d_descriptors(self):
@@ -634,15 +467,15 @@ class TestModels3DDescriptors(TestCase):
         # evaluate the model
         print('Training Dataset: ')
         train_score = model.evaluate(self.train_dataset, metrics)
-        self.assertAlmostEqual(train_score["accuracy_score"], 0.50, delta=0.02)
+        self.assertAlmostEqual(train_score["accuracy_score"], 0.87, delta=0.02)
         print("#############################")
         print('Validation Dataset: ')
         valid_score = model.evaluate(self.valid_dataset, metrics)
-        self.assertAlmostEqual(valid_score["accuracy_score"], 0.50, delta=0.1)
+        self.assertAlmostEqual(valid_score["accuracy_score"], 0.80, delta=0.1)
         print("#############################")
         print('Test Dataset: ')
         test_score = model.evaluate(self.test_dataset, metrics)
-        self.assertAlmostEqual(test_score["accuracy_score"], 0.50, delta=0.1)
+        self.assertAlmostEqual(test_score["accuracy_score"], 0.80, delta=0.1)
         print("#############################")
 
     def test_cnn_3d_descriptors(self):
@@ -699,15 +532,15 @@ class TestModels3DDescriptors(TestCase):
 
         train_score = model.evaluate(self.train_dataset, metrics)
         print('training set score:', train_score)
-        self.assertAlmostEqual(train_score["accuracy_score"], 0.55, delta=0.1)
+        self.assertAlmostEqual(train_score["accuracy_score"], 0.81, delta=0.3)
 
         validation_score = model.evaluate(self.valid_dataset, metrics)
         print('validation set score:', validation_score)
-        self.assertAlmostEqual(validation_score["accuracy_score"], 0.55, delta=0.1)
+        self.assertAlmostEqual(validation_score["accuracy_score"], 0.81, delta=0.3)
 
         test_score = model.evaluate(self.test_dataset, metrics)
         print('test set score:', model.evaluate(self.test_dataset, metrics))
-        self.assertAlmostEqual(validation_score["accuracy_score"], 0.55, delta=0.1)
+        self.assertAlmostEqual(test_score["accuracy_score"], 0.81, delta=0.3)
 
     def test_multitaskclass_3d_descriptors(self):
 
@@ -719,35 +552,70 @@ class TestModels3DDescriptors(TestCase):
         metrics = [Metric(roc_auc_score), Metric(precision_score), Metric(accuracy_score)]
         print('Training Dataset: ')
         train_score = model_multi.evaluate(self.train_dataset, metrics)
-        self.assertAlmostEqual(train_score["accuracy_score"], 0.55, delta=0.1)
+        self.assertAlmostEqual(train_score["accuracy_score"], 0.80, delta=0.1)
         print('Valid Dataset: ')
         valid_score = model_multi.evaluate(self.valid_dataset, metrics)
-        self.assertAlmostEqual(valid_score["accuracy_score"], 0.55, delta=0.1)
+        self.assertAlmostEqual(valid_score["accuracy_score"], 0.80, delta=0.1)
         print('Test Dataset: ')
         test_score = model_multi.evaluate(self.test_dataset, metrics)
-        self.assertAlmostEqual(test_score["accuracy_score"], 0.55, delta=0.1)
-
-    def test_irv_3d_descriptors(self):
-
-        ds = preproc.irv_transformation(self.dataset, K=10, n_tasks=1)
-
-        splitter = SingletaskStratifiedSplitter()
-        train_dataset, valid_dataset, test_dataset = splitter.train_valid_test_split(dataset=ds, frac_train=0.6,
-                                                                                     frac_valid=0.2, frac_test=0.2)
-        irv = MultitaskIRVClassifier(n_tasks=1, mode='classification')
-        model_irv = DeepChemModel(irv)
-        # Model training
-        model_irv.fit(train_dataset)
-        # Evaluation
-        metrics = [Metric(roc_auc_score), Metric(precision_score), Metric(accuracy_score)]
-        print('Training Dataset: ')
-        train_score = model_irv.evaluate(train_dataset, metrics)
-        self.assertAlmostEqual(train_score["accuracy_score"], 0.55, delta=0.1)
-        print('Valid Dataset: ')
-        valid_score = model_irv.evaluate(valid_dataset, metrics)
-        self.assertAlmostEqual(valid_score["accuracy_score"], 0.55, delta=0.1)
-        print('Test Dataset: ')
-        test_score = model_irv.evaluate(test_dataset, metrics)
-        self.assertAlmostEqual(test_score["accuracy_score"], 0.55, delta=0.1)
+        self.assertAlmostEqual(test_score["accuracy_score"], 0.80, delta=0.1)
 
 
+class Test3DGenerator(TestCase):
+
+    def setUp(self) -> None:
+        self.generator = ThreeDimensionalMoleculeGenerator(n_conformations=20)
+        self.test_dataset_to_convert = "../data/test_to_convert_to_sdf.csv"
+        loader = CSVLoader(self.test_dataset_to_convert,
+                           mols_field='Smiles',
+                           labels_fields='Class',
+                           id_field='ID')
+
+        self.test_dataset_to_convert_object = loader.create_dataset()
+
+    def test_generate_20_conformers(self):
+        mol = MolFromSmiles("CC(CC(C)(O)C=C)=CC=CC")
+
+        self.assertEquals(mol.GetConformers(), ())
+
+        mol = self.generator.generate_conformers(mol, 1)
+
+        self.assertEquals(len(mol.GetConformers()), 20)
+
+    def test_optimize_geometry(self):
+        new_generator = ThreeDimensionalMoleculeGenerator(n_conformations=10)
+
+        mol_raw = MolFromSmiles("CC(CC(C)(O)C=C)=CC=C")
+        mol_raw2 = MolFromSmiles("CC(CC(C)(O)C=C)=CC=C")
+
+        self.assertEquals(mol_raw.GetConformers(), ())
+
+        new_mol = new_generator.generate_conformers(mol_raw, 1)
+
+        conformer_1_before = new_mol.GetConformer(1)
+
+        self.assertEquals(len(new_mol.GetConformers()), 10)
+
+        new_mol = new_generator.optimize_molecular_geometry(new_mol, "MMFF94")
+
+        conformer_1_after = new_mol.GetConformer(1)
+
+        mol_raw.AddConformer(conformer_1_before)
+        mol_raw2.AddConformer(conformer_1_after)
+
+        rmsd = AlignMol(mol_raw, mol_raw2)
+
+        self.assertNotEqual(rmsd, 0)
+
+    def test_export_to_sdf(self):
+        generate_conformers_to_sdf_file(self.test_dataset_to_convert_object, "../data/test.sdf",
+                                        timeout_per_molecule=40)
+
+        loader = SDFLoader("../data/test.sdf", "_ID", "_Class")
+        dataset = loader.create_dataset()
+
+        All3DDescriptors().featurize(dataset)
+
+        features_number = dataset.len_X()[1]
+
+        self.assertEqual(features_number, 639)

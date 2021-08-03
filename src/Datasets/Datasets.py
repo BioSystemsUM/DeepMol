@@ -1,8 +1,7 @@
-from random import sample
-
 import numpy as np
 import pandas as pd
 from typing import Optional, Sequence, Iterable
+
 
 
 class Dataset(object):
@@ -70,7 +69,7 @@ class NumpyDataset(Dataset):
         n_tasks: int, default 1
           Number of learning tasks.
         """
-        # super().__init__()
+        #super().__init__()
 
         if not isinstance(mols, np.ndarray):
             mols = np.array(mols)
@@ -100,26 +99,25 @@ class NumpyDataset(Dataset):
                     print('Error while removing defined features!')
                     print(e)
 
+
     def len_mols(self):
         return len(self.mols)
-
+    
     def len_X(self):
         if self.X is not None:
             return self.X.shape
-        else:
-            return 'X not defined!'
+        else: return 'X not defined!'
 
     def len_y(self):
         if self.y is not None:
             return self.y.shape
-        else:
-            return 'y not defined!'
+        else : return 'y not defined!'
 
     def len_ids(self):
         if self.ids is not None:
             return self.ids.shape
-        else:
-            return 'ids not defined!'
+        else: return 'ids not defined!'
+
 
     def get_shape(self):
         """Get the shape of the dataset.
@@ -132,7 +130,6 @@ class NumpyDataset(Dataset):
     def mols(self) -> np.ndarray:
         """Get the features array for this dataset as a single numpy array."""
         return self.mols
-
     def X(self) -> np.ndarray:
         """Get the X vector for this dataset as a single numpy array."""
         return self.X
@@ -157,7 +154,7 @@ class NumpyDataset(Dataset):
         if self.ids is not None:
             self.ids = np.delete(self.ids, indexes)
 
-    # TODO: test this
+    #TODO: test this
     def selectFeatures(self, indexes):
         idx = list(range(len(self.X[0])))
         for i in indexes:
@@ -169,24 +166,16 @@ class NumpyDataset(Dataset):
         j = 0
         indexes = []
         for i in self.X:
-            if np.isnan(i).all():
+            if np.isnan(i[0]):
                 indexes.append(j)
-
-            j += 1
-
+            j+=1
         if len(indexes) > 0:
             print('Elements with indexes: ', indexes, ' were removed due to the presence of NAs!')
             print('The elements in question are: ', self.mols[indexes])
             self.removeElements(indexes)
 
-        # if removeNanColumns:
-        #     column_indexes = np.where(np.isnan(self.X).any(axis=0))
-        #
-        #     if len(column_indexes[0]) > 0:
-        #         self.X = self.X[:, ~np.isnan(self.X).any(axis=0)]
-        #         print('Columns in indexes: ', column_indexes, ' were removed due to the presence of NAs!')
 
-    # TODO: is this the best way of doing it? maybe directly delete instead of creating new NumpyDataset
+    #TODO: is this the best way of doing it? maybe directly delete instead of creating new NumpyDataset
     def select(self, indexes: Sequence[int]) -> 'NumpyDataset':
         """Creates a new subdataset of self from a selection of indexes.
         Parameters
@@ -218,17 +207,6 @@ class NumpyDataset(Dataset):
 
         return NumpyDataset(mols, X, y, ids, self.features2keep)
 
-    def sample_part(self, label, n):
-
-        indexes_with_label = list(np.where(self.y == label)[0])
-
-        m = len(indexes_with_label) - n
-        idx = sample(indexes_with_label, m)
-
-        self.removeElements(idx)
-
-        return self
-
     def merge(self,
               datasets: Iterable[Dataset]) -> 'NumpyDataset':
         """Merges provided datasets with the self dataset.
@@ -248,24 +226,17 @@ class NumpyDataset(Dataset):
         y = self.y
         ids = self.ids
         mols = self.mols
-        flag2 = False
+
         for ds in datasets:
             mols = np.append(mols, ds.mols, axis=0)
             y = np.append(y, ds.y, axis=0)
-
-            # ids = np.append(ids, ds.ids, axis=0)
-            if ids is not None:
-                ids = np.append(ids, ds.ids, axis=0) # changed this
+            ids = np.append(ids, ds.ids, axis=0)
             if X is not None:
-                if isinstance(X[0],np.ndarray):
-                    if len(X[0]) == len(ds.X[0]):
-                        X = np.append(X, ds.X, axis=0)
-                    else:
-                        flag2 = True
-                else:
+                if len(X[0])==len(ds.X[0]):
                     X = np.append(X, ds.X, axis=0)
-            else:
-                flag2 = True
+                else:
+                    flag2 = False
+            else: flag2 = False
         if flag2:
             print('Features are not the same length/type... '
                   '\nRecalculate features for all inputs! '
@@ -274,19 +245,9 @@ class NumpyDataset(Dataset):
         else:
             return NumpyDataset(mols, X, y, ids, self.features2keep)
 
-    def redefine_ids(self):
-
-        if not isinstance(self.ids[0],int):
-            for i in range(len(self.ids)):
-
-                self.ids[i] = i
-
-        self.ids = np.array(self.ids)
-
     def save_to_csv(self, path):
         df = pd.DataFrame()
-        if self.ids is not None:
-            df['ids'] = pd.Series(self.ids)
+        df['ids'] = pd.Series(self.ids)
         df['mols'] = pd.Series(self.mols)
         if self.y is not None:
             df['y'] = pd.Series(self.y)
@@ -312,6 +273,7 @@ class NumpyDataset(Dataset):
             df.to_csv(path, index=False)
         else:
             raise ValueError('No fingerprint was already calculated!')
+
 
 
 '''

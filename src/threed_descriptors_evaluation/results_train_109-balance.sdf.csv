@@ -1,2 +1,0 @@
-model,model_dir,test_accuracy_score,test_precision_score,test_recall_score,test_roc_auc_score,train_accuracy_score,train_precision_score,train_recall_score,train_roc_auc_score,batch_size,batchnorm,epochs,hidden_dropout,hlayers_sizes,input_dim,l2,learning_rate,task_type
-Mol2vec,,0.5077821011673151,0.0,0.0,0.5,0.5064880703223106,0.0,0.0,0.5,256,False,10,0.25,"[64, 32, 16]",300,1e-3,1e-4,classification

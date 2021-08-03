@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 from rdkit import Chem
 from rdkit.Chem import rdmolfiles
@@ -72,10 +73,3 @@ class MolecularFeaturizer(object):
             dataset.X = scaler.fit_transform(dataset.X)
 
         return dataset
-
-    # TODO: implement
-    def load_fp(self):
-        pass
-
-    def _featurize(self, mol):
-        pass

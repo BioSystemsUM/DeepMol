@@ -1,10 +1,7 @@
 # DeepMol
 
-<<<<<<< HEAD
-=======
 **[README UNDER CONSTRUCTION!]**
 
->>>>>>> 94465c4b53933392ded48e7661030898bd2e015c
 ### Description
 DeepMol is a python-based machine and deep learning framework for drug discovery. 
 It offers a variety of functionalities that enable a smoother approach to many 
@@ -50,16 +47,6 @@ operations on molecular data.
 
 ## Installation
 
-<<<<<<< HEAD
-### Docker
-
-1. Install [docker](https://docs.docker.com/install/).
-2. Clone the repository and build a DeepMol Docker image manually:
-```bash
-git clone https://github.com/BioSystemsUM/DeepMol.git
-
-docker build --squash -t deepmol --build-arg python_version=3.6 -f Docker/Dockerfile .
-=======
 ### Pip
 
 Install DeepMol via pip or conda:
@@ -89,14 +76,10 @@ or clone the repository and build it manually:
 ```bash
 git clone https://github.com/BioSystemsUM/DeepMol.git
 docker build ...
->>>>>>> 94465c4b53933392ded48e7661030898bd2e015c
 ```
 
 3. Create a container:
 ```bash
-<<<<<<< HEAD
-docker run --privileged -it --rm --env KERAS_BACKEND=tensorflow deepmol bash
-=======
 docker run ...
 ```
 
@@ -114,7 +97,6 @@ git clone https://github.com/BioSystemsUM/DeepMol.git
 3. Install dependencies:
 ```bash
 python setup.py install
->>>>>>> 94465c4b53933392ded48e7661030898bd2e015c
 ```
 
 ## Getting Started
@@ -161,11 +143,7 @@ dataset.get_shape()
 ```
 
 <p align="left">
-<<<<<<< HEAD
-  <img src="https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/src/docs/imgs/load_csv_output.png?token=AGEFRGJBJDLT7RC27OPU5PDAXJRZC" width="800" />
-=======
   <img src="https://github.com/BioSystemsUM/DeepMol/blob/be82712fbba9d2beab506f147862f3a6279ec594/src/docs/imgs/load_csv_output.png" width="800" />
->>>>>>> 94465c4b53933392ded48e7661030898bd2e015c
 </p>
 
 ### Compound Standardization
@@ -211,11 +189,7 @@ dataset = MorganFingerprint(radius=2, size=1024).featurize(dataset)
 ```
 
 <p align="left">
-<<<<<<< HEAD
-  <img src="https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/src/docs/imgs/featurization_output.png?token=AGEFRGODQDHUOPFRH5NV3P3AXJSZQ" width="800" />
-=======
   <img src="https://github.com/BioSystemsUM/DeepMol/blob/83360de6c79efec561f6a06ad7db755bbcf42f07/src/docs/imgs/featurization_output.png" width="800" />
->>>>>>> 94465c4b53933392ded48e7661030898bd2e015c
 </p>
 
 ```python
@@ -224,11 +198,7 @@ dataset.get_shape()
 ```
 
 <p align="left">
-<<<<<<< HEAD
-  <img src="https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/src/docs/imgs/get_shape_output.png?token=AGEFRGOEO6GO33NT7DX3VNLAXJTEE" width="800" />
-=======
   <img src="https://github.com/BioSystemsUM/DeepMol/blob/f392e01156625c2b81eede3c8e95a501faded30e/src/docs/imgs/get_shape_output.png" width="800" />
->>>>>>> 94465c4b53933392ded48e7661030898bd2e015c
 </p>
 
 ### Feature Selection
@@ -248,11 +218,7 @@ dataset.get_shape()
 ```
 
 <p align="left">
-<<<<<<< HEAD
-  <img src="https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/src/docs/imgs/get_shape_output_2.png?token=AGEFRGKWWJ6JAGUYWQ3FQX3AXJUSC" width="800" />
-=======
   <img src="https://github.com/BioSystemsUM/DeepMol/blob/f392e01156625c2b81eede3c8e95a501faded30e/src/docs/imgs/get_shape_output_2.png" width="800" />
->>>>>>> 94465c4b53933392ded48e7661030898bd2e015c
 </p>
 
 ### Unsupervised Exploration
@@ -267,11 +233,7 @@ ump = UMAP().runUnsupervised(dataset)
 ```
 
 <p align="left">
-<<<<<<< HEAD
-  <img src="https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/src/docs/imgs/umap_output.png?token=AGEFRGMRHLMDFL7MJEJEVVDAXXW5G" width="800" />
-=======
   <img src="https://github.com/BioSystemsUM/DeepMol/blob/f392e01156625c2b81eede3c8e95a501faded30e/src/docs/imgs/umap_output.png" width="800" />
->>>>>>> 94465c4b53933392ded48e7661030898bd2e015c
 </p>
 
 ### Data Split
@@ -295,11 +257,7 @@ test_dataset.get_shape()
 ```
 
 <p align="left">
-<<<<<<< HEAD
-  <img src="https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/src/docs/imgs/split_output.png?token=AGEFRGJQOLD56IUM4Z3JEI3AXXXAO" width="800" />
-=======
   <img src="https://github.com/BioSystemsUM/DeepMol/blob/f392e01156625c2b81eede3c8e95a501faded30e/src/docs/imgs/split_output.png" width="800" />
->>>>>>> 94465c4b53933392ded48e7661030898bd2e015c
 </p>
 
 ### Build, train and evaluate a model
@@ -335,11 +293,7 @@ model.cross_validate(dataset, Metric(roc_auc_score), folds=3)
 ```
 
 <p align="left">
-<<<<<<< HEAD
-  <img src="https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/src/docs/imgs/cross_validation_output.png?token=AGEFRGMVOC546LOEGLVEZP3AXXXDA" width="800" />
-=======
   <img src="https://github.com/BioSystemsUM/DeepMol/blob/f392e01156625c2b81eede3c8e95a501faded30e/src/docs/imgs/cross_validation_output.png" width="800" />
->>>>>>> 94465c4b53933392ded48e7661030898bd2e015c
 </p>
 
 ```python
@@ -361,11 +315,7 @@ test_score = model.evaluate(test_dataset, metrics)
 ```
 
 <p align="left">
-<<<<<<< HEAD
-  <img src="https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/src/docs/imgs/evaluate_output.png?token=AGEFRGPO25CGSP6Y73N5OUTAXXXI4" width="800" />
-=======
   <img src="https://github.com/BioSystemsUM/DeepMol/blob/f392e01156625c2b81eede3c8e95a501faded30e/src/docs/imgs/evaluate_output.png" width="800" />
->>>>>>> 94465c4b53933392ded48e7661030898bd2e015c
 </p>
 
 #### Keras model example
@@ -487,11 +437,7 @@ shap_calc.computePermutationShap()
 ```
 
 <p align="left">
-<<<<<<< HEAD
-  <img src="https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/src/docs/imgs/calc_shap_output.png?token=AGEFRGJLVT53EUXH5MKZU23AX4YPU" width="800" />
-=======
   <img src="https://github.com/BioSystemsUM/DeepMol/blob/f392e01156625c2b81eede3c8e95a501faded30e/src/docs/imgs/calc_shap_output.png" width="800" />
->>>>>>> 94465c4b53933392ded48e7661030898bd2e015c
 </p>
 
 ```python
@@ -499,11 +445,7 @@ shap_calc.plotSampleExplanation(index=1, plot_type='waterfall')
 ```
 
 <p align="left">
-<<<<<<< HEAD
-  <img src="https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/src/docs/imgs/sample_explanation_output.png?token=AGEFRGO6OLU4S7ONBQLJC6TAX4YRW" width="800" />
-=======
   <img src="https://github.com/BioSystemsUM/DeepMol/blob/f392e01156625c2b81eede3c8e95a501faded30e/src/docs/imgs/sample_explanation_output.png" width="800" />
->>>>>>> 94465c4b53933392ded48e7661030898bd2e015c
 </p>
 
 ```python
@@ -511,11 +453,7 @@ shap_calc.plotFeatureExplanation(index=115)
 ```
 
 <p align="left">
-<<<<<<< HEAD
-  <img src="https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/src/docs/imgs/feature_explanation_output.png?token=AGEFRGOFBTBJJ2ZRR7WSKPLAX4YTG" width="800" />
-=======
   <img src="https://github.com/BioSystemsUM/DeepMol/blob/f392e01156625c2b81eede3c8e95a501faded30e/src/docs/imgs/feature_explanation_output.png" width="800" />
->>>>>>> 94465c4b53933392ded48e7661030898bd2e015c
 </p>
 
 #### Draw relevant features
@@ -543,11 +481,7 @@ smi = test_dataset.mols[mol_number]
 draw_MACCS_Pattern(smi, patt_number)
 ```
 <p align="left">
-<<<<<<< HEAD
-  <img src="https://raw.githubusercontent.com/BioSystemsUM/DeepMol/master/src/docs/imgs/draw_maccs_output.png?token=AGEFRGJU6BFUED72D7W6BX3AX4YVE" width="800" />
-=======
   <img src="https://github.com/BioSystemsUM/DeepMol/blob/f392e01156625c2b81eede3c8e95a501faded30e/src/docs/imgs/draw_maccs_output.png" width="800" />
->>>>>>> 94465c4b53933392ded48e7661030898bd2e015c
 </p>
 
 

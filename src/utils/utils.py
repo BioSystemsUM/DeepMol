@@ -8,10 +8,6 @@ import gzip
 import pickle
 import numpy as np
 
-from deepchem.trans import DAGTransformer, IRVTransformer
-from deepchem.data import NumpyDataset
-from Datasets.Datasets import Dataset
-
 
 def load_pickle_file(input_file: str) -> Any:
     """Load from single, possibly gzipped, pickle file.
@@ -107,6 +103,15 @@ def normalize_labels_shape(y_pred):
             print(i)
             labels.append(int(round(i[0])))
     return np.array(labels)
+
+
+'''author: Bruno Pereira
+date: 28/04/2021
+'''
+
+from deepchem.trans import DAGTransformer, IRVTransformer
+from deepchem.data import NumpyDataset
+from Datasets.Datasets import Dataset
 
 def dag_transformation(dataset: Dataset, max_atoms: int = 10):
     '''Function to transform ConvMol adjacency lists to DAG calculation orders.

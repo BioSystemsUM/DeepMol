@@ -20,17 +20,44 @@ import traceback
 def _no_conformers_message(e):
     exc = traceback.format_exc()
 
-    if isinstance(e, RuntimeError) and \
-            "molecule has no conformers" in exc:
+    if isinstance(e, RuntimeError) and "molecule has no conformers" in exc \
+          or isinstance(e, ValueError) and "Bad Conformer Id" in exc:
         print("You have to generate molecular conformers for each molecule. \n"
-              "You can execute the following method: \n"
-              "rdkit3DDescriptors.generate_conformers_to_sdf_file(dataset: Dataset, file_path: str,"
-              " n_conformations: int,max_iterations: int, threads: int, timeout_per_molecule: int) \n"
-              "\n"
-              "The result will be stored in a SDF format file which can be loaded with the "
-              "method: loaders.Loaders.SDFLoader()")
+                           "You can execute the following method: \n"
+                           "rdkit3DDescriptors.generate_conformers_to_sdf_file(dataset: Dataset, file_path: str,"
+                           " n_conformations: int,max_iterations: int, threads: int, timeout_per_molecule: int) \n"
+                           "The result will be stored in a SDF format file which can be loaded with the "
+                           "method: loaders.Loaders.SDFLoader()")
 
         exit(1)
+
+
+def check_atoms_coordinates(mol):
+    """
+        Function to check if a molecule contains zero coordinates in all atoms.
+        Then this molecule must be eliminated.
+        Returns True if molecules is OK and False if molecule contains zero coordinates.
+        Example:
+            # Load  test set to a frame
+            sdf = 'miniset.sdf'
+            df = pt.LoadSDF(sdf, molColName='mol3DProt')
+            ## Checking if molecule contains only ZERO coordinates,
+           ##  then remove that molecules from dataset
+            df['check_coordinates'] = [checkAtomsCoordinates(x) for x in df.mol3DProt]
+            df_eliminated_mols = dfl[df.check_coordinates == False]
+            df = df[df.check_coordinates == True]
+            df.drop(columns=['check_coordinates'], inplace=True)
+            print('final minitest set:', df.shape[0])
+            print('minitest eliminated:', df_eliminated_mols.shape[0])
+    """
+    conf = mol.GetConformer()
+    position = []
+    for i in range(conf.GetNumAtoms()):
+        pos = conf.GetAtomPosition(i)
+        position.append([pos.x, pos.y, pos.z])
+    position = np.array(position)
+    if not np.any(position):
+        raise RuntimeError("molecule has no conformers")
 
 
 def get_all_3D_descriptors(mol):
@@ -59,7 +86,6 @@ def get_all_3D_descriptors(mol):
                     print('error in molecule: ' + str(mol))
                     all_descriptors = np.empty(size, dtype=float)
                     all_descriptors[:] = np.NaN
-
                     break
 
         except Exception:
@@ -76,7 +102,7 @@ class ThreeDimensionalMoleculeGenerator:
     def __init__(self, n_conformations: int = 20,
                  max_iterations: int = 2000,
                  threads: int = 1,
-                 timeout_per_molecule: int = 12):
+                 timeout_per_molecule: int = 40):
         """
         Class to generate three dimensional conformers and optimize them
 
@@ -159,7 +185,8 @@ class ThreeDimensionalMoleculeGenerator:
 
         return mol
 
-#TODO : check whether sdf file is being correctly exported for multi-class classification
+
+# TODO : check whether sdf file is being correctly exported for multi-class classification
 def generate_conformers_to_sdf_file(dataset: Dataset, file_path: str, n_conformations: int = 20,
                                     max_iterations: int = 2000, threads: int = 1, timeout_per_molecule: int = 12,
                                     ETKG_version: int = 1, optimization_mode: str = "MMFF94"):
@@ -215,7 +242,7 @@ def generate_conformers_to_sdf_file(dataset: Dataset, file_path: str, n_conforma
     final_set_with_conformations = []
 
     for i in range(mol_set.shape[0]):
-        action_thread = Thread(target=generate_conformers, args=(mol_set[i], ETKG_version, optimization_mode, ))
+        action_thread = Thread(target=generate_conformers, args=(mol_set[i], ETKG_version, optimization_mode,))
         action_thread.start()
 
         m2 = my_queue.get(True, timeout=timeout_per_molecule)
@@ -255,6 +282,7 @@ class All3DDescriptors(MolecularFeaturizer):
         size = 639
 
         try:
+            check_atoms_coordinates(mol)
             fp = get_all_3D_descriptors(mol)
 
         except Exception as e:
@@ -293,6 +321,7 @@ class AutoCorr3D(MolecularFeaturizer):
         """
 
         try:
+            check_atoms_coordinates(mol)
             fp = rdMolDescriptors.CalcAUTOCORR3D(mol)
 
         except Exception as e:
@@ -330,6 +359,7 @@ class RadialDistributionFunction(MolecularFeaturizer):
         """
 
         try:
+            check_atoms_coordinates(mol)
             fp = rdMolDescriptors.CalcRDF(mol)
 
         except Exception as e:
@@ -365,6 +395,7 @@ class PlaneOfBestFit(MolecularFeaturizer):
         """
 
         try:
+            check_atoms_coordinates(mol)
             fp = [rdMolDescriptors.CalcPBF(mol)]
 
         except Exception as e:
@@ -400,6 +431,7 @@ class MORSE(MolecularFeaturizer):
         """
 
         try:
+            check_atoms_coordinates(mol)
             fp = rdMolDescriptors.CalcMORSE(mol)
 
         except Exception as e:
@@ -436,6 +468,7 @@ class WHIM(MolecularFeaturizer):
         """
 
         try:
+            check_atoms_coordinates(mol)
             fp = rdMolDescriptors.CalcWHIM(mol)
 
         except Exception as e:
@@ -473,6 +506,7 @@ class RadiusOfGyration(MolecularFeaturizer):
         """
 
         try:
+            check_atoms_coordinates(mol)
             fp = [rdMolDescriptors.CalcRadiusOfGyration(mol)]
 
         except Exception as e:
@@ -510,6 +544,7 @@ class InertialShapeFactor(MolecularFeaturizer):
         """
 
         try:
+            check_atoms_coordinates(mol)
             fp = [rdMolDescriptors.CalcInertialShapeFactor(mol)]
 
         except Exception as e:
@@ -546,6 +581,7 @@ class Eccentricity(MolecularFeaturizer):
         """
 
         try:
+            check_atoms_coordinates(mol)
             fp = [rdMolDescriptors.CalcEccentricity(mol)]
 
         except Exception as e:
@@ -582,6 +618,7 @@ class Asphericity(MolecularFeaturizer):
         """
 
         try:
+            check_atoms_coordinates(mol)
             fp = [rdMolDescriptors.CalcAsphericity(mol)]
 
         except Exception as e:
@@ -618,6 +655,7 @@ class SpherocityIndex(MolecularFeaturizer):
         """
 
         try:
+            check_atoms_coordinates(mol)
             fp = [rdMolDescriptors.CalcSpherocityIndex(mol)]
 
         except Exception as e:
@@ -653,6 +691,8 @@ class PrincipalMomentsOfInertia(MolecularFeaturizer):
         """
 
         try:
+            check_atoms_coordinates(mol)
+
             pmi1 = [rdMolDescriptors.CalcPMI1(mol)]
             pmi2 = [rdMolDescriptors.CalcPMI2(mol)]
             pmi3 = [rdMolDescriptors.CalcPMI3(mol)]
@@ -695,6 +735,7 @@ class NormalizedPrincipalMomentsRatios(MolecularFeaturizer):
         """
 
         try:
+            check_atoms_coordinates(mol)
             npr1 = [rdMolDescriptors.CalcNPR1(mol)]
             npr2 = [rdMolDescriptors.CalcNPR2(mol)]
 

@@ -46,6 +46,12 @@ class TestSdfImporter(TestCase):
         assert len(dataset.y) == 100
         assert len(dataset.X) == 100
 
+    def test_2_sdf_importer(self):
+        loader = SDFLoader("../data/A2780.sdf", "ChEMBL_ID", labels_fields=["pIC50"])
+        dataset = loader.create_dataset()
+
+        assert len(dataset.X) == 2255
+
 
 class TestRdkit3DDescriptors(TestCase):
 

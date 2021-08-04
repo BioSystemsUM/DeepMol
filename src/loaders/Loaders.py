@@ -249,6 +249,8 @@ class SDFLoader(object):
             raise ValueError("User features must be a list of string containing "
                              "the features fields or None.")
 
+        self._mols_handler = None
+
         self.dataset_path = dataset_path
         self.id_field = id_field
         self.labels_fields = labels_fields
@@ -280,11 +282,11 @@ class SDFLoader(object):
 
     @property
     def mols_handler(self):
-        return self.mols_handler
+        return self._mols_handler
 
     @mols_handler.setter
     def mols_handler(self, value):
-        self.mols_handler = value
+        self._mols_handler = value
 
     @staticmethod
     def _get_dataset(dataset_path):
@@ -300,36 +302,6 @@ class SDFLoader(object):
         """
         return load_sdf_file(dataset_path)
 
-    @staticmethod
-    def check_atoms_coordinates(mol):
-        """
-            Function to check if a molecule contains zero coordinates in all atoms.
-            Then this molecule must be eliminated.
-            Returns True if molecules is OK and False if molecule contains zero coordinates.
-            Example:
-                # Load  test set to a frame
-                sdf = 'miniset.sdf'
-                df = pt.LoadSDF(sdf, molColName='mol3DProt')
-                ## Checking if molecule contains only ZERO coordinates,
-               ##  then remove that molecules from dataset
-                df['check_coordinates'] = [checkAtomsCoordinates(x) for x in df.mol3DProt]
-                df_eliminated_mols = dfl[df.check_coordinates == False]
-                df = df[df.check_coordinates == True]
-                df.drop(columns=['check_coordinates'], inplace=True)
-                print('final minitest set:', df.shape[0])
-                print('minitest eliminated:', df_eliminated_mols.shape[0])
-        """
-        conf = mol.GetConformer()
-        position = []
-        for i in range(conf.GetNumAtoms()):
-            pos = conf.GetAtomPosition(i)
-            position.append([pos.x, pos.y, pos.z])
-        position = np.array(position)
-        if not np.any(position):
-            return False
-        else:
-            return True
-
     def create_dataset(self, in_memory=True):
         if in_memory:
             self.mols_handler = self._get_dataset(self.dataset_path)
@@ -339,46 +311,43 @@ class SDFLoader(object):
             mols = []
             for mol in self.mols_handler:
 
-                viable = self.check_atoms_coordinates(mol)
+                mols.append(mol)
+                mol_feature = []
+                if self.features_fields is not None:
 
-                if viable:
-                    mols.append(mol)
-                    mol_feature = []
-                    if self.features_fields is not None:
+                    for feature in self.features_fields:
+                        mol_feature.append(mol.GetProp(feature))
 
-                        for feature in self.features_fields:
-                            mol_feature.append(mol.GetProp(feature))
+                    X.append(mol_feature)
 
-                        X.append(mol_feature)
+                else:
+                    mol_feature = None
+                    X.append(mol_feature)
 
-                    else:
-                        mol_feature = None
-                        X.append(mol_feature)
+                if self.labels_fields is not None:
 
-                    if self.labels_fields is not None:
+                    if isinstance(self.labels_fields, list):
+                        if len(self.labels_fields) == 1:
+                            y.append(float(mol.GetProp(self.labels_fields[0])))
 
-                        if isinstance(self.labels_fields, list):
-                            if len(self.labels_fields) == 1:
-                                y.append(float(mol.GetProp(self.labels_fields[0])))
-
-                            else:
-                                mol_ys = []
-                                for label in self.labels_fields:
-                                    mol_ys.append(float(mol.GetProp(label)))
-
-                                y.append(mol_ys)
                         else:
-                            y.append(float(mol.GetProp(self.labels_fields)))
-                    else:
-                        mol_y = None
-                        y.append(mol_y)
+                            mol_ys = []
+                            for label in self.labels_fields:
+                                mol_ys.append(float(mol.GetProp(label)))
 
-                    if self.id_field is not None:
-                        mol_id = mol.GetProp(self.id_field)
-                        ids.append(mol_id)
+                            y.append(mol_ys)
                     else:
-                        mol_id = None
-                        ids.append(mol_id)
+                        y.append(float(mol.GetProp(self.labels_fields)))
+                else:
+                    mol_y = None
+                    y.append(mol_y)
+
+                if self.id_field is not None:
+                    mol_id = mol.GetProp(self.id_field)
+                    ids.append(mol_id)
+                else:
+                    mol_id = None
+                    ids.append(mol_id)
 
             X = np.array(X)
             y = np.array(y)

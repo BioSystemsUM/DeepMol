@@ -8,7 +8,8 @@ import numpy as np
 from Datasets.Datasets import Dataset
 from sklearn.base import clone
 
-#Only for sequential single input models
+
+# Only for sequential single input models
 class KerasModel(Model):
     """Wrapper class that wraps keras models.
     The `KerasModel` class provides a wrapper around keras
@@ -49,11 +50,13 @@ class KerasModel(Model):
         self.model_type = 'keras'
 
         if mode == 'classification':
-            self.model = KerasClassifier(build_fn=model_builder, epochs=epochs, batch_size=batch_size, verbose=verbose, **kwargs)
+            self.model = KerasClassifier(build_fn=model_builder, epochs=epochs, batch_size=batch_size,
+                                         verbose=verbose, **kwargs)
         elif mode == 'regression':
-            self.model = KerasRegressor(build_fn=model_builder, nb_epoch=epochs, batch_size=batch_size, verbose=verbose, **kwargs)
-        else: raise ValueError('Only classification or regression is accepted.')
-
+            self.model = KerasRegressor(build_fn=model_builder, nb_epoch=epochs, batch_size=batch_size, verbose=verbose,
+                                        **kwargs)
+        else:
+            raise ValueError('Only classification or regression is accepted.')
 
     def fit(self, dataset: Dataset) -> None:
         """Fits keras model to data.
@@ -90,7 +93,7 @@ class KerasModel(Model):
         """Makes predictions on batch of data.
         Parameters
         ----------
-        dataset: Dataset
+        X: Dataset
           Dataset to make prediction on.
         """
         return super(KerasModel, self).predict(X)
@@ -105,12 +108,13 @@ class KerasModel(Model):
         """Loads scikit-learn model from joblib file on disk."""
         self.model = load_from_disk(self.get_model_filename(self.model_dir))
     '''
+
     def cross_validate(self,
                        dataset: Dataset,
                        metric: Metric,
                        folds: int = 3):
 
-        #TODO: add option to choose between splitters
+        # TODO: add option to choose between splitters
         if self.mode == 'classification':
             splitter = SingletaskStratifiedSplitter()
         if self.mode == 'regression':
@@ -146,5 +150,5 @@ class KerasModel(Model):
                 train_score_best_model = train_score[metric.name]
                 best_model = dummy_model
 
-
-        return best_model, train_score_best_model, test_score_best_model, train_scores, test_scores, avg_train_score/folds, avg_test_score/folds
+        return best_model, train_score_best_model, test_score_best_model, train_scores, test_scores, \
+               avg_train_score / folds, avg_test_score / folds

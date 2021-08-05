@@ -1,4 +1,3 @@
-
 from typing import Optional
 
 import numpy as np
@@ -12,6 +11,7 @@ from metrics.Metrics import Metric
 from utils.utils import load_from_disk, save_to_disk
 
 from sklearn.base import clone
+
 '''
 #Some ScikitLearn non weighted models
 NON_WEIGHTED_MODELS = [
@@ -19,6 +19,7 @@ NON_WEIGHTED_MODELS = [
     LassoCV, BayesianRidge
 ]
 '''
+
 
 class SklearnModel(Model):
     """Wrapper class that wraps scikit-learn models.
@@ -30,8 +31,8 @@ class SklearnModel(Model):
     def __init__(self,
                  model: BaseEstimator,
                  mode: Optional[str] = None,
-                 model_dir: Optional[str] = None):#,
-                 #**kwargs):
+                 model_dir: Optional[str] = None):  # ,
+        # **kwargs):
         """
         Parameters
         ----------
@@ -49,7 +50,6 @@ class SklearnModel(Model):
         self.mode = mode
         self.model_dir = model_dir
         self.model_type = 'sklearn'
-
 
     def fit(self, dataset: Dataset) -> None:
         """Fits scikit-learn model to data.
@@ -109,15 +109,15 @@ class SklearnModel(Model):
                        metric: Metric,
                        folds: int = 3):
 
-        #TODO: add option to choose between splitters
-        if self.mode =='classification':
+        # TODO: add option to choose between splitters
+        if self.mode == 'classification':
             splitter = SingletaskStratifiedSplitter()
             datasets = splitter.k_fold_split(dataset, folds)
-        elif self.mode=='regression':
+        elif self.mode == 'regression':
             splitter = RandomSplitter()
             datasets = splitter.k_fold_split(dataset, folds)
-        else :
-            try :
+        else:
+            try:
                 splitter = SingletaskStratifiedSplitter()
                 datasets = splitter.k_fold_split(dataset, folds)
             except Exception as e:
@@ -134,8 +134,8 @@ class SklearnModel(Model):
         best_model = None
         split = 1
         for train_ds, test_ds in datasets:
-            print('\nSplit', str(split),':')
-            split+=1
+            print('\nSplit', str(split), ':')
+            split += 1
             dummy_model = clone(SklearnModel(model=self.model))
 
             dummy_model.fit(train_ds)
@@ -155,6 +155,4 @@ class SklearnModel(Model):
                 train_score_best_model = train_score[metric.name]
                 best_model = dummy_model
 
-
-
-        return best_model, train_score_best_model, test_score_best_model, train_scores, test_scores, avg_train_score/folds, avg_test_score/folds
+        return best_model, train_score_best_model, test_score_best_model, train_scores, test_scores, avg_train_score / folds, avg_test_score / folds

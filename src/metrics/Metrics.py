@@ -106,8 +106,8 @@ class Metric(object):
                                           "mean_absolute_error", "rms_score", "mae_score", "pearsonr",
                                           "median_absolute_error"]:
                 mode = "regression"
-        else:
-            raise ValueError("Please specify the mode of this metric. mode must be 'regression' or 'classification'")
+            else:
+                raise ValueError("Please specify the mode of this metric. mode must be 'regression' or 'classification'")
 
         self.mode = mode
         self.n_tasks = n_tasks

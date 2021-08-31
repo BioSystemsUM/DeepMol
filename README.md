@@ -29,6 +29,7 @@ operations on molecular data.
     - [Unbalanced Datasets](#unbalanced-datasets)
 - [About Us](#about-us)
 - [Citing DeepMol](#citing-deepmol)
+- [License](#licensing)
 
 
 ## Requirements

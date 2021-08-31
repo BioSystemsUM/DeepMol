@@ -11,7 +11,13 @@ from parameterOptimization.HyperparameterOpt import GridHyperparamOpt
 import preprocessing as preproc
 from imbalanced_learn.ImbalancedLearn import RandomOverSampler, SMOTEENN
 import numpy as np
+
+from standardizer.CustomStandardizer import CustomStandardizer, heavy_standardisation
 from unsupervised.baseUnsupervised import PCA
+
+
+standardizer_vr = CustomStandardizer(params=heavy_standardisation)
+
 
 #pp_ds, path = preproc.preprocess(path='data/dataset_last_version2.csv', smiles_header='Smiles', sep=';', header=0, n=None)
 #pp_ds, path = preproc.preprocess(path='data/datset_wFooDB.csv',

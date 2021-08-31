@@ -4,10 +4,12 @@ date: 28/04/2021
 
 
 import numpy as np
-import deepchem as dc
+from rdkit.Chem.rdchem import Mol
+
 from Datasets.Datasets import Dataset
 from deepchem.utils.conformers import ConformerGenerator
-from  deepchem.feat import RDKitDescriptors, SmilesToImage, SmilesToSeq, CoulombMatrix, CoulombMatrixEig, ConvMolFeaturizer, WeaveFeaturizer, MolGraphConvFeaturizer
+from deepchem.feat import RDKitDescriptors, SmilesToImage, SmilesToSeq, CoulombMatrix, CoulombMatrixEig, \
+    ConvMolFeaturizer, WeaveFeaturizer, MolGraphConvFeaturizer, RawFeaturizer
 from compoundFeaturization.baseFeaturizer import MolecularFeaturizer
 from rdkit import Chem
 from typing import List, Any, Optional, Dict, Iterable
@@ -86,7 +88,13 @@ class ConvMolFeat(MolecularFeaturizer):
     def featurize(self, dataset: Dataset, log_every_n = 1000):
         # obtain new SMILE's strings
         print('Converting SMILES to Mol')
-        new_smiles = [Chem.MolFromSmiles(mol) for mol in dataset.mols]
+
+        if isinstance(dataset.mols[0], str):
+            rdkit_mols = [Chem.MolFromSmiles(mol) for mol in dataset.mols]
+        elif isinstance(dataset.mols[0], Mol):
+            rdkit_mols = dataset.mols
+        else:
+            rdkit_mols = None
 
         #featurization process using DeepChem featurizer
         print('Featurizing datapoints')
@@ -94,8 +102,8 @@ class ConvMolFeat(MolecularFeaturizer):
                 master_atom = self.master_atom,
                 use_chirality = self.use_chirality,
                 atom_properties = self.atom_properties,
-                per_atom_fragmentation = self.per_atom_fragmentation).featurize(new_smiles)
-        
+                per_atom_fragmentation = self.per_atom_fragmentation).featurize(rdkit_mols)
+
         #identify which rows did not get featurized
         indexes = []
         for i, feat in enumerate(dataset.X):
@@ -151,7 +159,12 @@ class WeaveFeat(MolecularFeaturizer):
     def featurize(self, dataset: Dataset, log_every_n = 1000):
         # obtain new SMILE's strings
         print('Converting SMILES to Mol')
-        new_smiles = [Chem.MolFromSmiles(mol) for mol in dataset.mols]
+        if isinstance(dataset.mols[0], str):
+            rdkit_mols = [Chem.MolFromSmiles(mol) for mol in dataset.mols]
+        elif isinstance(dataset.mols[0], Mol):
+            rdkit_mols = dataset.mols
+        else:
+            rdkit_mols = None
 
         #featurization process using DeepChem featurizer
         print('Featurizing datapoints')
@@ -159,7 +172,7 @@ class WeaveFeat(MolecularFeaturizer):
                 graph_distance = self.graph_distance, 
                 explicit_H = self.explicit_H, 
                 use_chirality = self.use_chirality,
-                max_pair_distance = self.max_pair_distance).featurize(new_smiles)
+                max_pair_distance = self.max_pair_distance).featurize(rdkit_mols)
         
         #identify which rows did not get featurized
         indexes = []
@@ -200,14 +213,20 @@ class MolGraphConvFeat(MolecularFeaturizer):
     def featurize(self, dataset: Dataset, log_every_n = 1000):
        # obtain new SMILE's strings
         print('Converting SMILES to Mol')
-        new_smiles = [Chem.MolFromSmiles(mol) for mol in dataset.mols]
+
+        if isinstance(dataset.mols[0], str):
+            rdkit_mols = [Chem.MolFromSmiles(mol) for mol in dataset.mols]
+        elif isinstance(dataset.mols[0], Mol):
+            rdkit_mols = dataset.mols
+        else:
+            rdkit_mols = None
 
         #featurization process using DeepChem featurizer
         print('Featurizing datapoints')
         dataset.X = MolGraphConvFeaturizer(
                 use_edges = self.use_edges,  
                 use_chirality = self.use_chirality,
-                use_partial_charge = self.use_partial_charge).featurize(new_smiles)
+                use_partial_charge = self.use_partial_charge).featurize(rdkit_mols)
         
         #identify which rows did not get featurized
         indexes = []
@@ -261,14 +280,19 @@ class CoulombFeat(MolecularFeaturizer):
     def featurize(self, dataset: Dataset, max_conformers: int = 1, log_every_n = 1000):
         # obtain new SMILE's strings
         print('Converting SMILES to Mol')
-        new_smiles = [Chem.MolFromSmiles(mol) for mol in dataset.mols]
+        if isinstance(dataset.mols[0], str):
+            rdkit_mols = [Chem.MolFromSmiles(mol) for mol in dataset.mols]
+        elif isinstance(dataset.mols[0], Mol):
+            rdkit_mols = dataset.mols
+        else:
+            rdkit_mols = None
         
         generator = ConformerGenerator(max_conformers = max_conformers)
         
         # TO USE in case to add option for the software to find the parameter max_atoms
         # maximum_number_atoms = find_maximum_number_atoms(new_smiles)
         
-        new_conformers = get_conformers(new_smiles, generator)
+        new_conformers = get_conformers(rdkit_mols, generator)
         #featurization process using DeepChem featurizer
         print('Featurizing datapoints')
         featurizer = CoulombMatrix(
@@ -332,14 +356,19 @@ class CoulombEigFeat(MolecularFeaturizer):
     def featurize(self, dataset: Dataset, max_conformers: int = 1, log_every_n = 1000):
         # obtain new SMILE's strings
         print('Converting SMILES to Mol')
-        new_smiles = [Chem.MolFromSmiles(mol) for mol in dataset.mols]
+        if isinstance(dataset.mols[0], str):
+            rdkit_mols = [Chem.MolFromSmiles(mol) for mol in dataset.mols]
+        elif isinstance(dataset.mols[0], Mol):
+            rdkit_mols = dataset.mols
+        else:
+            rdkit_mols = None
         
         generator = ConformerGenerator(max_conformers = max_conformers)
         
         # TO USE in case to add option for the software to find the parameter max_atoms
         # maximum_number_atoms = find_maximum_number_atoms(new_smiles)
         
-        new_conformers = get_conformers(new_smiles, generator)
+        new_conformers = get_conformers(rdkit_mols, generator)
         #featurization process using DeepChem featurizer
         print('Featurizing datapoints')
         featurizer = CoulombMatrixEig(
@@ -411,7 +440,12 @@ class SmileImageFeat(MolecularFeaturizer):
     def featurize(self, dataset: Dataset, log_every_n = 1000):
         # obtain new SMILE's strings
         print('Converting SMILES to Mol')
-        new_smiles = [Chem.MolFromSmiles(mol) for mol in dataset.mols]
+        if isinstance(dataset.mols[0], str):
+            rdkit_mols = [Chem.MolFromSmiles(mol) for mol in dataset.mols]
+        elif isinstance(dataset.mols[0], Mol):
+            rdkit_mols = dataset.mols
+        else:
+            rdkit_mols = None
 
         #featurization process using DeepChem featurizer
         print('Featurizing datapoints')
@@ -419,7 +453,7 @@ class SmileImageFeat(MolecularFeaturizer):
                 img_size = self.img_size,
                 max_len = self.max_len,
                 res = self.res,
-                img_spec = self.img_spec).featurize(new_smiles)
+                img_spec = self.img_spec).featurize(rdkit_mols)
         
         #identify which rows did not get featurized
         indexes = []
@@ -460,20 +494,33 @@ class SmilesSeqFeat(MolecularFeaturizer):
     def featurize(self, dataset: Dataset, log_every_n = 1000):
         # Getting the dictionary if it is None
         if self.char_to_idx == None:
-            self.char_to_idx = get_dictionary_from_smiles(dataset.mols, self.max_len)
+
+            if isinstance(dataset.mols[0], Mol):
+                smiles = [Chem.MolToSmiles(mol) for mol in dataset.mols]
+            elif isinstance(dataset.mols[0], str):
+                smiles = dataset.mols
+            else:
+                smiles = None
+
+            self.char_to_idx = get_dictionary_from_smiles(smiles, self.max_len)
         
         dataset.dictionary = self.char_to_idx
 
         # obtain new SMILE's strings
         print('Converting SMILES to Mol')
-        new_smiles = [Chem.MolFromSmiles(mol) for mol in dataset.mols]
+        if isinstance(dataset.mols[0], str):
+            rdkit_mols = [Chem.MolFromSmiles(mol) for mol in dataset.mols]
+        elif isinstance(dataset.mols[0], Mol):
+            rdkit_mols = dataset.mols
+        else:
+            rdkit_mols = None
 
         #featurization process using DeepChem featurizer
         print('Featurizing datapoints')
         dataset.X = SmilesToSeq(
                 char_to_idx = self.char_to_idx,
                 max_len = self.max_len,
-                pad_len = self.pad_len).featurize(new_smiles)
+                pad_len = self.pad_len).featurize(rdkit_mols)
 
         #identify which rows did not get featurized
         indexes = []
@@ -509,6 +556,20 @@ class CGCNNFeat():
             raise ImportError("This class requires pymatgen to be installed")
         
         pass
-        
 
 
+class RawFeat(MolecularFeaturizer):
+
+    def featurize(self, dataset: Dataset, log_every_n=1000):
+
+        if isinstance(dataset.mols[0], Mol):
+            smiles = [Chem.MolToSmiles(mol) for mol in dataset.mols]
+        elif isinstance(dataset.mols[0], str):
+            smiles = dataset.mols
+        else:
+            smiles = None
+
+        print('Featurizing datapoints')
+        dataset.X = RawFeaturizer().featurize(smiles)
+        dataset.ids = smiles # this is needed when calling the build_char_dict method (TextCNNModel)
+        return dataset

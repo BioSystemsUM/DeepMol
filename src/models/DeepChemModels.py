@@ -3,22 +3,20 @@ date: 28/04/2021
 '''
 
 
-from typing import Optional, List
+from typing import Optional, List, Type
 from copy import deepcopy
 import numpy as np
+
+from loaders.Loaders import CSVLoader
+from metrics.Metrics import Metric
 from models.Models import Model
 from Datasets.Datasets import Dataset
-from loaders.Loaders import CSVLoader
-from splitters.splitters import RandomSplitter
-from metrics.Metrics import Metric
-from deepchem.models import Model as deep_model
-#from deepchem.models import SeqToSeq, WGAN, GATModel, GCNModel, AttentiveFPModel, LCNNModel, MultitaskIRVClassifier
+from deepchem.models import Model as deep_model, TorchModel
 from deepchem.models import SeqToSeq, WGAN, MultitaskIRVClassifier
-from deepchem.data import NumpyDataset, DiskDataset
+from deepchem.data import NumpyDataset
 import deepchem as dc
-#from deepchem.trans import Transformer
 
-
+from splitters.splitters import Splitter
 from utils.utils import load_from_disk, save_to_disk
 
 
@@ -66,7 +64,7 @@ class DeepChemModel(Model):
             if model is not None:
                 raise ValueError("Can not use both model and model_instance argument at the same time.")
 
-            model = model_instance
+            model = self.model_instance
 
         super(DeepChemModel, self).__init__(model, model_dir, **kwargs)
         if 'use_weights' in kwargs:
@@ -88,22 +86,26 @@ class DeepChemModel(Model):
         else:
             self.epochs = 30
 
-
     def fit(self, dataset: Dataset) -> None:
-        """Fits scikit-learn model to data.
+        """Fits DeepChemModel to data.
         Parameters
         ----------
         dataset: Dataset
             The `Dataset` to train this model on.
         """
         # Afraid of model.fit not recognizes the input dataset as a deepchem.data.datasets.Dataset
-        
-
-        new_dataset = NumpyDataset(
+        if isinstance(self.model, TorchModel) and self.model.model.mode == 'regression':
+            y = np.expand_dims(dataset.y, axis=-1)  # need to do this so that the loss is calculated correctly
+            new_dataset = NumpyDataset(
                 X=dataset.X,
-                y=dataset.y,
-                #w = np.ones((np.shape(dataset.features)[0])),
+                y=y,
                 ids=dataset.mols)
+        else:
+            new_dataset = NumpyDataset(
+                    X=dataset.X,
+                    y=dataset.y,
+                    #w = np.ones((np.shape(dataset.features)[0])),
+                    ids=dataset.mols)
         if isinstance(self.model, SeqToSeq):
             self.model.fit_sequences(generate_sequences(epochs=self.model.epochs, train_smiles=dataset.ids))
         elif isinstance(self.model, WGAN):
@@ -111,8 +113,7 @@ class DeepChemModel(Model):
             # TODO: Wait for the implementation of iterbactches
             # self.model.fit_gan(dataset.iterbatches(5000))
         else:
-            self.model.fit(new_dataset)
-        return
+            self.model.fit(new_dataset, nb_epoch=self.epochs)
 
     def predict(self, dataset: Dataset,
                 transformers: List[dc.trans.NormalizationTransformer] = []) -> np.ndarray:
@@ -137,13 +138,18 @@ class DeepChemModel(Model):
                 #w = np.ones((np.shape(dataset.features)[0],self.n_tasks)),
                 ids=dataset.mols)
 
-        res =  self.model.predict(new_dataset,transformers)
-        
-        #if isinstance(self.model, (GATModel,GCNModel,AttentiveFPModel,LCNNModel)):
-        if not isinstance(self.model, (SeqToSeq, WGAN, MultitaskIRVClassifier)):
+        res = self.model.predict(new_dataset,transformers)
+
+        # if isinstance(self.model, (GATModel,GCNModel,AttentiveFPModel,LCNNModel)):
+        #     return res
+        # elif len(res.shape) == 2:
+        #     new_res = np.squeeze(res)
+        # else:
+        #     new_res = np.reshape(res,(res.shape[0],res.shape[2]))
+        if isinstance(self.model, TorchModel) and self.model.model.mode == 'classification':
             return res
         else:
-            new_res = np.reshape(res,(res.shape[0],res.shape[2]))
+            new_res = np.squeeze(res) # this works for all regression models (Keras and PyTorch) and is more general than the commented code above
         
         return new_res
 
@@ -168,10 +174,11 @@ class DeepChemModel(Model):
     def cross_validate(self,
                        dataset: Dataset,
                        metric: Metric,
+                       splitter: Type[Splitter],
                        transformers: List[dc.trans.NormalizationTransformer] = [],
                        folds: int = 3):
         #TODO: add option to choose between splitters (later, for now we only have random)
-        splitter = RandomSplitter()
+        #splitter = RandomSplitter()
         datasets = splitter.k_fold_split(dataset, folds)
 
         train_scores = []

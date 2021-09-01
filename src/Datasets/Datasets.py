@@ -21,23 +21,21 @@ class Dataset(object):
         """
         raise NotImplementedError()
 
-    @property
-    def mols(self) -> np.ndarray:
+    def get_mols(self) -> np.ndarray:
         """Get the molecules (e.g. SMILES format) vector for this dataset as a single numpy array."""
         raise NotImplementedError()
 
-    @property
-    def X(self) -> np.ndarray:
+    def get_X(self) -> np.ndarray:
         """Get the features array for this dataset as a single numpy array."""
         raise NotImplementedError()
 
-    @property
-    def y(self) -> np.ndarray:
+
+    def get_y(self) -> np.ndarray:
         """Get the y (tasks) vector for this dataset as a single numpy array."""
         raise NotImplementedError()
 
-    @property
-    def ids(self) -> np.ndarray:
+
+    def get_ids(self) -> np.ndarray:
         """Get the ids vector for this dataset as a single numpy array."""
         raise NotImplementedError()
 
@@ -131,23 +129,23 @@ class NumpyDataset(Dataset):
         print('Features_shape: ', self.len_X())
         print('Labels_shape: ', self.len_y())
 
-    @property
-    def mols(self) -> np.ndarray:
+
+    def get_mols(self) -> np.ndarray:
         """Get the features array for this dataset as a single numpy array."""
         return self.mols
 
-    @property
-    def X(self) -> np.ndarray:
+
+    def get_X(self) -> np.ndarray:
         """Get the X vector for this dataset as a single numpy array."""
         return self.X
 
-    @property
-    def y(self) -> np.ndarray:
+
+    def get_y(self) -> np.ndarray:
         """Get the y vector for this dataset as a single numpy array."""
         return self.y
 
-    @property
-    def ids(self) -> np.ndarray:
+
+    def get_ids(self) -> np.ndarray:
         """Get the ids vector for this dataset as a single numpy array."""
         return self.ids
 

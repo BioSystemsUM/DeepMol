@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from typing import Optional, Sequence, Iterable
-
+import warnings
 
 class Dataset(object):
     """Abstract base class for datasets
@@ -132,22 +132,38 @@ class NumpyDataset(Dataset):
 
     def get_mols(self) -> np.ndarray:
         """Get the features array for this dataset as a single numpy array."""
-        return self.mols
+        if self.mols is not None:
+            return self.mols
+        else:
+            print("Molecules not defined!")
+            return None
 
 
     def get_X(self) -> np.ndarray:
         """Get the X vector for this dataset as a single numpy array."""
-        return self.X
+        if self.X is not None:
+            return self.X
+        else:
+            print("X not defined!")
+            return None
 
 
     def get_y(self) -> np.ndarray:
         """Get the y vector for this dataset as a single numpy array."""
-        return self.y
+        if self.y is not None:
+            return self.y
+        else:
+            print("y not defined!")
+            return None
 
 
     def get_ids(self) -> np.ndarray:
         """Get the ids vector for this dataset as a single numpy array."""
-        return self.ids
+        if self.ids is not None:
+            return self.ids
+        else:
+            print("ids not defined!")
+            return None
 
     def removeElements(self, indexes):
         """Remove elements with specific indexes from the dataset

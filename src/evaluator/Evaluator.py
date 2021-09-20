@@ -19,7 +19,7 @@ def _process_metric_input(metrics: Metric) -> List[Metric]:
 
     Parameters
     ----------
-    metrics: metrics.Metric/list[dc.metrics.Metric]
+    metrics: metrics.Metric/list[metrics.Metric]
         Input metrics to process.
     Returns
     -------

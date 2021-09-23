@@ -1,9 +1,10 @@
+import os
+import pickle
 import numpy as np
 import pandas as pd
 import shap
 import matplotlib.pyplot as plt
 
-from src.models.DeepChemModels import DeepChemModel
 from src.Datasets.Datasets import NumpyDataset
 
 
@@ -17,12 +18,12 @@ class ShapValues(object):
 
     def __init__(self, dataset, model, mode):
         '''
-        :param dataset:
-        :param model:
+        :param dataset: Dataset to explain (can be the dataset the model was originally trained on or a test dataset)
+        :param model: Model to explain
         '''
 
         self.model = model
-        self.dataset = dataset
+        self.dataset = dataset # TODO: need to see if this affects
         self.mode = mode
         try:
             self.columns_names = ['feat_' + str(i + 1) for i in range(dataset.X.shape[1])]
@@ -94,12 +95,13 @@ class ShapValues(object):
             else :
                 shap.plots.beeswarm(self.shap_values, **kwargs)
 
-    def computeDeepShap(self, n_background_samples=100, plot=True, **kwargs):
+    def computeDeepShap(self, train_dataset, n_background_samples=100, plot=True, **kwargs):
+        # train_dataset is the dataset that the model was trained on
         # doesn't work for DeepChemModels (because of output shape)
         model = self.model.model.model
         shap.explainers._deep.deep_tf.op_handlers["AddV2"] = shap.explainers._deep.deep_tf.passthrough # so that it works for Keras models with Batch Normalization
-        background_inds = np.random.choice(self.dataset.X.shape[0], n_background_samples, replace=False)
-        background = self.dataset.X[background_inds]
+        background_inds = np.random.choice(train_dataset.shape[0], n_background_samples, replace=False)
+        background = train_dataset.X[background_inds] # background always taken from the training set
         explainer = shap.DeepExplainer(model, background)
         shap_vals = explainer.shap_values(self.dataset.X)
         expected_value = explainer.expected_value
@@ -111,16 +113,15 @@ class ShapValues(object):
         if plot:
             shap.plots.beeswarm(self.shap_values, **kwargs)
 
-    def computeGradientShap(self, plot=True, **kwargs):
+    def computeGradientShap(self, train_dataset, plot=True, **kwargs):
         # doesn't work for DeepChemModels (because of output shape)
         model = self.model.model.model
-        explainer = shap.GradientExplainer(model, self.dataset.X)
-        shap_vals = explainer.shap_values(self.dataset.X)
+        explainer = shap.GradientExplainer(model, train_dataset.X) # uses train_dataset as the background
 
-        expected_value = model.predict(self.dataset.X).mean(0) # TODO: change. i think this is only works for regression??
-        # https://github.com/slundberg/shap/issues/1095
+        expected_value = model.predict(train_dataset.X).mean(0)
         base_values = np.tile(expected_value, self.dataset.X.shape[0]) # repeat value across all rows
         # base_values are necessary for waterfall plots
+        shap_vals = explainer.shap_values(self.dataset.X)
         self.shap_values = shap._explanation.Explanation(values=shap_vals[0], base_values=base_values,
                                                          data=self.dataset.X, feature_names=self.columns_names)
 
@@ -150,17 +151,21 @@ class ShapValues(object):
 
 
     #TODO: check why force is not working (maybe java plugin is missing?)
-    def plotSampleExplanation(self, index=0, plot_type='waterfall', save=False):
+    def plotSampleExplanation(self, index=0, plot_type='waterfall', save=False, output_dir=None):
         if self.shap_values is None:
             print('Shap values not computed yet! Computing shap values...')
             self.computeShap(plot=False)
 
         if plot_type=='waterfall':
             # visualize the nth prediction's explanation
-            shap.plots.waterfall(self.shap_values[index])
+            shap.plots.waterfall(self.shap_values[index], max_display=20)
             if save:
+                if output_dir is not None:
+                    output_path = os.path.join(output_dir, 'shap_sample_explanation_plot.png')
+                else:
+                    output_path = 'shap_sample_explanation_plot.png'
                 plt.tight_layout()
-                plt.savefig('shap_sample_explanation_plot.png')
+                plt.savefig(output_path)
             else:
                 plt.show()
         elif plot_type=='force':
@@ -170,17 +175,22 @@ class ShapValues(object):
         else:
             raise ValueError('Plot type must be waterfall or force!')
 
-    def plotFeatureExplanation(self, index='all', save=False):
+    def plotFeatureExplanation(self, index='all', save=False, output_dir=None):
         if index=='all':
             # summarize the effects of all the features
-            shap.plots.beeswarm(self.shap_values)
+            shap.plots.beeswarm(self.shap_values, max_display=20)
         else:
             # create a dependence scatter plot to show the effect of a single feature across the whole dataset
             shap.plots.scatter(self.shap_values[:, index], color=self.shap_values)
 
         if save:
             plt.tight_layout()
-            plt.savefig('shap_feature_explanation_plot.png')
+            if output_dir is not None:
+                output_path = os.path.join(output_dir, 'shap_feature_explanation_plot.png')
+            else:
+                output_path = 'shap_feature_explanation_plot.png'
+            plt.tight_layout()
+            plt.savefig(output_path)
         else:
             plt.show()
 
@@ -190,26 +200,33 @@ class ShapValues(object):
         else:
             raise ValueError('Shap values not computed yet!')
 
-    def plotBar(self, max_display=10, save=False):
+    def plotBar(self, max_display=20, save=False, output_dir=None):
         if self.shap_values is not None:
             shap.plots.bar(self.shap_values, max_display=max_display)
             if save:
                 plt.tight_layout()
-                plt.savefig('shap_bar_plot.png')
+                plt.tight_layout()
+                if output_dir is not None:
+                    output_path = os.path.join(output_dir, 'shap_feature_explanation_plot.png')
+                else:
+                    output_path = 'shap_feature_explanation_plot.png'
+                plt.savefig(output_path)
             else:
                 plt.show()
         else:
             raise ValueError('Shap values not computed yet!')
 
-    def plot_important_fp_bits(self, index, bit):
-        # implement this here or just call the drawing functions from utils after we inspect the plots to
-        # find the most important bits?
-        pass
-
     def save_shap_values(self, output_filepath):
         df = pd.DataFrame(data=self.shap_values.values, columns=self.shap_values.feature_names)
         df.to_csv(output_filepath, index=False)
 
+    def save_explanation_object(self, output_filepath):
+        with open(output_filepath, 'wb') as f:
+            pickle.dump(self.shap_values, f)
+
+    def load_explanation_object(self, filepath):
+        with open(filepath, 'rb') as f:
+            self.shap_values = pickle.load(f)
 
     #TODO: check this again
     '''

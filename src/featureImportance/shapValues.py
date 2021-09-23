@@ -205,9 +205,9 @@ class ShapValues(object):
                 plt.tight_layout()
                 plt.tight_layout()
                 if output_dir is not None:
-                    output_path = os.path.join(output_dir, 'shap_feature_explanation_plot.png')
+                    output_path = os.path.join(output_dir, 'shap_bar_plot.png')
                 else:
-                    output_path = 'shap_feature_explanation_plot.png'
+                    output_path = 'shap_bar_plot.png'
                 plt.savefig(output_path)
             else:
                 plt.show()

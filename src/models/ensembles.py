@@ -41,6 +41,7 @@ class VotingEnsemble(object):
             featurized_dataset = featurizer.featurize(dataset)
             model.fit(featurized_dataset)
             fit_models.append(model)
+            del featurized_dataset
         self.base_models = fit_models
 
     def predict(self, dataset: Dataset):
@@ -61,6 +62,7 @@ class VotingEnsemble(object):
             if self.mode == 'classification':
                 y_pred = normalize_labels_shape(y_pred)
             predictions.append(y_pred)
+            del featurized_dataset
 
         if self.mode == 'classification':  # classification - majority class
             ensemble_pred = np.apply_along_axis(lambda x: np.argmax(np.bincount(x)),

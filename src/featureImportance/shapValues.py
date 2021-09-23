@@ -8,8 +8,6 @@ import matplotlib.pyplot as plt
 from src.Datasets.Datasets import NumpyDataset
 
 
-# TODO: allow user to explain predictions for the test set as well
-
 #TODO: Add more features (different plots and methods)
 class ShapValues(object):
     '''
@@ -100,7 +98,7 @@ class ShapValues(object):
         # doesn't work for DeepChemModels (because of output shape)
         model = self.model.model.model
         shap.explainers._deep.deep_tf.op_handlers["AddV2"] = shap.explainers._deep.deep_tf.passthrough # so that it works for Keras models with Batch Normalization
-        background_inds = np.random.choice(train_dataset.shape[0], n_background_samples, replace=False)
+        background_inds = np.random.choice(train_dataset.X.shape[0], n_background_samples, replace=False)
         background = train_dataset.X[background_inds] # background always taken from the training set
         explainer = shap.DeepExplainer(model, background)
         shap_vals = explainer.shap_values(self.dataset.X)

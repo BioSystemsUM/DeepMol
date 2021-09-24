@@ -147,7 +147,6 @@ class ShapValues(object):
         if plot:
             shap.plots.beeswarm(self.shap_values, **kwargs)
 
-
     #TODO: check why force is not working (maybe java plugin is missing?)
     def plotSampleExplanation(self, index=0, plot_type='waterfall', save=False, output_dir=None):
         if self.shap_values is None:
@@ -164,6 +163,7 @@ class ShapValues(object):
                     output_path = 'shap_sample_explanation_plot.png'
                 plt.tight_layout()
                 plt.savefig(output_path)
+                plt.close()
             else:
                 plt.show()
         elif plot_type=='force':
@@ -189,6 +189,7 @@ class ShapValues(object):
                 output_path = 'shap_feature_explanation_plot.png'
             plt.tight_layout()
             plt.savefig(output_path)
+            plt.close()
         else:
             plt.show()
 
@@ -209,6 +210,7 @@ class ShapValues(object):
                 else:
                     output_path = 'shap_bar_plot.png'
                 plt.savefig(output_path)
+                plt.close()
             else:
                 plt.show()
         else:

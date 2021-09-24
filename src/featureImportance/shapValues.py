@@ -148,14 +148,14 @@ class ShapValues(object):
             shap.plots.beeswarm(self.shap_values, **kwargs)
 
     #TODO: check why force is not working (maybe java plugin is missing?)
-    def plotSampleExplanation(self, index=0, plot_type='waterfall', save=False, output_dir=None):
+    def plotSampleExplanation(self, index=0, plot_type='waterfall', save=False, output_dir=None, max_display=20):
         if self.shap_values is None:
             print('Shap values not computed yet! Computing shap values...')
             self.computeShap(plot=False)
 
         if plot_type=='waterfall':
             # visualize the nth prediction's explanation
-            shap.plots.waterfall(self.shap_values[index], max_display=20)
+            shap.plots.waterfall(self.shap_values[index], max_display=max_display)
             if save:
                 if output_dir is not None:
                     output_path = os.path.join(output_dir, 'shap_sample_explanation_plot.png')
@@ -173,10 +173,10 @@ class ShapValues(object):
         else:
             raise ValueError('Plot type must be waterfall or force!')
 
-    def plotFeatureExplanation(self, index='all', save=False, output_dir=None):
+    def plotFeatureExplanation(self, index='all', save=False, output_dir=None, max_display=20):
         if index=='all':
             # summarize the effects of all the features
-            shap.plots.beeswarm(self.shap_values, max_display=20)
+            shap.plots.beeswarm(self.shap_values, max_display=max_display)
         else:
             # create a dependence scatter plot to show the effect of a single feature across the whole dataset
             shap.plots.scatter(self.shap_values[:, index], color=self.shap_values)

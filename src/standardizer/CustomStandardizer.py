@@ -97,8 +97,7 @@ class CustomStandardizer(MolecularStandardizer):
         'KEKULIZE': False,
         'NEUTRALISE_CHARGE_LATE': True}
 
-    def __init__(self,
-                 params: dict = simple_standardisation):
+    def __init__(self, params=None):
         """
         Parameters
         ----------
@@ -106,6 +105,9 @@ class CustomStandardizer(MolecularStandardizer):
             Parameters containing which steps of standardization to take.
         """
 
+        super().__init__()
+        if params is None:
+            params = simple_standardisation
         self.params = params
 
     def _standardize(self, mol: Any):

@@ -14,7 +14,7 @@ from compoundFeaturization.mixedDescriptors import MixedFeaturizer
 from compoundFeaturization.rdkit3DDescriptors import AutoCorr3D, All3DDescriptors, RadialDistributionFunction, \
     PlaneOfBestFit, MORSE, WHIM, RadiusOfGyration, InertialShapeFactor, Eccentricity, Asphericity, \
     SpherocityIndex, PrincipalMomentsOfInertia, NormalizedPrincipalMomentsRatios, \
-    ThreeDimensionalMoleculeGenerator, generate_conformers_to_sdf_file
+    ThreeDimensionalMoleculeGenerator, generate_conformers_to_sdf_file, get_all_3D_descriptors
 from compoundFeaturization.rdkitFingerprints import MorganFingerprint
 from loaders.Loaders import SDFLoader, CSVLoader
 from metrics.Metrics import Metric
@@ -22,8 +22,6 @@ from models.DeepChemModels import DeepChemModel
 from models.kerasModels import KerasModel
 from models.sklearnModels import SklearnModel
 from splitters.splitters import SingletaskStratifiedSplitter
-
-import pandas as pd
 
 
 class Test3DGeneration(TestCase):
@@ -58,6 +56,7 @@ class TestRdkit3DDescriptors(TestCase):
     def setUp(self) -> None:
         self.test_dataset_sdf = "../data/dataset_sweet_3D_to_test.sdf"
         self.test_dataset_to_fail = "../data/preprocessed_dataset_wfoodb.csv"
+        self.mini_dataset_to_generate_conformers = "../data/test_to_convert_to_sdf.csv"
 
     def test_autocorr3D(self):
         loader = SDFLoader(self.test_dataset_sdf, "_SourceID", labels_fields=["_SWEET"])
@@ -355,6 +354,26 @@ class TestRdkit3DDescriptors(TestCase):
             All3DDescriptors().featurize(dataset)
 
         self.assertEqual(cm.exception.code, 1)
+
+    def test_all_rdkit_descriptors_generating_conformers(self):
+        loader = CSVLoader(self.mini_dataset_to_generate_conformers,
+                           mols_field='Smiles',
+                           labels_fields='Class')
+
+        dataset = loader.create_dataset()
+
+        All3DDescriptors(generate_conformers=True).featurize(dataset)
+
+        mol = MolFromSmiles("CC(C)(C)C(O)C(O)=O")
+        generator = ThreeDimensionalMoleculeGenerator()
+        mol = generator.generate_conformers(mol)
+        mol = generator.optimize_molecular_geometry(mol)
+        descriptors = get_all_3D_descriptors(mol)
+
+        first_instance = dataset.X[0]
+
+        for i in range(len(first_instance)):
+            self.assertAlmostEqual(descriptors[i], first_instance[i], delta=1)
 
 
 class TestMixedDescriptors(TestCase):

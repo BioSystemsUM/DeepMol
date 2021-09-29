@@ -1,43 +1,112 @@
+from abc import ABC, abstractmethod
+
 import numpy as np
 import pandas as pd
-from typing import Optional, Sequence, Iterable
-import warnings
+from typing import Optional, Sequence, Iterable, Union, List
 
-class Dataset(object):
+from rdkit.Chem import Mol
+
+
+class Dataset(ABC):
     """Abstract base class for datasets
     Subclasses need to implement their own methods based on this class.
     """
 
     def __init__(self) -> None:
-        raise NotImplementedError()
+        pass
 
     def __len__(self) -> int:
         """Get the number of elements in the dataset."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
+    @property
+    @abstractmethod
+    def mols(self):
+        raise NotImplementedError
+
+    @mols.setter
+    @abstractmethod
+    def mols(self, value: Union[List[str], List[Mol]]):
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def X(self):
+        raise NotImplementedError
+
+    @X.setter
+    @abstractmethod
+    def X(self, value: np.ndarray):
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def y(self):
+        raise NotImplementedError
+
+    @y.setter
+    @abstractmethod
+    def y(self, value: np.ndarray):
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def ids(self):
+        raise NotImplementedError
+
+    @ids.setter
+    @abstractmethod
+    def ids(self, value: np.ndarray):
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def n_tasks(self):
+        raise NotImplementedError
+
+    @n_tasks.setter
+    @abstractmethod
+    def n_tasks(self, value: int):
+        raise NotImplementedError
+
+    @abstractmethod
     def get_shape(self):
         """Get the shape of all the elements of the dataset.
         mols, X, y, ids.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
+    @abstractmethod
     def get_mols(self) -> np.ndarray:
         """Get the molecules (e.g. SMILES format) vector for this dataset as a single numpy array."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
+    @abstractmethod
     def get_X(self) -> np.ndarray:
         """Get the features array for this dataset as a single numpy array."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
-
+    @abstractmethod
     def get_y(self) -> np.ndarray:
         """Get the y (tasks) vector for this dataset as a single numpy array."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
-
+    @abstractmethod
     def get_ids(self) -> np.ndarray:
         """Get the ids vector for this dataset as a single numpy array."""
-        raise NotImplementedError()
+        raise NotImplementedError
+
+    @abstractmethod
+    def removeNAs(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def removeElements(self, indexes):
+        raise NotImplementedError
+
+    @abstractmethod
+    def selectFeatures(self, indexes):
+        raise NotImplementedError
 
 
 class NumpyDataset(Dataset):
@@ -46,13 +115,51 @@ class NumpyDataset(Dataset):
       numpy arrays.
       """
 
-    def __init__(self,
-                 mols: np.ndarray,
-                 X: Optional[np.ndarray] = None,
-                 y: Optional[np.ndarray] = None,
-                 ids: Optional[np.ndarray] = None,
-                 features2keep: Optional[np.ndarray] = None,
-                 n_tasks: int = 1):
+    @property
+    def mols(self):
+        return self._mols
+
+    @mols.setter
+    def mols(self, value):
+        self._mols = value
+
+    @property
+    def n_tasks(self):
+        return self._n_tasks
+
+    @n_tasks.setter
+    def n_tasks(self, value):
+        self._n_tasks = value
+
+    @property
+    def X(self):
+        return self._X
+
+    @X.setter
+    def X(self, value):
+        self._X = value
+
+    @property
+    def y(self):
+        return self._y
+
+    @y.setter
+    def y(self, value):
+        self._y = value
+
+    @property
+    def ids(self):
+        return self._ids
+
+    @ids.setter
+    def ids(self, value):
+        self._ids = value
+
+    def __len__(self) -> int:
+        pass
+
+    def __init__(self, mols: np.ndarray, X: Optional[np.ndarray] = None, y: Optional[np.ndarray] = None,
+                 ids: Optional[np.ndarray] = None, features2keep: Optional[np.ndarray] = None, n_tasks: int = 1):
         """Initialize a NumpyDataset object.
         Parameters
         ----------
@@ -70,8 +177,7 @@ class NumpyDataset(Dataset):
         n_tasks: int, default 1
           Number of learning tasks.
         """
-        # super().__init__()
-
+        super().__init__()
         if not isinstance(mols, np.ndarray):
             mols = np.array(mols)
         if not isinstance(X, np.ndarray) and X is not None:
@@ -129,8 +235,7 @@ class NumpyDataset(Dataset):
         print('Features_shape: ', self.len_X())
         print('Labels_shape: ', self.len_y())
 
-
-    def get_mols(self) -> np.ndarray:
+    def get_mols(self) -> Union[List[str], List[Mol], None]:
         """Get the features array for this dataset as a single numpy array."""
         if self.mols is not None:
             return self.mols
@@ -138,8 +243,7 @@ class NumpyDataset(Dataset):
             print("Molecules not defined!")
             return None
 
-
-    def get_X(self) -> np.ndarray:
+    def get_X(self) -> Union[np.ndarray, None]:
         """Get the X vector for this dataset as a single numpy array."""
         if self.X is not None:
             return self.X
@@ -147,8 +251,7 @@ class NumpyDataset(Dataset):
             print("X not defined!")
             return None
 
-
-    def get_y(self) -> np.ndarray:
+    def get_y(self) -> Union[np.ndarray, None]:
         """Get the y vector for this dataset as a single numpy array."""
         if self.y is not None:
             return self.y
@@ -156,8 +259,7 @@ class NumpyDataset(Dataset):
             print("y not defined!")
             return None
 
-
-    def get_ids(self) -> np.ndarray:
+    def get_ids(self) -> Union[np.ndarray, None]:
         """Get the ids vector for this dataset as a single numpy array."""
         if self.ids is not None:
             return self.ids
@@ -203,7 +305,7 @@ class NumpyDataset(Dataset):
         """Creates a new subdataset of self from a selection of indexes.
         Parameters
         ----------
-        indices: List[int]
+        indexes: List[int]
           List of indices to select.
         Returns
         -------

@@ -21,13 +21,14 @@ def _no_conformers_message(e):
     exc = traceback.format_exc()
 
     if isinstance(e, RuntimeError) and "molecule has no conformers" in exc \
-          or isinstance(e, ValueError) and "Bad Conformer Id" in exc:
+            or isinstance(e, ValueError) and "Bad Conformer Id" in exc:
         print("You have to generate molecular conformers for each molecule. \n"
-                           "You can execute the following method: \n"
-                           "rdkit3DDescriptors.generate_conformers_to_sdf_file(dataset: Dataset, file_path: str,"
-                           " n_conformations: int,max_iterations: int, threads: int, timeout_per_molecule: int) \n"
-                           "The result will be stored in a SDF format file which can be loaded with the "
-                           "method: loaders.Loaders.SDFLoader()")
+              "You can execute the following method: \n"
+              "rdkit3DDescriptors.generate_conformers_to_sdf_file(dataset: Dataset, file_path: str,"
+              " n_conformations: int,max_iterations: int, threads: int, timeout_per_molecule: int) \n"
+              "The result will be stored in a SDF format file which can be loaded with the "
+              "method: loaders.Loaders.SDFLoader()\n\n"
+              "Or set the generate_conformers parameter to True")
 
         exit(1)
 
@@ -50,14 +51,20 @@ def check_atoms_coordinates(mol):
             print('final minitest set:', df.shape[0])
             print('minitest eliminated:', df_eliminated_mols.shape[0])
     """
-    conf = mol.GetConformer()
-    position = []
-    for i in range(conf.GetNumAtoms()):
-        pos = conf.GetAtomPosition(i)
-        position.append([pos.x, pos.y, pos.z])
-    position = np.array(position)
-    if not np.any(position):
-        raise RuntimeError("molecule has no conformers")
+    try:
+        conf = mol.GetConformer()
+        position = []
+        for i in range(conf.GetNumAtoms()):
+            pos = conf.GetAtomPosition(i)
+            position.append([pos.x, pos.y, pos.z])
+        position = np.array(position)
+        if not np.any(position):
+            return False
+
+        else:
+            return True
+    except:
+        return False
 
 
 def get_all_3D_descriptors(mol):
@@ -248,9 +255,10 @@ def generate_conformers_to_sdf_file(dataset: Dataset, file_path: str, n_conforma
         m2 = my_queue.get(True, timeout=timeout_per_molecule)
 
         label = dataset.y[i]
-        mol_id = dataset.ids[i]
         m2.SetProp("_Class", "%f" % label)
-        m2.SetProp("_ID", "%f" % mol_id)
+        if dataset.ids:
+            mol_id = dataset.ids[i]
+            m2.SetProp("_ID", "%f" % mol_id)
 
         final_set_with_conformations.append(m2)
 
@@ -264,11 +272,15 @@ def generate_conformers_to_sdf_file(dataset: Dataset, file_path: str, n_conforma
 
 class All3DDescriptors(MolecularFeaturizer):
 
-    def __init__(self):
+    def __init__(self, generate_conformers=False):
+        self.generate_conformers = generate_conformers
+        if self.generate_conformers:
+            self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
+
         super().__init__()
 
     def _featurize(self, mol: Mol) -> np.ndarray:
-        """ Featurization of a molecule with all rdkit 3D featurizers
+        """ Featurization of a molecule with all rdkit 3D descriptors
         Parameters
         ----------
         mol: rdkit.Chem.rdchem.Mol
@@ -276,13 +288,20 @@ class All3DDescriptors(MolecularFeaturizer):
         Returns
         -------
         np.ndarray
-          A numpy array of all 3D featurizers from rdkit
+          A numpy array of all 3D descriptors from rdkit
         """
 
         size = 639
 
         try:
-            check_atoms_coordinates(mol)
+            has_conformers = check_atoms_coordinates(mol)
+
+            if not has_conformers and self.generate_conformers:
+                mol = self.three_dimensional_generator.generate_conformers(mol)
+                mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
+            else:
+                raise RuntimeError("molecule has no conformers")
+
             fp = get_all_3D_descriptors(mol)
 
         except Exception as e:
@@ -304,8 +323,10 @@ class AutoCorr3D(MolecularFeaturizer):
     https://doi.org/10.1002/9783527618279.ch37
     """
 
-    def __init__(self):
-
+    def __init__(self, generate_conformers=False):
+        self.generate_conformers = generate_conformers
+        if self.generate_conformers:
+            self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
         super().__init__()
 
     def _featurize(self, mol: Mol) -> np.ndarray:
@@ -321,7 +342,12 @@ class AutoCorr3D(MolecularFeaturizer):
         """
 
         try:
-            check_atoms_coordinates(mol)
+            has_conformers = check_atoms_coordinates(mol)
+
+            if not has_conformers and self.generate_conformers:
+                mol = self.three_dimensional_generator.generate_conformers(mol)
+                mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
+
             fp = rdMolDescriptors.CalcAUTOCORR3D(mol)
 
         except Exception as e:
@@ -342,8 +368,10 @@ class RadialDistributionFunction(MolecularFeaturizer):
     https://doi.org/10.1002/9783527618279.ch37
     """
 
-    def __init__(self):
-
+    def __init__(self, generate_conformers=False):
+        self.generate_conformers = generate_conformers
+        if self.generate_conformers:
+            self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
         super().__init__()
 
     def _featurize(self, mol: Mol) -> np.ndarray:
@@ -359,7 +387,12 @@ class RadialDistributionFunction(MolecularFeaturizer):
         """
 
         try:
-            check_atoms_coordinates(mol)
+            has_conformers = check_atoms_coordinates(mol)
+
+            if not has_conformers and self.generate_conformers:
+                mol = self.three_dimensional_generator.generate_conformers(mol)
+                mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
+
             fp = rdMolDescriptors.CalcRDF(mol)
 
         except Exception as e:
@@ -378,8 +411,10 @@ class PlaneOfBestFit(MolecularFeaturizer):
     Nicholas C. Firth, Nathan Brown, and Julian Blagg, JCIM 52:2516-25
     """
 
-    def __init__(self):
-
+    def __init__(self, generate_conformers=False):
+        self.generate_conformers = generate_conformers
+        if self.generate_conformers:
+            self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
         super().__init__()
 
     def _featurize(self, mol: Mol) -> np.ndarray:
@@ -395,7 +430,12 @@ class PlaneOfBestFit(MolecularFeaturizer):
         """
 
         try:
-            check_atoms_coordinates(mol)
+            has_conformers = check_atoms_coordinates(mol)
+
+            if not has_conformers and self.generate_conformers:
+                mol = self.three_dimensional_generator.generate_conformers(mol)
+                mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
+
             fp = [rdMolDescriptors.CalcPBF(mol)]
 
         except Exception as e:
@@ -414,8 +454,10 @@ class MORSE(MolecularFeaturizer):
     https://doi.org/10.1002/9783527618279.ch37
     """
 
-    def __init__(self):
-
+    def __init__(self, generate_conformers=False):
+        self.generate_conformers = generate_conformers
+        if self.generate_conformers:
+            self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
         super().__init__()
 
     def _featurize(self, mol: Mol) -> np.ndarray:
@@ -431,7 +473,12 @@ class MORSE(MolecularFeaturizer):
         """
 
         try:
-            check_atoms_coordinates(mol)
+            has_conformers = check_atoms_coordinates(mol)
+
+            if not has_conformers and self.generate_conformers:
+                mol = self.three_dimensional_generator.generate_conformers(mol)
+                mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
+
             fp = rdMolDescriptors.CalcMORSE(mol)
 
         except Exception as e:
@@ -451,8 +498,10 @@ class WHIM(MolecularFeaturizer):
     https://doi.org/10.1002/9783527618279.ch37
     """
 
-    def __init__(self):
-
+    def __init__(self, generate_conformers=False):
+        self.generate_conformers = generate_conformers
+        if self.generate_conformers:
+            self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
         super().__init__()
 
     def _featurize(self, mol: Mol) -> np.ndarray:
@@ -468,7 +517,12 @@ class WHIM(MolecularFeaturizer):
         """
 
         try:
-            check_atoms_coordinates(mol)
+            has_conformers = check_atoms_coordinates(mol)
+
+            if not has_conformers and self.generate_conformers:
+                mol = self.three_dimensional_generator.generate_conformers(mol)
+                mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
+
             fp = rdMolDescriptors.CalcWHIM(mol)
 
         except Exception as e:
@@ -489,7 +543,10 @@ class RadiusOfGyration(MolecularFeaturizer):
     https://doi.org/10.1002/9780470125861.ch5
     """
 
-    def __init__(self):
+    def __init__(self, generate_conformers=False):
+        self.generate_conformers = generate_conformers
+        if self.generate_conformers:
+            self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
 
         super().__init__()
 
@@ -506,7 +563,12 @@ class RadiusOfGyration(MolecularFeaturizer):
         """
 
         try:
-            check_atoms_coordinates(mol)
+            has_conformers = check_atoms_coordinates(mol)
+
+            if not has_conformers and self.generate_conformers:
+                mol = self.three_dimensional_generator.generate_conformers(mol)
+                mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
+
             fp = [rdMolDescriptors.CalcRadiusOfGyration(mol)]
 
         except Exception as e:
@@ -527,7 +589,10 @@ class InertialShapeFactor(MolecularFeaturizer):
     https://doi.org/10.1002/9783527618279.ch37
     """
 
-    def __init__(self):
+    def __init__(self, generate_conformers=False):
+        self.generate_conformers = generate_conformers
+        if self.generate_conformers:
+            self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
 
         super().__init__()
 
@@ -544,7 +609,12 @@ class InertialShapeFactor(MolecularFeaturizer):
         """
 
         try:
-            check_atoms_coordinates(mol)
+            has_conformers = check_atoms_coordinates(mol)
+
+            if not has_conformers and self.generate_conformers:
+                mol = self.three_dimensional_generator.generate_conformers(mol)
+                mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
+
             fp = [rdMolDescriptors.CalcInertialShapeFactor(mol)]
 
         except Exception as e:
@@ -564,8 +634,10 @@ class Eccentricity(MolecularFeaturizer):
     https://doi.org/10.1002/9780470125861.ch5
     """
 
-    def __init__(self):
-
+    def __init__(self, generate_conformers=False):
+        self.generate_conformers = generate_conformers
+        if self.generate_conformers:
+            self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
         super().__init__()
 
     def _featurize(self, mol: Mol) -> np.ndarray:
@@ -581,7 +653,12 @@ class Eccentricity(MolecularFeaturizer):
         """
 
         try:
-            check_atoms_coordinates(mol)
+            has_conformers = check_atoms_coordinates(mol)
+
+            if not has_conformers and self.generate_conformers:
+                mol = self.three_dimensional_generator.generate_conformers(mol)
+                mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
+
             fp = [rdMolDescriptors.CalcEccentricity(mol)]
 
         except Exception as e:
@@ -601,8 +678,10 @@ class Asphericity(MolecularFeaturizer):
     https://doi.org/10.1063/1.464689
     """
 
-    def __init__(self):
-
+    def __init__(self, generate_conformers=False):
+        self.generate_conformers = generate_conformers
+        if self.generate_conformers:
+            self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
         super().__init__()
 
     def _featurize(self, mol: Mol) -> np.ndarray:
@@ -618,7 +697,12 @@ class Asphericity(MolecularFeaturizer):
         """
 
         try:
-            check_atoms_coordinates(mol)
+            has_conformers = check_atoms_coordinates(mol)
+
+            if not has_conformers and self.generate_conformers:
+                mol = self.three_dimensional_generator.generate_conformers(mol)
+                mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
+
             fp = [rdMolDescriptors.CalcAsphericity(mol)]
 
         except Exception as e:
@@ -638,8 +722,10 @@ class SpherocityIndex(MolecularFeaturizer):
     https://doi.org/10.1002/9783527618279.ch37
     """
 
-    def __init__(self):
-
+    def __init__(self, generate_conformers=False):
+        self.generate_conformers = generate_conformers
+        if self.generate_conformers:
+            self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
         super().__init__()
 
     def _featurize(self, mol: Mol) -> np.ndarray:
@@ -655,7 +741,12 @@ class SpherocityIndex(MolecularFeaturizer):
         """
 
         try:
-            check_atoms_coordinates(mol)
+            has_conformers = check_atoms_coordinates(mol)
+
+            if not has_conformers and self.generate_conformers:
+                mol = self.three_dimensional_generator.generate_conformers(mol)
+                mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
+
             fp = [rdMolDescriptors.CalcSpherocityIndex(mol)]
 
         except Exception as e:
@@ -674,8 +765,10 @@ class PrincipalMomentsOfInertia(MolecularFeaturizer):
 
     """
 
-    def __init__(self):
-
+    def __init__(self, generate_conformers=False):
+        self.generate_conformers = generate_conformers
+        if self.generate_conformers:
+            self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
         super().__init__()
 
     def _featurize(self, mol: Mol) -> np.ndarray:
@@ -691,7 +784,11 @@ class PrincipalMomentsOfInertia(MolecularFeaturizer):
         """
 
         try:
-            check_atoms_coordinates(mol)
+            has_conformers = check_atoms_coordinates(mol)
+
+            if not has_conformers and self.generate_conformers:
+                mol = self.three_dimensional_generator.generate_conformers(mol)
+                mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
 
             pmi1 = [rdMolDescriptors.CalcPMI1(mol)]
             pmi2 = [rdMolDescriptors.CalcPMI2(mol)]
@@ -718,8 +815,10 @@ class NormalizedPrincipalMomentsRatios(MolecularFeaturizer):
 
     """
 
-    def __init__(self):
-
+    def __init__(self,generate_conformers=False):
+        self.generate_conformers = generate_conformers
+        if self.generate_conformers:
+            self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
         super().__init__()
 
     def _featurize(self, mol: Mol) -> np.ndarray:
@@ -735,7 +834,12 @@ class NormalizedPrincipalMomentsRatios(MolecularFeaturizer):
         """
 
         try:
-            check_atoms_coordinates(mol)
+            has_conformers = check_atoms_coordinates(mol)
+
+            if not has_conformers and self.generate_conformers:
+                mol = self.three_dimensional_generator.generate_conformers(mol)
+                mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
+
             npr1 = [rdMolDescriptors.CalcNPR1(mol)]
             npr2 = [rdMolDescriptors.CalcNPR2(mol)]
 

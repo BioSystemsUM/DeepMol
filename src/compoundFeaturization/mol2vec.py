@@ -3,7 +3,7 @@ from typing import Any, Optional
 from compoundFeaturization.baseFeaturizer import MolecularFeaturizer
 from gensim.models import word2vec
 from mol2vec.features import mol2alt_sentence, sentences2vec
-import os, sys
+
 
 class Mol2Vec(MolecularFeaturizer):
     '''Mol2Vec fingerprint implementation from https://doi.org/10.1021/acs.jcim.7b00616
@@ -15,10 +15,7 @@ class Mol2Vec(MolecularFeaturizer):
     for instance, be fed into supervised machine learning approaches to predict compound properties.
     '''
 
-    def __init__(self,
-                 pretrain_model_path: Optional[str] = None,
-                 radius: int = 1,
-                 unseen: str = 'UNK',
+    def __init__(self, pretrain_model_path: Optional[str] = None, radius: int = 1, unseen: str = 'UNK',
                  gather_method: str = 'sum'):
 
         '''
@@ -35,6 +32,7 @@ class Mol2Vec(MolecularFeaturizer):
             How to aggregate vectors of identifiers are extracted from Mol2vec. 'sum' or 'mean' is supported.
         '''
 
+        super().__init__()
         self.radius = radius
         self.unseen = unseen
         self.gather_method = gather_method
@@ -56,7 +54,7 @@ class Mol2Vec(MolecularFeaturizer):
         np.ndarray
           1D array of mol2vec fingerprint. The default length is 300.
         """
-        try :
+        try:
             sentence = self.mol2alt_sentence(mol, self.radius)
             vec_identifiers = self.sentences2vec(
                 sentence, self.model, unseen=self.unseen)

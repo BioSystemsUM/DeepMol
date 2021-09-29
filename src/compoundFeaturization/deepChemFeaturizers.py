@@ -59,7 +59,7 @@ def get_dictionary_from_smiles(smiles, max_len):
 class ConvMolFeat(MolecularFeaturizer):
     """Duvenaud graph convolution, adapted from deepchem.
     Vector of descriptors for each atom in a molecule.
-    The featurizer computes that vector of local descriptors.
+    The featurizers computes that vector of local descriptors.
     """
     
     def __init__(self, master_atom: bool = False, use_chirality: bool = False, atom_properties: Iterable[str] = [], per_atom_fragmentation: bool = False):
@@ -96,7 +96,7 @@ class ConvMolFeat(MolecularFeaturizer):
         else:
             rdkit_mols = None
 
-        #featurization process using DeepChem featurizer
+        #featurization process using DeepChem featurizers
         print('Featurizing datapoints')
         dataset.X = ConvMolFeaturizer(
                 master_atom = self.master_atom,
@@ -166,7 +166,7 @@ class WeaveFeat(MolecularFeaturizer):
         else:
             rdkit_mols = None
 
-        #featurization process using DeepChem featurizer
+        #featurization process using DeepChem featurizers
         print('Featurizing datapoints')
         dataset.X = WeaveFeaturizer(
                 graph_distance = self.graph_distance, 
@@ -221,7 +221,7 @@ class MolGraphConvFeat(MolecularFeaturizer):
         else:
             rdkit_mols = None
 
-        #featurization process using DeepChem featurizer
+        #featurization process using DeepChem featurizers
         print('Featurizing datapoints')
         dataset.X = MolGraphConvFeaturizer(
                 use_edges = self.use_edges,  
@@ -253,7 +253,7 @@ class CoulombFeat(MolecularFeaturizer):
         Parameters
         ----------
         max_atoms: int
-            The maximum number of atoms expected for molecules this featurizer will
+            The maximum number of atoms expected for molecules this featurizers will
             process.
         remove_hydrogens: Boolean
             If True, remove hydrogens before processing them. Default to False.
@@ -293,7 +293,7 @@ class CoulombFeat(MolecularFeaturizer):
         # maximum_number_atoms = find_maximum_number_atoms(new_smiles)
         
         new_conformers = get_conformers(rdkit_mols, generator)
-        #featurization process using DeepChem featurizer
+        #featurization process using DeepChem featurizers
         print('Featurizing datapoints')
         featurizer = CoulombMatrix(
                 max_atoms = self.max_atoms,  
@@ -329,7 +329,7 @@ class CoulombEigFeat(MolecularFeaturizer):
         Parameters
         ----------
         max_atoms: int
-            The maximum number of atoms expected for molecules this featurizer will
+            The maximum number of atoms expected for molecules this featurizers will
             process.
         remove_hydrogens: Boolean
             If True, remove hydrogens before processing them. Default to False.
@@ -369,7 +369,7 @@ class CoulombEigFeat(MolecularFeaturizer):
         # maximum_number_atoms = find_maximum_number_atoms(new_smiles)
         
         new_conformers = get_conformers(rdkit_mols, generator)
-        #featurization process using DeepChem featurizer
+        #featurization process using DeepChem featurizers
         print('Featurizing datapoints')
         featurizer = CoulombMatrixEig(
                 max_atoms = self.max_atoms,  
@@ -447,7 +447,7 @@ class SmileImageFeat(MolecularFeaturizer):
         else:
             rdkit_mols = None
 
-        #featurization process using DeepChem featurizer
+        #featurization process using DeepChem featurizers
         print('Featurizing datapoints')
         dataset.X = SmilesToImage(
                 img_size = self.img_size,
@@ -515,7 +515,7 @@ class SmilesSeqFeat(MolecularFeaturizer):
         else:
             rdkit_mols = None
 
-        #featurization process using DeepChem featurizer
+        #featurization process using DeepChem featurizers
         print('Featurizing datapoints')
         dataset.X = SmilesToSeq(
                 char_to_idx = self.char_to_idx,

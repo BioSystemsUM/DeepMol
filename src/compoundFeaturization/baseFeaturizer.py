@@ -1,5 +1,6 @@
+from abc import ABC, abstractmethod
+
 import numpy as np
-import pandas as pd
 
 from rdkit import Chem
 from rdkit.Chem import rdmolfiles
@@ -10,7 +11,7 @@ from sklearn.preprocessing import StandardScaler
 from Datasets.Datasets import Dataset
 
 
-class MolecularFeaturizer(object):
+class MolecularFeaturizer(ABC):
     """Abstract class for calculating a set of features for a molecule.
     A `MolecularFeaturizer` uses SMILES strings or RDKit molecule
     objects to represent molecules.
@@ -73,3 +74,8 @@ class MolecularFeaturizer(object):
             dataset.X = scaler.fit_transform(dataset.X)
 
         return dataset
+
+    @abstractmethod
+    def _featurize(self, mol: Mol):
+        raise NotImplementedError()
+

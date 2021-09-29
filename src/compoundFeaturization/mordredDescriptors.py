@@ -7,11 +7,11 @@ from compoundFeaturization.baseFeaturizer import MolecularFeaturizer
 
 
 class MordredFeaturizer(MolecularFeaturizer):
-    """Mordred featurizer
+    """Mordred featurizers
     Includes all Mordred descriptors
     """
 
-    def __init__(self, class_descriptors=descriptors, ignore_3D=False):
+    def __init__(self, class_descriptors=descriptors, ignore_3D=True):
 
         super().__init__()
         self.descriptors = class_descriptors
@@ -46,7 +46,7 @@ class MordredFeaturizer(MolecularFeaturizer):
 
 
 class Mordred3DFeaturizer(MolecularFeaturizer):
-    """Mordred featurizer
+    """Mordred featurizers
     Includes all Mordred descriptors
     """
 
@@ -134,7 +134,7 @@ class ChargedPartialSurfaceArea(MolecularFeaturizer):
 
 
 class MolecularGravitationalIndex(MolecularFeaturizer):
-    """Molecular Gravitational Index featurizer
+    """Molecular Gravitational Index featurizers
     """
 
     def __init__(self):

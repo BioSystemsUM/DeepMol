@@ -32,8 +32,6 @@ class MixedFeaturizer(MolecularFeaturizer):
 
                 final_features = np.concatenate((final_features, current_features))
 
-
-
         except Exception:
             print('error in smile: ' + str(mol))
             final_features = np.empty(80, dtype=float)

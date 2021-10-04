@@ -81,6 +81,7 @@ RUN conda install -y -c conda-forge theano && conda clean -afy
 RUN conda install -y -c anaconda notebook && conda clean -afy
 RUN conda install -y -c conda-forge mkdocs && conda clean -afy
 RUN conda install -y -c anaconda gensim=3.8.3 && conda clean -afy
+RUN conda install -y -c conda-forge shap && conda clean -afy
 RUN python3 -m pip -q --no-cache-dir install --upgrade pip
 RUN python3 -m pip -q --no-cache-dir install git+https://github.com/samoturk/mol2vec
 RUN python3 -m pip -q --no-cache-dir install cntk-gpu

@@ -141,8 +141,6 @@ class ShapValues(object):
             link = 'identity'
         explainer = shap.KernelExplainer(f, background, link=link)
         shap_values = explainer.shap_values(self.dataset.X, nsamples=nsamples)
-        print(shap_values)
-        print(type(shap_values))
 
         if plot:
             shap.plots.beeswarm(self.shap_values, **kwargs)
@@ -155,12 +153,12 @@ class ShapValues(object):
 
         if plot_type=='waterfall':
             # visualize the nth prediction's explanation
-            shap.plots.waterfall(self.shap_values[index], max_display=max_display)
+            shap.plots.waterfall(self.shap_values[index], max_display=max_display, show=False)
             if save:
                 if output_dir is not None:
-                    output_path = os.path.join(output_dir, 'shap_sample_explanation_plot.png')
+                    output_path = os.path.join(output_dir, 'shap_sample%s_explanation_plot.png' % str(index))
                 else:
-                    output_path = 'shap_sample_explanation_plot.png'
+                    output_path = 'shap_sample%s_explanation_plot.png' % str(index)
                 plt.tight_layout()
                 plt.savefig(output_path)
                 plt.close()

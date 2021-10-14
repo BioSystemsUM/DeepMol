@@ -1,5 +1,6 @@
 import os
 import pickle
+import copy
 import numpy as np
 import pandas as pd
 import shap
@@ -109,7 +110,7 @@ class ShapValues(object):
                                                          feature_names=self.columns_names)
 
         if plot:
-            shap.plots.beeswarm(self.shap_values, **kwargs)
+            shap.plots.beeswarm(copy.deepcopy(self.shap_values), **kwargs) # using a copy because beeswarm modifies shap_values for some reason
 
     def computeGradientShap(self, train_dataset, plot=True, **kwargs):
         # doesn't work for DeepChemModels (because of output shape)
@@ -124,7 +125,7 @@ class ShapValues(object):
                                                          data=self.dataset.X, feature_names=self.columns_names)
 
         if plot:
-            shap.plots.beeswarm(self.shap_values, **kwargs)
+            shap.plots.beeswarm(copy.deepcopy(self.shap_values), **kwargs)
 
     def computeKernelShap(self, n_background_samples=10, nsamples=100, plot=True, **kwargs):
 
@@ -143,7 +144,7 @@ class ShapValues(object):
         shap_values = explainer.shap_values(self.dataset.X, nsamples=nsamples)
 
         if plot:
-            shap.plots.beeswarm(self.shap_values, **kwargs)
+            shap.plots.beeswarm(copy.deepcopy(self.shap_values), **kwargs)
 
     #TODO: check why force is not working (maybe java plugin is missing?)
     def plotSampleExplanation(self, index=0, plot_type='waterfall', save=False, output_dir=None, max_display=20):
@@ -151,9 +152,11 @@ class ShapValues(object):
             print('Shap values not computed yet! Computing shap values...')
             self.computeShap(plot=False)
 
+        shap_values = copy.deepcopy(self.shap_values) # because some plotting functions like beeswarm may be modifiying the explanation object
+
         if plot_type=='waterfall':
             # visualize the nth prediction's explanation
-            shap.plots.waterfall(self.shap_values[index], max_display=max_display, show=False)
+            shap.plots.waterfall(shap_values[index], max_display=max_display, show=False)
             if save:
                 if output_dir is not None:
                     output_path = os.path.join(output_dir, 'shap_sample%s_explanation_plot.png' % str(index))
@@ -167,17 +170,19 @@ class ShapValues(object):
         elif plot_type=='force':
             shap.initjs()
             # visualize the first prediction's explanation with a force plot
-            shap.plots.force(self.shap_values[index])
+            shap.plots.force(shap_values[index])
         else:
             raise ValueError('Plot type must be waterfall or force!')
 
     def plotFeatureExplanation(self, index='all', save=False, output_dir=None, max_display=20):
+        shap_values = copy.deepcopy(self.shap_values) # because some plotting functions like beeswarm may be modifiying the explanation object
+
         if index=='all':
             # summarize the effects of all the features
-            shap.plots.beeswarm(self.shap_values, max_display=max_display)
+            shap.plots.beeswarm(shap_values, max_display=max_display)
         else:
             # create a dependence scatter plot to show the effect of a single feature across the whole dataset
-            shap.plots.scatter(self.shap_values[:, index], color=self.shap_values)
+            shap.plots.scatter(shap_values[:, index], color=self.shap_values)
 
         if save:
             plt.tight_layout()
@@ -193,13 +198,13 @@ class ShapValues(object):
 
     def plotHeatMap(self):
         if self.shap_values is not None:
-            shap.plots.heatmap(self.shap_values)
+            shap.plots.heatmap(copy.deepcopy(self.shap_values))
         else:
             raise ValueError('Shap values not computed yet!')
 
     def plotBar(self, max_display=20, save=False, output_dir=None):
         if self.shap_values is not None:
-            shap.plots.bar(self.shap_values, max_display=max_display)
+            shap.plots.bar(copy.deepcopy(self.shap_values), max_display=max_display)
             if save:
                 plt.tight_layout()
                 plt.tight_layout()

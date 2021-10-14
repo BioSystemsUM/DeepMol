@@ -59,9 +59,9 @@ class ShapValues(object):
         if plot:
             # visualize all the training set predictions
             if masker:
-                shap.plots.bar(self.shap_values, **kwargs)
+                shap.plots.bar(copy.deepcopy(self.shap_values), **kwargs)
             else:
-                shap.plots.beeswarm(self.shap_values, **kwargs)
+                shap.plots.beeswarm(copy.deepcopy(self.shap_values), **kwargs) # # using a copy because beeswarm modifies the shap values for some reason
 
     # TODO: masker not working
     # TODO: too much iterations needed (remove?)
@@ -90,9 +90,9 @@ class ShapValues(object):
         if plot:
             # visualize all the training set predictions
             if masker:
-                shap.plots.bar(self.shap_values, **kwargs)
+                shap.plots.bar(copy.deepcopy(self.shap_values), **kwargs)
             else :
-                shap.plots.beeswarm(self.shap_values, **kwargs)
+                shap.plots.beeswarm(copy.deepcopy(self.shap_values), **kwargs) # using a copy because beeswarm modifies the shap values for some reason
 
     def computeDeepShap(self, train_dataset, n_background_samples=100, plot=True, **kwargs):
         # train_dataset is the dataset that the model was trained on

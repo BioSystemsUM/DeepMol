@@ -599,7 +599,7 @@ def menu():
         opt = int(input('Option: '))
         if opt == 1:
             if ds is None:
-                dataset = CSVLoader(dataset_path='../data/preprocessed_dataset_wfoodb.csv',
+                dataset = CSVLoader(dataset_path='../src/data/preprocessed_dataset_wfoodb.csv',
                                     mols_field='Smiles',
                                     labels_fields='Class',
                                     id_field='ID')  # , shard_size=4000)

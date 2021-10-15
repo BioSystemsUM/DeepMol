@@ -8,7 +8,7 @@ from rdkit.Chem import rdmolops
 from rdkit.Chem.rdchem import Mol
 from sklearn.preprocessing import StandardScaler
 
-from Datasets.Datasets import Dataset
+from ..Datasets.Datasets import Dataset
 
 
 class MolecularFeaturizer(ABC):

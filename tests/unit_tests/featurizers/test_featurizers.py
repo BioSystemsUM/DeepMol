@@ -9,7 +9,7 @@ from loaders.Loaders import CSVLoader
 class FeaturizerTestCase(ABC):
 
     def setUp(self) -> None:
-        dir_path = os.path.join(os.path.dirname(sys.path[1]), "src")
+        dir_path = os.path.join(os.path.dirname(sys.path[3]), "src")
         dataset = os.path.join(dir_path, "data", "test_to_convert_to_sdf.csv")
         loader = CSVLoader(dataset,
                            mols_field='Standardized_Smiles',

@@ -6,7 +6,7 @@ from typing import Optional, Union, List
 
 from rdkit.Chem import SDMolSupplier
 
-from Datasets.Datasets import NumpyDataset
+from src.Datasets.Datasets import NumpyDataset
 import numpy as np
 import pandas as pd
 

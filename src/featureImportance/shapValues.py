@@ -97,6 +97,7 @@ class ShapValues(object):
     def computeDeepShap(self, train_dataset, n_background_samples=100, plot=True, **kwargs):
         # train_dataset is the dataset that the model was trained on
         # doesn't work for DeepChemModels (because of output shape)
+        # TODO: see this example to see if I can get this working with TextCNN
         model = self.model.model.model
         shap.explainers._deep.deep_tf.op_handlers["AddV2"] = shap.explainers._deep.deep_tf.passthrough # so that it works for Keras models with Batch Normalization
         background_inds = np.random.choice(train_dataset.X.shape[0], n_background_samples, replace=False)
@@ -179,13 +180,12 @@ class ShapValues(object):
 
         if index=='all':
             # summarize the effects of all the features
-            shap.plots.beeswarm(shap_values, max_display=max_display)
+            shap.plots.beeswarm(shap_values, max_display=max_display, show=False)
         else:
             # create a dependence scatter plot to show the effect of a single feature across the whole dataset
             shap.plots.scatter(shap_values[:, index], color=self.shap_values)
 
         if save:
-            plt.tight_layout()
             if output_dir is not None:
                 output_path = os.path.join(output_dir, 'shap_feature_explanation_plot.png')
             else:
@@ -204,14 +204,13 @@ class ShapValues(object):
 
     def plotBar(self, max_display=20, save=False, output_dir=None):
         if self.shap_values is not None:
-            shap.plots.bar(copy.deepcopy(self.shap_values), max_display=max_display)
+            shap.plots.bar(copy.deepcopy(self.shap_values), max_display=max_display, show=False)
             if save:
-                plt.tight_layout()
-                plt.tight_layout()
                 if output_dir is not None:
                     output_path = os.path.join(output_dir, 'shap_bar_plot.png')
                 else:
                     output_path = 'shap_bar_plot.png'
+                plt.tight_layout()
                 plt.savefig(output_path)
                 plt.close()
             else:

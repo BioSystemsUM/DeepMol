@@ -72,6 +72,7 @@ def main(dataset_dir, output_filepath, model_names, hyperparams, gpu):
 			models.append(builder(**hyperparams))
 		else:
 			models.append(KerasModel(model_builder=builder, mode=mode, **hyperparams))
+	hyperparam_vals = {x: hyperparam_vals[x] for x in model_names}
 
 	# Build ensemble
 	print('Building the ensemble')

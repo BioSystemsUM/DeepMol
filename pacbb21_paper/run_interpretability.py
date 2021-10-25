@@ -2,15 +2,13 @@ import argparse
 import os
 import pickle
 
-import numpy as np
 import pandas as pd
-import tensorflow as tf
 
 from model_build_functions import BUILDERS
 from src.loaders.Loaders import CSVLoader
 from src.models.kerasModels import KerasModel
 from src.featureImportance.shapValues import ShapValues
-from src.utils.utils import load_from_disk, normalize_labels_shape
+from src.utils.utils import load_from_disk, normalize_labels_shape, draw_morgan_bits
 from utils import get_featurizer
 
 
@@ -37,7 +35,8 @@ def main(dataset_dir, model_name, saved_model, hyperparams, gpu):
 	test_dataset.get_shape()
 
 	output_dir = os.path.join('..', 'pacbb21_paper', 'results', 'shap', dataset_name)
-	os.makedirs(output_dir)
+	if not os.path.exists(output_dir):
+		os.makedirs(output_dir)
 
 	# Featurization
 	print('Featurizing molecules')
@@ -69,7 +68,7 @@ def main(dataset_dir, model_name, saved_model, hyperparams, gpu):
 		model.fit(train_dataset)
 		# model.save()
 	else:
-		model = load_from_disk(saved_model) # not sure this would work, as this fucntion loads models saved using joblib and I don't think that works for Keras models
+		model = load_from_disk(saved_model) # not sure this would work, as this function loads models saved using joblib and I don't think that works for Keras models
 
 	# Predict values
 	predictions = model.predict(test_dataset)
@@ -89,11 +88,16 @@ def main(dataset_dir, model_name, saved_model, hyperparams, gpu):
 	                            n_background_samples=100,
 	                            plot=False)
 	# interpreter.computeGradientShap()
-	interpreter.plotFeatureExplanation(index='all', save=True, output_dir=output_dir, max_display=30)
-	interpreter.plotBar(save=True, output_dir=output_dir, max_display=30)
-	# interpreter.plotSampleExplanation(index=0, save=True, output_dir=output_dir) # need to find a good sample to explain
 	interpreter.save_explanation_object(os.path.join(output_dir, 'shap_values_explainer.pkl'))
 	interpreter.save_shap_values(os.path.join(output_dir, 'shap_values.csv'))
+	interpreter.plotFeatureExplanation(index='all', save=True, output_dir=output_dir, max_display=21)
+	interpreter.plotBar(save=True, output_dir=output_dir, max_display=21)
+	if dataset_name == 'CCRF-CEM':
+		samples = [21, 493, 90, 429]
+	elif dataset_name == '1-balance':
+		samples = [535, 536, 537, 538, 548, 555]
+	for id in samples:
+		interpreter.plotSampleExplanation(index=id, output_dir=output_dir, max_display=21, save=True)
 
 
 if __name__ == '__main__':

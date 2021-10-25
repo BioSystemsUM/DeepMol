@@ -18,7 +18,7 @@ def plot_important_morgan_bits(dataset_name, sample_id, n_top_features=10):
 	df = pd.read_csv(os.path.join('..', 'pacbb21_paper', 'data', 'split_datasets', dataset_name, 'test_%s.csv' % dataset_name))
 	smiles = df.loc[sample_id, 'mols']
 	bits_img = draw_morgan_bits(smiles, bits=important_bits, radius=2, nBits=1024)
-	with open(os.path.join('..', 'pacbb21_paper', 'results', 'shap', '1-balance', 'sample%s_important_bits.svg' % sample_id), 'w') as f:
+	with open(os.path.join('..', 'pacbb21_paper', 'results', 'shap', dataset_name, 'sample%s_important_bits.svg' % sample_id), 'w') as f:
 		f.write(bits_img)
 
 

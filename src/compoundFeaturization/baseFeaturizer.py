@@ -77,13 +77,11 @@ class MolecularFeaturizer(ABC):
         features = np.vstack(features)
         dataset.X = features
 
-        # if anyNA:
-        # TODO: where and in which manner to remove NAs????
         dataset.remove_nan(remove_nans_axis)
 
         if scaler:
             # transform data
-            dataset.X = scaler.fit_transform(dataset.X)
+            scaler.fit_transform(dataset)
             if path_to_save_scaler:
                 scaler.save_scaler(path_to_save_scaler)
 

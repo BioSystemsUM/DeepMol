@@ -1,10 +1,13 @@
+from abc import abstractmethod, ABC
+
 from Datasets.Datasets import Dataset
 from sklearn.feature_selection import VarianceThreshold, SelectKBest, chi2, SelectPercentile, RFECV, SelectFromModel
-from sklearn.ensemble import RandomForestClassifier
-import pandas as pd
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 import numpy as np
+from boruta import BorutaPy
 
-class BaseFeatureSelector(object):
+
+class BaseFeatureSelector(ABC):
     """Abstract class for feature selection.
     A `BaseFeatureSelector` uses features present in a Dataset object
     to select the most important ones. FeatureSelectors which are subclasses of
@@ -22,7 +25,7 @@ class BaseFeatureSelector(object):
         self.features = None
         self.y = None
 
-    def featureSelection(self, dataset: Dataset):
+    def select_features(self, dataset: Dataset):
         """Perform feature selection for the molecules present in the dataset.
 
         Parameters
@@ -39,13 +42,15 @@ class BaseFeatureSelector(object):
 
         self.y_fs = dataset.y
 
-        features, self.features2keep = self._featureSelector()
+        features, self.features2keep = self._select_features()
 
-        dataset.X = np.asarray(features)
-
-        dataset.features2keep = self.features2keep
+        dataset.select_features(self.features2keep)
 
         return dataset
+
+    @abstractmethod
+    def _select_features(self):
+        raise NotImplementedError
 
 
 class LowVarianceFS(BaseFeatureSelector):
@@ -62,9 +67,10 @@ class LowVarianceFS(BaseFeatureSelector):
             Features with a training-set variance lower than this threshold will be removed.
         """
 
+        super().__init__()
         self.param = threshold
 
-    def _featureSelector(self):
+    def _select_features(self):
         """Returns features and indexes of features to keep."""
         fs = np.stack(self.features_fs, axis=0)
         vt = VarianceThreshold(threshold=self.param)
@@ -89,10 +95,11 @@ class KbestFS(BaseFeatureSelector):
             or a single array with scores.
         """
 
+        super().__init__()
         self.k = k
         self.score_func = score_func
 
-    def _featureSelector(self):
+    def _select_features(self):
         """Returns features and indexes of features to keep."""
         fs = np.stack(self.features_fs, axis=0)
         kb = SelectKBest(self.score_func, k=self.k)
@@ -117,31 +124,27 @@ class PercentilFS(BaseFeatureSelector):
             or a single array with scores.
         """
 
+        super().__init__()
         self.percentil = percentil
         self.score_func = score_func
 
-    def _featureSelector(self):
+    def _select_features(self):
         """Returns features and indexes of features to keep."""
         fs = np.stack(self.features_fs, axis=0)
         sp = SelectPercentile(self.score_func, percentile=self.percentil)
         X_new = sp.fit_transform(fs, self.y_fs)
         return X_new, sp.get_support(indices=True)
 
-#TODO: takes too long to run, check if its normal or a code problem
+
+# TODO: takes too long to run, check if its normal or a code problem
 class RFECVFS(BaseFeatureSelector):
     """Class for RFECV feature selection.
 
     Feature ranking with recursive feature elimination and cross-validated selection of the best number of features.
     """
 
-    def __init__(self,
-                 estimator: callable = None,
-                 step: int or float = 1,
-                 min_features_to_select: int = 1,
-                 cv: int = None,
-                 scoring: str = None,
-                 verbose: int = 0,
-                 n_jobs: int = -1):
+    def __init__(self, estimator: callable = None, step: int or float = 1, min_features_to_select: int = 1,
+                 cv: int = None, scoring: str = None, verbose: int = 0, n_jobs: int = -1):
 
         """Initialize this Feature Selector
         Parameters
@@ -181,6 +184,7 @@ class RFECVFS(BaseFeatureSelector):
             Number of cores to run in parallel while fitting across folds. None means 1 unless in a
             joblib.parallel_backend context. -1 means using all processors. See Glossary for more details.
         """
+        super().__init__()
         if estimator is None:
             self.estimator = RandomForestClassifier(n_jobs=n_jobs)
         else:
@@ -191,7 +195,7 @@ class RFECVFS(BaseFeatureSelector):
         self.scoring = scoring
         self.verbose = verbose
 
-    def _featureSelector(self):
+    def _select_features(self):
         """Returns features and indexes of features to keep."""
         fs = np.stack(self.features_fs, axis=0)
         rfe = RFECV(self.estimator,
@@ -203,18 +207,15 @@ class RFECVFS(BaseFeatureSelector):
         X_new = rfe.fit_transform(fs, self.y_fs)
         return X_new, rfe.get_support(indices=True)
 
+
 class SelectFromModelFS(BaseFeatureSelector):
     """Class for Select From Model feature selection.
 
     Meta-transformer for selecting features based on importance weights.
     """
 
-    def __init__(self,
-                 estimator: callable = None,
-                 threshold: str or float = None,
-                 prefit: bool = False,
-                 norm_order: int = 1,
-                 max_features: int = None):
+    def __init__(self, estimator: callable = None, threshold: str or float = None, prefit: bool = False,
+                 norm_order: int = 1, max_features: int = None):
 
         """Initialize this Feature Selector
         Parameters
@@ -244,6 +245,7 @@ class SelectFromModelFS(BaseFeatureSelector):
         max_features: int or None, optional
             The maximum number of features to select. To only select based on max_features, set threshold=-np.inf
         """
+        super().__init__()
         if estimator is None:
             self.estimator = RandomForestClassifier(n_jobs=-1)
         else:
@@ -253,7 +255,7 @@ class SelectFromModelFS(BaseFeatureSelector):
         self.norm_order = norm_order
         self.max_features = max_features
 
-    def _featureSelector(self):
+    def _select_features(self):
         """Returns features and indexes of features to keep."""
         fs = np.stack(self.features_fs, axis=0)
         sfm = SelectFromModel(self.estimator,
@@ -263,3 +265,59 @@ class SelectFromModelFS(BaseFeatureSelector):
                               max_features=self.max_features)
         X_new = sfm.fit_transform(fs, self.y_fs)
         return X_new, sfm.get_support(indices=True)
+
+
+# TODO : get the task based on the output
+class BorutaAlgorithm(BaseFeatureSelector):
+
+    def __init__(self, estimator=None, task="classification",
+                 support_weak: bool = False, n_estimators=1000, perc=100, alpha=0.05,
+                 two_step=True, max_iter=100, random_state=None, verbose=0):
+
+        super().__init__()
+
+        self.support_weak = support_weak
+
+        if not estimator:
+            if task == "classification":
+                self.estimator = RandomForestClassifier(
+                    n_jobs=-1,
+                    max_depth=5
+                )
+            elif task == "regression":
+                self.estimator = RandomForestRegressor(
+                    n_jobs=-1,
+                    max_depth=5
+                )
+
+        else:
+            self.estimator = estimator
+
+        self.boruta = BorutaPy(
+            self.estimator,
+            n_estimators,
+            perc,
+            alpha,
+            two_step,
+            max_iter,
+            random_state,
+            verbose
+        )
+
+    def _select_features(self, **kwargs):
+        fs = np.stack(self.features_fs, axis=0)
+
+        self.boruta.fit(fs, self.y_fs)
+
+        X_new = self.boruta.fit_transform(fs, self.y_fs)
+
+        support = [i for i in self.boruta.support_ if i]
+        if self.support_weak:
+            weak_support = [i for i in self.boruta.support_weak_ if i]
+
+            features_to_keep = list(set.union(set(support), set(weak_support)))
+
+        else:
+            features_to_keep = support
+
+        return X_new, features_to_keep

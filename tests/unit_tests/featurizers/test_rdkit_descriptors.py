@@ -6,13 +6,45 @@ from rdkit import Chem
 from rdkit.Chem import MolFromSmiles
 from rdkit.Chem.rdMolAlign import AlignMol
 
-from compoundFeaturization.rdkit3DDescriptors import ThreeDimensionalMoleculeGenerator, All3DDescriptors, AutoCorr3D, \
+from compoundFeaturization.rdkitDescriptors import ThreeDimensionalMoleculeGenerator, All3DDescriptors, AutoCorr3D, \
     RadialDistributionFunction, PlaneOfBestFit, MORSE, WHIM, RadiusOfGyration, InertialShapeFactor, Eccentricity, \
     Asphericity, SpherocityIndex, PrincipalMomentsOfInertia, NormalizedPrincipalMomentsRatios, \
-    generate_conformers_to_sdf_file
+    generate_conformers_to_sdf_file, TwoDimensionDescriptors
 from tests.unit_tests.featurizers.test_featurizers import FeaturizerTestCase
 
 import numpy as np
+
+
+class Test2DDescriptors(FeaturizerTestCase, TestCase):
+
+    def test_featurize(self):
+        TwoDimensionDescriptors().featurize(self.mini_dataset_to_test)
+        self.assertEqual(5, self.mini_dataset_to_test.X.shape[0])
+
+        TwoDimensionDescriptors().featurize(self.dataset_to_test)
+        self.assertEqual(4294, self.dataset_to_test.X.shape[0])
+
+    def test_featurize_with_nan(self):
+
+        dataset_rows_number = len(self.mini_dataset_to_test.mols)
+        to_add = np.zeros(4)
+
+        self.mini_dataset_to_test.mols = np.concatenate((self.mini_dataset_to_test.mols, to_add))
+        self.mini_dataset_to_test.y = np.concatenate((self.mini_dataset_to_test.y, to_add))
+
+        dataset = copy(self.mini_dataset_to_test)
+        TwoDimensionDescriptors().featurize(dataset)
+        self.assertEqual(dataset_rows_number, dataset.X.shape[0])
+
+        dataset_rows_number = len(self.dataset_to_test.mols)
+        to_add = np.zeros(4)
+
+        self.dataset_to_test.mols = np.concatenate((self.dataset_to_test.mols, to_add))
+        self.dataset_to_test.y = np.concatenate((self.dataset_to_test.y, to_add))
+
+        dataset = copy(self.dataset_to_test)
+        TwoDimensionDescriptors().featurize(dataset)
+        self.assertEqual(dataset_rows_number, dataset.X.shape[0])
 
 
 class Test3DDescriptors(FeaturizerTestCase, TestCase):

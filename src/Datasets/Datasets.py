@@ -134,10 +134,19 @@ class NumpyDataset(Dataset):
 
     @property
     def X(self):
-        if self.features2keep is not None:
-            return self._X[:, self.features2keep]
 
-        return self._X
+        if self._X.size > 0:
+            if self.features2keep is not None:
+                if self.features2keep.size == 0:
+                    raise Exception("This dataset has no features")
+                else:
+                    return self._X[:, self.features2keep]
+
+            else:
+                return self._X
+
+        else:
+            raise Exception("This dataset has no features")
 
     @X.setter
     def X(self, value: Union[np.array, None]):

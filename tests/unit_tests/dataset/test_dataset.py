@@ -59,10 +59,10 @@ class TestDataset(TestCase):
         self.assertEqual(set(self.dataset_to_test.features2keep), {4, 60, 40})
 
     def test_select_features(self):
-        self.dataset_to_test.select_features([i for i in range(100)])
+        self.dataset_to_test._select_features([i for i in range(100)])
         self.assertEqual(self.dataset_to_test.X.shape[1], 100)
 
-        self.dataset_to_test.select_features([4, 60, 40, 20, 39])
+        self.dataset_to_test._select_features([4, 60, 40, 20, 39])
         self.assertEqual(self.dataset_to_test.X.shape[1], 5)
 
     def test_remove_elements(self):

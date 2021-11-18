@@ -16,12 +16,6 @@ class TestMordredDescriptors(FeaturizerTestCase, TestCase):
         self.assertEqual(dataset_rows_number, self.mini_dataset_to_test.X.shape[0])
         self.assertEqual(self.mini_dataset_to_test.X.shape[1], 1280)
 
-        dataset_rows_number = len(self.dataset_to_test.mols)
-        MordredFeaturizer().featurize(self.dataset_to_test, remove_nans_axis=1)
-
-        self.assertEqual(dataset_rows_number, self.dataset_to_test.X.shape[0])
-        self.assertEqual(self.mini_dataset_to_test.X.shape[1], 1280)
-
     def test_featurize_with_nan(self):
         dataset_rows_number = len(self.mini_dataset_to_test.mols)
         to_add = np.zeros(4)

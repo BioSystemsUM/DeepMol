@@ -2,7 +2,7 @@ from copy import copy
 from unittest import TestCase
 
 from compoundFeaturization.mixedDescriptors import MixedFeaturizer
-from compoundFeaturization.rdkit3DDescriptors import All3DDescriptors
+from compoundFeaturization.rdkitDescriptors import All3DDescriptors
 from compoundFeaturization.rdkitFingerprints import MorganFingerprint
 from tests.unit_tests.featurizers.test_featurizers import FeaturizerTestCase
 

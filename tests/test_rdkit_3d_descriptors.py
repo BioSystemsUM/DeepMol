@@ -11,7 +11,7 @@ from tensorflow.python.keras.layers import Dense, Dropout, GaussianNoise, Reshap
 from tensorflow.keras.optimizers import Adadelta, Adam, RMSprop
 
 from compoundFeaturization.mixedDescriptors import MixedFeaturizer
-from compoundFeaturization.rdkit3DDescriptors import AutoCorr3D, All3DDescriptors, RadialDistributionFunction, \
+from compoundFeaturization.rdkitDescriptors import AutoCorr3D, All3DDescriptors, RadialDistributionFunction, \
     PlaneOfBestFit, MORSE, WHIM, RadiusOfGyration, InertialShapeFactor, Eccentricity, Asphericity, \
     SpherocityIndex, PrincipalMomentsOfInertia, NormalizedPrincipalMomentsRatios, \
     ThreeDimensionalMoleculeGenerator, generate_conformers_to_sdf_file, get_all_3D_descriptors

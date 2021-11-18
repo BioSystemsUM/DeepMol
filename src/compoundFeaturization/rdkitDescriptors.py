@@ -3,8 +3,9 @@ from typing import Union
 
 from numpy import float64, int64
 from rdkit import Chem
-from rdkit.Chem import Mol, rdMolDescriptors, AllChem, MolFromSmiles
+from rdkit.Chem import Mol, rdMolDescriptors, AllChem, MolFromSmiles, Descriptors
 from rdkit.Chem.rdForceFieldHelpers import UFFOptimizeMoleculeConfs
+from rdkit.ML.Descriptors import MoleculeDescriptors
 
 from Datasets.Datasets import Dataset
 from compoundFeaturization.baseFeaturizer import MolecularFeaturizer
@@ -289,6 +290,32 @@ def generate_conformers_to_sdf_file(dataset: Dataset, file_path: str, n_conforma
         writer.write(mol)
 
     writer.close()
+
+
+class TwoDimensionDescriptors(MolecularFeaturizer):
+
+    def __init__(self):
+        super().__init__()
+
+    def _featurize(self, mol: Mol):
+
+        calc = MoleculeDescriptors.MolecularDescriptorCalculator([x[0] for x in Descriptors._descList])
+        # header = calc.GetDescriptorNames()
+
+        try:
+            descriptors = calc.CalcDescriptors(mol)
+
+        except Exception as e:
+
+            print('error in smile: ' + str(mol))
+            _no_conformers_message(e)
+
+            descriptors = np.empty(208, dtype=float)
+            descriptors[:] = np.NaN
+
+        descriptors = np.asarray(descriptors, dtype=np.float)
+
+        return descriptors
 
 
 class ThreeDimensionDescriptor(MolecularFeaturizer):

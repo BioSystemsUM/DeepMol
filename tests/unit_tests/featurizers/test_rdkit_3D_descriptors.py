@@ -54,131 +54,131 @@ class Test3DDescriptors(FeaturizerTestCase, TestCase):
 
         ETKG_version_combinations = [1, 2, 3]
         geometry_optimization_method = ["MMFF94", "UFF"]
-        for smiles in self.dataset_to_test.mols:
+        for smiles in self.mini_dataset_to_test.mols:
             for version in ETKG_version_combinations:
                 for method in geometry_optimization_method:
                     self.molecular_geometry_generation_and_optimization(smiles, method, version, new_generator)
 
     def test_featurize(self):
-        dataset_rows_number = len(self.dataset_to_test.mols)
-        All3DDescriptors(generate_conformers=True).featurize(self.dataset_to_test)
-        self.assertEqual(dataset_rows_number, self.dataset_to_test.X.shape[0])
+        dataset_rows_number = len(self.mini_dataset_to_test.mols)
+        All3DDescriptors(mandatory_generation_of_conformers=True).featurize(self.mini_dataset_to_test)
+        self.assertEqual(dataset_rows_number, self.mini_dataset_to_test.X.shape[0])
 
     def test_featurize_with_nan(self):
-        dataset_rows_number = len(self.dataset_to_test.mols)
+        dataset_rows_number = len(self.mini_dataset_to_test.mols)
         to_add = np.zeros(4)
 
-        self.dataset_to_test.mols = np.concatenate((self.dataset_to_test.mols, to_add))
-        self.dataset_to_test.y = np.concatenate((self.dataset_to_test.y, to_add))
+        self.mini_dataset_to_test.mols = np.concatenate((self.mini_dataset_to_test.mols, to_add))
+        self.mini_dataset_to_test.y = np.concatenate((self.mini_dataset_to_test.y, to_add))
 
-        dataset = copy(self.dataset_to_test)
-        All3DDescriptors(generate_conformers=True).featurize(dataset)
+        dataset = copy(self.mini_dataset_to_test)
+        All3DDescriptors(mandatory_generation_of_conformers=True).featurize(dataset)
         self.assertEqual(dataset_rows_number, dataset.X.shape[0])
 
-        AutoCorr3D(generate_conformers=True).featurize(dataset)
+        AutoCorr3D(mandatory_generation_of_conformers=True).featurize(dataset)
         self.assertEqual(dataset_rows_number, dataset.X.shape[0])
 
-        RadialDistributionFunction(generate_conformers=True).featurize(dataset)
+        RadialDistributionFunction(mandatory_generation_of_conformers=True).featurize(dataset)
         self.assertEqual(dataset_rows_number, dataset.X.shape[0])
 
-        PlaneOfBestFit(generate_conformers=True).featurize(dataset)
+        PlaneOfBestFit(mandatory_generation_of_conformers=True).featurize(dataset)
         self.assertEqual(dataset_rows_number, dataset.X.shape[0])
 
-        MORSE(generate_conformers=True).featurize(dataset)
+        MORSE(mandatory_generation_of_conformers=True).featurize(dataset)
         self.assertEqual(dataset_rows_number, dataset.X.shape[0])
 
-        WHIM(generate_conformers=True).featurize(dataset)
+        WHIM(mandatory_generation_of_conformers=True).featurize(dataset)
         self.assertEqual(dataset_rows_number, dataset.X.shape[0])
 
-        RadiusOfGyration(generate_conformers=True).featurize(dataset)
+        RadiusOfGyration(mandatory_generation_of_conformers=True).featurize(dataset)
         self.assertEqual(dataset_rows_number, dataset.X.shape[0])
 
-        InertialShapeFactor(generate_conformers=True).featurize(dataset)
+        InertialShapeFactor(mandatory_generation_of_conformers=True).featurize(dataset)
         self.assertEqual(dataset_rows_number, dataset.X.shape[0])
 
-        Eccentricity(generate_conformers=True).featurize(dataset)
+        Eccentricity(mandatory_generation_of_conformers=True).featurize(dataset)
         self.assertEqual(dataset_rows_number, dataset.X.shape[0])
 
-        Asphericity(generate_conformers=True).featurize(dataset)
+        Asphericity(mandatory_generation_of_conformers=True).featurize(dataset)
         self.assertEqual(dataset_rows_number, dataset.X.shape[0])
 
-        SpherocityIndex(generate_conformers=True).featurize(dataset)
+        SpherocityIndex(mandatory_generation_of_conformers=True).featurize(dataset)
         self.assertEqual(dataset_rows_number, dataset.X.shape[0])
 
-        PrincipalMomentsOfInertia(generate_conformers=True).featurize(dataset)
+        PrincipalMomentsOfInertia(mandatory_generation_of_conformers=True).featurize(dataset)
         self.assertEqual(dataset_rows_number, dataset.X.shape[0])
 
-        NormalizedPrincipalMomentsRatios(generate_conformers=True).featurize(dataset)
+        NormalizedPrincipalMomentsRatios(mandatory_generation_of_conformers=True).featurize(dataset)
         self.assertEqual(dataset_rows_number, dataset.X.shape[0])
 
     def test_featurize_to_fail(self):
 
         with self.assertRaises(SystemExit) as cm:
-            All3DDescriptors().featurize(self.dataset_to_test)
+            All3DDescriptors().featurize(self.mini_dataset_to_test)
 
         self.assertEqual(cm.exception.code, 1)
 
         with self.assertRaises(SystemExit) as cm:
-            AutoCorr3D().featurize(self.dataset_to_test)
+            AutoCorr3D().featurize(self.mini_dataset_to_test)
 
         self.assertEqual(cm.exception.code, 1)
 
         with self.assertRaises(SystemExit) as cm:
-            RadialDistributionFunction().featurize(self.dataset_to_test)
+            RadialDistributionFunction().featurize(self.mini_dataset_to_test)
 
         self.assertEqual(cm.exception.code, 1)
 
         with self.assertRaises(SystemExit) as cm:
-            PlaneOfBestFit().featurize(self.dataset_to_test)
+            PlaneOfBestFit().featurize(self.mini_dataset_to_test)
 
         self.assertEqual(cm.exception.code, 1)
 
         with self.assertRaises(SystemExit) as cm:
-            MORSE().featurize(self.dataset_to_test)
+            MORSE().featurize(self.mini_dataset_to_test)
 
         self.assertEqual(cm.exception.code, 1)
 
         with self.assertRaises(SystemExit) as cm:
-            WHIM().featurize(self.dataset_to_test)
+            WHIM().featurize(self.mini_dataset_to_test)
 
         self.assertEqual(cm.exception.code, 1)
 
         with self.assertRaises(SystemExit) as cm:
-            RadiusOfGyration().featurize(self.dataset_to_test)
+            RadiusOfGyration().featurize(self.mini_dataset_to_test)
 
         self.assertEqual(cm.exception.code, 1)
 
         with self.assertRaises(SystemExit) as cm:
-            InertialShapeFactor().featurize(self.dataset_to_test)
+            InertialShapeFactor().featurize(self.mini_dataset_to_test)
 
         self.assertEqual(cm.exception.code, 1)
 
         with self.assertRaises(SystemExit) as cm:
-            Eccentricity().featurize(self.dataset_to_test)
+            Eccentricity().featurize(self.mini_dataset_to_test)
 
         self.assertEqual(cm.exception.code, 1)
 
         with self.assertRaises(SystemExit) as cm:
-            Asphericity().featurize(self.dataset_to_test)
+            Asphericity().featurize(self.mini_dataset_to_test)
 
         self.assertEqual(cm.exception.code, 1)
 
         with self.assertRaises(SystemExit) as cm:
-            SpherocityIndex().featurize(self.dataset_to_test)
+            SpherocityIndex().featurize(self.mini_dataset_to_test)
 
         self.assertEqual(cm.exception.code, 1)
 
         with self.assertRaises(SystemExit) as cm:
-            PrincipalMomentsOfInertia().featurize(self.dataset_to_test)
+            PrincipalMomentsOfInertia().featurize(self.mini_dataset_to_test)
 
         self.assertEqual(cm.exception.code, 1)
 
         with self.assertRaises(SystemExit) as cm:
-            NormalizedPrincipalMomentsRatios().featurize(self.dataset_to_test)
+            NormalizedPrincipalMomentsRatios().featurize(self.mini_dataset_to_test)
 
         self.assertEqual(cm.exception.code, 1)
 
     def test_generate_conformers_and_export(self):
 
-        generate_conformers_to_sdf_file(self.dataset_to_test, "temp.sdf")
+        generate_conformers_to_sdf_file(self.mini_dataset_to_test, "temp.sdf")
         os.remove("temp.sdf")

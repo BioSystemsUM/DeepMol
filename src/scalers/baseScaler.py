@@ -11,15 +11,15 @@ class BaseScaler(ABC):
 
     def __init__(self):
         if self.__class__ == BaseScaler:
-            raise Exception('Abstract class MolecularFeaturizer should not be instantiated')
+            raise Exception('Abstract class BaseScaler should not be instantiated')
 
-    @abstractmethod
     @property
+    @abstractmethod
     def scaler_object(self):
         raise NotImplementedError
 
-    @abstractmethod
     @scaler_object.setter
+    @abstractmethod
     def scaler_object(self, value):
         raise NotImplementedError
 
@@ -64,6 +64,6 @@ class BaseScaler(ABC):
     def _transform(self, X: np.ndarray):
         raise NotImplementedError
 
-    #TODO: figure out the better way of wrapping this method, as it intends to fit the dataset in batches
+    # TODO: figure out the better way of wrapping this method, as it intends to fit the dataset in batches
     def partial_fit(self, dataset: Dataset):
         pass

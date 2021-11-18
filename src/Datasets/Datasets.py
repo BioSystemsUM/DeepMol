@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from collections import Set
 
 import numpy as np
 import pandas as pd
@@ -97,15 +98,15 @@ class Dataset(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def removeNAs(self):
+    def remove_nan(self, axis: int = 0):
         raise NotImplementedError
 
     @abstractmethod
-    def removeElements(self, indexes):
+    def remove_elements(self, indexes):
         raise NotImplementedError
 
     @abstractmethod
-    def selectFeatures(self, indexes):
+    def select_features(self, indexes):
         raise NotImplementedError
 
 
@@ -133,10 +134,16 @@ class NumpyDataset(Dataset):
 
     @property
     def X(self):
+        if self.features2keep is not None:
+            return self._X[:, self.features2keep]
+
         return self._X
 
     @X.setter
-    def X(self, value):
+    def X(self, value: Union[np.array, None]):
+        if value is not None:
+            self.features2keep = np.array([i for i in range(value.shape[1])])
+
         self._X = value
 
     @property
@@ -200,7 +207,7 @@ class NumpyDataset(Dataset):
             print(self.len_X())
             if len(features2keep) != self.len_X()[1]:
                 try:
-                    self.selectFeatures(features2keep)
+                    self.select_features(features2keep)
                     print('Defined features extracted!')
                 except Exception as e:
                     print('Error while removing defined features!')
@@ -267,70 +274,76 @@ class NumpyDataset(Dataset):
             print("ids not defined!")
             return None
 
-    def removeElements(self, indexes):
+    def remove_elements(self, indexes):
         """Remove elements with specific indexes from the dataset
             Very useful when doing feature selection or to remove NAs.
         """
-        self.mols = np.delete(self.mols, indexes)
-        if self.X is not None:
-            self.X = np.delete(self.X, indexes, axis=0)
-        if self.y is not None:
-            self.y = np.delete(self.y, indexes)
-        if self.ids is not None:
-            self.ids = np.delete(self.ids, indexes)
+        all_indexes = [i for i in range(self.X.shape[0])]
+        indexes_to_keep = list(set(all_indexes) - set(indexes))
 
-    # TODO: test this
-    def selectFeatures(self, indexes):
-        idx = list(range(len(self.X[0])))
-        for i in indexes:
-            del idx[i]
-        self.X = np.delete(self.X, idx, axis=1)
+        self.select(indexes_to_keep)
 
-    def removeNAs(self):
-        """Remove samples with NAs from the Dataset"""
+    def select_features(self, indexes):
+        self.select(indexes, axis=1)
+
+    def remove_nan(self, axis=0):
+        """Remove only samples with at least one NaN in the features (when axis = 0)
+           Or remove samples with all features with NaNs and the features with at least one NaN (axis = 1) """
+
         j = 0
         indexes = []
-        for i in self.X:
-            if np.isnan(np.dot(i, i)):
-                indexes.append(j)
 
-            j += 1
-        if len(indexes) > 0:
-            print('Elements with indexes: ', indexes, ' were removed due to the presence of NAs!')
-            print('The elements in question are: ', self.mols[indexes])
-            self.removeElements(indexes)
+        if axis == 0:
+            for i in self.X:
+                if np.isnan(np.dot(i, i)):
+                    indexes.append(j)
 
-    # TODO: is this the best way of doing it? maybe directly delete instead of creating new NumpyDataset
-    def select(self, indexes: Sequence[int]) -> 'NumpyDataset':
+                j += 1
+            if len(indexes) > 0:
+                print('Elements with indexes: ', indexes, ' were removed due to the presence of NAs!')
+                print('The elements in question are: ', self.mols[indexes])
+                self.remove_elements(indexes)
+
+        elif axis == 1:
+            self.X = self.X[~np.isnan(self.X).all(axis=1)]
+            nans_column_indexes = [nans_indexes[1] for nans_indexes in np.argwhere(np.isnan(self.X))]
+
+            column_sets = list(set(nans_column_indexes))
+            self.X = np.delete(self.X, column_sets, axis=1)
+
+    def select(self, indexes: Sequence[int], axis: int = 0):
         """Creates a new subdataset of self from a selection of indexes.
         Parameters
         ----------
         indexes: List[int]
           List of indices to select.
+        axis: int
+          Axis
+
         Returns
         -------
         Dataset
           A NumpyDataset object containing only the selected indexes.
         """
 
-        mols = self.mols[indexes]
+        if axis == 0:
+            all_indexes = [i for i in range(self.X.shape[axis])]
+            indexes_to_delete = list(set(all_indexes) - set(indexes))
 
-        if self.y is not None:
-            y = self.y[indexes]
-        else:
-            y = self.y
+            self.mols = np.delete(self.mols, indexes_to_delete, axis)
 
-        if self.X is not None:
-            X = self.X[indexes]
-        else:
-            X = self.X
+            if self.y is not None:
+                self.y = np.delete(self.y, indexes_to_delete, axis)
 
-        if self.ids is not None:
-            ids = self.ids[indexes]
-        else:
-            ids = self.ids
+            if self.X is not None:
+                self.X = np.delete(self.X, indexes_to_delete, axis)
 
-        return NumpyDataset(mols, X, y, ids, self.features2keep)
+            if self.ids is not None:
+                self.ids = np.delete(self.ids, indexes_to_delete, axis)
+
+        if axis == 1:
+            indexes_to_delete = list(set(self.features2keep) - set(indexes))
+            self.features2keep = np.array(list(set(self.features2keep) - set(indexes_to_delete)))
 
     def merge(self,
               datasets: Iterable[Dataset]) -> 'NumpyDataset':

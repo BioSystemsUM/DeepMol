@@ -37,7 +37,11 @@ class MordredFeaturizer(MolecularFeaturizer):
 
         except Exception as e:
             print('error in smile: ' + str(mol))
-            result = np.empty(1826, dtype=float)
+            if not self.ignore_3D:
+                result = np.empty(1826, dtype=float)
+            else:
+                result = np.empty(1613, dtype=float)
+
             result[:] = np.NaN
 
         result = np.asarray(result, dtype=np.float)

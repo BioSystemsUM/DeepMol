@@ -1,4 +1,4 @@
 .idea/
 __pycache__/
 .ipynb_checkpoints/
-src/data/dataset_sweet_3D.sdf
+tests/data/dataset_sweet_3D.sdf

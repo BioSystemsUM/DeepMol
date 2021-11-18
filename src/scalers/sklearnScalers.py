@@ -11,7 +11,7 @@ class StandardScaler(BaseScaler):
         self.copy = copy
         self.with_mean = with_mean
         self.with_std = with_std
-        self._scaler_object = sklearn.preprocessing.StandardScaler(copy=self.copy,
+        self.scaler_object = sklearn.preprocessing.StandardScaler(copy=self.copy,
                                                                    with_mean=self.with_mean,
                                                                    with_std=self.with_std)
 
@@ -23,7 +23,7 @@ class StandardScaler(BaseScaler):
 
     @scaler_object.setter
     def scaler_object(self, value):
-        pass
+        self._scaler_object = value
 
     def load_scaler(self, file_path):
         self.scaler_object = joblib.load(file_path)
@@ -56,7 +56,7 @@ class MinMaxScaler(BaseScaler):
 
     @scaler_object.setter
     def scaler_object(self, value):
-        pass
+        self._scaler_object = value
 
     def load_scaler(self, file_path):
         self.scaler_object = joblib.load(file_path)
@@ -85,7 +85,7 @@ class MaxAbsScaler(BaseScaler):
 
     @scaler_object.setter
     def scaler_object(self, value):
-        pass
+        self._scaler_object = value
 
     def load_scaler(self, file_path):
         self.scaler_object = joblib.load(file_path)
@@ -123,7 +123,7 @@ class RobustScaler(BaseScaler):
 
     @scaler_object.setter
     def scaler_object(self, value):
-        pass
+        self._scaler_object = value
 
     def load_scaler(self, file_path):
         self.scaler_object = joblib.load(file_path)
@@ -158,7 +158,7 @@ class PolynomialFeatures(BaseScaler):
 
     @scaler_object.setter
     def scaler_object(self, value):
-        pass
+        self._scaler_object = value
 
     def load_scaler(self, file_path):
         self.scaler_object = joblib.load(file_path)
@@ -188,7 +188,7 @@ class Normalizer(BaseScaler):
 
     @scaler_object.setter
     def scaler_object(self, value):
-        pass
+        self._scaler_object = value
 
     def load_scaler(self, file_path):
         self.scaler_object = joblib.load(file_path)
@@ -218,7 +218,7 @@ class Binarizer(BaseScaler):
 
     @scaler_object.setter
     def scaler_object(self, value):
-        pass
+        self._scaler_object = value
 
     def load_scaler(self, file_path):
         self.scaler_object = joblib.load(file_path)
@@ -246,7 +246,7 @@ class KernelCenterer(BaseScaler):
 
     @scaler_object.setter
     def scaler_object(self, value):
-        pass
+        self._scaler_object = value
 
     def load_scaler(self, file_path):
         self.scaler_object = joblib.load(file_path)
@@ -287,7 +287,7 @@ class QuantileTransformer(BaseScaler):
 
     @scaler_object.setter
     def scaler_object(self, value):
-        pass
+        self._scaler_object = value
 
     def load_scaler(self, file_path):
         self.scaler_object = joblib.load(file_path)
@@ -321,7 +321,7 @@ class PowerTransformer(BaseScaler):
 
     @scaler_object.setter
     def scaler_object(self, value):
-        pass
+        self._scaler_object = value
 
     def load_scaler(self, file_path):
         self.scaler_object = joblib.load(file_path)

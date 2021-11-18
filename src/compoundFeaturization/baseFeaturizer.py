@@ -6,9 +6,10 @@ from rdkit import Chem
 from rdkit.Chem import rdmolfiles
 from rdkit.Chem import rdmolops
 from rdkit.Chem.rdchem import Mol
-from sklearn.preprocessing import StandardScaler
 
-from ..Datasets.Datasets import Dataset
+from Datasets.Datasets import Dataset
+from scalers.baseScaler import BaseScaler
+from utils.errors import PreConditionViolationException
 
 
 class MolecularFeaturizer(ABC):
@@ -24,7 +25,11 @@ class MolecularFeaturizer(ABC):
         if self.__class__ == MolecularFeaturizer:
             raise Exception('Abstract class MolecularFeaturizer should not be instantiated')
 
-    def featurize(self, dataset: Dataset, log_every_n=1000, scale=False):
+    def featurize(self, dataset: Dataset, log_every_n=1000,
+                  scaler: BaseScaler = None,
+                  path_to_save_scaler: str = None,
+                  remove_nans_axis: int = 0):
+
         """Calculate features for molecules.
         Parameters
         ----------
@@ -32,8 +37,10 @@ class MolecularFeaturizer(ABC):
           Dataset containing molecules to featurize
         log_every_n: int, default 1000
           Logging messages reported every `log_every_n` samples.
-        scale: bool, default False
-          Scale the data: y = (x – mean) / standard_deviation
+        scaler: BaseScaler, default None
+          Scale the data
+        path_to_save_scaler: str, default None
+          File path to save scaler
         Returns
         -------
         dataset: Dataset object
@@ -57,25 +64,31 @@ class MolecularFeaturizer(ABC):
                     except Exception as e:
                         mol = mol
                 features.append(self._featurize(mol))
+
+            except PreConditionViolationException:
+                exit(1)
+
             except Exception as e:
                 if isinstance(mol, Chem.rdchem.Mol):
                     mol = Chem.MolToSmiles(mol)
                 print("Failed to featurize datapoint %d, %s. Appending empty array" % (i, mol))
                 print("Exception message: {}".format(e))
-        dataset.X = np.asarray(features)
+
+        features = np.vstack(features)
+        dataset.X = features
 
         # if anyNA:
         # TODO: where and in which manner to remove NAs????
-        dataset.removeNAs()
+        dataset.remove_nan(remove_nans_axis)
 
-        if scale:
-            scaler = StandardScaler()
+        if scaler:
             # transform data
             dataset.X = scaler.fit_transform(dataset.X)
+            if path_to_save_scaler:
+                scaler.save_scaler(path_to_save_scaler)
 
         return dataset
 
     @abstractmethod
     def _featurize(self, mol: Mol):
         raise NotImplementedError()
-

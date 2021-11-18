@@ -37,7 +37,7 @@ class Test3DGeneration(TestCase):
 class TestSdfImporter(TestCase):
 
     def test_sdf_importer(self):
-        loader = SDFLoader("../src/data/dataset_sweet_3D_to_test.sdf", "_SourceID", labels_fields=["_SWEET"])
+        loader = SDFLoader("tests/data/dataset_sweet_3D_to_test.sdf", "_SourceID", labels_fields=["_SWEET"])
         dataset = loader.create_dataset()
 
         assert len(loader.mols_handler) == 100
@@ -45,7 +45,7 @@ class TestSdfImporter(TestCase):
         assert len(dataset.X) == 100
 
     def test_2_sdf_importer(self):
-        loader = SDFLoader("../src/data/A2780.sdf", "ChEMBL_ID", labels_fields=["pIC50"])
+        loader = SDFLoader("tests/data/A2780.sdf", "ChEMBL_ID", labels_fields=["pIC50"])
         dataset = loader.create_dataset()
 
         assert len(dataset.X) == 2255
@@ -383,7 +383,7 @@ class TestMixedDescriptors(TestCase):
         self.test_dataset_to_fail = "../preprocessed_dataset_wfoodb.csv"
 
     def test_mixed_descriptors_fingerprints_rdkit(self):
-        loader = SDFLoader("../src/data/dataset_sweet_3D_to_test.sdf", "_SourceID", labels_fields=["_SWEET"])
+        loader = SDFLoader("tests/data/dataset_sweet_3D_to_test.sdf", "_SourceID", labels_fields=["_SWEET"])
         dataset = loader.create_dataset()
 
         descriptors = [All3DDescriptors(), MorganFingerprint()]
@@ -397,7 +397,7 @@ class TestMixedDescriptors(TestCase):
 class TestModels3DDescriptors(TestCase):
 
     def setUp(self) -> None:
-        loader = SDFLoader("../src/data/dataset_sweet_3d_balanced.sdf", "_SourceID", labels_fields=["_SWEET"])
+        loader = SDFLoader("tests/data/dataset_sweet_3d_balanced.sdf", "_SourceID", labels_fields=["_SWEET"])
         self.dataset = loader.create_dataset()
 
         self.dataset = All3DDescriptors().featurize(self.dataset, scale=True)
@@ -633,10 +633,10 @@ class Test3DGenerator(TestCase):
         self.assertNotEqual(rmsd, 0)
 
     def test_export_to_sdf(self):
-        generate_conformers_to_sdf_file(self.test_dataset_to_convert_object, "../src/data/test.sdf",
+        generate_conformers_to_sdf_file(self.test_dataset_to_convert_object, "tests/data/test.sdf",
                                         timeout_per_molecule=40)
 
-        loader = SDFLoader("../src/data/test.sdf", "_ID", "_Class")
+        loader = SDFLoader("tests/data/test.sdf", "_ID", "_Class")
         dataset = loader.create_dataset()
 
         All3DDescriptors().featurize(dataset)

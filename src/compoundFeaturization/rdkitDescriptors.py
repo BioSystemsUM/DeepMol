@@ -95,7 +95,8 @@ class ThreeDimensionalMoleculeGenerator:
         self.threads = threads
         self.timeout_per_molecule = timeout_per_molecule
 
-    def check_if_mol_has_explicit_hydrogens(self, new_mol: Mol):
+    @staticmethod
+    def check_if_mol_has_explicit_hydrogens(new_mol: Mol):
 
         atoms = new_mol.GetAtoms()
         for atom in atoms:
@@ -134,10 +135,6 @@ class ThreeDimensionalMoleculeGenerator:
         else:
             print("Choose ETKDG's valid version (1,2 or 3)")
             return None
-
-        # has_explicit_hydrogens = self.check_if_mol_has_explicit_hydrogens(new_mol)
-        # if has_explicit_hydrogens:
-        #     new_mol = Chem.RemoveHs(new_mol)
 
         return new_mol
 
@@ -212,7 +209,6 @@ def generate_conformers(generator: ThreeDimensionalMoleculeGenerator,
 
     new_mol = generator.generate_conformers(new_mol, ETKG_version)
     new_mol = generator.optimize_molecular_geometry(new_mol, optimization_mode)
-    new_mol = Chem.RemoveHs(new_mol)
     return new_mol
 
 
@@ -271,23 +267,26 @@ def generate_conformers_to_sdf_file(dataset: Dataset, file_path: str, n_conforma
 
     final_set_with_conformations = []
 
+    writer = Chem.SDWriter(file_path)
+
     for i in range(mol_set.shape[0]):
         printProgressBar(i, mol_set.shape[0])
 
-        m2 = generate_conformers(generator, mol_set[i], ETKG_version, optimization_mode)
+        try:
+            m2 = generate_conformers(generator, mol_set[i], ETKG_version, optimization_mode)
 
-        label = dataset.y[i]
-        m2.SetProp("_Class", "%f" % label)
-        if dataset.ids:
-            mol_id = dataset.ids[i]
-            m2.SetProp("_ID", "%f" % mol_id)
+            label = dataset.y[i]
+            m2.SetProp("_Class", "%f" % label)
 
-        final_set_with_conformations.append(m2)
+            if dataset.ids is not None and dataset.ids.size > 0:
+                mol_id = dataset.ids[i]
+                m2.SetProp("_ID", "%f" % mol_id)
 
-    writer = Chem.SDWriter(file_path)
+            writer.write(m2)
+            final_set_with_conformations.append(m2)
 
-    for mol in final_set_with_conformations:
-        writer.write(mol)
+        except:
+            pass
 
     writer.close()
 

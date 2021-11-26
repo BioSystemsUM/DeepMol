@@ -143,7 +143,7 @@ class NumpyDataset(Dataset):
 
     @property
     def X(self):
-        if self._X:
+        if self._X is not None:
             if self._X.size > 0:
                 if self.features2keep is not None:
                     if self.features2keep.size == 0:
@@ -162,8 +162,8 @@ class NumpyDataset(Dataset):
     @X.setter
     def X(self, value: Union[np.array, None]):
         if value is not None and value.size > 0:
-            print(value)
             self.features2keep = np.array([i for i in range(value.shape[1])])
+            self._X = value
         else:
             self._X = None
 
@@ -188,7 +188,6 @@ class NumpyDataset(Dataset):
             self._ids = value
         else:
             self._ids = None
-
 
     def __len__(self) -> int:
         return len(self.mols)

@@ -12,6 +12,64 @@ from Datasets.Datasets import Dataset, NumpyDataset
 from sklearn.model_selection import KFold, StratifiedKFold
 
 
+def get_train_valid_test_indexes(scaffold_sets, train_cutoff, test_cutoff, valid_cutoff, frac_train, frac_test):
+    train_inds: List[int] = []
+    valid_inds: List[int] = []
+    test_inds: List[int] = []
+
+    for scaffold_set in scaffold_sets:
+        if len(train_inds) + len(scaffold_set) > train_cutoff:
+            if len(test_inds) + len(scaffold_set) <= test_cutoff:
+                test_inds += scaffold_set
+            elif len(valid_inds) + len(scaffold_set) <= valid_cutoff:
+                valid_inds += scaffold_set
+            else:
+                train_index = int(len(scaffold_set) * frac_train)
+                test_index = int(len(scaffold_set) * frac_test) + train_index
+                train_inds += scaffold_set[:train_index]
+                test_inds += scaffold_set[train_index:test_index]
+                valid_inds += scaffold_set[test_index:]
+        else:
+            train_inds += scaffold_set
+
+    return train_inds, valid_inds, test_inds
+
+
+def get_mols_for_each_class(mols: List[Mol], dataset: Dataset):
+    mols_classes_map = {}
+    indices_classes_map = {}
+    for i, mol in enumerate(mols):
+
+        if dataset.y[i] not in mols_classes_map:
+            mols_classes_map[dataset.y[i]] = [mol]
+            indices_classes_map[dataset.y[i]] = [i]
+
+        else:
+            mols_classes_map[dataset.y[i]].append(mol)
+            indices_classes_map[dataset.y[i]].append(i)
+
+    return mols_classes_map, indices_classes_map
+
+
+def get_fingerprints_for_each_class(mols, dataset):
+    fps_classes_map = {}
+    indices_classes_map = {}
+    all_fps = []
+    for i, mol in enumerate(mols):
+
+        fp = AllChem.GetMorganFingerprintAsBitVect(mol, 2, 1024)
+        all_fps.append(fp)
+        if dataset.y[i] not in fps_classes_map:
+            fps_classes_map[dataset.y[i]] = [fp]
+            indices_classes_map[dataset.y[i]] = [i]
+
+        else:
+            fps_classes_map[dataset.y[i]].append(fp)
+            indices_classes_map[dataset.y[i]].append(i)
+
+    return fps_classes_map, indices_classes_map, all_fps
+
+
 class Splitter(ABC):
     """Splitters split up Datasets into pieces for training/validation/testing.
     In machine learning applications, it's often necessary to split up a dataset
@@ -58,11 +116,10 @@ class Splitter(ABC):
     def train_valid_test_split(self,
                                dataset: Dataset,
                                frac_train: float = 0.8,
-                               frac_valid: float = 0.1,
-                               frac_test: float = 0.1,
+                               frac_valid: float = None,
+                               frac_test: float = None,
                                seed: Optional[int] = None,
-                               log_every_n: int = 1000,
-                               **kwargs) -> Tuple[Dataset, Dataset, Dataset]:
+                               log_every_n: int = 1000) -> Tuple[Dataset, Dataset, Dataset]:
         """ Splits a Dataset into train/validation/test sets.
         Returns Dataset objects for train, valid, test.
         Parameters
@@ -85,6 +142,16 @@ class Splitter(ABC):
         Tuple[Dataset, Dataset, Dataset]
           A tuple of train, valid and test datasets as Dataset objects.
         """
+
+        if frac_test is None and frac_valid is None:
+            raise Exception("Please insert all the required parameters! Both test and validation sets fraction are "
+                            "not defined!")
+
+        elif frac_test is None:
+            frac_test = 1 - frac_train + frac_valid
+
+        elif frac_valid is None:
+            frac_valid = 1 - frac_train + frac_test
 
         # print("Computing train/valid/test indices")
         train_inds, valid_inds, test_inds = self.split(dataset,
@@ -332,8 +399,7 @@ class SimilaritySplitter(Splitter):
 
         mols = generate_mols_and_delete_invalid_smiles(dataset)
 
-        fps_classes_map, indices_classes_map, all_fps = SimilaritySplitter.get_fingerprints_for_each_class(mols,
-                                                                                                           dataset)
+        fps_classes_map, indices_classes_map, all_fps = get_fingerprints_for_each_class(mols, dataset)
 
         train_size = int(frac_train * len(dataset))
         valid_size = int(frac_valid * len(dataset))
@@ -342,7 +408,7 @@ class SimilaritySplitter(Splitter):
         train_inds = []
         test_valid_inds = []
 
-        is_regression = all([not i.item().is_integer() for i in dataset.y])
+        is_regression = any([not isinstance(i.item(), int) and not i.item().is_integer() for i in dataset.y])
 
         if not is_regression:
             for class_ in fps_classes_map:
@@ -449,26 +515,6 @@ class SimilaritySplitter(Splitter):
 
         return indices_in_group
 
-    @staticmethod
-    def get_fingerprints_for_each_class(mols, dataset):
-
-        fps_classes_map = {}
-        indices_classes_map = {}
-        all_fps = []
-        for i, mol in enumerate(mols):
-
-            fp = AllChem.GetMorganFingerprintAsBitVect(mol, 2, 1024)
-            all_fps.append(fp)
-            if dataset.y[i] not in fps_classes_map:
-                fps_classes_map[dataset.y[i]] = [fp]
-                indices_classes_map[dataset.y[i]] = [i]
-
-            else:
-                fps_classes_map[dataset.y[i]].append(fp)
-                indices_classes_map[dataset.y[i]].append(i)
-
-        return fps_classes_map, indices_classes_map, all_fps
-
 
 class ScaffoldSplitter(Splitter):
 
@@ -506,13 +552,14 @@ class ScaffoldSplitter(Splitter):
         np.testing.assert_almost_equal(frac_train + frac_valid + frac_test, 1.)
 
         mols = generate_mols_and_delete_invalid_smiles(dataset)
-        mols_classes_map, indices_classes_map = ScaffoldSplitter.get_mols_for_each_class(mols, dataset)
+        mols_classes_map, indices_classes_map = get_mols_for_each_class(mols, dataset)
 
-        is_regression = all([not i.item().is_integer() for i in dataset.y])
+        is_regression = any([not isinstance(i.item(), int) and not i.item().is_integer() for i in dataset.y])
 
         train_cutoff = int(frac_train * len(dataset))
         valid_cutoff = int(frac_valid * len(dataset))
         test_cutoff = len(dataset) - train_cutoff - valid_cutoff
+
         train_inds: List[int] = []
         valid_inds: List[int] = []
         test_inds: List[int] = []
@@ -526,24 +573,10 @@ class ScaffoldSplitter(Splitter):
                 valid_class_cutoff = int(frac_valid * len(indexes))
                 test_class_cutoff = len(indexes) - train_class_cutoff - valid_class_cutoff
 
-                train_inds_class_ = []
-                test_inds_class_ = []
-                valid_inds_class_ = []
-
-                for scaffold_set in scaffold_sets:
-                    if len(train_inds_class_) + len(scaffold_set) > train_class_cutoff:
-                        if len(test_inds_class_) + len(scaffold_set) < test_class_cutoff:
-                            test_inds_class_ += scaffold_set
-                        elif len(valid_inds_class_) + len(scaffold_set) < valid_class_cutoff:
-                            valid_inds_class_ += scaffold_set
-                        else:
-                            train_index = int(len(scaffold_set) * frac_train)
-                            test_index = int(len(scaffold_set) * frac_test) + train_index
-                            train_inds_class_ += scaffold_set[:train_index]
-                            test_inds_class_ += scaffold_set[train_index:test_index]
-                            valid_inds_class_ += scaffold_set[test_index:]
-                    else:
-                        train_inds_class_ += scaffold_set
+                train_inds_class_, valid_inds_class_, test_inds_class_ = \
+                    get_train_valid_test_indexes(scaffold_sets, train_class_cutoff,
+                                                 test_class_cutoff, valid_class_cutoff,
+                                                 frac_train, frac_test)
 
                 train_inds.extend(train_inds_class_)
                 test_inds.extend(test_inds_class_)
@@ -551,36 +584,10 @@ class ScaffoldSplitter(Splitter):
 
         else:
             scaffold_sets = self.generate_scaffolds(mols, [i for i in range(len(mols))])
-            for scaffold_set in scaffold_sets:
-                if len(test_inds) + len(scaffold_set) < test_cutoff:
-                    test_inds += scaffold_set
-                elif len(valid_inds) + len(scaffold_set) < valid_cutoff:
-                    valid_inds += scaffold_set
-                else:
-                    train_index = int(len(scaffold_set) * frac_train)
-                    test_index = int(len(scaffold_set) * frac_test) + train_index
-                    train_inds += scaffold_set[:train_index]
-                    test_inds += scaffold_set[train_index:test_index]
-                    valid_inds += scaffold_set[test_index:]
+            train_inds, valid_inds, test_inds = get_train_valid_test_indexes(scaffold_sets, train_cutoff, test_cutoff,
+                                                                             valid_cutoff, frac_train, frac_test)
 
         return train_inds, valid_inds, test_inds
-
-    @staticmethod
-    def get_mols_for_each_class(mols: List[Mol], dataset: Dataset):
-
-        mols_classes_map = {}
-        indices_classes_map = {}
-        for i, mol in enumerate(mols):
-
-            if dataset.y[i] not in mols_classes_map:
-                mols_classes_map[dataset.y[i]] = [mol]
-                indices_classes_map[dataset.y[i]] = [i]
-
-            else:
-                mols_classes_map[dataset.y[i]].append(mol)
-                indices_classes_map[dataset.y[i]].append(i)
-
-        return mols_classes_map, indices_classes_map
 
     @staticmethod
     def generate_scaffolds(mols: List[Mol], indexes: List[int],
@@ -725,33 +732,63 @@ class ButinaSplitter(Splitter):
 
         mols = generate_mols_and_delete_invalid_smiles(dataset)
 
-        fps = [AllChem.GetMorganFingerprintAsBitVect(x, 2, 1024) for x in mols]
+        fps_classes_map, indices_classes_map, all_fps = get_fingerprints_for_each_class(mols, dataset)
 
-        # calcaulate scaffold sets
-        # (ytz): this is directly copypasta'd from Greg Landrum's clustering example.
-        dists = []
-        nfps = len(fps)
-        for i in range(1, nfps):
-            sims = DataStructs.BulkTanimotoSimilarity(fps[i], fps[:i])
-            dists.extend([1 - x for x in sims])
-        scaffold_sets = Butina.ClusterData(
-            dists, nfps, self.cutoff, isDistData=True)
-        scaffold_sets = sorted(scaffold_sets, key=lambda x: -len(x))
+        is_regression = any([not isinstance(i.item(), int) and not i.item().is_integer() for i in dataset.y])
 
-        train_cutoff = frac_train * len(dataset)
-        valid_cutoff = (frac_train + frac_valid) * len(dataset)
+        train_cutoff = int(frac_train * len(dataset))
+        valid_cutoff = int(frac_valid * len(dataset))
+        test_cutoff = len(dataset) - train_cutoff - valid_cutoff
+
         train_inds: List[int] = []
         valid_inds: List[int] = []
         test_inds: List[int] = []
 
-        for scaffold_set in scaffold_sets:
-            if len(train_inds) + len(scaffold_set) > train_cutoff:
-                if len(train_inds) + len(valid_inds) + len(scaffold_set) > valid_cutoff:
-                    test_inds += scaffold_set
-                else:
-                    valid_inds += scaffold_set
-            else:
-                train_inds += scaffold_set
+        if not is_regression:
+            for class_ in fps_classes_map:
+                dists = []
+                fps = fps_classes_map[class_]
+                nfps = len(fps)
+                for i in range(1, nfps):
+                    sims = DataStructs.BulkTanimotoSimilarity(fps[i], fps[:i])
+                    dists.extend([1 - x for x in sims])
+                scaffold_sets = Butina.ClusterData(
+                    dists, nfps, self.cutoff, isDistData=True)
+                scaffold_sets = sorted(scaffold_sets, key=lambda x: -len(x))
+
+                new_scaffold_sets = []  # update for the true indexes of the compounds
+                for scaffold_list in scaffold_sets:
+                    new_scaffold_set = []
+                    for i in scaffold_list:
+                        true_index = indices_classes_map[class_][i]
+                        new_scaffold_set.append(true_index)
+                    new_scaffold_sets.append(new_scaffold_set)
+
+                train_cutoff_class_ = int(frac_train * len(fps_classes_map[class_]))
+                valid_cutoff_class_ = int(frac_valid * len(fps_classes_map[class_]))
+                test_cutoff_class_ = len(fps_classes_map[class_]) - train_cutoff_class_ - valid_cutoff_class_
+
+                train_inds_class_, valid_inds_class_, test_inds_class_ = \
+                    get_train_valid_test_indexes(new_scaffold_sets, train_cutoff_class_, test_cutoff_class_,
+                                                 valid_cutoff_class_, frac_train, frac_test)
+
+                train_inds.extend(train_inds_class_)
+                test_inds.extend(test_inds_class_)
+                valid_inds.extend(valid_inds_class_)
+
+        else:
+            dists = []
+            nfps = len(all_fps)
+            for i in range(1, nfps):
+                sims = DataStructs.BulkTanimotoSimilarity(all_fps[i], all_fps[:i])
+                dists.extend([1 - x for x in sims])
+            scaffold_sets = Butina.ClusterData(
+                dists, nfps, self.cutoff, isDistData=True)
+            scaffold_sets = sorted(scaffold_sets, key=lambda x: -len(x))
+
+            train_inds, valid_inds, test_inds = get_train_valid_test_indexes(scaffold_sets, train_cutoff, test_cutoff,
+                                                                             valid_cutoff, frac_train, frac_test)
+
         return train_inds, valid_inds, test_inds
 
 

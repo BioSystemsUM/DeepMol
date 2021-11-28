@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -97,15 +99,23 @@ class Dataset(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def removeNAs(self):
+    def remove_nan(self, axis: int = 0):
         raise NotImplementedError
 
     @abstractmethod
-    def removeElements(self, indexes):
+    def remove_elements(self, indexes: List[int]):
         raise NotImplementedError
 
     @abstractmethod
-    def selectFeatures(self, indexes):
+    def select_features(self, indexes: List[int]):
+        raise NotImplementedError
+
+    @abstractmethod
+    def select(self, indexes: List[int], axis: int = 0):
+        raise NotImplementedError
+
+    @abstractmethod
+    def select_to_split(self, indexes: List[int]) -> Dataset:
         raise NotImplementedError
 
 
@@ -133,11 +143,29 @@ class NumpyDataset(Dataset):
 
     @property
     def X(self):
-        return self._X
+        if self._X is not None:
+            if self._X.size > 0:
+                if self.features2keep is not None:
+                    if self.features2keep.size == 0:
+                        raise Exception("This dataset has no features")
+                    else:
+                        return self._X[:, self.features2keep]
+
+                else:
+                    return self._X
+
+            else:
+                raise Exception("This dataset has no features")
+        else:
+            return None
 
     @X.setter
-    def X(self, value):
-        self._X = value
+    def X(self, value: Union[np.array, None]):
+        if value is not None and value.size > 0:
+            self.features2keep = np.array([i for i in range(value.shape[1])])
+            self._X = value
+        else:
+            self._X = None
 
     @property
     def y(self):
@@ -145,7 +173,10 @@ class NumpyDataset(Dataset):
 
     @y.setter
     def y(self, value):
-        self._y = value
+        if value is not None and value.size > 0:
+            self._y = value
+        else:
+            self._y = None
 
     @property
     def ids(self):
@@ -153,12 +184,16 @@ class NumpyDataset(Dataset):
 
     @ids.setter
     def ids(self, value):
-        self._ids = value
+        if value is not None and value.size > 0:
+            self._ids = value
+        else:
+            self._ids = None
 
     def __len__(self) -> int:
-        pass
+        return len(self.mols)
 
-    def __init__(self, mols: np.ndarray, X: Optional[np.ndarray] = None, y: Optional[np.ndarray] = None,
+    def __init__(self, mols: Union[np.ndarray, List[str], List[mols]], X: Optional[np.ndarray] = None,
+                 y: Optional[np.ndarray] = None,
                  ids: Optional[np.ndarray] = None, features2keep: Optional[np.ndarray] = None, n_tasks: int = 1):
         """Initialize a NumpyDataset object.
         Parameters
@@ -200,7 +235,7 @@ class NumpyDataset(Dataset):
             print(self.len_X())
             if len(features2keep) != self.len_X()[1]:
                 try:
-                    self.selectFeatures(features2keep)
+                    self.select_features(features2keep)
                     print('Defined features extracted!')
                 except Exception as e:
                     print('Error while removing defined features!')
@@ -267,70 +302,95 @@ class NumpyDataset(Dataset):
             print("ids not defined!")
             return None
 
-    def removeElements(self, indexes):
+    def remove_elements(self, indexes):
         """Remove elements with specific indexes from the dataset
             Very useful when doing feature selection or to remove NAs.
         """
-        self.mols = np.delete(self.mols, indexes)
-        if self.X is not None:
-            self.X = np.delete(self.X, indexes, axis=0)
-        if self.y is not None:
-            self.y = np.delete(self.y, indexes)
-        if self.ids is not None:
-            self.ids = np.delete(self.ids, indexes)
+        all_indexes = self.ids
+        indexes_to_keep = list(set(all_indexes) - set(indexes))
 
-    # TODO: test this
-    def selectFeatures(self, indexes):
-        idx = list(range(len(self.X[0])))
-        for i in indexes:
-            del idx[i]
-        self.X = np.delete(self.X, idx, axis=1)
+        self.select(indexes_to_keep)
 
-    def removeNAs(self):
-        """Remove samples with NAs from the Dataset"""
+    def select_features(self, indexes):
+        self.select(indexes, axis=1)
+
+    def remove_nan(self, axis=0):
+        """Remove only samples with at least one NaN in the features (when axis = 0)
+           Or remove samples with all features with NaNs and the features with at least one NaN (axis = 1) """
+
         j = 0
         indexes = []
-        for i in self.X:
-            if np.isnan(np.dot(i, i)):
-                indexes.append(j)
 
-            j += 1
-        if len(indexes) > 0:
-            print('Elements with indexes: ', indexes, ' were removed due to the presence of NAs!')
-            print('The elements in question are: ', self.mols[indexes])
-            self.removeElements(indexes)
+        if axis == 0:
+            for i in self.X:
+                if np.isnan(np.dot(i, i)):
+                    indexes.append(j)
 
-    # TODO: is this the best way of doing it? maybe directly delete instead of creating new NumpyDataset
-    def select(self, indexes: Sequence[int]) -> 'NumpyDataset':
+                j += 1
+            if len(indexes) > 0:
+                print('Elements with indexes: ', indexes, ' were removed due to the presence of NAs!')
+                print('The elements in question are: ', self.mols[indexes])
+                self.remove_elements(indexes)
+
+        elif axis == 1:
+            self.X = self.X[~np.isnan(self.X).all(axis=1)]
+            nans_column_indexes = [nans_indexes[1] for nans_indexes in np.argwhere(np.isnan(self.X))]
+
+            column_sets = list(set(nans_column_indexes))
+            self.X = np.delete(self.X, column_sets, axis=1)
+
+    def select_to_split(self, indexes: List[int]) -> NumpyDataset:
+
+        y = None
+        X = None
+        ids = None
+
+        mols = [self.mols[i] for i in indexes]
+
+        if self.y is not None:
+            y = self.y[indexes]
+
+        if self.X is not None:
+            X = self.X[indexes, :]
+
+        if self.ids is not None:
+            ids = self.ids[indexes]
+
+        return NumpyDataset(mols, X, y, ids, self.features2keep)
+
+    def select(self, indexes: Sequence[int], axis: int = 0):
         """Creates a new subdataset of self from a selection of indexes.
         Parameters
         ----------
         indexes: List[int]
           List of indices to select.
+        axis: int
+          Axis
+
         Returns
         -------
         Dataset
           A NumpyDataset object containing only the selected indexes.
         """
 
-        mols = self.mols[indexes]
+        if axis == 0:
+            all_indexes = self.ids
+            indexes_to_delete = list(set(all_indexes) - set(indexes))
 
-        if self.y is not None:
-            y = self.y[indexes]
-        else:
-            y = self.y
+            self.mols = np.delete(self.mols, indexes_to_delete, axis)
 
-        if self.X is not None:
-            X = self.X[indexes]
-        else:
-            X = self.X
+            if self.y is not None:
+                self.y = np.delete(self.y, indexes_to_delete, axis)
 
-        if self.ids is not None:
-            ids = self.ids[indexes]
-        else:
-            ids = self.ids
+            if self.X is not None:
+                self.X = np.delete(self.X, indexes_to_delete, axis)
 
-        return NumpyDataset(mols, X, y, ids, self.features2keep)
+            if self.ids is not None:
+                self.ids = np.delete(self.ids, indexes_to_delete, axis)
+
+        if axis == 1:
+            indexes_to_delete = list(set(self.features2keep) - set(indexes))
+            self.features2keep = np.array(list(set(self.features2keep) - set(indexes_to_delete)))
 
     def merge(self,
               datasets: Iterable[Dataset]) -> 'NumpyDataset':
@@ -388,7 +448,7 @@ class NumpyDataset(Dataset):
     # TODO: test load and save
     def load_features(self, path, sep=',', header=0):
         df = pd.read_csv(path, sep=sep, header=header)
-        self.dataset.X = df.to_numpy()
+        self.X = df.to_numpy()
 
     # TODO: Order of the features compared with the initial mols/y's is lost because some features cannot be computed
     #  due to smiles invalidity (use only the function save_to_csv? or think about other implementation?)

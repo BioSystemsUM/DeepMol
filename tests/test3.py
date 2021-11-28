@@ -33,7 +33,7 @@ standardizer_vr = CustomStandardizer(params=heavy_standardisation)
 
 #ds = CSVLoader('preprocessed_dataset.csv', 'Smiles', ['Class'], 'PubChem CID')#, chunk_size=1000)
 
-ds = CSVLoader(dataset_path='../data/preprocessed_dataset_wfoodb.csv', mols_field='Smiles', labels_fields='Class', id_field='ID', shard_size=5000)
+ds = CSVLoader(dataset_path='tests/data/preprocessed_dataset_wfoodb.csv', mols_field='Smiles', labels_fields='Class', id_field='ID', shard_size=5000)
 ds = ds.create_dataset()
 
 ds.get_shape()

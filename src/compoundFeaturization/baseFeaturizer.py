@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Union
 
 import numpy as np
 
@@ -10,6 +9,7 @@ from rdkit.Chem.rdchem import Mol
 
 from Datasets.Datasets import Dataset
 from scalers.baseScaler import BaseScaler
+from utils.errors import PreConditionViolationException
 
 
 class MolecularFeaturizer(ABC):
@@ -22,11 +22,14 @@ class MolecularFeaturizer(ABC):
     """
 
     def __init__(self):
-
         if self.__class__ == MolecularFeaturizer:
             raise Exception('Abstract class MolecularFeaturizer should not be instantiated')
 
-    def featurize(self, dataset: Dataset, log_every_n=1000, scaler: Union[BaseScaler, None] = None):
+    def featurize(self, dataset: Dataset, log_every_n=1000,
+                  scaler: BaseScaler = None,
+                  path_to_save_scaler: str = None,
+                  remove_nans_axis: int = 0):
+
         """Calculate features for molecules.
         Parameters
         ----------
@@ -36,6 +39,8 @@ class MolecularFeaturizer(ABC):
           Logging messages reported every `log_every_n` samples.
         scaler: BaseScaler, default None
           Scale the data
+        path_to_save_scaler: str, default None
+          File path to save scaler
         Returns
         -------
         dataset: Dataset object
@@ -59,20 +64,26 @@ class MolecularFeaturizer(ABC):
                     except Exception as e:
                         mol = mol
                 features.append(self._featurize(mol))
+
+            except PreConditionViolationException:
+                exit(1)
+
             except Exception as e:
                 if isinstance(mol, Chem.rdchem.Mol):
                     mol = Chem.MolToSmiles(mol)
                 print("Failed to featurize datapoint %d, %s. Appending empty array" % (i, mol))
                 print("Exception message: {}".format(e))
-        dataset.X = np.asarray(features)
 
-        # if anyNA:
-        # TODO: where and in which manner to remove NAs????
-        dataset.removeNAs()
+        features = np.vstack(features)
+        dataset.X = features
+
+        dataset.remove_nan(remove_nans_axis)
 
         if scaler:
             # transform data
             scaler.fit_transform(dataset)
+            if path_to_save_scaler:
+                scaler.save_scaler(path_to_save_scaler)
 
         return dataset
 

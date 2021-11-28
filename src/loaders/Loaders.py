@@ -203,7 +203,7 @@ class CSVLoader(object):
             if self.id_field is not None:
                 ids = dataset[self.id_field].to_numpy()
             else:
-                ids = None
+                ids = np.array([i for i in range(dataset.shape[0])])
 
             return NumpyDataset(mols=mols,
                                 X=X,
@@ -318,10 +318,6 @@ class SDFLoader(object):
                     for feature in self.features_fields:
                         mol_feature.append(mol.GetProp(feature))
 
-                    X.append(mol_feature)
-
-                else:
-                    mol_feature = None
                     X.append(mol_feature)
 
                 if self.labels_fields is not None:

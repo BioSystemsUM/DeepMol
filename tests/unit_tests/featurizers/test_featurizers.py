@@ -9,11 +9,18 @@ from loaders.Loaders import CSVLoader
 class FeaturizerTestCase(ABC):
 
     def setUp(self) -> None:
-        dir_path = os.path.join(os.path.dirname(sys.path[1]), "src")
-        dataset = os.path.join(dir_path, "data", "test_to_convert_to_sdf.csv")
+        dir_path = os.path.join(os.path.dirname(os.path.abspath(".")))
+        dataset = os.path.join(dir_path, "tests", "data", "test_to_convert_to_sdf.csv")
         loader = CSVLoader(dataset,
                            mols_field='Standardized_Smiles',
                            labels_fields='Class')
+
+        self.mini_dataset_to_test = loader.create_dataset()
+
+        dataset = os.path.join(dir_path, "tests", "data", "PC-3.csv")
+        loader = CSVLoader(dataset,
+                           mols_field='smiles',
+                           labels_fields='pIC50')
 
         self.dataset_to_test = loader.create_dataset()
         self.mol2vec_model = os.path.join(dir_path, "compoundFeaturization", "mol2vec_models", "model_300dim.pkl")

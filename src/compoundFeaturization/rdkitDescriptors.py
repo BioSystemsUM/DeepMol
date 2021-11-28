@@ -1,12 +1,11 @@
 import inspect
-import queue
-from threading import Thread
 from typing import Union
 
+from numpy import float64, int64
 from rdkit import Chem
-from rdkit.Chem import Mol, rdMolDescriptors, AllChem, MolFromSmiles
+from rdkit.Chem import Mol, rdMolDescriptors, AllChem, MolFromSmiles, Descriptors
 from rdkit.Chem.rdForceFieldHelpers import UFFOptimizeMoleculeConfs
-from rdkit.Chem.rdmolops import RemoveHs
+from rdkit.ML.Descriptors import MoleculeDescriptors
 
 from Datasets.Datasets import Dataset
 from compoundFeaturization.baseFeaturizer import MolecularFeaturizer
@@ -15,6 +14,8 @@ import numpy as np
 import sys
 
 import traceback
+
+from utils.errors import PreConditionViolationException
 
 
 def _no_conformers_message(e):
@@ -67,43 +68,6 @@ def check_atoms_coordinates(mol):
         return False
 
 
-def get_all_3D_descriptors(mol):
-    """
-    Method that lists all the methods and uses them to featurize the whole set.
-    """
-
-    size = 639
-
-    current_module = sys.modules[__name__]
-
-    all_descriptors = np.empty(0, dtype=float)
-    for name, descriptor_function in inspect.getmembers(current_module, inspect.isclass):
-        try:
-            parents = [parent_function.__name__ for parent_function in inspect.getmro(descriptor_function)]
-
-            if name not in ["All3DDescriptors", "MolecularFeaturizer", "GETAWAY"] and \
-                    "MolecularFeaturizer" in parents:
-
-                descriptor_values = descriptor_function()._featurize(mol)
-
-                if not np.any(np.isnan(descriptor_values)):
-                    all_descriptors = np.concatenate((all_descriptors, descriptor_values))
-
-                else:
-                    print('error in molecule: ' + str(mol))
-                    all_descriptors = np.empty(size, dtype=float)
-                    all_descriptors[:] = np.NaN
-                    break
-
-        except Exception:
-            print('error in molecule: ' + str(mol))
-            all_descriptors = np.empty(size, dtype=float)
-            all_descriptors[:] = np.NaN
-            break
-
-    return all_descriptors
-
-
 class ThreeDimensionalMoleculeGenerator:
 
     def __init__(self, n_conformations: int = 20,
@@ -130,6 +94,16 @@ class ThreeDimensionalMoleculeGenerator:
         self.n_conformations = n_conformations
         self.threads = threads
         self.timeout_per_molecule = timeout_per_molecule
+
+    @staticmethod
+    def check_if_mol_has_explicit_hydrogens(new_mol: Mol):
+
+        atoms = new_mol.GetAtoms()
+        for atom in atoms:
+            number_hydrogens = atom.GetNumExplicitHs()
+            if number_hydrogens != 0:
+                return True
+        return False
 
     def generate_conformers(self, new_mol: Mol, ETKDG_version: int = 1, **kwargs):
         """
@@ -162,8 +136,6 @@ class ThreeDimensionalMoleculeGenerator:
             print("Choose ETKDG's valid version (1,2 or 3)")
             return None
 
-        new_mol = RemoveHs(new_mol)
-
         return new_mol
 
     def optimize_molecular_geometry(self, mol: Mol, mode: str = "MMFF94"):
@@ -180,6 +152,8 @@ class ThreeDimensionalMoleculeGenerator:
 
         """
 
+        mol = Chem.AddHs(mol)
+
         if "MMFF" in mode:
             AllChem.MMFFOptimizeMoleculeConfs(mol,
                                               maxIters=self.max_iterations,
@@ -191,6 +165,51 @@ class ThreeDimensionalMoleculeGenerator:
                                      numThreads=self.threads)
 
         return mol
+
+
+def get_all_3D_descriptors(mol):
+    """
+    Method that lists all the methods and uses them to featurize the whole set.
+    """
+
+    size = 639
+
+    current_module = sys.modules[__name__]
+
+    all_descriptors = np.empty(0, dtype=float)
+    for name, featurizer_function in inspect.getmembers(current_module, inspect.isclass):
+        try:
+            if issubclass(featurizer_function, ThreeDimensionDescriptor) and \
+                    issubclass(featurizer_function, MolecularFeaturizer) and \
+                    not name in [All3DDescriptors.__name__, ThreeDimensionDescriptor.__name__]:
+
+                descriptor_function = featurizer_function(False)
+                descriptor_values = descriptor_function._featurize(mol)
+
+                if not np.any(np.isnan(descriptor_values)):
+                    all_descriptors = np.concatenate((all_descriptors, descriptor_values))
+
+                else:
+                    raise Exception
+
+        except Exception:
+            print('error in molecule: ' + str(mol))
+            all_descriptors = np.empty(size, dtype=float)
+            all_descriptors[:] = np.NaN
+            break
+
+    return all_descriptors
+
+
+def generate_conformers(generator: ThreeDimensionalMoleculeGenerator,
+                        new_mol: Union[Mol, str], ETKG_version: int = 1,
+                        optimization_mode: str = "MMFF94"):
+    if isinstance(new_mol, str):
+        new_mol = MolFromSmiles(new_mol)
+
+    new_mol = generator.generate_conformers(new_mol, ETKG_version)
+    new_mol = generator.optimize_molecular_geometry(new_mol, optimization_mode)
+    return new_mol
 
 
 # TODO : check whether sdf file is being correctly exported for multi-class classification
@@ -221,59 +240,140 @@ def generate_conformers_to_sdf_file(dataset: Dataset, file_path: str, n_conforma
           mode for the molecular geometry optimization (MMFF or UFF)
     """
 
+    def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='|'):
+        """
+      Call in a loop to create terminal progress bar
+      @params:
+          iteration   - Required  : current iteration (Int)
+          total       - Required  : total iterations (Int)
+          prefix      - Optional  : prefix string (Str)
+          suffix      - Optional  : suffix string (Str)
+          decimals    - Optional  : positive number of decimals in percent complete (Int)
+          length      - Optional  : character length of bar (Int)
+          fill        - Optional  : bar fill character (Str)
+          printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
+      """
+        percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+        filledLength = int(length * iteration // total)
+        bar = fill * filledLength + '-' * (length - filledLength)
+        print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end="", flush=True)
+        # Print New Line on Complete
+        if iteration == total:
+            print()
+
     generator = ThreeDimensionalMoleculeGenerator(max_iterations, n_conformations, threads, timeout_per_molecule)
-
-    my_queue = queue.Queue()
-
-    def store_in_queue(f):
-        def wrapper(*args):
-            my_queue.put(f(*args))
-
-        return wrapper
-
-    @store_in_queue
-    def generate_conformers(new_mol: Union[Mol, str], ETKG_version: int = 1, optimization_mode: str = "MMFF94"):
-
-        if isinstance(new_mol, str):
-            new_mol = MolFromSmiles(new_mol)
-
-        new_mol = Chem.AddHs(new_mol)
-
-        new_mol = generator.generate_conformers(new_mol, ETKG_version)
-        new_mol = generator.optimize_molecular_geometry(new_mol, optimization_mode)
-
-        return new_mol
 
     mol_set = dataset.mols
 
     final_set_with_conformations = []
 
-    for i in range(mol_set.shape[0]):
-        action_thread = Thread(target=generate_conformers, args=(mol_set[i], ETKG_version, optimization_mode,))
-        action_thread.start()
-
-        m2 = my_queue.get(True, timeout=timeout_per_molecule)
-
-        label = dataset.y[i]
-        m2.SetProp("_Class", "%f" % label)
-        if dataset.ids:
-            mol_id = dataset.ids[i]
-            m2.SetProp("_ID", "%f" % mol_id)
-
-        final_set_with_conformations.append(m2)
-
     writer = Chem.SDWriter(file_path)
 
-    for mol in final_set_with_conformations:
-        writer.write(mol)
+    for i in range(mol_set.shape[0]):
+        printProgressBar(i, mol_set.shape[0])
+
+        try:
+            m2 = generate_conformers(generator, mol_set[i], ETKG_version, optimization_mode)
+
+            label = dataset.y[i]
+            m2.SetProp("_Class", "%f" % label)
+
+            if dataset.ids is not None and dataset.ids.size > 0:
+                mol_id = dataset.ids[i]
+                m2.SetProp("_ID", "%f" % mol_id)
+
+            writer.write(m2)
+            final_set_with_conformations.append(m2)
+
+        except:
+            pass
 
     writer.close()
 
 
+class TwoDimensionDescriptors(MolecularFeaturizer):
+
+    def __init__(self):
+        super().__init__()
+
+    def _featurize(self, mol: Mol):
+
+        calc = MoleculeDescriptors.MolecularDescriptorCalculator([x[0] for x in Descriptors._descList])
+        # header = calc.GetDescriptorNames()
+
+        try:
+            descriptors = calc.CalcDescriptors(mol)
+
+        except Exception as e:
+
+            print('error in smile: ' + str(mol))
+            _no_conformers_message(e)
+
+            descriptors = np.empty(208, dtype=float)
+            descriptors[:] = np.NaN
+
+        descriptors = np.asarray(descriptors, dtype=np.float)
+
+        return descriptors
+
+
+class ThreeDimensionDescriptor(MolecularFeaturizer):
+
+    def __init__(self, mandatory_generation_of_conformers):
+        self.descriptor_function = None
+        self.mandatory_generation_of_conformers = mandatory_generation_of_conformers
+        if self.mandatory_generation_of_conformers:
+            self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
+        super().__init__()
+
+    @property
+    def descriptor_function(self):
+        return self._descriptor_function
+
+    @descriptor_function.setter
+    def descriptor_function(self, function: callable):
+        self._descriptor_function = function
+
+    def generate_descriptor(self, mol):
+        try:
+            has_conformers = check_atoms_coordinates(mol)
+
+            if not has_conformers and self.mandatory_generation_of_conformers:
+                mol = self.three_dimensional_generator.generate_conformers(mol)
+                mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
+
+            elif not has_conformers:
+                raise PreConditionViolationException("molecule has no conformers")
+
+            fp = self.descriptor_function(mol)
+            if any([isinstance(fp, fp_type) for fp_type in [str, int, float64, float, int64]]):
+                fp = [fp]
+
+        except PreConditionViolationException as e:
+
+            _no_conformers_message(e)
+            raise e
+
+        except Exception as e:
+
+            print('error in smile: ' + str(mol))
+            _no_conformers_message(e)
+
+            fp = np.empty(80, dtype=float)
+            fp[:] = np.NaN
+
+        fp = np.asarray(fp, dtype=np.float)
+
+        return fp
+
+    def _featurize(self, mol: Mol):
+        raise NotImplementedError
+
+
 class All3DDescriptors(MolecularFeaturizer):
 
-    def __init__(self, generate_conformers=False):
-        self.generate_conformers = generate_conformers
+    def __init__(self, mandatory_generation_of_conformers=False):
+        self.generate_conformers = mandatory_generation_of_conformers
         if self.generate_conformers:
             self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
 
@@ -299,16 +399,20 @@ class All3DDescriptors(MolecularFeaturizer):
             if not has_conformers and self.generate_conformers:
                 mol = self.three_dimensional_generator.generate_conformers(mol)
                 mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
-            else:
-                raise RuntimeError("molecule has no conformers")
+            elif not has_conformers:
+                raise PreConditionViolationException("molecule has no conformers")
 
             fp = get_all_3D_descriptors(mol)
+
+        except PreConditionViolationException as e:
+
+            _no_conformers_message(e)
+            raise e
 
         except Exception as e:
 
             print('error in smile: ' + str(mol))
 
-            _no_conformers_message(e)
             fp = np.empty(size, dtype=float)
             fp[:] = np.NaN
 
@@ -317,17 +421,15 @@ class All3DDescriptors(MolecularFeaturizer):
         return fp
 
 
-class AutoCorr3D(MolecularFeaturizer):
+class AutoCorr3D(ThreeDimensionDescriptor):
     """AutoCorr3D.
     Todeschini and Consoni “Descriptors from Molecular Geometry” Handbook of Chemoinformatics
     https://doi.org/10.1002/9783527618279.ch37
     """
 
-    def __init__(self, generate_conformers=False):
-        self.generate_conformers = generate_conformers
-        if self.generate_conformers:
-            self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
-        super().__init__()
+    def __init__(self, mandatory_generation_of_conformers=False):
+        super().__init__(mandatory_generation_of_conformers)
+        self.descriptor_function = rdMolDescriptors.CalcAUTOCORR3D
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """3D Autocorrelation descriptors vector calculation (length of 80)
@@ -341,38 +443,19 @@ class AutoCorr3D(MolecularFeaturizer):
           A numpy array of 3D Autocorrelation descriptors
         """
 
-        try:
-            has_conformers = check_atoms_coordinates(mol)
-
-            if not has_conformers and self.generate_conformers:
-                mol = self.three_dimensional_generator.generate_conformers(mol)
-                mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
-
-            fp = rdMolDescriptors.CalcAUTOCORR3D(mol)
-
-        except Exception as e:
-
-            print('error in smile: ' + str(mol))
-            _no_conformers_message(e)
-
-            fp = np.empty(80, dtype=float)
-            fp[:] = np.NaN
-        fp = np.asarray(fp, dtype=np.float)
-
+        fp = self.generate_descriptor(mol)
         return fp
 
 
-class RadialDistributionFunction(MolecularFeaturizer):
+class RadialDistributionFunction(ThreeDimensionDescriptor):
     """Radial distribution function
     Todeschini and Consoni “Descriptors from Molecular Geometry” Handbook of Chemoinformatics
     https://doi.org/10.1002/9783527618279.ch37
     """
 
-    def __init__(self, generate_conformers=False):
-        self.generate_conformers = generate_conformers
-        if self.generate_conformers:
-            self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
-        super().__init__()
+    def __init__(self, mandatory_generation_of_conformers=False):
+        super().__init__(mandatory_generation_of_conformers)
+        self.descriptor_function = rdMolDescriptors.CalcRDF
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """ Radial distribution function descriptors calculation (length of 210)
@@ -386,36 +469,19 @@ class RadialDistributionFunction(MolecularFeaturizer):
           A numpy array of Radial distribution function results.
         """
 
-        try:
-            has_conformers = check_atoms_coordinates(mol)
-
-            if not has_conformers and self.generate_conformers:
-                mol = self.three_dimensional_generator.generate_conformers(mol)
-                mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
-
-            fp = rdMolDescriptors.CalcRDF(mol)
-
-        except Exception as e:
-            print('error in smile: ' + str(mol))
-            _no_conformers_message(e)
-
-            fp = np.empty(210, dtype=float)
-            fp[:] = np.NaN
-        fp = np.asarray(fp, dtype=np.float)
+        fp = self.generate_descriptor(mol)
 
         return fp
 
 
-class PlaneOfBestFit(MolecularFeaturizer):
+class PlaneOfBestFit(ThreeDimensionDescriptor):
     """Plane of best fit
     Nicholas C. Firth, Nathan Brown, and Julian Blagg, JCIM 52:2516-25
     """
 
-    def __init__(self, generate_conformers=False):
-        self.generate_conformers = generate_conformers
-        if self.generate_conformers:
-            self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
-        super().__init__()
+    def __init__(self, mandatory_generation_of_conformers=False):
+        super().__init__(mandatory_generation_of_conformers)
+        self.descriptor_function = rdMolDescriptors.CalcPBF
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """ Radial distribution function descriptors calculation
@@ -429,36 +495,20 @@ class PlaneOfBestFit(MolecularFeaturizer):
           A numpy array with the Plane of best fit.
         """
 
-        try:
-            has_conformers = check_atoms_coordinates(mol)
-
-            if not has_conformers and self.generate_conformers:
-                mol = self.three_dimensional_generator.generate_conformers(mol)
-                mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
-
-            fp = [rdMolDescriptors.CalcPBF(mol)]
-
-        except Exception as e:
-            print('error in smile: ' + str(mol))
-            _no_conformers_message(e)
-            fp = np.empty(1, dtype=float)
-            fp[:] = np.NaN
-        fp = np.asarray(fp, dtype=np.float)
+        fp = self.generate_descriptor(mol)
 
         return fp
 
 
-class MORSE(MolecularFeaturizer):
+class MORSE(ThreeDimensionDescriptor):
     """Molecule Representation of Structures based on Electron diffraction descriptors
     Todeschini and Consoni “Descriptors from Molecular Geometry” Handbook of Chemoinformatics
     https://doi.org/10.1002/9783527618279.ch37
     """
 
-    def __init__(self, generate_conformers=False):
-        self.generate_conformers = generate_conformers
-        if self.generate_conformers:
-            self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
-        super().__init__()
+    def __init__(self, mandatory_generation_of_conformers=False):
+        super().__init__(mandatory_generation_of_conformers)
+        self.descriptor_function = rdMolDescriptors.CalcMORSE
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """ Molecule Representation of Structures based on Electron diffraction descriptors calculation (length of 224)
@@ -472,37 +522,21 @@ class MORSE(MolecularFeaturizer):
           A numpy array of MORSE descriptors
         """
 
-        try:
-            has_conformers = check_atoms_coordinates(mol)
-
-            if not has_conformers and self.generate_conformers:
-                mol = self.three_dimensional_generator.generate_conformers(mol)
-                mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
-
-            fp = rdMolDescriptors.CalcMORSE(mol)
-
-        except Exception as e:
-            print('error in smile: ' + str(mol))
-            _no_conformers_message(e)
-            fp = np.empty(224, dtype=float)
-            fp[:] = np.NaN
-        fp = np.asarray(fp, dtype=np.float)
+        fp = self.generate_descriptor(mol)
 
         return fp
 
 
-class WHIM(MolecularFeaturizer):
+class WHIM(ThreeDimensionDescriptor):
     """
     WHIM descriptors vector
     Todeschini and Consoni “Descriptors from Molecular Geometry” Handbook of Chemoinformatics
     https://doi.org/10.1002/9783527618279.ch37
     """
 
-    def __init__(self, generate_conformers=False):
-        self.generate_conformers = generate_conformers
-        if self.generate_conformers:
-            self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
-        super().__init__()
+    def __init__(self, mandatory_generation_of_conformers=False):
+        super().__init__(mandatory_generation_of_conformers)
+        self.descriptor_function = rdMolDescriptors.CalcWHIM
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """ WHIM descriptors calculation (length of 114)
@@ -515,40 +549,21 @@ class WHIM(MolecularFeaturizer):
         np.ndarray
           A numpy array of WHIM descriptors
         """
-
-        try:
-            has_conformers = check_atoms_coordinates(mol)
-
-            if not has_conformers and self.generate_conformers:
-                mol = self.three_dimensional_generator.generate_conformers(mol)
-                mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
-
-            fp = rdMolDescriptors.CalcWHIM(mol)
-
-        except Exception as e:
-            print('error in smile: ' + str(mol))
-
-            _no_conformers_message(e)
-            fp = np.empty(114, dtype=float)
-            fp[:] = np.NaN
-        fp = np.asarray(fp, dtype=np.float)
+        fp = self.generate_descriptor(mol)
 
         return fp
 
 
-class RadiusOfGyration(MolecularFeaturizer):
+class RadiusOfGyration(ThreeDimensionDescriptor):
     """
     Calculate Radius of Gyration
     G. A. Arteca “Molecular Shape Descriptors” Reviews in Computational Chemistry vol 9
     https://doi.org/10.1002/9780470125861.ch5
     """
 
-    def __init__(self, generate_conformers=False):
-        self.generate_conformers = generate_conformers
-        if self.generate_conformers:
-            self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
-
-        super().__init__()
+    def __init__(self, mandatory_generation_of_conformers=False):
+        super().__init__(mandatory_generation_of_conformers)
+        self.descriptor_function = rdMolDescriptors.CalcRadiusOfGyration
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """ Radius of Gyration calculation (length of 1)
@@ -562,39 +577,21 @@ class RadiusOfGyration(MolecularFeaturizer):
           A numpy array of Molecule Representation of Structures based on Electron diffraction
         """
 
-        try:
-            has_conformers = check_atoms_coordinates(mol)
-
-            if not has_conformers and self.generate_conformers:
-                mol = self.three_dimensional_generator.generate_conformers(mol)
-                mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
-
-            fp = [rdMolDescriptors.CalcRadiusOfGyration(mol)]
-
-        except Exception as e:
-            print('error in smile: ' + str(mol))
-
-            _no_conformers_message(e)
-            fp = np.empty(1, dtype=float)
-            fp[:] = np.NaN
-        fp = np.asarray(fp, dtype=np.float)
+        fp = self.generate_descriptor(mol)
 
         return fp
 
 
-class InertialShapeFactor(MolecularFeaturizer):
+class InertialShapeFactor(ThreeDimensionDescriptor):
     """
     Calculate Inertial Shape Factor
     Todeschini and Consoni “Descriptors from Molecular Geometry” Handbook of Chemoinformatics
     https://doi.org/10.1002/9783527618279.ch37
     """
 
-    def __init__(self, generate_conformers=False):
-        self.generate_conformers = generate_conformers
-        if self.generate_conformers:
-            self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
-
-        super().__init__()
+    def __init__(self, mandatory_generation_of_conformers=False):
+        super().__init__(mandatory_generation_of_conformers)
+        self.descriptor_function = rdMolDescriptors.CalcInertialShapeFactor
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """ Inertial Shape Factor (length of 1)
@@ -608,37 +605,21 @@ class InertialShapeFactor(MolecularFeaturizer):
           A numpy array of the Inertial Shape Factor
         """
 
-        try:
-            has_conformers = check_atoms_coordinates(mol)
-
-            if not has_conformers and self.generate_conformers:
-                mol = self.three_dimensional_generator.generate_conformers(mol)
-                mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
-
-            fp = [rdMolDescriptors.CalcInertialShapeFactor(mol)]
-
-        except Exception as e:
-            print('error in smile: ' + str(mol))
-            _no_conformers_message(e)
-            fp = np.empty(1, dtype=float)
-            fp[:] = np.NaN
-        fp = np.asarray(fp, dtype=np.float)
+        fp = self.generate_descriptor(mol)
 
         return fp
 
 
-class Eccentricity(MolecularFeaturizer):
+class Eccentricity(ThreeDimensionDescriptor):
     """
     Calculate molecular eccentricity
     G. A. Arteca “Molecular Shape Descriptors” Reviews in Computational Chemistry vol 9
     https://doi.org/10.1002/9780470125861.ch5
     """
 
-    def __init__(self, generate_conformers=False):
-        self.generate_conformers = generate_conformers
-        if self.generate_conformers:
-            self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
-        super().__init__()
+    def __init__(self, mandatory_generation_of_conformers=False):
+        super().__init__(mandatory_generation_of_conformers)
+        self.descriptor_function = rdMolDescriptors.CalcEccentricity
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """ Eccentricity (length of 1)
@@ -652,37 +633,21 @@ class Eccentricity(MolecularFeaturizer):
           A numpy array of the Eccentricity
         """
 
-        try:
-            has_conformers = check_atoms_coordinates(mol)
-
-            if not has_conformers and self.generate_conformers:
-                mol = self.three_dimensional_generator.generate_conformers(mol)
-                mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
-
-            fp = [rdMolDescriptors.CalcEccentricity(mol)]
-
-        except Exception as e:
-            print('error in smile: ' + str(mol))
-            _no_conformers_message(e)
-            fp = np.empty(1, dtype=float)
-            fp[:] = np.NaN
-        fp = np.asarray(fp, dtype=np.float)
+        fp = self.generate_descriptor(mol)
 
         return fp
 
 
-class Asphericity(MolecularFeaturizer):
+class Asphericity(ThreeDimensionDescriptor):
     """
     Calculate molecular Asphericity
     A. Baumgaertner, “Shapes of flexible vesicles” J. Chem. Phys. 98:7496 (1993)
     https://doi.org/10.1063/1.464689
     """
 
-    def __init__(self, generate_conformers=False):
-        self.generate_conformers = generate_conformers
-        if self.generate_conformers:
-            self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
-        super().__init__()
+    def __init__(self, mandatory_generation_of_conformers=False):
+        super().__init__(mandatory_generation_of_conformers)
+        self.descriptor_function = rdMolDescriptors.CalcEccentricity
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """ Asphericity (length of 1)
@@ -696,37 +661,21 @@ class Asphericity(MolecularFeaturizer):
           A numpy array of the Asphericity
         """
 
-        try:
-            has_conformers = check_atoms_coordinates(mol)
-
-            if not has_conformers and self.generate_conformers:
-                mol = self.three_dimensional_generator.generate_conformers(mol)
-                mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
-
-            fp = [rdMolDescriptors.CalcAsphericity(mol)]
-
-        except Exception as e:
-            print('error in smile: ' + str(mol))
-            _no_conformers_message(e)
-            fp = np.empty(1, dtype=float)
-            fp[:] = np.NaN
-        fp = np.asarray(fp, dtype=np.float)
+        fp = self.generate_descriptor(mol)
 
         return fp
 
 
-class SpherocityIndex(MolecularFeaturizer):
+class SpherocityIndex(ThreeDimensionDescriptor):
     """
     Calculate molecular Spherocity Index
     Todeschini and Consoni “Descriptors from Molecular Geometry” Handbook of Chemoinformatics
     https://doi.org/10.1002/9783527618279.ch37
     """
 
-    def __init__(self, generate_conformers=False):
-        self.generate_conformers = generate_conformers
-        if self.generate_conformers:
-            self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
-        super().__init__()
+    def __init__(self, mandatory_generation_of_conformers=False):
+        super().__init__(mandatory_generation_of_conformers)
+        self.descriptor_function = rdMolDescriptors.CalcEccentricity
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """ Spherocity Index (length of 1)
@@ -740,36 +689,20 @@ class SpherocityIndex(MolecularFeaturizer):
           A numpy array of the Spherocity Index
         """
 
-        try:
-            has_conformers = check_atoms_coordinates(mol)
-
-            if not has_conformers and self.generate_conformers:
-                mol = self.three_dimensional_generator.generate_conformers(mol)
-                mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
-
-            fp = [rdMolDescriptors.CalcSpherocityIndex(mol)]
-
-        except Exception as e:
-            print('error in smile: ' + str(mol))
-            _no_conformers_message(e)
-            fp = np.empty(1, dtype=float)
-            fp[:] = np.NaN
-        fp = np.asarray(fp, dtype=np.float)
+        fp = self.generate_descriptor(mol)
 
         return fp
 
 
-class PrincipalMomentsOfInertia(MolecularFeaturizer):
+class PrincipalMomentsOfInertia(ThreeDimensionDescriptor):
     """
     Calculate Principal Moments of Inertia
 
     """
 
-    def __init__(self, generate_conformers=False):
-        self.generate_conformers = generate_conformers
-        if self.generate_conformers:
-            self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
-        super().__init__()
+    def __init__(self, mandatory_generation_of_conformers=False):
+        super().__init__(mandatory_generation_of_conformers)
+        self.descriptor_function = rdMolDescriptors.CalcEccentricity
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """ Principal Moments of Inertia (length of 3)
@@ -786,15 +719,23 @@ class PrincipalMomentsOfInertia(MolecularFeaturizer):
         try:
             has_conformers = check_atoms_coordinates(mol)
 
-            if not has_conformers and self.generate_conformers:
+            if not has_conformers and self.mandatory_generation_of_conformers:
                 mol = self.three_dimensional_generator.generate_conformers(mol)
                 mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
+
+            elif not has_conformers:
+                raise PreConditionViolationException("molecule has no conformers")
 
             pmi1 = [rdMolDescriptors.CalcPMI1(mol)]
             pmi2 = [rdMolDescriptors.CalcPMI2(mol)]
             pmi3 = [rdMolDescriptors.CalcPMI3(mol)]
 
             pmi = pmi1 + pmi2 + pmi3
+
+        except PreConditionViolationException as e:
+
+            _no_conformers_message(e)
+            raise e
 
         except Exception as e:
             print('error in smile: ' + str(mol))
@@ -808,18 +749,16 @@ class PrincipalMomentsOfInertia(MolecularFeaturizer):
         return pmi
 
 
-class NormalizedPrincipalMomentsRatios(MolecularFeaturizer):
+class NormalizedPrincipalMomentsRatios(ThreeDimensionDescriptor):
     """
     Normalized principal moments ratios
     Sauer and Schwarz JCIM 43:987-1003 (2003)
 
     """
 
-    def __init__(self,generate_conformers=False):
-        self.generate_conformers = generate_conformers
-        if self.generate_conformers:
-            self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
-        super().__init__()
+    def __init__(self, mandatory_generation_of_conformers=False):
+
+        super().__init__(mandatory_generation_of_conformers)
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """ Normalized Principal Moments Ratios (length of 2)
@@ -836,14 +775,22 @@ class NormalizedPrincipalMomentsRatios(MolecularFeaturizer):
         try:
             has_conformers = check_atoms_coordinates(mol)
 
-            if not has_conformers and self.generate_conformers:
+            if not has_conformers and self.mandatory_generation_of_conformers:
                 mol = self.three_dimensional_generator.generate_conformers(mol)
                 mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
+
+            elif not has_conformers:
+                raise PreConditionViolationException("molecule has no conformers")
 
             npr1 = [rdMolDescriptors.CalcNPR1(mol)]
             npr2 = [rdMolDescriptors.CalcNPR2(mol)]
 
             npr = npr1 + npr2
+
+        except PreConditionViolationException as e:
+
+            _no_conformers_message(e)
+            raise e
 
         except Exception as e:
             print('error in smile: ' + str(mol))

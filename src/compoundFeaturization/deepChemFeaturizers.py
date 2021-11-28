@@ -115,7 +115,7 @@ class ConvMolFeat(MolecularFeaturizer):
                 print('Failed to featurize datapoint %d, %s' %(i, dataset.mols[i]))
                 indexes.append(i)
         # treat indexes with no featurization
-        dataset.removeElements(indexes)
+        dataset.remove_elements(indexes)
         print('Elements with indexes: ', indexes, 'were removed due to lack of featurization.')
 
         return dataset
@@ -185,7 +185,7 @@ class WeaveFeat(MolecularFeaturizer):
                 print('Failed to featurize datapoint %d, %s' %(i, dataset.mols[i]))
                 indexes.append(i)
         # treat indexes with no featurization
-        dataset.removeElements(indexes)
+        dataset.remove_elements(indexes)
         print('Elements with indexes: ', indexes, 'were removed due to lack of featurization.')
 
         return dataset
@@ -239,7 +239,7 @@ class MolGraphConvFeat(MolecularFeaturizer):
                 print('Failed to featurize datapoint %d, %s' %(i, dataset.mols[i]))
                 indexes.append(i)
         # treat indexes with no featurization
-        dataset.removeElements(indexes)
+        dataset.remove_elements(indexes)
         print('Elements with indexes: ', indexes, 'were removed due to lack of featurization.')
 
         return dataset
@@ -315,7 +315,7 @@ class CoulombFeat(MolecularFeaturizer):
                 indexes.append(i)
  
         # treat indexes with no featurization
-        dataset.removeElements(indexes)
+        dataset.remove_elements(indexes)
         print('Elements with indexes: ', indexes, 'were removed due to lack of featurization.')
 
         return dataset
@@ -390,7 +390,7 @@ class CoulombEigFeat(MolecularFeaturizer):
                 indexes.append(i)
  
         # treat indexes with no featurization
-        dataset.removeElements(indexes)
+        dataset.remove_elements(indexes)
         print('Elements with indexes: ', indexes, 'were removed due to lack of featurization.')
 
         return dataset
@@ -464,7 +464,7 @@ class SmileImageFeat(MolecularFeaturizer):
                 print('Failed to featurize datapoint %d, %s' %(i, dataset.mols[i]))
                 indexes.append(i)
         # treat indexes with no featurization
-        dataset.removeElements(indexes)
+        dataset.remove_elements(indexes)
         print('Elements with indexes: ', indexes, 'were removed due to lack of featurization.')
         dataset.X = np.asarray([np.asarray(feat,dtype=object) for feat in dataset.X])
 
@@ -531,7 +531,7 @@ class SmilesSeqFeat(MolecularFeaturizer):
                 print('Failed to featurize datapoint %d, %s' %(i, dataset.mols[i]))
                 indexes.append(i)
         # treat indexes with no featurization
-        dataset.removeElements(indexes)
+        dataset.remove_elements(indexes)
         print('Elements with indexes: ', indexes, 'were removed due to lack of featurization.')
         dataset.X = np.asarray([np.asarray(feat,dtype=object) for feat in dataset.X])
 

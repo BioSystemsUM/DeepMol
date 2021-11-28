@@ -14,6 +14,7 @@ class TestMixedFeaturizer(FeaturizerTestCase, TestCase):
         dataset_rows_number = len(self.dataset_to_test.mols)
         descriptors = [All3DDescriptors(generate_conformers=True), MorganFingerprint()]
         MixedFeaturizer(featurizers=descriptors).featurize(self.dataset_to_test)
+
         self.assertEqual(dataset_rows_number, self.dataset_to_test.X.shape[0])
 
     def test_featurize_with_nan(self):
@@ -26,4 +27,5 @@ class TestMixedFeaturizer(FeaturizerTestCase, TestCase):
         dataset = copy(self.dataset_to_test)
         descriptors = [All3DDescriptors(generate_conformers=True), MorganFingerprint()]
         MixedFeaturizer(featurizers=descriptors).featurize(dataset)
+
         self.assertEqual(dataset_rows_number, dataset.X.shape[0])

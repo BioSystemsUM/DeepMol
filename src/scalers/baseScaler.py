@@ -13,13 +13,13 @@ class BaseScaler(ABC):
         if self.__class__ == BaseScaler:
             raise Exception('Abstract class MolecularFeaturizer should not be instantiated')
 
-    @abstractmethod
     @property
+    @abstractmethod
     def scaler_object(self):
         raise NotImplementedError
 
-    @abstractmethod
     @scaler_object.setter
+    @abstractmethod
     def scaler_object(self, value):
         raise NotImplementedError
 

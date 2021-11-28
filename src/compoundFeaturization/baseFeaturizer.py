@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Union
 
 import numpy as np
 
@@ -6,9 +7,9 @@ from rdkit import Chem
 from rdkit.Chem import rdmolfiles
 from rdkit.Chem import rdmolops
 from rdkit.Chem.rdchem import Mol
-from sklearn.preprocessing import StandardScaler
 
 from Datasets.Datasets import Dataset
+from scalers.baseScaler import BaseScaler
 
 
 class MolecularFeaturizer(ABC):
@@ -21,10 +22,11 @@ class MolecularFeaturizer(ABC):
     """
 
     def __init__(self):
+
         if self.__class__ == MolecularFeaturizer:
             raise Exception('Abstract class MolecularFeaturizer should not be instantiated')
 
-    def featurize(self, dataset: Dataset, log_every_n=1000, scale=False):
+    def featurize(self, dataset: Dataset, log_every_n=1000, scaler: Union[BaseScaler, None] = None):
         """Calculate features for molecules.
         Parameters
         ----------
@@ -32,8 +34,8 @@ class MolecularFeaturizer(ABC):
           Dataset containing molecules to featurize
         log_every_n: int, default 1000
           Logging messages reported every `log_every_n` samples.
-        scale: bool, default False
-          Scale the data: y = (x – mean) / standard_deviation
+        scaler: BaseScaler, default None
+          Scale the data
         Returns
         -------
         dataset: Dataset object
@@ -68,14 +70,12 @@ class MolecularFeaturizer(ABC):
         # TODO: where and in which manner to remove NAs????
         dataset.removeNAs()
 
-        if scale:
-            scaler = StandardScaler()
+        if scaler:
             # transform data
-            dataset.X = scaler.fit_transform(dataset.X)
+            scaler.fit_transform(dataset)
 
         return dataset
 
     @abstractmethod
     def _featurize(self, mol: Mol):
         raise NotImplementedError()
-

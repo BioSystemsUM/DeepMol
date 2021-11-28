@@ -1,8 +1,8 @@
 from setuptools import setup, find_packages
 
-setup(name='src',
+setup(name='deepmol',
       version='1.0',
-      packages=find_packages(),
+      packages=find_packages(include=["src"]),
       author='BiSBII CEB University of Minho',
       author_email='jfscorreia95@gmail.com',
       description='DeepMol: ...',

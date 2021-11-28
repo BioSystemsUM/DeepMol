@@ -16,6 +16,7 @@ class FeaturizerTestCase(ABC):
                            labels_fields='Class')
 
         self.dataset_to_test = loader.create_dataset()
+        self.mol2vec_model = os.path.join(dir_path, "compoundFeaturization", "mol2vec_models", "model_300dim.pkl")
 
     @abstractmethod
     def test_featurize(self):

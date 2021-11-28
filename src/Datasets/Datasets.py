@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -115,7 +113,7 @@ class Dataset(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def select_to_split(self, indexes: List[int]) -> Dataset:
+    def select_to_split(self, indexes: List[int]):
         raise NotImplementedError
 
 
@@ -192,7 +190,7 @@ class NumpyDataset(Dataset):
     def __len__(self) -> int:
         return len(self.mols)
 
-    def __init__(self, mols: Union[np.ndarray, List[str], List[mols]], X: Optional[np.ndarray] = None,
+    def __init__(self, mols: Union[np.ndarray, List[str], List[Mol]], X: Optional[np.ndarray] = None,
                  y: Optional[np.ndarray] = None,
                  ids: Optional[np.ndarray] = None, features2keep: Optional[np.ndarray] = None, n_tasks: int = 1):
         """Initialize a NumpyDataset object.
@@ -339,7 +337,7 @@ class NumpyDataset(Dataset):
             column_sets = list(set(nans_column_indexes))
             self.X = np.delete(self.X, column_sets, axis=1)
 
-    def select_to_split(self, indexes: List[int]) -> NumpyDataset:
+    def select_to_split(self, indexes: List[int]):
 
         y = None
         X = None

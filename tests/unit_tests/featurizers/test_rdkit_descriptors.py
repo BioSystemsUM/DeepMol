@@ -46,6 +46,25 @@ class Test2DDescriptors(FeaturizerTestCase, TestCase):
         TwoDimensionDescriptors().featurize(dataset)
         self.assertEqual(dataset_rows_number, dataset.X.shape[0])
 
+    def test_with_invalid_smiles(self):
+
+        TwoDimensionDescriptors().featurize(self.dataset_invalid_smiles)
+
+    def test_dummy_test(self):
+        dir_path = os.path.join(os.path.dirname(os.path.abspath(".")))
+        dataset = os.path.join(dir_path, "tests", "data", "negative_cases1.csv")
+        from loaders.Loaders import CSVLoader
+
+        loader = CSVLoader(dataset,
+                           mols_field='smiles',
+                           labels_fields='sweet')
+
+        dataset = loader.create_dataset()
+        from compoundFeaturization.rdkitFingerprints import AtomPairFingerprint
+
+        AtomPairFingerprint(nBits=1024, includeChirality=True).featurize(dataset)
+
+        dataset.remove_duplicates()
 
 class Test3DDescriptors(FeaturizerTestCase, TestCase):
 

@@ -300,6 +300,11 @@ class NumpyDataset(Dataset):
             print("ids not defined!")
             return None
 
+    def remove_duplicates(self):
+        unique, index = np.unique(self.X, return_index=True, axis=0)
+
+        self.select(index, axis=0)
+
     def remove_elements(self, indexes):
         """Remove elements with specific indexes from the dataset
             Very useful when doing feature selection or to remove NAs.
@@ -373,18 +378,23 @@ class NumpyDataset(Dataset):
 
         if axis == 0:
             all_indexes = self.ids
-            indexes_to_delete = list(set(all_indexes) - set(indexes))
+            indexes_to_delete = sorted(list(set(all_indexes) - set(indexes)))
+            raw_indexes = []
+            for index in indexes_to_delete:
+                for i, mol_index in enumerate(all_indexes):
+                    if index == mol_index:
+                        raw_indexes.append(i)
 
-            self.mols = np.delete(self.mols, indexes_to_delete, axis)
+            self.mols = np.delete(self.mols, raw_indexes, axis)
 
             if self.y is not None:
-                self.y = np.delete(self.y, indexes_to_delete, axis)
+                self.y = np.delete(self.y, raw_indexes, axis)
 
             if self.X is not None:
-                self.X = np.delete(self.X, indexes_to_delete, axis)
+                self.X = np.delete(self.X, raw_indexes, axis)
 
             if self.ids is not None:
-                self.ids = np.delete(self.ids, indexes_to_delete, axis)
+                self.ids = np.delete(self.ids, raw_indexes, axis)
 
         if axis == 1:
             indexes_to_delete = list(set(self.features2keep) - set(indexes))

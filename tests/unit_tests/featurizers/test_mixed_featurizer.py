@@ -2,8 +2,10 @@ from copy import copy
 from unittest import TestCase
 
 from compoundFeaturization.mixedDescriptors import MixedFeaturizer
+from compoundFeaturization.mol2vec import Mol2Vec
 from compoundFeaturization.rdkitDescriptors import All3DDescriptors
-from compoundFeaturization.rdkitFingerprints import MorganFingerprint
+from compoundFeaturization.rdkitFingerprints import MorganFingerprint, AtomPairFingerprint
+from scalers.sklearnScalers import StandardScaler
 from tests.unit_tests.featurizers.test_featurizers import FeaturizerTestCase
 
 import numpy as np
@@ -27,3 +29,14 @@ class TestMixedFeaturizer(FeaturizerTestCase, TestCase):
         descriptors = [All3DDescriptors(generate_conformers=True), MorganFingerprint()]
         MixedFeaturizer(featurizers=descriptors).featurize(dataset)
         self.assertEqual(dataset_rows_number, dataset.X.shape[0])
+
+    def test_mixed_featurizer(self):
+        atom_pair = AtomPairFingerprint(nBits=1024, includeChirality=True)
+        scaler = StandardScaler()
+        moltovec = Mol2Vec()
+        featurize_method = MixedFeaturizer(featurizers=[atom_pair, moltovec])
+        featurize_method.featurize(self.mini_dataset_to_test)
+        columns = [i for i in range(1024, 1324)]
+        scaler.fit_transform(self.mini_dataset_to_test, columns)
+        scaler.transform(self.mini_dataset_to_test, columns)
+

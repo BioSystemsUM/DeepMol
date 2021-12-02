@@ -278,7 +278,7 @@ class BorutaAlgorithm(BaseFeatureSelector):
 
         self.support_weak = support_weak
 
-        if not estimator:
+        if estimator is None:
             if task == "classification":
                 self.estimator = RandomForestClassifier(
                     n_jobs=-1,

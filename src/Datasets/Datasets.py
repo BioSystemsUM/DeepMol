@@ -226,7 +226,8 @@ class NumpyDataset(Dataset):
         self.X = X
         self.y = y
         self.ids = ids
-        self.features2keep = features2keep
+        if features2keep:
+            self.features2keep = features2keep
         self.n_tasks = n_tasks
 
         if features2keep is not None:

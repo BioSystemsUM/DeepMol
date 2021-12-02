@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import List
 
 import joblib
 
@@ -31,10 +32,13 @@ class BaseScaler(ABC):
     def load_scaler(self, file_path: str):
         raise NotImplementedError
 
-    def fit_transform(self, dataset: Dataset):
+    def fit_transform(self, dataset: Dataset, columns=None):
 
+        if not columns:
+            columns = [i for i in range(dataset.X.shape[1])]
         try:
-            dataset.X = self._fit_transform(dataset.X)
+            res = self._fit_transform(dataset.X[:, columns])
+            dataset.X = np.concatenate((dataset.X[:, :min(columns)], res), axis=1)
 
         except:
             raise Exception("It was not possible to scale the data")
@@ -43,9 +47,11 @@ class BaseScaler(ABC):
     def _fit_transform(self, X):
         raise NotImplementedError
 
-    def fit(self, dataset: Dataset):
+    def fit(self, dataset: Dataset, columns=None):
+        if not columns:
+            columns = [i for i in range(dataset.X.shape[1])]
         try:
-            self._fit(dataset.X)
+            self._fit(dataset.X[:, columns])
 
         except:
             raise Exception("It was not possible to scale the data")
@@ -54,12 +60,15 @@ class BaseScaler(ABC):
     def _fit(self, X: np.ndarray):
         raise NotImplementedError
 
-    def transform(self, dataset: Dataset):
-        try:
-            dataset.X = self._transform(dataset.X)
+    def transform(self, dataset: Dataset, columns=None):
+        if not columns:
+            columns = [i for i in range(dataset.X.shape[1])]
+        # try:
+        res = self._transform(dataset.X[:, columns])
+        dataset.X = np.concatenate((dataset.X[:, :min(columns)], res), axis=1)
 
-        except:
-            raise Exception("It was not possible to scale the data")
+        # except:
+        #     raise Exception("It was not possible to scale the data")
 
     def _transform(self, X: np.ndarray):
         raise NotImplementedError

@@ -9,7 +9,7 @@ import numpy as np
 class TestMol2Vec(FeaturizerTestCase, TestCase):
     def test_featurize(self):
         dataset_rows_number = len(self.mini_dataset_to_test.mols)
-        Mol2Vec(pretrain_model_path="../../../src/compoundFeaturization/mol2vec_models/model_300dim.pkl").featurize(
+        Mol2Vec().featurize(
             self.mini_dataset_to_test)
         self.assertEqual(dataset_rows_number, self.mini_dataset_to_test.X.shape[0])
 

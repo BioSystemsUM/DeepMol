@@ -21,7 +21,8 @@ class MolecularFeaturizer(ABC):
     calculating features for a single molecule.
     """
 
-    def __init__(self):
+    def __init__(self, ):
+
         if self.__class__ == MolecularFeaturizer:
             raise Exception('Abstract class MolecularFeaturizer should not be instantiated')
 
@@ -79,11 +80,13 @@ class MolecularFeaturizer(ABC):
 
         dataset.remove_nan(remove_nans_axis)
 
-        if scaler:
+        if scaler and path_to_save_scaler:
             # transform data
             scaler.fit_transform(dataset)
-            if path_to_save_scaler:
-                scaler.save_scaler(path_to_save_scaler)
+            scaler.save_scaler(path_to_save_scaler)
+
+        elif scaler:
+            scaler.transform(dataset)
 
         return dataset
 

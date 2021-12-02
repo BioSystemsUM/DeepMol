@@ -1,9 +1,13 @@
+import os
 from typing import Iterable
 
 import numpy as np
 from rdkit.Chem import Mol
 
 from compoundFeaturization.baseFeaturizer import MolecularFeaturizer
+from compoundFeaturization.mol2vec import Mol2Vec
+from compoundFeaturization.rdkitFingerprints import AtomPairFingerprint
+from scalers.sklearnScalers import StandardScaler
 
 
 class MixedFeaturizer(MolecularFeaturizer):
@@ -40,3 +44,4 @@ class MixedFeaturizer(MolecularFeaturizer):
         final_features = np.asarray(final_features, dtype=np.float)
 
         return final_features
+

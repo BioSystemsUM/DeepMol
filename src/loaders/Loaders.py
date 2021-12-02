@@ -142,6 +142,7 @@ class CSVLoader(object):
         self.id_field = id_field
         self.labels_fields = labels_fields
         self.features_fields = features_fields
+
         self.features2keep = features2keep
         self.shard_size = shard_size
 

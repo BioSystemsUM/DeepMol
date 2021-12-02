@@ -1,6 +1,6 @@
 import joblib
 import numpy as np
-import sklearn
+import sklearn.preprocessing as preprocessing
 
 from scalers.baseScaler import BaseScaler
 
@@ -11,9 +11,9 @@ class StandardScaler(BaseScaler):
         self.copy = copy
         self.with_mean = with_mean
         self.with_std = with_std
-        self.scaler_object = sklearn.preprocessing.StandardScaler(copy=self.copy,
-                                                                   with_mean=self.with_mean,
-                                                                   with_std=self.with_std)
+        self.scaler_object = preprocessing.StandardScaler(copy=self.copy,
+                                                           with_mean=self.with_mean,
+                                                           with_std=self.with_std)
 
         super().__init__()
 
@@ -44,7 +44,7 @@ class MinMaxScaler(BaseScaler):
         self.copy = copy
         self.feature_range = feature_range
         self.clip = clip
-        self._scaler_object = sklearn.preprocessing.MinMaxScaler(copy=self.copy,
+        self._scaler_object = preprocessing.MinMaxScaler(copy=self.copy,
                                                                  feature_range=self.feature_range,
                                                                  clip=self.clip)
 
@@ -75,7 +75,7 @@ class MaxAbsScaler(BaseScaler):
 
     def __init__(self, copy=True):
         self.copy = copy
-        self._scaler_object = sklearn.preprocessing.MaxAbsScaler(copy=self.copy)
+        self._scaler_object = preprocessing.MaxAbsScaler(copy=self.copy)
 
         super().__init__()
 
@@ -109,7 +109,7 @@ class RobustScaler(BaseScaler):
         self.with_scaling = with_scaling
         self.quantile_range = quantile_range
         self.unit_variance = unit_variance
-        self._scaler_object = sklearn.preprocessing.RobustScaler(with_centering=self.with_centering,
+        self._scaler_object = preprocessing.RobustScaler(with_centering=self.with_centering,
                                                                  with_scaling=self.with_scaling,
                                                                  quantile_range=self.quantile_range,
                                                                  copy=self.copy,
@@ -145,7 +145,7 @@ class PolynomialFeatures(BaseScaler):
         self.interaction_only = interaction_only
         self.include_bias = include_bias
         self.order = order
-        self._scaler_object = sklearn.preprocessing.PolynomialFeatures(degree=self.degree,
+        self._scaler_object = preprocessing.PolynomialFeatures(degree=self.degree,
                                                                        interaction_only=self.interaction_only,
                                                                        include_bias=self.include_bias,
                                                                        order=self.order)
@@ -178,7 +178,7 @@ class Normalizer(BaseScaler):
     def __init__(self, norm='l2', copy=True):
         self.norm = norm
         self.copy = copy
-        self._scaler_object = sklearn.preprocessing.Normalizer(norm=self.norm, copy=self.copy)
+        self._scaler_object = preprocessing.Normalizer(norm=self.norm, copy=self.copy)
 
         super().__init__()
 
@@ -208,7 +208,7 @@ class Binarizer(BaseScaler):
     def __init__(self, threshold=0.0, copy=True):
         self.threshold = threshold
         self.copy = copy
-        self._scaler_object = sklearn.preprocessing.Binarizer(threshold=self.threshold, copy=self.copy)
+        self._scaler_object = preprocessing.Binarizer(threshold=self.threshold, copy=self.copy)
 
         super().__init__()
 
@@ -236,7 +236,7 @@ class Binarizer(BaseScaler):
 class KernelCenterer(BaseScaler):
 
     def __init__(self):
-        self._scaler_object = sklearn.preprocessing.KernelCenterer()
+        self._scaler_object = preprocessing.KernelCenterer()
 
         super().__init__()
 
@@ -273,7 +273,7 @@ class QuantileTransformer(BaseScaler):
         self.random_state = random_state
         self.copy = copy
         self._scaler_object = \
-            sklearn.preprocessing.QuantileTransformer(n_quantiles=self.n_quantiles,
+            preprocessing.QuantileTransformer(n_quantiles=self.n_quantiles,
                                                       output_distribution=self.output_distribution,
                                                       ignore_implicit_zeros=self.ignore_implicit_zeros,
                                                       subsample=self.subsample,
@@ -309,7 +309,7 @@ class PowerTransformer(BaseScaler):
         self.standardize = standardize
         self.copy = copy
         self._scaler_object = \
-            sklearn.preprocessing.QuantileTransformer(method=self.method,
+            preprocessing.QuantileTransformer(method=self.method,
                                                       standardize=self.standardize,
                                                       copy=self.copy)
 

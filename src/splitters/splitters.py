@@ -12,25 +12,36 @@ from Datasets.Datasets import Dataset, NumpyDataset
 from sklearn.model_selection import KFold, StratifiedKFold
 
 
-def get_train_valid_test_indexes(scaffold_sets, train_cutoff, test_cutoff, valid_cutoff, frac_train, frac_test):
+def get_train_valid_test_indexes(scaffold_sets,
+                                 train_cutoff, test_cutoff, valid_cutoff,
+                                 frac_train, frac_test,
+                                 homogenous_datasets):
     train_inds: List[int] = []
     valid_inds: List[int] = []
     test_inds: List[int] = []
 
     for scaffold_set in scaffold_sets:
-        if len(train_inds) + len(scaffold_set) > train_cutoff:
-            if len(test_inds) + len(scaffold_set) <= test_cutoff:
-                test_inds += scaffold_set
-            elif len(valid_inds) + len(scaffold_set) <= valid_cutoff:
-                valid_inds += scaffold_set
+        if not homogenous_datasets:
+            if len(train_inds) + len(scaffold_set) > train_cutoff:
+                if len(test_inds) + len(scaffold_set) <= test_cutoff:
+                    test_inds += scaffold_set
+                elif len(valid_inds) + len(scaffold_set) <= valid_cutoff:
+                    valid_inds += scaffold_set
+                else:
+                    train_index = int(len(scaffold_set) * frac_train)
+                    test_index = int(len(scaffold_set) * frac_test) + train_index
+                    train_inds += scaffold_set[:train_index]
+                    test_inds += scaffold_set[train_index:test_index]
+                    valid_inds += scaffold_set[test_index:]
             else:
-                train_index = int(len(scaffold_set) * frac_train)
-                test_index = int(len(scaffold_set) * frac_test) + train_index
-                train_inds += scaffold_set[:train_index]
-                test_inds += scaffold_set[train_index:test_index]
-                valid_inds += scaffold_set[test_index:]
+                train_inds += scaffold_set
+
         else:
-            train_inds += scaffold_set
+            train_index = int(len(scaffold_set) * frac_train)
+            test_index = int(len(scaffold_set) * frac_test) + train_index
+            train_inds += scaffold_set[:train_index]
+            test_inds += scaffold_set[train_index:test_index]
+            valid_inds += scaffold_set[test_index:]
 
     return train_inds, valid_inds, test_inds
 
@@ -394,8 +405,39 @@ class SingletaskStratifiedSplitter(Splitter):
 
 class SimilaritySplitter(Splitter):
 
-    def split(self, dataset: Dataset, frac_train: float = 0.8, frac_valid: float = 0.1, frac_test: float = 0.1,
-              seed: Optional[int] = None, log_every_n: Optional[int] = None, balanced: bool = True) -> Tuple:
+    def split(self, dataset: Dataset, frac_train: float = 0.8,
+              frac_valid: float = 0.1, frac_test: float = 0.1,
+              seed: Optional[int] = None, log_every_n: Optional[int] = None,
+              homogenous_threshold: float = 0.7) -> Tuple:
+
+        """
+        Splits compounds into train/validation/test based on similarity.
+        It can generate both homogenous and heterogeneous train and test sets
+        Parameters
+        ----------
+        dataset: Dataset
+          Dataset to be split.
+        frac_train: float, optional (default 0.8)
+          Fraction of dataset put into training data.
+        frac_valid: float, optional (default 0.1)
+          Fraction of dataset put into validation data.
+        frac_test: float, optional (default 0.1)
+          Fraction of dataset put into test data.
+        seed: int, optional (default None)
+          Random seed to use.
+        log_every_n: int, optional (default None)
+          Log every n examples (not currently used).
+        homogenous_threshold: float
+          Threshold for similarity, all the compounds with a similarity lower
+           than this threshold will be separated in the training set and test set.
+          The higher the threshold is, the more heterogeneous the split will be.
+
+        Returns
+        -------
+        Tuple[np.ndarray, np.ndarray, np.ndarray]
+          A tuple of train indices, valid indices, and test indices.
+          Each indices is a numpy array.
+                """
 
         mols = generate_mols_and_delete_invalid_smiles(dataset)
 
@@ -422,7 +464,8 @@ class SimilaritySplitter(Splitter):
                 train_inds_class_, test_valid_inds_class_ = self._split_fingerprints(fps, train_size_class_,
                                                                                      valid_size_class_ +
                                                                                      test_size_class_,
-                                                                                     indexes)
+                                                                                     indexes,
+                                                                                     homogenous_threshold)
 
                 train_inds.extend(train_inds_class_)
                 test_valid_inds.extend(test_valid_inds_class_)
@@ -430,7 +473,8 @@ class SimilaritySplitter(Splitter):
             train_inds, test_valid_inds = self._split_fingerprints(all_fps, train_size,
                                                                    valid_size +
                                                                    test_size,
-                                                                   [i for i in range(len(all_fps))])
+                                                                   [i for i in range(len(all_fps))],
+                                                                   homogenous_threshold)
 
         # Split the second group into validation and test sets.
 
@@ -456,7 +500,7 @@ class SimilaritySplitter(Splitter):
                     test_inds_class_, valid_inds_class_ = self._split_fingerprints(test_valid_fps_class_,
                                                                                    test_size_class_,
                                                                                    valid_size_class_,
-                                                                                   indexes)
+                                                                                   indexes, homogenous_threshold)
 
                     test_inds.extend(test_inds_class_)
                     valid_inds.extend(valid_inds_class_)
@@ -466,12 +510,32 @@ class SimilaritySplitter(Splitter):
                 test_inds, valid_inds = self._split_fingerprints(test_valid_fps, train_size,
                                                                  valid_size +
                                                                  test_size,
-                                                                 test_valid_inds)
+                                                                 test_valid_inds, homogenous_threshold)
 
         return train_inds, valid_inds, test_inds
 
     @staticmethod
-    def _split_fingerprints(fps: List, size1: int, size2: int, indexes: List[int]):
+    def _split_fingerprints(fps: List, size1: int, size2: int, indexes: List[int], homogenous_threshold: float):
+        """
+        Returns all scaffolds from the dataset.
+        Parameters
+        ----------
+        fps: List
+          List of fingerprints
+        size1: int
+          Size of the first set of molecules
+        size2: int
+          Size of the second set of molecules
+        indexes: List[int]
+          Molecules' indexes
+        homogenous_threshold:
+          Threshold for similarity, all the compounds with a similarity lower
+           than this threshold will be separated from the training set and test set
+        Returns
+        -------
+        scaffold_sets: List[List[int]]
+          List of indices of each scaffold in the dataset.
+                """
 
         assert len(fps) == size1 + size2
 
@@ -494,8 +558,13 @@ class SimilaritySplitter(Splitter):
 
             # Identify the unassigned molecule that is least similar to everything in
             # the other group.
+            minimum = np.min(max_similarity_to_group[1 - group])
+            if minimum < homogenous_threshold:
+                i = np.argmin(max_similarity_to_group[1 - group])
 
-            i = np.argmin(max_similarity_to_group[1 - group])
+            else:
+                list_elements = np.array([i for i in range(len(max_similarity_to_group[1 - group]))])
+                i = np.random.choice(list_elements)
 
             # Add it to the group.
 
@@ -524,8 +593,8 @@ class ScaffoldSplitter(Splitter):
               frac_valid: float = 0.1,
               frac_test: float = 0.1,
               seed: Optional[int] = None,
-              log_every_n: Optional[int] = 1000
-              ) -> Tuple[List[int], List[int], List[int]]:
+              log_every_n: Optional[int] = 1000,
+              homogenous_datasets: bool = True) -> Tuple[List[int], List[int], List[int]]:
         """
         Splits internal compounds into train/validation/test by scaffold.
         Parameters
@@ -543,6 +612,8 @@ class ScaffoldSplitter(Splitter):
         log_every_n: int, optional (default 1000)
           Controls the logger by dictating how often logger outputs
           will be produced.
+        homogenous_datasets: bool, optional (default True)
+          Whether the datasets will be homogenous or not.
         Returns
         -------
         Tuple[List[int], List[int], List[int]]
@@ -576,7 +647,7 @@ class ScaffoldSplitter(Splitter):
                 train_inds_class_, valid_inds_class_, test_inds_class_ = \
                     get_train_valid_test_indexes(scaffold_sets, train_class_cutoff,
                                                  test_class_cutoff, valid_class_cutoff,
-                                                 frac_train, frac_test)
+                                                 frac_train, frac_test, homogenous_datasets)
 
                 train_inds.extend(train_inds_class_)
                 test_inds.extend(test_inds_class_)
@@ -585,7 +656,8 @@ class ScaffoldSplitter(Splitter):
         else:
             scaffold_sets = self.generate_scaffolds(mols, [i for i in range(len(mols))])
             train_inds, valid_inds, test_inds = get_train_valid_test_indexes(scaffold_sets, train_cutoff, test_cutoff,
-                                                                             valid_cutoff, frac_train, frac_test)
+                                                                             valid_cutoff, frac_train, frac_test,
+                                                                             homogenous_datasets)
 
         return train_inds, valid_inds, test_inds
 
@@ -595,6 +667,10 @@ class ScaffoldSplitter(Splitter):
         """Returns all scaffolds from the dataset.
         Parameters
         ----------
+        mols: List[Mol]
+          List of rdkit.Mol objects for scaffold generation
+        indexes: List[int]
+          Molecules' indexes.
         log_every_n: int, optional (default 1000)
           Controls the logger by dictating how often logger outputs
           will be produced.
@@ -694,8 +770,8 @@ class ButinaSplitter(Splitter):
               frac_valid: float = 0.1,
               frac_test: float = 0.1,
               seed: Optional[int] = None,
-              log_every_n: Optional[int] = None
-              ) -> Tuple[List[int], List[int], List[int]]:
+              log_every_n: Optional[int] = None,
+              homogenous_datasets: bool = True) -> Tuple[List[int], List[int], List[int]]:
         """
         Splits internal compounds into train and validation based on the butina
         clustering algorithm. This splitting algorithm has an O(N^2) run time, where N
@@ -718,6 +794,8 @@ class ButinaSplitter(Splitter):
           Random seed to use.
         log_every_n: int, optional (default None)
           Log every n examples (not currently used).
+        homogenous_datasets: bool, optional (default True)
+          Whether the datasets will be homogenous or not.
         Returns
         -------
         Tuple[List[int], List[int], List[int]]
@@ -770,7 +848,7 @@ class ButinaSplitter(Splitter):
 
                 train_inds_class_, valid_inds_class_, test_inds_class_ = \
                     get_train_valid_test_indexes(new_scaffold_sets, train_cutoff_class_, test_cutoff_class_,
-                                                 valid_cutoff_class_, frac_train, frac_test)
+                                                 valid_cutoff_class_, frac_train, frac_test, homogenous_datasets)
 
                 train_inds.extend(train_inds_class_)
                 test_inds.extend(test_inds_class_)
@@ -786,8 +864,9 @@ class ButinaSplitter(Splitter):
                 dists, nfps, self.cutoff, isDistData=True)
             scaffold_sets = sorted(scaffold_sets, key=lambda x: -len(x))
 
-            train_inds, valid_inds, test_inds = get_train_valid_test_indexes(scaffold_sets, train_cutoff, test_cutoff,
-                                                                             valid_cutoff, frac_train, frac_test)
+            train_inds, valid_inds, test_inds = get_train_valid_test_indexes(scaffold_sets,
+                                                                             train_cutoff, test_cutoff, valid_cutoff,
+                                                                             frac_train, frac_test, homogenous_datasets)
 
         return train_inds, valid_inds, test_inds
 

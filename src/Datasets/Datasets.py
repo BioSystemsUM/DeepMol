@@ -232,15 +232,15 @@ class NumpyDataset(Dataset):
         #     self.features2keep = None
         self.n_tasks = n_tasks
 
-        if features2keep is not None:
-            print(self.len_X())
-            if len(features2keep) != self.len_X()[1]:
-                try:
-                    self.select_features(features2keep)
-                    print('Defined features extracted!')
-                except Exception as e:
-                    print('Error while removing defined features!')
-                    print(e)
+        # if features2keep is not None:
+        #     print(self.len_X())
+        #     if len(features2keep) != self.len_X()[1]:
+        #         try:
+        #             self.select_features(features2keep)
+        #             print('Defined features extracted!')
+        #         except Exception as e:
+        #             print('Error while removing defined features!')
+        #             print(e)
 
     def len_mols(self):
         return len(self.mols)

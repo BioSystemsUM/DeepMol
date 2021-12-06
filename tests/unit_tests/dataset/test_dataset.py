@@ -3,6 +3,7 @@ from unittest import TestCase
 
 from compoundFeaturization.rdkitFingerprints import MorganFingerprint
 from loaders.Loaders import CSVLoader
+import pandas as pd
 
 
 class TestDataset(TestCase):
@@ -16,6 +17,24 @@ class TestDataset(TestCase):
 
         self.dataset_to_test = loader.create_dataset()
         MorganFingerprint().featurize(self.dataset_to_test)
+
+
+
+    def test_load_dataset_with_features(self):
+        dir_path = os.path.join(os.path.dirname(os.path.abspath(".")))
+        dataset = os.path.join(dir_path, "tests", "data", "train_dataset.csv")
+        pandas_dset = pd.read_csv(dataset)
+        columns = list(pandas_dset.columns[3:])
+
+        loader = CSVLoader(dataset,
+                           features_fields=columns,
+                           mols_field='mols',
+                           labels_fields='y')
+
+        dataset = loader.create_dataset()
+        self.assertEqual(len(dataset.features2keep), len(columns))
+
+
 
     def test_select_rows(self):
         self.dataset_to_test.select([0, 2], axis=0)

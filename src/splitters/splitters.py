@@ -130,7 +130,8 @@ class Splitter(ABC):
                                frac_valid: float = None,
                                frac_test: float = None,
                                seed: Optional[int] = None,
-                               log_every_n: int = 1000) -> Tuple[Dataset, Dataset, Dataset]:
+                               log_every_n: int = 1000,
+                               **kwargs) -> Tuple[Dataset, Dataset, Dataset]:
         """ Splits a Dataset into train/validation/test sets.
         Returns Dataset objects for train, valid, test.
         Parameters
@@ -170,7 +171,9 @@ class Splitter(ABC):
                                                        frac_test=frac_test,
                                                        frac_valid=frac_valid,
                                                        seed=seed,
-                                                       log_every_n=log_every_n)
+                                                       log_every_n=log_every_n,
+                                                       **kwargs)
+
         train_dataset = dataset.select_to_split(train_inds)
         valid_dataset = dataset.select_to_split(valid_inds)
         test_dataset = dataset.select_to_split(test_inds)
@@ -216,7 +219,8 @@ class Splitter(ABC):
               frac_valid: float = 0.1,
               frac_test: float = 0.1,
               seed: Optional[int] = None,
-              log_every_n: Optional[int] = None) -> Tuple:
+              log_every_n: Optional[int] = None,
+              **kwargs) -> Tuple:
 
         """Return indices for specified split
         Parameters
@@ -250,7 +254,8 @@ class RandomSplitter(Splitter):
               frac_train: float = 0.8, frac_valid: float = 0.1,
               frac_test: float = 0.1,
               seed: Optional[int] = None,
-              log_every_n: Optional[int] = None) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+              log_every_n: Optional[int] = None,
+              **kwargs) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Splits randomly into train/validation/test.
         Parameters
@@ -308,7 +313,7 @@ class SingletaskStratifiedSplitter(Splitter):
                      k: int,
                      seed: Optional[int] = None,
                      log_every_n: Optional[int] = None,
-                     **kwargs) -> list[tuple[NumpyDataset, NumpyDataset]]:
+                     **kwargs) -> List[Tuple[NumpyDataset, NumpyDataset]]:
         # TODO: comments
         """
         Splits compounds into k-folds using stratified sampling.
@@ -349,7 +354,8 @@ class SingletaskStratifiedSplitter(Splitter):
     def split(self, dataset: Dataset, frac_train: float = 0.8,
               frac_valid: float = 0.1, frac_test: float = 0.1,
               seed: Optional[int] = None,
-              log_every_n: Optional[int] = None) -> tuple[list[int], list[int], list[int]]:
+              log_every_n: Optional[int] = None,
+              **kwargs) -> Tuple[List[int], List[int], List[int]]:
         """
         Splits compounds into train/validation/test using stratified sampling.
         Parameters

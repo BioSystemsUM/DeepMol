@@ -187,6 +187,14 @@ class NumpyDataset(Dataset):
         else:
             self._ids = None
 
+    @property
+    def features2keep(self):
+        return self._features2keep
+
+    @features2keep.setter
+    def features2keep(self, value):
+        self._features2keep = value
+
     def __len__(self) -> int:
         return len(self.mols)
 
@@ -223,24 +231,16 @@ class NumpyDataset(Dataset):
             features2keep = np.ndarray(features2keep)
 
         self.mols = mols
+
+        if features2keep is not None:
+            self.features2keep = features2keep
+        else:
+            self.features2keep = None
+
         self.X = X
         self.y = y
         self.ids = ids
-        if features2keep:
-            self.features2keep = features2keep
-        # elif X.size > 0:
-        #     self.features2keep = None
         self.n_tasks = n_tasks
-
-        # if features2keep is not None:
-        #     print(self.len_X())
-        #     if len(features2keep) != self.len_X()[1]:
-        #         try:
-        #             self.select_features(features2keep)
-        #             print('Defined features extracted!')
-        #         except Exception as e:
-        #             print('Error while removing defined features!')
-        #             print(e)
 
     def len_mols(self):
         return len(self.mols)
@@ -402,9 +402,9 @@ class NumpyDataset(Dataset):
         if axis == 1:
             indexes_to_delete = list(set(self.features2keep) - set(indexes))
             self.features2keep = np.array(list(set(self.features2keep) - set(indexes_to_delete)))
+            self.features2keep = np.sort(self.features2keep)
 
-    def merge(self,
-              datasets: Iterable[Dataset]) -> 'NumpyDataset':
+    def merge(self, datasets: Iterable[Dataset]) -> 'NumpyDataset':
         """Merges provided datasets with the self dataset.
         Parameters
         ----------
@@ -422,6 +422,7 @@ class NumpyDataset(Dataset):
         y = self.y
         ids = self.ids
         mols = self.mols
+        flag2 = False
 
         for ds in datasets:
             mols = np.append(mols, ds.mols, axis=0)

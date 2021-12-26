@@ -299,7 +299,7 @@ class TwoDimensionDescriptors(MolecularFeaturizer):
     def _featurize(self, mol: Mol):
 
         calc = MoleculeDescriptors.MolecularDescriptorCalculator([x[0] for x in Descriptors._descList])
-        # header = calc.GetDescriptorNames()
+        #header = calc.GetDescriptorNames()
 
         try:
             descriptors = calc.CalcDescriptors(mol)
@@ -309,7 +309,7 @@ class TwoDimensionDescriptors(MolecularFeaturizer):
             print('error in smile: ' + str(mol))
             _no_conformers_message(e)
 
-            descriptors = np.empty(208, dtype=float)
+            descriptors = np.empty(200, dtype=float)
             descriptors[:] = np.NaN
 
         descriptors = np.asarray(descriptors, dtype=np.float)

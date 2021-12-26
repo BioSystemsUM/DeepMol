@@ -38,6 +38,7 @@ class BaseFeatureSelector(ABC):
           Dataset containing the selected features and indexes of the
           features kept as 'self.features2keep'
         """
+
         self.features_fs = dataset.X
 
         self.y_fs = dataset.y

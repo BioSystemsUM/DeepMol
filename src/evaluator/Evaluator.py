@@ -101,7 +101,7 @@ class Evaluator(object):
 
     # TODO: Works with singletask, check for multitask
     def compute_model_performance(self,
-                                  metrics: Metric,
+                                  metrics: Union[Metric, List[Metric]],
                                   per_task_metrics: bool = False,
                                   n_classes: int = 2) -> Union[Score, Tuple[Score, Score]]:
         """

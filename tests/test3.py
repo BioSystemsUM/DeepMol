@@ -1,5 +1,5 @@
 from compoundFeaturization.rdkitFingerprints import MorganFingerprint, MACCSkeysFingerprint, LayeredFingerprint
-from compoundFeaturization.rdkitFingerprints import RDKFingerprint, AtomPairFingerprint
+from compoundFeaturization.rdkitFingerprints import RDKFingerprint, AtomPairFingerprintCallbackHash
 from compoundFeaturization.mol2vec import Mol2Vec
 from loaders.Loaders import CSVLoader
 from featureSelection.baseFeatureSelector import LowVarianceFS, KbestFS, PercentilFS, RFECVFS, SelectFromModelFS

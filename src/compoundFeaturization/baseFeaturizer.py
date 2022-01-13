@@ -51,12 +51,16 @@ class MolecularFeaturizer(ABC):
 
         features = []
         for i, mol in enumerate(molecules):
+            mol_convertable = True
             if i % log_every_n == 0:
                 print("Featurizing datapoint %i" % i)
             try:
                 if isinstance(mol, str):
                     # mol must be a RDKit Mol object, so parse a SMILES
                     molobj = Chem.MolFromSmiles(mol)
+                    if molobj is None:
+                        dataset.remove_elements([i])
+                        mol_convertable = False
                     try:
                         # SMILES is unique, so set a canonical order of atoms
                         new_order = rdmolfiles.CanonicalRankAtoms(molobj)
@@ -64,7 +68,9 @@ class MolecularFeaturizer(ABC):
                         mol = molobj
                     except Exception as e:
                         mol = mol
-                features.append(self._featurize(mol))
+
+                if mol_convertable:
+                    features.append(self._featurize(mol))
 
             except PreConditionViolationException:
                 exit(1)

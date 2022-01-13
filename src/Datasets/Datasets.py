@@ -26,7 +26,7 @@ class Dataset(ABC):
 
     @mols.setter
     @abstractmethod
-    def mols(self, value: Union[List[str], List[Mol]]):
+    def mols(self, value: Union[List[str], List[Mol], np.array]):
         raise NotImplementedError
 
     @property
@@ -185,7 +185,7 @@ class NumpyDataset(Dataset):
         if value is not None and value.size > 0:
             self._ids = value
         else:
-            self._ids = None
+            self._ids = [i for i in range(self.mols.shape[0])]
 
     @property
     def features2keep(self):
@@ -330,7 +330,7 @@ class NumpyDataset(Dataset):
         if axis == 0:
             for i in self.X:
                 if np.isnan(np.dot(i, i)):
-                    indexes.append(j)
+                    indexes.append(self.ids[j])
 
                 j += 1
             if len(indexes) > 0:

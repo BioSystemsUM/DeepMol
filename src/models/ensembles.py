@@ -102,15 +102,21 @@ class VotingClassifier(Ensemble):
 
         # TODO : implement
         elif self.voting == "hard":
-            pass
-            # for mol_i, mol_predictions in enumerate(results_from_all_models):
-            #     predictions_counter = {}
-            #     for i, class_prediction in enumerate(class_predictions):
-            #         if class_prediction > :
-            #             max_prediction_class = i
-            #             max_prediction = class_prediction
-            #
-            #     if proba:
-            #         final_result[mol_i] = class_predictions
-            #     else:
-            #         final_result[mol_i] = max_prediction_class
+            for mol_i, mol_predictions in enumerate(results_from_all_models):
+                predictions_counter = {}
+                max_prediction = 0
+                max_prediction_class = 0
+                for i, class_prediction in enumerate(mol_predictions):
+                    for j in range(len(mol_predictions)):
+
+                        # TODO: instantiate list of prediction classes (maybe before all of this)
+                        # and work over that list
+
+                        if class_prediction > max_prediction:
+                            max_prediction_class = i
+                            max_prediction = class_prediction
+
+                if proba:
+                    pass
+                else:
+                    final_result[mol_i] = max_prediction_class

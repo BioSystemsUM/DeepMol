@@ -250,8 +250,8 @@ MACCSsmartsPatts = {
          0),  # QHAACH2A
     91:
         (
-        '[$([!#6;!#1;!H0]~*~*~*~[CH2]~*),$([!#6;!#1;!H0;R]1@[R]@[R]@[R]@[CH2;R]1),$([!#6;!#1;!H0]~[R]1@[R]@[R]@[CH2;R]1),$([!#6;!#1;!H0]~*~[R]1@[R]@[CH2;R]1)]',
-        0),  # QHAAACH2A
+            '[$([!#6;!#1;!H0]~*~*~*~[CH2]~*),$([!#6;!#1;!H0;R]1@[R]@[R]@[R]@[CH2;R]1),$([!#6;!#1;!H0]~[R]1@[R]@[R]@[CH2;R]1),$([!#6;!#1;!H0]~*~[R]1@[R]@[CH2;R]1)]',
+            0),  # QHAAACH2A
     92: ('[#8]~[#6](~[#7])~[#6]', 0),  # OC(N)C
     93: ('[!#6;!#1]~[CH3]', 0),  # QCH3
     94: ('[!#6;!#1]~[#7]', 0),  # QN
@@ -263,8 +263,8 @@ MACCSsmartsPatts = {
     100: ('*~[CH2]~[#7]', 0),  # ACH2N
     101:
         (
-        '[$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]1),$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]1),$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]1),$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]1),$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]1),$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]1),$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]1)]',
-        0),  # 8M Ring or larger. This only handles up to ring sizes of 14
+            '[$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]1),$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]1),$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]1),$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]1),$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]1),$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]1),$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]1)]',
+            0),  # 8M Ring or larger. This only handles up to ring sizes of 14
     102: ('[!#6;!#1]~[#8]', 0),  # QO
     103: ('Cl', 0),  # CL
     104: ('[!#6;!#1;!H0]~*~[CH2]~*', 0),  # QHACH2A
@@ -293,8 +293,8 @@ MACCSsmartsPatts = {
     127: ('*@*!@[#8]', 1),  # A$A!O > 1 (&...) Spec Incomplete
     128:
         (
-        '[$(*~[CH2]~*~*~*~[CH2]~*),$([R]1@[CH2;R]@[R]@[R]@[R]@[CH2;R]1),$(*~[CH2]~[R]1@[R]@[R]@[CH2;R]1),$(*~[CH2]~*~[R]1@[R]@[CH2;R]1)]',
-        0),  # ACH2AAACH2A
+            '[$(*~[CH2]~*~*~*~[CH2]~*),$([R]1@[CH2;R]@[R]@[R]@[R]@[CH2;R]1),$(*~[CH2]~[R]1@[R]@[R]@[CH2;R]1),$(*~[CH2]~*~[R]1@[R]@[CH2;R]1)]',
+            0),  # ACH2AAACH2A
     129: ('[$(*~[CH2]~*~*~[CH2]~*),$([R]1@[CH2]@[R]@[R]@[CH2;R]1),$(*~[CH2]~[R]1@[R]@[CH2;R]1)]',
           0),  # ACH2AACH2A
     130: ('[!#6;!#1]~[!#6;!#1]', 1),  # QQ > 1 (&...)  Spec Incomplete
@@ -479,14 +479,14 @@ def getSubstructDepiction(mol, atomID, radius, molSize=(450, 200)):
     return moltosvg(mol, molSize=molSize, highlightAtoms=atomsToUse, highlightAtomColors={atomID: (0.3, 0.3, 1)})
 
 
-def draw_morgan_bit_on_molecule(mol_smiles, bit, radius=2, nBits=2048, molSize=(450, 200)):
+def draw_morgan_bit_on_molecule(mol_smiles, bit, radius=2, nBits=2048, chiral=False, molSize=(450, 200)):
     try:
         mol = Chem.MolFromSmiles(mol_smiles)
     except Exception as e:
         raise ValueError('Invalid SMILES.')
 
     info = {}
-    rdMolDescriptors.GetMorganFingerprintAsBitVect(mol, radius=radius, nBits=nBits, bitInfo=info)
+    rdMolDescriptors.GetMorganFingerprintAsBitVect(mol, radius=radius, nBits=nBits, bitInfo=info, useChirality=chiral)
 
     if bit not in info.keys():
         print('Bits ON: ', info.keys())
@@ -508,19 +508,19 @@ from rdkit.Chem import RDKFingerprint
 def draw_rdk_bits(smiles, bits, minPath=2, maxPath=7, fpSize=2048):
     mol = Chem.MolFromSmiles(smiles)
 
-    rdkbi = {}
-    fp = RDKFingerprint(mol, minPath=minPath, maxPath=maxPath, fpSize=fpSize, bitInfo=rdkbi)
+    rdkbit = {}
+    fp = RDKFingerprint(mol, minPath=minPath, maxPath=maxPath, fpSize=fpSize, bitInfo=rdkbit)
 
     if isinstance(bits, int):
-        if bits not in rdkbi.keys():
-            print('Bits ON: ', rdkbi.keys())
+        if bits not in rdkbit.keys():
+            print('Bits ON: ', rdkbit.keys())
             raise ValueError('Bit is off! Select a on bit')
-        return Draw.DrawRDKitBit(mol, bits, rdkbi)
+        return Draw.DrawRDKitBit(mol, bits, rdkbit)
 
     elif isinstance(bits, list):
         bits_on = []
         for b in bits:
-            if b in rdkbi.keys():
+            if b in rdkbit.keys():
                 bits_on.append(b)
             else:
                 print('Bit %d is off!' % (b))
@@ -528,11 +528,11 @@ def draw_rdk_bits(smiles, bits, minPath=2, maxPath=7, fpSize=2048):
             raise ValueError('All the selected bits are off! Select on bits!')
         elif len(bits_on) != len(bits):
             print('Using only bits ON: ', bits_on)
-        tpls = [(mol, x, rdkbi) for x in bits_on]
+        tpls = [(mol, x, rdkbit) for x in bits_on]
         return Draw.DrawRDKitBits(tpls, molsPerRow=5, legends=['bit_' + str(x) for x in bits_on])
 
     elif bits == 'ON':
-        tpls = [(mol, x, rdkbi) for x in fp.GetOnBits()]
+        tpls = [(mol, x, rdkbit) for x in fp.GetOnBits()]
         return Draw.DrawRDKitBits(tpls, molsPerRow=5, legends=[str(x) for x in fp.GetOnBits()])
 
     else:

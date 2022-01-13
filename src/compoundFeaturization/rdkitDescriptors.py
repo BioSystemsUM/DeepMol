@@ -303,6 +303,8 @@ class TwoDimensionDescriptors(MolecularFeaturizer):
 
         try:
             descriptors = calc.CalcDescriptors(mol)
+            if np.isnan(np.sum(descriptors)):
+                raise Exception
 
         except Exception as e:
 

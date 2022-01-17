@@ -14,7 +14,7 @@ class Model(BaseEstimator):
     """Abstract base class for ML/DL models.
     """
 
-    def __init__(self, model=None, model_dir: Optional[str]= None,  **kwargs) -> None:
+    def __init__(self, model=None, model_dir: Optional[str] = None, **kwargs) -> None:
         """Abstract class for all models.
         This is an abstact class and should not be invoked directly.
 
@@ -28,7 +28,8 @@ class Model(BaseEstimator):
         """
 
         if self.__class__.__name__ == "Model":
-            raise ValueError("This constructor is for an abstract class and should never be called directly. Can only call from subclass constructors.")
+            raise ValueError(
+                "This constructor is for an abstract class and should never be called directly. Can only call from subclass constructors.")
 
         self.model_dir_is_temp = False
 
@@ -47,7 +48,7 @@ class Model(BaseEstimator):
         if 'model_dir_is_temp' in dir(self) and self.model_dir_is_temp:
             shutil.rmtree(self.model_dir)
 
-    def fit_on_batch(self,  X: Sequence, y: Sequence):
+    def fit_on_batch(self, X: Sequence, y: Sequence):
         """Perform a single step of training.
         Parameters
         ----------
@@ -74,13 +75,11 @@ class Model(BaseEstimator):
         """
         raise NotImplementedError("Each class model must implement its own reload method.")
 
-
     def get_model_filename(self, model_dir: str) -> str:
         """
         Given model directory, obtain filename for the model itself.
         """
         return os.path.join(model_dir, "model.joblib")
-
 
     def get_params_filename(self, model_dir: str) -> str:
         """
@@ -128,10 +127,10 @@ class Model(BaseEstimator):
         return y_pred
 
     def evaluate(self,
-                dataset: Dataset,
-                metrics: List[Metric],
-                per_task_metrics: bool = False,
-                n_classes: int = 2):
+                 dataset: Dataset,
+                 metrics: List[Metric],
+                 per_task_metrics: bool = False,
+                 n_classes: int = 2):
         """
         Evaluates the performance of this model on specified dataset.
 
@@ -173,5 +172,3 @@ class Model(BaseEstimator):
         Get number of tasks.
         """
         raise NotImplementedError()
-
-

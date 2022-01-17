@@ -1,7 +1,8 @@
 import shap
 import pandas as pd
 
-#TODO: Add more features (different plots and methods)
+
+# TODO: Add more features (different plots and methods)
 class ShapValues(object):
     '''
     ...
@@ -17,7 +18,7 @@ class ShapValues(object):
         self.model = model
         self.shap_values = None
 
-    #TODO: masker not working
+    # TODO: masker not working
     def computePermutationShap(self, masker=False, plot=True, **kwargs):
         columns_names = ['feat_' + str(i + 1) for i in range(self.dataset.X.shape[1])]
         X = pd.DataFrame(self.dataset.X, columns=columns_names)
@@ -76,19 +77,19 @@ class ShapValues(object):
             # visualize all the training set predictions
             if masker:
                 shap.plots.bar(self.shap_values, **kwargs)
-            else :
+            else:
                 shap.plots.beeswarm(self.shap_values, **kwargs)
 
-    #TODO: check why force is not working (maybe java plugin is missing?)
+    # TODO: check why force is not working (maybe java plugin is missing?)
     def plotSampleExplanation(self, index=0, plot_type='waterfall'):
         if self.shap_values is None:
             print('Shap values not computed yet! Computing shap values...')
             self.computeShap(plot=False)
 
-        if plot_type=='waterfall':
+        if plot_type == 'waterfall':
             # visualize the nth prediction's explanation
             shap.plots.waterfall(self.shap_values[index])
-        elif plot_type=='force':
+        elif plot_type == 'force':
             shap.initjs()
             # visualize the first prediction's explanation with a force plot
             shap.plots.force(self.shap_values[index])
@@ -96,7 +97,7 @@ class ShapValues(object):
             raise ValueError('Plot type must be waterfall or force!')
 
     def plotFeatureExplanation(self, index='all'):
-        if index=='all':
+        if index == 'all':
             # summarize the effects of all the features
             shap.plots.beeswarm(self.shap_values)
         else:
@@ -109,10 +110,7 @@ class ShapValues(object):
         else:
             raise ValueError('Shap values not computed yet!')
 
-
-
-
-    #TODO: check this again
+    # TODO: check this again
     '''
     def plotPositiveClass(self):
         shap_values2 = self.shap_values[...,1]
@@ -123,10 +121,3 @@ class ShapValues(object):
         shap_values2 = self.shap_values[...,0]
         shap.plots.bar(shap_values2)
     '''
-
-
-
-
-
-
-

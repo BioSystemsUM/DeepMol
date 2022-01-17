@@ -38,6 +38,7 @@ class BaseFeatureSelector(ABC):
           Dataset containing the selected features and indexes of the
           features kept as 'self.features2keep'
         """
+
         self.features_fs = dataset.X
 
         self.y_fs = dataset.y
@@ -309,11 +310,11 @@ class BorutaAlgorithm(BaseFeatureSelector):
 
         self.boruta.fit(fs, self.y_fs)
 
-        X_new = self.boruta.fit_transform(fs, self.y_fs)
+        X_new = self.boruta.transform(fs, weak=self.support_weak)
 
-        support = [i for i in self.boruta.support_ if i]
+        support = [i for i, boolean in enumerate(self.boruta.support_) if boolean]
         if self.support_weak:
-            weak_support = [i for i in self.boruta.support_weak_ if i]
+            weak_support = [i for i, boolean in enumerate(self.boruta.support_weak_) if boolean]
 
             features_to_keep = list(set.union(set(support), set(weak_support)))
 

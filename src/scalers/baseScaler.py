@@ -33,12 +33,12 @@ class BaseScaler(ABC):
         raise NotImplementedError
 
     def fit_transform(self, dataset: Dataset, columns=None):
-
         if not columns:
             columns = [i for i in range(dataset.X.shape[1])]
         try:
             res = self._fit_transform(dataset.X[:, columns])
-            dataset.X = np.concatenate((dataset.X[:, :min(columns)], res), axis=1)
+            # TODO: due to X being a property, the "set" method must choose so that it could behave as a numpy array
+            dataset._X[:, columns] = res
 
         except:
             raise Exception("It was not possible to scale the data")
@@ -63,12 +63,12 @@ class BaseScaler(ABC):
     def transform(self, dataset: Dataset, columns=None):
         if not columns:
             columns = [i for i in range(dataset.X.shape[1])]
-        # try:
-        res = self._transform(dataset.X[:, columns])
-        dataset.X = np.concatenate((dataset.X[:, :min(columns)], res), axis=1)
+        try:
+            res = self._transform(dataset.X[:, columns])
+            dataset._X[:, columns] = res
 
-        # except:
-        #     raise Exception("It was not possible to scale the data")
+        except:
+            raise Exception("It was not possible to scale the data")
 
     def _transform(self, X: np.ndarray):
         raise NotImplementedError

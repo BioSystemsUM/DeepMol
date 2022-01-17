@@ -43,6 +43,14 @@ class MolecularStandardizer(ABC):
                         molobj = rdmolops.RenumberAtoms(molobj, new_order)
                     except Exception as e:
                         molobj = mol
+                elif isinstance(mol, Mol):
+                    try:
+                        molobj = mol
+                        # SMILES is unique, so set a canonical order of atoms
+                        new_order = rdmolfiles.CanonicalRankAtoms(molobj)
+                        molobj = rdmolops.RenumberAtoms(molobj, new_order)
+                    except Exception as e:
+                        molobj = mol
 
                 stand_mols.append(Chem.MolToSmiles(self._standardize(molobj)))
             except Exception as e:

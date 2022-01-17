@@ -1,7 +1,7 @@
 from copy import copy
 from unittest import TestCase
 
-from compoundFeaturization.rdkitFingerprints import AtomPairFingerprint, MorganFingerprint, MACCSkeysFingerprint, \
+from compoundFeaturization.rdkitFingerprints import AtomPairFingerprintCallbackHash, MorganFingerprint, MACCSkeysFingerprint, \
     LayeredFingerprint, RDKFingerprint
 from tests.unit_tests.featurizers.test_featurizers import FeaturizerTestCase
 import numpy as np
@@ -12,7 +12,7 @@ class TestRDKitFingerprints(FeaturizerTestCase, TestCase):
     def test_featurize(self):
         # test Atom Pair fingerprints (without NaN generation)
         dataset_rows_number = len(self.mini_dataset_to_test.mols)
-        AtomPairFingerprint().featurize(self.mini_dataset_to_test)
+        AtomPairFingerprintCallbackHash().featurize(self.mini_dataset_to_test)
         self.assertEqual(dataset_rows_number, self.mini_dataset_to_test.X.shape[0])
 
         MorganFingerprint().featurize(self.mini_dataset_to_test)
@@ -35,7 +35,7 @@ class TestRDKitFingerprints(FeaturizerTestCase, TestCase):
         self.mini_dataset_to_test.y = np.concatenate((self.mini_dataset_to_test.y, to_add))
 
         dataset = copy(self.mini_dataset_to_test)
-        AtomPairFingerprint().featurize(dataset)
+        AtomPairFingerprintCallbackHash().featurize(dataset)
         self.assertEqual(dataset_rows_number, dataset.X.shape[0])
 
         dataset = copy(self.mini_dataset_to_test)

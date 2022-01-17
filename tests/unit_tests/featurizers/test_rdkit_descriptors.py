@@ -60,9 +60,9 @@ class Test2DDescriptors(FeaturizerTestCase, TestCase):
                            labels_fields='sweet')
 
         dataset = loader.create_dataset()
-        from compoundFeaturization.rdkitFingerprints import AtomPairFingerprint
+        from compoundFeaturization.rdkitFingerprints import AtomPairFingerprintCallbackHash
 
-        AtomPairFingerprint(nBits=1024, includeChirality=True).featurize(dataset)
+        AtomPairFingerprintCallbackHash(nBits=1024, includeChirality=True).featurize(dataset)
 
         dataset.remove_duplicates()
 

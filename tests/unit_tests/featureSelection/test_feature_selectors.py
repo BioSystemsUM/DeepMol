@@ -57,5 +57,5 @@ class TestFeatureSelectors(TestCase):
                            mols_field='mols',
                            labels_fields='y')
         dataset = loader.create_dataset()
-        BorutaAlgorithm(max_iter=5, n_estimators=100).select_features(dataset)
+        BorutaAlgorithm(max_iter=3, n_estimators=100, support_weak=True).select_features(dataset)
 

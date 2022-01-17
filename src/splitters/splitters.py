@@ -16,34 +16,37 @@ def get_train_valid_test_indexes(scaffold_sets,
                                  train_cutoff, test_cutoff, valid_cutoff,
                                  frac_train, frac_test,
                                  homogenous_datasets):
-    train_inds: List[int] = []
-    valid_inds: List[int] = []
-    test_inds: List[int] = []
+    train_inds = np.array([])
+    valid_inds = np.array([])
+    test_inds = np.array([])
 
     for scaffold_set in scaffold_sets:
+        scaffold_set = np.array(scaffold_set)
         if not homogenous_datasets:
             if len(train_inds) + len(scaffold_set) > train_cutoff:
                 if len(test_inds) + len(scaffold_set) <= test_cutoff:
-                    test_inds += scaffold_set
+                    test_inds = np.hstack([test_inds, scaffold_set])
                 elif len(valid_inds) + len(scaffold_set) <= valid_cutoff:
-                    valid_inds += scaffold_set
+                    valid_inds = np.hstack([valid_inds, scaffold_set])
                 else:
-                    train_index = int(len(scaffold_set) * frac_train)
-                    test_index = int(len(scaffold_set) * frac_test) + train_index
-                    train_inds += scaffold_set[:train_index]
-                    test_inds += scaffold_set[train_index:test_index]
-                    valid_inds += scaffold_set[test_index:]
+                    np.random.shuffle(scaffold_set)
+                    train_index = int(np.round(len(scaffold_set) * frac_train))
+                    test_index = int(np.round(len(scaffold_set) * frac_test)) + train_index
+                    train_inds = np.hstack([train_inds, scaffold_set[:train_index]])
+                    test_inds = np.hstack([test_inds, scaffold_set[train_index:test_index]])
+                    valid_inds = np.hstack([valid_inds, scaffold_set[test_index:]])
             else:
-                train_inds += scaffold_set
+                train_inds = np.hstack([train_inds, scaffold_set])
 
         else:
-            train_index = int(len(scaffold_set) * frac_train)
-            test_index = int(len(scaffold_set) * frac_test) + train_index
-            train_inds += scaffold_set[:train_index]
-            test_inds += scaffold_set[train_index:test_index]
-            valid_inds += scaffold_set[test_index:]
+            np.random.shuffle(scaffold_set)
+            train_index = int(np.round(len(scaffold_set) * frac_train))
+            test_index = int(np.round(len(scaffold_set) * frac_test)) + train_index
+            train_inds = np.hstack([train_inds, scaffold_set[:train_index]])
+            test_inds = np.hstack([test_inds, scaffold_set[train_index:test_index]])
+            valid_inds = np.hstack([valid_inds, scaffold_set[test_index:]])
 
-    return train_inds, valid_inds, test_inds
+    return list(map(int, train_inds)), list(map(int, valid_inds)), list(map(int, test_inds))
 
 
 def get_mols_for_each_class(mols: List[Mol], dataset: Dataset):
@@ -569,8 +572,9 @@ class SimilaritySplitter(Splitter):
                 i = np.argmin(max_similarity_to_group[1 - group])
 
             else:
-                list_elements = np.array([i for i in range(len(max_similarity_to_group[1 - group]))])
-                i = np.random.choice(list_elements)
+                # list_elements = np.array([i for i in range(len(max_similarity_to_group[1 - group]))])
+                i = np.argmax(max_similarity_to_group[1 - group])
+                # i = np.random.choice(list_elements)
 
             # Add it to the group.
 
@@ -869,6 +873,9 @@ class ButinaSplitter(Splitter):
             scaffold_sets = Butina.ClusterData(
                 dists, nfps, self.cutoff, isDistData=True)
             scaffold_sets = sorted(scaffold_sets, key=lambda x: -len(x))
+            counter = 0
+            for scaffold_set in scaffold_sets:
+                counter += len(scaffold_set)
 
             train_inds, valid_inds, test_inds = get_train_valid_test_indexes(scaffold_sets,
                                                                              train_cutoff, test_cutoff, valid_cutoff,

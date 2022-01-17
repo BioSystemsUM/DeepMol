@@ -311,7 +311,7 @@ class TwoDimensionDescriptors(MolecularFeaturizer):
             print('error in smile: ' + str(mol))
             _no_conformers_message(e)
 
-            descriptors = np.empty(200, dtype=float)
+            descriptors = np.empty(208, dtype=float)
             descriptors[:] = np.NaN
 
         descriptors = np.asarray(descriptors, dtype=np.float)

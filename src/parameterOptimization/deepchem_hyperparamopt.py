@@ -104,6 +104,6 @@ class DeepchemRandomSearchCV(DeepchemBaseSearchCV):
 
     def __init__(self, model_build_fn, param_distributions, scoring, refit, cv, mode, random_state=None,
                  return_train_score=False, n_iter=20):
-        self.param_grid = list(ParameterSampler(param_distributions, n_iter, random_state))
+        self.param_grid = list(ParameterSampler(param_distributions, n_iter, random_state=random_state))
         super().__init__(model_build_fn=model_build_fn, param_grid=self.param_grid, scoring=scoring, refit=refit, cv=cv,
                          mode=mode, random_state=random_state, return_train_score=return_train_score)

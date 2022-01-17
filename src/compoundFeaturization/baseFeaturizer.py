@@ -81,7 +81,8 @@ class MolecularFeaturizer(ABC):
                 print("Failed to featurize datapoint %d, %s. Appending empty array" % (i, mol))
                 print("Exception message: {}".format(e))
 
-        features = np.vstack(features)
+        if isinstance(features[0], np.ndarray):
+            features = np.vstack(features)
         dataset.X = features
 
         dataset.remove_nan(remove_nans_axis)

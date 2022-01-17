@@ -11,7 +11,7 @@ from deepchem.feat import RDKitDescriptors, SmilesToImage, SmilesToSeq, CoulombM
     ConvMolFeaturizer, WeaveFeaturizer, MolGraphConvFeaturizer, RawFeaturizer
 from compoundFeaturization.baseFeaturizer import MolecularFeaturizer
 from rdkit import Chem
-from typing import List, Any, Optional, Dict, Iterable
+from typing import List, Any, Optional, Dict, Iterable, Union
 
 
 def find_maximum_number_atoms(molecules):
@@ -493,11 +493,12 @@ class SmilesSeqFeat(MolecularFeaturizer):
         pad_len: int
             Amount of padding to add on either side of the SMILES seq. Default to 10
         """
+        super().__init__()
         self.char_to_idx = char_to_idx
         self.max_len = max_len
         self.pad_len = pad_len
 
-    def featurize(self, dataset: Dataset, log_every_n=1000):
+    def _featurize(self, dataset: Dataset, log_every_n=1000):
         # Getting the dictionary if it is None
         if self.char_to_idx == None:
 
@@ -553,7 +554,7 @@ class CGCNNFeat():
         self.max_neighbors = max_neighbors
         self.step = step
 
-    def featurize(self, dataset: Dataset, log_every_n=1000):
+    def _featurize(self, dataset: Dataset, log_every_n=1000):
 
         # Dataset is supposed to be composed by structure dictionaries or pymatgen.Structure objects
         try:
@@ -566,16 +567,15 @@ class CGCNNFeat():
 
 class RawFeat(MolecularFeaturizer):
 
-    def featurize(self, dataset: Dataset, log_every_n=1000):
+    def _featurize(self, mol: Union[Mol, str], log_every_n=1000):
 
-        if isinstance(dataset.mols[0], Mol):
-            smiles = [Chem.MolToSmiles(mol) for mol in dataset.mols]
-        elif isinstance(dataset.mols[0], str):
-            smiles = dataset.mols
+        if isinstance(mol, Mol):
+            smiles = Chem.MolToSmiles(mol)
+        elif isinstance(mol, str):
+            smiles = mol
         else:
             smiles = None
 
-        print('Featurizing datapoints')
-        dataset.X = RawFeaturizer().featurize(smiles)
-        dataset.ids = smiles  # this is needed when calling the build_char_dict method (TextCNNModel)
-        return dataset
+        mol = RawFeaturizer().featurize([smiles])[0]
+        #dataset.ids = smiles  # this is needed when calling the build_char_dict method (TextCNNModel)
+        return mol

@@ -48,6 +48,10 @@ class KerasModel(Model):
         self.optimizer = optimizer
         self.learning_rate = learning_rate
         self.model_type = 'keras'
+        self.batch_size = batch_size
+        self.epochs = epochs
+        self.model_builder = model_builder
+        self.verbose = verbose
 
         if mode == 'classification':
             self.model = KerasClassifier(build_fn=model_builder, epochs=epochs, batch_size=batch_size,

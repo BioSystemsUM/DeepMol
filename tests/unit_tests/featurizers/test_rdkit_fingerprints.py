@@ -1,18 +1,32 @@
+import os
 from copy import copy
 from unittest import TestCase
 
-from compoundFeaturization.rdkitFingerprints import AtomPairFingerprintCallbackHash, MorganFingerprint, MACCSkeysFingerprint, \
-    LayeredFingerprint, RDKFingerprint
+from compoundFeaturization.rdkitFingerprints import AtomPairFingerprintCallbackHash, MorganFingerprint, \
+    MACCSkeysFingerprint, \
+    LayeredFingerprint, RDKFingerprint, AtomPairFingerprint
+from loaders.Loaders import CSVLoader
 from tests.unit_tests.featurizers.test_featurizers import FeaturizerTestCase
 import numpy as np
 
 
 class TestRDKitFingerprints(FeaturizerTestCase, TestCase):
 
+    def test_featurize_morgan(self):
+        dir_path = os.path.join(os.path.dirname(os.path.abspath(".")))
+        dataset = os.path.join(dir_path, "tests", "data", "test_dataset.csv")
+        loader = CSVLoader(dataset,
+                           mols_field='mols',
+                           labels_fields='y')
+
+        test_dataset = loader.create_dataset()
+
+        MorganFingerprint().featurize(test_dataset)
+
     def test_featurize(self):
         # test Atom Pair fingerprints (without NaN generation)
         dataset_rows_number = len(self.mini_dataset_to_test.mols)
-        AtomPairFingerprintCallbackHash().featurize(self.mini_dataset_to_test)
+        AtomPairFingerprint().featurize(self.mini_dataset_to_test)
         self.assertEqual(dataset_rows_number, self.mini_dataset_to_test.X.shape[0])
 
         MorganFingerprint().featurize(self.mini_dataset_to_test)
@@ -35,7 +49,7 @@ class TestRDKitFingerprints(FeaturizerTestCase, TestCase):
         self.mini_dataset_to_test.y = np.concatenate((self.mini_dataset_to_test.y, to_add))
 
         dataset = copy(self.mini_dataset_to_test)
-        AtomPairFingerprintCallbackHash().featurize(dataset)
+        AtomPairFingerprint().featurize(dataset)
         self.assertEqual(dataset_rows_number, dataset.X.shape[0])
 
         dataset = copy(self.mini_dataset_to_test)
@@ -53,4 +67,3 @@ class TestRDKitFingerprints(FeaturizerTestCase, TestCase):
         dataset = copy(self.mini_dataset_to_test)
         RDKFingerprint().featurize(dataset)
         self.assertEqual(dataset_rows_number, dataset.X.shape[0])
-

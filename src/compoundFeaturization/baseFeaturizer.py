@@ -48,9 +48,11 @@ class MolecularFeaturizer(ABC):
           The input Dataset containing a featurized representation of the molecules in Dataset.X.
         """
         molecules = dataset.mols
+        dataset_ids = dataset.ids
 
         features = []
         for i, mol in enumerate(molecules):
+            mol_id = dataset_ids[i]
             mol_convertable = True
             if i % log_every_n == 0:
                 print("Featurizing datapoint %i" % i)
@@ -59,7 +61,7 @@ class MolecularFeaturizer(ABC):
                     # mol must be a RDKit Mol object, so parse a SMILES
                     molobj = Chem.MolFromSmiles(mol)
                     if molobj is None:
-                        dataset.remove_elements([i])
+                        dataset.remove_elements([mol_id])
                         mol_convertable = False
                     try:
                         # SMILES is unique, so set a canonical order of atoms
@@ -70,7 +72,8 @@ class MolecularFeaturizer(ABC):
                         mol = mol
 
                 if mol_convertable:
-                    features.append(self._featurize(mol))
+                    feat = self._featurize(mol)
+                    features.append(feat)
 
             except PreConditionViolationException:
                 exit(1)
@@ -80,6 +83,7 @@ class MolecularFeaturizer(ABC):
                     mol = Chem.MolToSmiles(mol)
                 print("Failed to featurize datapoint %d, %s. Appending empty array" % (i, mol))
                 print("Exception message: {}".format(e))
+                dataset.remove_elements([mol_id])
 
         if isinstance(features[0], np.ndarray):
             features = np.vstack(features)

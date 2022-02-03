@@ -335,8 +335,10 @@ class NumpyDataset(Dataset):
         indexes = []
 
         if axis == 0:
-            for i in self.X:
-                if len(self.X.shape) == 2:
+            shape = self.X.shape
+            X = self.X
+            for i in X:
+                if len(shape) == 2:
                     if np.isnan(np.dot(i, i)):
                         indexes.append(self.ids[j])
 
@@ -346,7 +348,7 @@ class NumpyDataset(Dataset):
                 j += 1
             if len(indexes) > 0:
                 print('Elements with indexes: ', indexes, ' were removed due to the presence of NAs!')
-                print('The elements in question are: ', self.mols[indexes])
+                # print('The elements in question are: ', self.mols[indexes])
                 self.remove_elements(indexes)
 
         elif axis == 1:

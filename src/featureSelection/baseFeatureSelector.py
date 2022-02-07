@@ -268,7 +268,6 @@ class SelectFromModelFS(BaseFeatureSelector):
         return X_new, sfm.get_support(indices=True)
 
 
-# TODO : get the task based on the output
 class BorutaAlgorithm(BaseFeatureSelector):
 
     def __init__(self, estimator=None, task="classification",

@@ -19,7 +19,7 @@ class ShapValues(object):
         self.shap_values = None
 
     # TODO: masker not working
-    def computePermutationShap(self, masker=False, plot=True, **kwargs):
+    def computePermutationShap(self, masker=False, plot=True, max_evals = 500, **kwargs):
         columns_names = ['feat_' + str(i + 1) for i in range(self.dataset.X.shape[1])]
         X = pd.DataFrame(self.dataset.X, columns=columns_names)
 
@@ -41,7 +41,7 @@ class ShapValues(object):
         else:
             explainer = shap.explainers.Permutation(model.predict, X)
 
-        self.shap_values = explainer(X)
+        self.shap_values = explainer(X, max_evals=max_evals)
         if plot:
             # visualize all the training set predictions
             if masker:

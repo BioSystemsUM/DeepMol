@@ -2,10 +2,10 @@
 date: 28/04/2021
 '''
 
-
 from typing import Optional, List, Type
 from copy import deepcopy
 import numpy as np
+from deepchem.feat import MolGraphConvFeaturizer
 
 from loaders.Loaders import CSVLoader
 from metrics.Metrics import Metric
@@ -32,9 +32,6 @@ def generate_sequences(epochs, train_smiles):
     for i in range(epochs):
         for smile in train_smiles:
             yield smile, smile
-
-
-
 
 class DeepChemModel(Model):
     """Wrapper class that wraps deepchem models.
@@ -71,7 +68,7 @@ class DeepChemModel(Model):
             self.use_weights = kwargs['use_weights']
         else:
             self.use_weights = True
-        
+
         if 'n_tasks' in kwargs:
             self.n_tasks = kwargs['n_tasks']
         else:
@@ -102,10 +99,10 @@ class DeepChemModel(Model):
                 ids=dataset.mols)
         else:
             new_dataset = NumpyDataset(
-                    X=dataset.X,
-                    y=dataset.y,
-                    #w = np.ones((np.shape(dataset.features)[0])),
-                    ids=dataset.mols)
+                X=dataset.X,
+                y=dataset.y,
+                # w = np.ones((np.shape(dataset.features)[0])),
+                ids=dataset.mols)
         if isinstance(self.model, SeqToSeq):
             self.model.fit_sequences(generate_sequences(epochs=self.model.epochs, train_smiles=dataset.ids))
         elif isinstance(self.model, WGAN):
@@ -133,12 +130,12 @@ class DeepChemModel(Model):
             The value is a return value of `predict` method of the DeepChem model.
         """
         new_dataset = NumpyDataset(
-                X=dataset.X,
-                y=dataset.y,
-                #w = np.ones((np.shape(dataset.features)[0],self.n_tasks)),
-                ids=dataset.mols)
+            X=dataset.X,
+            y=dataset.y,
+            # w = np.ones((np.shape(dataset.features)[0],self.n_tasks)),
+            ids=dataset.mols)
 
-        res = self.model.predict(new_dataset,transformers)
+        res = self.model.predict(new_dataset, transformers)
 
         # if isinstance(self.model, (GATModel,GCNModel,AttentiveFPModel,LCNNModel)):
         #     return res
@@ -149,8 +146,9 @@ class DeepChemModel(Model):
         if isinstance(self.model, TorchModel) and self.model.model.mode == 'classification':
             return res
         else:
-            new_res = np.squeeze(res) # this works for all regression models (Keras and PyTorch) and is more general than the commented code above
-        
+            new_res = np.squeeze(
+                res)  # this works for all regression models (Keras and PyTorch) and is more general than the commented code above
+
         return new_res
 
     def predict_on_batch(self, X: Dataset) -> np.ndarray:
@@ -169,7 +167,6 @@ class DeepChemModel(Model):
     def reload(self):
         """Loads deepchem model from joblib file on disk."""
         self.model = load_from_disk(self.get_model_filename(self.model_dir))
- 
 
     def cross_validate(self,
                        dataset: Dataset,
@@ -177,8 +174,8 @@ class DeepChemModel(Model):
                        splitter: Type[Splitter],
                        transformers: List[dc.trans.NormalizationTransformer] = [],
                        folds: int = 3):
-        #TODO: add option to choose between splitters (later, for now we only have random)
-        #splitter = RandomSplitter()
+        # TODO: add option to choose between splitters (later, for now we only have random)
+        # splitter = RandomSplitter()
         datasets = splitter.k_fold_split(dataset, folds)
 
         train_scores = []
@@ -208,8 +205,7 @@ class DeepChemModel(Model):
                 train_score_best_model = train_score[metric.name]
                 best_model = dummy_model
 
-
-        return best_model, train_score_best_model, test_score_best_model, train_scores, test_scores, avg_train_score/folds, avg_test_score/folds
+        return best_model, train_score_best_model, test_score_best_model, train_scores, test_scores, avg_train_score / folds, avg_test_score / folds
 
 
 if __name__ == "__main__":

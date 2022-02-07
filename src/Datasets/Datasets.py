@@ -146,8 +146,10 @@ class NumpyDataset(Dataset):
                 if self.features2keep is not None:
                     if self.features2keep.size == 0:
                         raise Exception("This dataset has no features")
-                    else:
+                    elif len(self._X.shape) == 2:
                         return self._X[:, self.features2keep]
+                    else:
+                        return self._X
 
                 else:
                     return self._X
@@ -158,9 +160,14 @@ class NumpyDataset(Dataset):
             return None
 
     @X.setter
-    def X(self, value: Union[np.array, None]):
+    def X(self, value: Union[np.array, list, None]):
+        if isinstance(value, list):
+            value = np.array(value)
         if value is not None and value.size > 0:
-            self.features2keep = np.array([i for i in range(value.shape[1])])
+            if len(value.shape) == 2:
+                self.features2keep = np.array([i for i in range(value.shape[1])])
+            else:
+                self.features2keep = np.array([i for i in range(len(value))])
             self._X = value
         else:
             self._X = None
@@ -328,14 +335,20 @@ class NumpyDataset(Dataset):
         indexes = []
 
         if axis == 0:
-            for i in self.X:
-                if np.isnan(np.dot(i, i)):
-                    indexes.append(self.ids[j])
+            shape = self.X.shape
+            X = self.X
+            for i in X:
+                if len(shape) == 2:
+                    if np.isnan(np.dot(i, i)):
+                        indexes.append(self.ids[j])
 
+                else:
+                    if i is None:
+                        indexes.append(self.ids[j])
                 j += 1
             if len(indexes) > 0:
                 print('Elements with indexes: ', indexes, ' were removed due to the presence of NAs!')
-                print('The elements in question are: ', self.mols[indexes])
+                # print('The elements in question are: ', self.mols[indexes])
                 self.remove_elements(indexes)
 
         elif axis == 1:
@@ -357,7 +370,10 @@ class NumpyDataset(Dataset):
             y = self.y[indexes]
 
         if self.X is not None:
-            X = self.X[indexes, :]
+            if len(self.X.shape) == 2:
+                X = self.X[indexes, :]
+            else:
+                X = self.X[indexes]
 
         if self.ids is not None:
             ids = self.ids[indexes]

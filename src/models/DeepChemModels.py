@@ -5,14 +5,13 @@ date: 28/04/2021
 from typing import Optional, List, Type
 from copy import deepcopy
 import numpy as np
-from deepchem.feat import MolGraphConvFeaturizer
 
 from loaders.Loaders import CSVLoader
 from metrics.Metrics import Metric
 from models.Models import Model
 from Datasets.Datasets import Dataset
-from deepchem.models import Model as deep_model, TorchModel
-from deepchem.models import SeqToSeq, WGAN, MultitaskIRVClassifier
+from deepchem.models.torch_models import TorchModel
+from deepchem.models import SeqToSeq, WGAN, Model as deep_model
 from deepchem.data import NumpyDataset
 import deepchem as dc
 
@@ -32,6 +31,7 @@ def generate_sequences(epochs, train_smiles):
     for i in range(epochs):
         for smile in train_smiles:
             yield smile, smile
+
 
 class DeepChemModel(Model):
     """Wrapper class that wraps deepchem models.

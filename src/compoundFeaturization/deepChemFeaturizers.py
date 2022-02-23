@@ -199,10 +199,10 @@ class MolGraphConvFeat(MolecularFeaturizer):
             Whether to use partial chrage data or not. If True, computes gasteiger
             charges. Default to False.
         """
+        super().__init__()
         self.use_edges = use_edges
         self.use_chirality = use_chirality
         self.use_partial_charge = use_partial_charge
-
 
     def _featurize(self, mol: Union[Mol, str], log_every_n=1000):
         # obtain new SMILE's strings
@@ -308,7 +308,7 @@ class CoulombEigFeat(MolecularFeaturizer):
     Adapted from deepchem"""
 
     def __init__(self, max_atoms: int, remove_hydrogens: bool = False, randomize: bool = False,
-                 n_samples: Optional[int] = 1, seed: Optional[int] = None):
+                 n_samples: Optional[int] = 1, seed: Optional[int] = None, max_conformers:int = 1):
         """
         Parameters
         ----------
@@ -333,6 +333,7 @@ class CoulombEigFeat(MolecularFeaturizer):
         if seed is not None:
             seed = int(seed)
         self.seed = seed
+        self.max_conformers = max_conformers
 
     def featurize(self, dataset: Dataset, max_conformers: int = 1, log_every_n=1000):
         # obtain new SMILE's strings
@@ -375,6 +376,33 @@ class CoulombEigFeat(MolecularFeaturizer):
         print('Elements with indexes: ', indexes, 'were removed due to lack of featurization.')
 
         return dataset
+
+    def _featurize(self, mol: Union[Mol, str]):
+
+        if isinstance(mol, str):
+            rdkit_mols = [Chem.MolFromSmiles(mol)]
+        elif isinstance(mol, Mol):
+            rdkit_mols = [mol]
+        else:
+            rdkit_mols = None
+
+        generator = ConformerGenerator(max_conformers=self.max_conformers)
+
+        new_conformers = get_conformers(rdkit_mols, generator)
+        # featurization process using DeepChem featurizers
+        print('Featurizing datapoints')
+        featurizer = CoulombMatrixEig(
+            max_atoms=self.max_atoms,
+            remove_hydrogens=self.remove_hydrogens,
+            randomize=self.randomize,
+            n_samples=self.n_samples,
+            seed=self.seed)
+
+        features = featurizer.featurize(rdkit_mols)
+
+        assert features[0].size != 0
+
+        return features[0]
 
 
 class SmileImageFeat(MolecularFeaturizer):
@@ -542,5 +570,5 @@ class RawFeat(MolecularFeaturizer):
             smiles = None
 
         mol = RawFeaturizer().featurize([smiles])[0]
-        #dataset.ids = smiles  # this is needed when calling the build_char_dict method (TextCNNModel)
+        # dataset.ids = smiles  # this is needed when calling the build_char_dict method (TextCNNModel)
         return mol

@@ -407,15 +407,16 @@ def draw_MACCS_Pattern(smiles, smarts_patt_index, path=None):
 ##### MORGAN FINGERPRINTS #####
 ###############################
 
-from rdkit.Chem import rdMolDescriptors, rdDepictor
+from rdkit.Chem import rdMolDescriptors, rdDepictor, Mol
 from rdkit.Chem import Draw
 from IPython.display import SVG
 
 
-def draw_morgan_bits(smiles, bits, radius=2, nBits=2048):
+def draw_morgan_bits(molecule, bits, radius=2, nBits=2048):
     bi = {}
 
-    mol = Chem.MolFromSmiles(smiles)
+    mol = Chem.MolFromSmiles(molecule)
+
     fp = rdMolDescriptors.GetMorganFingerprintAsBitVect(mol, radius=radius, nBits=nBits, bitInfo=bi)
 
     if isinstance(bits, int):

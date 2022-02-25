@@ -516,10 +516,11 @@ class SimilaritySplitter(Splitter):
 
             else:
                 test_valid_fps = [i for i in range(len(all_fps)) if i in test_valid_inds]
-                test_inds, valid_inds = self._split_fingerprints(test_valid_fps, train_size,
-                                                                 valid_size +
+                test_inds, valid_inds = self._split_fingerprints(test_valid_fps,
                                                                  test_size,
-                                                                 test_valid_inds, homogenous_threshold)
+                                                                 valid_size,
+                                                                 test_valid_inds,
+                                                                 homogenous_threshold)
 
         return train_inds, valid_inds, test_inds
 

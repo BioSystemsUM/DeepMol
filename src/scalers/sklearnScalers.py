@@ -12,8 +12,8 @@ class StandardScaler(BaseScaler):
         self.with_mean = with_mean
         self.with_std = with_std
         self.scaler_object = preprocessing.StandardScaler(copy=self.copy,
-                                                           with_mean=self.with_mean,
-                                                           with_std=self.with_std)
+                                                          with_mean=self.with_mean,
+                                                          with_std=self.with_std)
 
         super().__init__()
 
@@ -45,8 +45,8 @@ class MinMaxScaler(BaseScaler):
         self.feature_range = feature_range
         self.clip = clip
         self._scaler_object = preprocessing.MinMaxScaler(copy=self.copy,
-                                                                 feature_range=self.feature_range,
-                                                                 clip=self.clip)
+                                                         feature_range=self.feature_range,
+                                                         clip=self.clip)
 
         super().__init__()
 
@@ -110,10 +110,10 @@ class RobustScaler(BaseScaler):
         self.quantile_range = quantile_range
         self.unit_variance = unit_variance
         self._scaler_object = preprocessing.RobustScaler(with_centering=self.with_centering,
-                                                                 with_scaling=self.with_scaling,
-                                                                 quantile_range=self.quantile_range,
-                                                                 copy=self.copy,
-                                                                 unit_variance=self.unit_variance)
+                                                         with_scaling=self.with_scaling,
+                                                         quantile_range=self.quantile_range,
+                                                         copy=self.copy,
+                                                         unit_variance=self.unit_variance)
 
         super().__init__()
 
@@ -146,9 +146,9 @@ class PolynomialFeatures(BaseScaler):
         self.include_bias = include_bias
         self.order = order
         self._scaler_object = preprocessing.PolynomialFeatures(degree=self.degree,
-                                                                       interaction_only=self.interaction_only,
-                                                                       include_bias=self.include_bias,
-                                                                       order=self.order)
+                                                               interaction_only=self.interaction_only,
+                                                               include_bias=self.include_bias,
+                                                               order=self.order)
 
         super().__init__()
 
@@ -274,10 +274,10 @@ class QuantileTransformer(BaseScaler):
         self.copy = copy
         self._scaler_object = \
             preprocessing.QuantileTransformer(n_quantiles=self.n_quantiles,
-                                                      output_distribution=self.output_distribution,
-                                                      ignore_implicit_zeros=self.ignore_implicit_zeros,
-                                                      subsample=self.subsample,
-                                                      random_state=self.random_state, copy=self.copy)
+                                              output_distribution=self.output_distribution,
+                                              ignore_implicit_zeros=self.ignore_implicit_zeros,
+                                              subsample=self.subsample,
+                                              random_state=self.random_state, copy=self.copy)
 
         super().__init__()
 
@@ -310,8 +310,8 @@ class PowerTransformer(BaseScaler):
         self.copy = copy
         self._scaler_object = \
             preprocessing.QuantileTransformer(method=self.method,
-                                                      standardize=self.standardize,
-                                                      copy=self.copy)
+                                              standardize=self.standardize,
+                                              copy=self.copy)
 
         super().__init__()
 

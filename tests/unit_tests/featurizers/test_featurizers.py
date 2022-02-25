@@ -9,14 +9,15 @@ from loaders.loaders import CSVLoader
 class FeaturizerTestCase(ABC):
 
     def setUp(self) -> None:
-        dataset = os.path.join("../..", "data", "test_to_convert_to_sdf.csv")
+        dir_path = os.path.join(os.path.dirname(os.path.abspath(".")))
+        dataset = os.path.join(dir_path, "tests", "data", "test_to_convert_to_sdf.csv")
         loader = CSVLoader(dataset,
                            mols_field='Standardized_Smiles',
                            labels_fields='Class')
 
         self.mini_dataset_to_test = loader.create_dataset()
 
-        dataset = os.path.join("../..", "data", "PC-3.csv")
+        dataset = os.path.join(dir_path, "tests", "data", "PC-3.csv")
         loader = CSVLoader(dataset,
                            mols_field='smiles',
                            labels_fields='pIC50')
@@ -24,7 +25,7 @@ class FeaturizerTestCase(ABC):
         self.dataset_to_test = loader.create_dataset()
 
         dir_path = os.path.join(os.path.dirname(os.path.abspath(".")))
-        dataset = os.path.join("../..", "data", "invalid_smiles_dataset.csv")
+        dataset = os.path.join(dir_path, "tests", "data", "invalid_smiles_dataset.csv")
         loader = CSVLoader(dataset,
                            mols_field='Standardized_Smiles',
                            labels_fields='Class')

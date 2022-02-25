@@ -42,6 +42,8 @@ class MolecularFeaturizer(ABC):
           Scale the data
         path_to_save_scaler: str, default None
           File path to save scaler
+        remove_nans_axis: int, default 0
+          integer that defines in which axis the NaNs should be removed
         Returns
         -------
         dataset: Dataset object

@@ -86,37 +86,46 @@ class VotingClassifier(Ensemble):
 
             for mol_i, mol_predictions in enumerate(results_from_all_models):
                 class_predictions = np.apply_along_axis(np.mean, 1, mol_predictions)
-                max_prediction = 0
-                max_prediction_class = 0
-                for i, class_prediction in enumerate(class_predictions):
-                    if class_prediction > max_prediction:
-                        max_prediction_class = i
-                        max_prediction = class_prediction
 
                 if proba:
                     final_result[mol_i] = class_predictions
                 else:
+                    max_prediction = 0
+                    max_prediction_class = 0
+                    for i, class_prediction in enumerate(class_predictions):
+                        if class_prediction > max_prediction:
+                            max_prediction_class = i
+                            max_prediction = class_prediction
                     final_result[mol_i] = max_prediction_class
 
             return final_result
 
-        # TODO : implement
         elif self.voting == "hard":
             for mol_i, mol_predictions in enumerate(results_from_all_models):
                 predictions_counter = {}
-                max_prediction = 0
-                max_prediction_class = 0
-                for i, class_prediction in enumerate(mol_predictions):
-                    for j in range(len(mol_predictions)):
+                for i, models_class_predictions in enumerate(mol_predictions):
+                    for model_class_prediction in models_class_predictions:
+                        if model_class_prediction > 0.5:
 
-                        # TODO: instantiate list of prediction classes (maybe before all of this)
-                        # and work over that list
+                            if i in predictions_counter:
+                                predictions_counter[i].append(model_class_prediction)
+                            else:
+                                predictions_counter[i] = [model_class_prediction]
 
-                        if class_prediction > max_prediction:
-                            max_prediction_class = i
-                            max_prediction = class_prediction
+                class_with_more_predictions = None
+                max_n_predictions = 0
 
-                if proba:
-                    pass
-                else:
-                    final_result[mol_i] = max_prediction_class
+                for class_ in predictions_counter:
+                    len_predictions_counter = len(predictions_counter[class_])
+                    if len_predictions_counter > max_n_predictions:
+                        max_n_predictions = len_predictions_counter
+                        class_with_more_predictions = class_
+
+                assert class_with_more_predictions is not None
+
+                final_result[mol_i] = class_with_more_predictions
+
+        else:
+            raise Exception("Voting has to be either 'soft' or 'hard'")
+
+        return final_result

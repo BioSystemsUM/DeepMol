@@ -25,7 +25,6 @@ class Test2DDescriptors(FeaturizerTestCase, TestCase):
         self.assertEqual(4294, self.dataset_to_test.X.shape[0])
 
     def test_featurize_with_nan(self):
-
         dataset_rows_number = len(self.mini_dataset_to_test.mols)
         to_add = np.zeros(4)
 
@@ -47,7 +46,6 @@ class Test2DDescriptors(FeaturizerTestCase, TestCase):
         self.assertEqual(dataset_rows_number, dataset.X.shape[0])
 
     def test_with_invalid_smiles(self):
-
         TwoDimensionDescriptors().featurize(self.dataset_invalid_smiles)
 
     def test_dummy_test(self):
@@ -65,6 +63,7 @@ class Test2DDescriptors(FeaturizerTestCase, TestCase):
         AtomPairFingerprintCallbackHash(nBits=1024, includeChirality=True).featurize(dataset)
 
         dataset.remove_duplicates()
+
 
 class Test3DDescriptors(FeaturizerTestCase, TestCase):
 

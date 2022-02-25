@@ -147,7 +147,7 @@ params_dict_svm = {'C': [1.0, 0.7, 0.5, 0.3, 0.1],
 
 optimizer = GridHyperparamOpt(rf_model_builder)
 
-best_rf, best_hyperparams, all_results = optimizer.hyperparam_search(params_dict_rf, train_dataset, valid_dataset, Metric(roc_auc_score))
+best_rf, best_hyperparams, all_results = optimizer.hyperparameter_search(params_dict_rf, train_dataset, valid_dataset, Metric(roc_auc_score))
 
 print('#################')
 print(best_hyperparams)

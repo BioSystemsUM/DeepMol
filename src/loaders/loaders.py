@@ -15,10 +15,14 @@ def load_csv_file(input_file, fields, sep=',', header=0, chunk_size=None):
     """Load data as pandas dataframe from CSV files.
     Parameters
     ----------
-    input_files: str
+    input_file: str
         data path
-    keep_fields: np.ndarray
+    fields: np.ndarray
         fields to keep
+    sep: str
+        separator
+    header: int
+        the row where the header is
     chunk_size: int, default None
         The chunk size to yield at one time.
     Returns
@@ -168,15 +172,22 @@ class CSVLoader(object):
 
         self.fields2keep = fields2keep
 
-    # TODO: update comments
-    def _get_dataset(self, dataset_path, fields=None, sep=',', header=0, chunk_size=None):
+    @staticmethod
+    def _get_dataset(dataset_path, fields=None, sep=',', header=0, chunk_size=None):
         """Loads data with size chunk_size.
         Parameters
         ----------
-        input_files: str
+        dataset_path: str
             Filename to process
-        shard_size: int, optional
+        fields
+        chunk_size: int, optional
             The size of a shard of data to process at a time.
+        sep: str
+            separator
+        header: int
+            the row where the header is
+        fields: np.ndarray
+            fields to keep
         Returns
         -------
         pd.DataFrame

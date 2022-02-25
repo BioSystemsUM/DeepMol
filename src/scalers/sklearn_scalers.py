@@ -309,9 +309,7 @@ class PowerTransformer(BaseScaler):
         self.standardize = standardize
         self.copy = copy
         self._scaler_object = \
-            preprocessing.QuantileTransformer(method=self.method,
-                                              standardize=self.standardize,
-                                              copy=self.copy)
+            preprocessing.QuantileTransformer(copy=self.copy)
 
         super().__init__()
 

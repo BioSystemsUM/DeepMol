@@ -1,7 +1,7 @@
 import os
 import shutil
 import tempfile
-from typing import List, Optional, Sequence
+from typing import List, Optional, Sequence, Union
 import numpy as np
 from datasets.datasets import Dataset
 from evaluator.evaluator import Evaluator
@@ -29,7 +29,8 @@ class Model(BaseEstimator):
 
         if self.__class__.__name__ == "Model":
             raise ValueError(
-                "This constructor is for an abstract class and should never be called directly. Can only call from subclass constructors.")
+                "This constructor is for an abstract class and should never be called directly. Can only call from "
+                "subclass constructors.")
 
         self.model_dir_is_temp = False
 
@@ -75,13 +76,15 @@ class Model(BaseEstimator):
         """
         raise NotImplementedError("Each class model must implement its own reload method.")
 
-    def get_model_filename(self, model_dir: str) -> str:
+    @staticmethod
+    def get_model_filename(model_dir: str) -> str:
         """
         Given model directory, obtain filename for the model itself.
         """
         return os.path.join(model_dir, "model.joblib")
 
-    def get_params_filename(self, model_dir: str) -> str:
+    @staticmethod
+    def get_params_filename(model_dir: str) -> str:
         """
         Given model directory, obtain filename for the model itself.
         """
@@ -128,7 +131,7 @@ class Model(BaseEstimator):
 
     def evaluate(self,
                  dataset: Dataset,
-                 metrics: List[Metric],
+                 metrics: Union[List[Metric], Metric],
                  per_task_metrics: bool = False,
                  n_classes: int = 2):
         """

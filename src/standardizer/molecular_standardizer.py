@@ -31,6 +31,7 @@ class MolecularStandardizer(ABC):
         stand_mols = []
 
         for i, mol in enumerate(molecules):
+            molobj = None
             if i % log_every_n == 0:
                 print("Standardizing datapoint %i" % i)
             try:
@@ -51,6 +52,8 @@ class MolecularStandardizer(ABC):
                         molobj = rdmolops.RenumberAtoms(molobj, new_order)
                     except Exception as e:
                         molobj = mol
+
+                assert molobj is not None
 
                 stand_mols.append(Chem.MolToSmiles(self._standardize(molobj)))
             except Exception as e:

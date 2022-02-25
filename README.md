@@ -407,16 +407,17 @@ Grid and randomized hyperparameter optimization is provided using cross-validati
 or a held-out validation set.
 
 ```python
-from parameter_optimization.hyperparameter_optimization import HyperparamOpt_Valid, HyperparamOpt_CV
+from parameter_optimization.hyperparameter_optimization import HyperparameterOptimizerValidation,
+  HyperparameterOptimizerCV
 
 # Hyperparameter Optimization (using the above created keras model)
-optimizer = HyperparamOpt_Valid(create_model)
+optimizer = HyperparameterOptimizerValidation(create_model)
 
 params_dict = {'optimizer': ['adam', 'rmsprop'],
                'dropout': [0.2, 0.4, 0.5]}
 
-best_model, best_hyperparams, all_results = optimizer.hyperparam_search(params_dict, train_dataset,
-                                                                        valid_dataset, Metric(roc_auc_score))
+best_model, best_hyperparams, all_results = optimizer.hyperparameter_search(params_dict, train_dataset,
+                                                                            valid_dataset, Metric(roc_auc_score))
 
 print(best_hyperparams)
 print(best_model)

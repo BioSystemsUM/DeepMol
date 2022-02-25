@@ -47,7 +47,7 @@ def _convert_hyperparam_dict_to_filename(hyper_params: Dict[str, Any]) -> str:
 
 
 def validate_metrics(metrics):
-    '''Validate single and multi metrics'''
+    """Validate single and multi metrics"""
     if isinstance(metrics, dict):
         all_metrics = []
         for m in metrics.values():
@@ -61,7 +61,7 @@ def validate_metrics(metrics):
             all_metrics = metrics
         else:
             print('WARNING: ', metrics, ' is not a valid scoring function. '
-                                       'Use sorted(sklearn.metrics.SCORERS.keys()) to get valid options.')
+                                        'Use sorted(sklearn.metrics.SCORERS.keys()) to get valid options.')
 
     if not metrics:
         metrics = 'accuracy'
@@ -70,7 +70,7 @@ def validate_metrics(metrics):
     return metrics
 
 
-class HyperparamOpt(object):
+class HyperparameterOptimizer(object):
     """Abstract superclass for hyperparameter search classes.
     """
 
@@ -92,16 +92,15 @@ class HyperparamOpt(object):
         self.model_builder = model_builder
         self.mode = mode
 
-
-    def hyperparam_search(self,
-                          params_dict: Dict[str, Any],
-                          train_dataset: Dataset,
-                          valid_dataset: Dataset,
-                          metric: Metric,
-                          use_max: bool = True,
-                          logdir: Optional[str] = None,
-                          **kwargs) -> Tuple[Model, Dict[str, Any], Dict[str, float]]:
-      """Conduct Hyperparameter search.
+    def hyperparameter_search(self,
+                              params_dict: Dict[str, Any],
+                              train_dataset: Dataset,
+                              valid_dataset: Dataset,
+                              metric: Metric,
+                              use_max: bool = True,
+                              logdir: Optional[str] = None,
+                              **kwargs) -> Tuple[Model, Dict[str, Any], Dict[str, float]]:
+        """Conduct Hyperparameter search.
       This method defines the common API shared by all hyperparameter
       optimization subclasses. Different classes will implement
       different search methods but they must all follow this common API.
@@ -127,27 +126,27 @@ class HyperparamOpt(object):
       -------
       Tuple[`best_model`, `best_hyperparams`, `all_scores`]
       """
-      raise NotImplementedError
+        raise NotImplementedError
 
 
-class HyperparamOpt_Valid(HyperparamOpt):
+class HyperparameterOptimizerValidation(HyperparameterOptimizer):
     """
     Provides simple grid hyperparameter search capabilities.
     This class performs a grid hyperparameter search over the specified
     hyperparameter space.
     """
 
-    def hyperparam_search(self,
-                          params_dict: Dict,
-                          train_dataset: Dataset,
-                          valid_dataset: Dataset,
-                          metric: Metric,
-                          n_iter_search: int = 15,
-                          n_jobs: int = 1,
-                          verbose: int = 0,
-                          use_max: bool = True,
-                          logdir: Optional[str] = None,
-                          **kwargs):
+    def hyperparameter_search(self,
+                              params_dict: Dict,
+                              train_dataset: Dataset,
+                              valid_dataset: Dataset,
+                              metric: Metric,
+                              n_iter_search: int = 15,
+                              n_jobs: int = 1,
+                              verbose: int = 0,
+                              use_max: bool = True,
+                              logdir: Optional[str] = None,
+                              **kwargs):
 
         """Perform hyperparams search according to params_dict.
         Each key to hyperparams_dict is a model_param. The values should
@@ -165,6 +164,10 @@ class HyperparamOpt_Valid(HyperparamOpt):
             metric used for evaluation
         n_iter_search: int or None, optional
             Number of random combinations of parameters to test, if None performs complete grid search
+        n_jobs: int
+            Number of jobs
+        verbose: int
+            Verbose mode
         use_max: bool, optional
             If True, return the model with the highest score.
         logdir: str, optional
@@ -176,7 +179,7 @@ class HyperparamOpt_Valid(HyperparamOpt):
         """
 
         if self.mode is None:
-            #TODO: better way of doint this
+            # TODO: better way of doint this
             if len(set(train_dataset.y)) > 2:
                 model = KerasRegressor(build_fn=self.model_builder, **kwargs)
                 self.mode = 'regression'
@@ -187,7 +190,8 @@ class HyperparamOpt_Valid(HyperparamOpt):
             model = KerasClassifier(build_fn=self.model_builder, **kwargs)
         elif self.mode == 'regression':
             model = KerasRegressor(build_fn=self.model_builder, **kwargs)
-        else : raise ValueError('Model operation mode can only be classification or regression!')
+        else:
+            raise ValueError('Model operation mode can only be classification or regression!')
 
         print('MODE: ', self.mode)
         hyperparams = params_dict.keys()
@@ -212,7 +216,7 @@ class HyperparamOpt_Valid(HyperparamOpt):
         all_scores = {}
         j = 0
         print("Fitting %d random models from a space of %d possible models." % (
-        len(random_inds), number_combinations))
+            len(random_inds), number_combinations))
         for ind, hyperparameter_tuple in enumerate(itertools.product(*hyperparam_vals)):
             if ind in random_inds:
                 j += 1
@@ -235,7 +239,7 @@ class HyperparamOpt_Valid(HyperparamOpt):
                 else:
                     model_dir = tempfile.mkdtemp()
 
-                try :
+                try:
                     model = SklearnModel(self.model_builder(**model_params), model_dir)
 
                 except Exception as e:
@@ -282,26 +286,25 @@ class HyperparamOpt_Valid(HyperparamOpt):
         return best_model, best_hyperparams, all_scores
 
 
-
-class HyperparamOpt_CV(HyperparamOpt):
+class HyperparameterOptimizerCV(HyperparameterOptimizer):
     """
     Provides simple grid hyperparameter search capabilities.
     This class performs a grid hyperparameter search over the specified
     hyperparameter space.
     """
 
-    def hyperparam_search(self,
-                          model_type: str,
-                          params_dict: Dict,
-                          train_dataset: Dataset,
-                          metric: Metric,
-                          cv: int = 3,
-                          n_iter_search: int = 15,
-                          n_jobs: int = 1,
-                          verbose: int = 0,
-                          logdir: Optional[str] = None,
-                          seed: Optional[int] = None,
-                          **kwargs):
+    def hyperparameter_search(self,
+                              model_type: str,
+                              params_dict: Dict,
+                              train_dataset: Dataset,
+                              metric: Metric,
+                              cv: int = 3,
+                              n_iter_search: int = 15,
+                              n_jobs: int = 1,
+                              verbose: int = 0,
+                              logdir: Optional[str] = None,
+                              seed: Optional[int] = None,
+                              **kwargs):
 
         """Perform hyperparams search according to params_dict.
         Each key to hyperparams_dict is a model_param. The values should
@@ -321,6 +324,12 @@ class HyperparamOpt_CV(HyperparamOpt):
             number of folds to perform in the cross validation
         n_iter_search: int or None, optional
             Number of random combinations of parameters to test, if None performs complete grid search
+        n_jobs: int
+            Number of jobs
+        verbose: int
+            Verbose mode
+        seed: int
+            Seed to be able to reproduce the results
         logdir: str, optional
             The directory in which to store created models. If not set, will
             use a temporary directory.
@@ -337,24 +346,29 @@ class HyperparamOpt_CV(HyperparamOpt):
 
         if model_type != 'deepchem':
             if self.mode == 'classification':
-                cv = StratifiedKFold(n_splits=cv, shuffle=True, random_state=seed) # changed this so that we can set seed here and shuffle data by default
+                cv = StratifiedKFold(n_splits=cv, shuffle=True,
+                                     random_state=seed)  # changed this so that we can set seed here and shuffle data
+                # by default
             else:
-                cv = KFold(n_splits=cv, shuffle=True, random_state=seed) # added this so that data is shuffled before splitting
+                cv = KFold(n_splits=cv, shuffle=True,
+                           random_state=seed)  # added this so that data is shuffled before splitting
 
         print('MODEL TYPE: ', model_type)
-        #diferentiate sklearn model from keras model
+        # diferentiate sklearn model from keras model
         if model_type == 'keras':
             if self.mode == 'classification':
                 model = KerasClassifier(build_fn=self.model_builder, **kwargs)
             elif self.mode == 'regression':
                 model = KerasRegressor(build_fn=self.model_builder, **kwargs)
-            else : raise ValueError('Model operation mode can only be classification or regression!')
+            else:
+                raise ValueError('Model operation mode can only be classification or regression!')
         elif model_type == 'sklearn':
             model = self.model_builder()
-            #model = SklearnModel(self.model_builder, self.mode)
+            # model = SklearnModel(self.model_builder, self.mode)
         elif model_type == 'deepchem':
-            model = self.model_builder # because we don't want to call the function yet
-        else : raise ValueError('Only keras, sklearn and deepchem models are accepted.')
+            model = self.model_builder  # because we don't want to call the function yet
+        else:
+            raise ValueError('Only keras, sklearn and deepchem models are accepted.')
 
         metrics = validate_metrics(metric)
 
@@ -369,33 +383,29 @@ class HyperparamOpt_CV(HyperparamOpt):
             #                                 scoring = metrics, n_jobs=n_jobs, cv=cv,
             #                                 verbose=verbose, n_iter = n_iter_search, refit=False)
             if model_type == 'deepchem':
-                grid = DeepchemRandomSearchCV(model_build_fn=model, param_distributions=params_dict, scoring = metrics,
-                                              cv=cv, mode=self.mode, n_iter = n_iter_search, refit=True,
+                grid = DeepchemRandomSearchCV(model_build_fn=model, param_distributions=params_dict, scoring=metrics,
+                                              cv=cv, mode=self.mode, n_iter=n_iter_search, refit=True,
                                               random_state=seed)
             else:
-                grid = RandomizedSearchCV(estimator=model, param_distributions=params_dict, scoring = metrics,
-                                          n_jobs=n_jobs, cv=cv, verbose=verbose, n_iter = n_iter_search, refit=False,
+                grid = RandomizedSearchCV(estimator=model, param_distributions=params_dict, scoring=metrics,
+                                          n_jobs=n_jobs, cv=cv, verbose=verbose, n_iter=n_iter_search, refit=False,
                                           random_state=seed)
-        else :
-            # if self.mode == 'classification':
-            #     grid = GridSearchCV(estimator = model, param_grid = params_dict,
-            #                         scoring = metrics, n_jobs=n_jobs, cv=StratifiedKFold(n_splits=cv), verbose=verbose,
-            #                         refit=False)
-            # else: grid = RandomizedSearchCV(estimator = model, param_distributions = params_dict,
-            #                                 scoring = metrics, n_jobs=n_jobs, cv=cv,
-            #                                 verbose=verbose, n_iter = n_iter_search, refit=False)
+        else:
+            # if self.mode == 'classification': grid = GridSearchCV(estimator = model, param_grid = params_dict,
+            # scoring = metrics, n_jobs=n_jobs, cv=StratifiedKFold(n_splits=cv), verbose=verbose, refit=False) else:
+            # grid = RandomizedSearchCV(estimator = model, param_distributions = params_dict, scoring = metrics,
+            # n_jobs=n_jobs, cv=cv, verbose=verbose, n_iter = n_iter_search, refit=False)
             if model_type == 'deepchem':
-                grid = DeepchemGridSearchCV(model_build_fn= model, param_grid = params_dict, scoring = metrics,
+                grid = DeepchemGridSearchCV(model_build_fn=model, param_grid=params_dict, scoring=metrics,
                                             cv=cv, mode=self.mode, refit=True, random_state=seed)
             else:
                 grid = GridSearchCV(estimator=model, param_grid=params_dict, scoring=metrics, n_jobs=n_jobs,
                                     cv=cv, verbose=verbose, refit=False)
 
-
-        #print(train_dataset.X.shape, train_dataset.X.shape[0]/cv)
+        # print(train_dataset.X.shape, train_dataset.X.shape[0]/cv)
         if model_type == 'deepchem':
             grid.fit(train_dataset)
-            grid_result = grid # because fit here doesn't return the object
+            grid_result = grid  # because fit here doesn't return the object
         else:
             grid_result = grid.fit(train_dataset.X, train_dataset.y)
         print("\n \n Best %s: %f using %s" % (metrics, grid_result.best_score_, grid_result.best_params_))
@@ -416,5 +426,5 @@ class HyperparamOpt_CV(HyperparamOpt):
             best_model.fit(train_dataset)
             print(best_model)
             return best_model, grid_result.best_params_, grid_result.cv_results_
-        else: # DeepchemModel
+        else:  # DeepchemModel
             return grid_result.best_estimator_, grid_result.best_params_, grid_result.cv_results_

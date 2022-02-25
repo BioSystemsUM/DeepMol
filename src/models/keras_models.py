@@ -2,7 +2,7 @@ from models.models import Model
 from models.sklearn_models import SklearnModel
 from metrics.metrics import Metric
 from splitters.splitters import RandomSplitter, SingletaskStratifiedSplitter
-from typing import Optional, Callable
+from typing import Optional, Callable, Sequence
 from tensorflow.keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
 import numpy as np
 from datasets.datasets import Dataset
@@ -113,16 +113,34 @@ class KerasModel(Model):
         self.model = load_from_disk(self.get_model_filename(self.model_dir))
     '''
 
+    def fit_on_batch(self, X: Sequence, y: Sequence):
+        pass
+
+    def reload(self) -> None:
+        pass
+
+    def save(self) -> None:
+        pass
+
+    def get_task_type(self) -> str:
+        pass
+
+    def get_num_tasks(self) -> int:
+        pass
+
     def cross_validate(self,
                        dataset: Dataset,
                        metric: Metric,
                        folds: int = 3):
 
         # TODO: add option to choose between splitters
+        splitter = None
         if self.mode == 'classification':
             splitter = SingletaskStratifiedSplitter()
         if self.mode == 'regression':
             splitter = RandomSplitter()
+
+        assert splitter is not None
 
         datasets = splitter.k_fold_split(dataset, folds)
 

@@ -22,7 +22,7 @@ class DeepchemBaseSearchCV(object):
         else:
             scorer = scoring
         score_func = scorer._score_func
-        #kwargs = scorer._kwargs
+        # kwargs = scorer._kwargs
         self.metric = Metric(score_func, mode=mode)
         if 'error' in score_func.__name__:
             self.use_max = False

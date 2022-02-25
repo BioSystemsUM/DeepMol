@@ -13,7 +13,7 @@ from metrics.metrics import Metric
 from metrics.metrics_functions import prc_auc_score
 from models.deepchem_models import DeepChemModel
 from models.keras_models import KerasModel
-from parameter_optimization.hyperparameter_optimization import HyperparamOpt_CV
+from parameter_optimization.hyperparameter_optimization import HyperparameterOptimizerCV
 
 
 class TestDeepChemHyperparameterOpt(TestCase):
@@ -61,7 +61,7 @@ class TestDeepChemHyperparameterOpt(TestCase):
         mode = 'classification'
         params_dict['task_type'] = [mode]
 
-        optimizer = HyperparamOpt_CV(textcnn_builder, mode=mode)
+        optimizer = HyperparameterOptimizerCV(textcnn_builder, mode=mode)
 
         metrics = [Metric(roc_auc_score, n_tasks=1),
                    Metric(prc_auc_score, n_tasks=1),
@@ -70,14 +70,14 @@ class TestDeepChemHyperparameterOpt(TestCase):
                    Metric(recall_score, n_tasks=1)]
         opt_metric = 'roc_auc'
 
-        best_model, best_hyperparams, all_results = optimizer.hyperparam_search("deepchem",
-                                                                                params_dict,
-                                                                                self.dataset,
-                                                                                opt_metric,
-                                                                                cv=3,
-                                                                                n_iter_search=1,
-                                                                                n_jobs=1,
-                                                                                seed=123)
+        best_model, best_hyperparams, all_results = optimizer.hyperparameter_search("deepchem",
+                                                                                    params_dict,
+                                                                                    self.dataset,
+                                                                                    opt_metric,
+                                                                                    cv=3,
+                                                                                    n_iter_search=1,
+                                                                                    n_jobs=1,
+                                                                                    seed=123)
         best_model.evaluate(self.dataset, metrics)
 
     def test_graph_conv(self):
@@ -101,7 +101,7 @@ class TestDeepChemHyperparameterOpt(TestCase):
         featurizer = deepChemFeaturizers.ConvMolFeat()
         featurizer.featurize(self.dataset)
 
-        optimizer = HyperparamOpt_CV(graphconv_builder, mode=mode)
+        optimizer = HyperparameterOptimizerCV(graphconv_builder, mode=mode)
 
         metrics = [Metric(roc_auc_score), Metric(precision_score),
                    Metric(accuracy_score), Metric(confusion_matrix),
@@ -109,14 +109,14 @@ class TestDeepChemHyperparameterOpt(TestCase):
 
         opt_metric = 'roc_auc'
 
-        best_model, best_hyperparams, all_results = optimizer.hyperparam_search("deepchem",
-                                                                                params_dict,
-                                                                                self.dataset,
-                                                                                opt_metric,
-                                                                                cv=3,
-                                                                                n_iter_search=1,
-                                                                                n_jobs=1,
-                                                                                seed=123)
+        best_model, best_hyperparams, all_results = optimizer.hyperparameter_search("deepchem",
+                                                                                    params_dict,
+                                                                                    self.dataset,
+                                                                                    opt_metric,
+                                                                                    cv=3,
+                                                                                    n_iter_search=1,
+                                                                                    n_jobs=1,
+                                                                                    seed=123)
 
     def test_gcn(self):
         def gcn_builder(graph_conv_layers, dropout, predictor_hidden_feats, predictor_dropout, learning_rate, task_type,
@@ -143,7 +143,7 @@ class TestDeepChemHyperparameterOpt(TestCase):
         featurizer = deepChemFeaturizers.MolGraphConvFeat()
         featurizer.featurize(self.dataset)
 
-        optimizer = HyperparamOpt_CV(gcn_builder, mode=mode)
+        optimizer = HyperparameterOptimizerCV(gcn_builder, mode=mode)
 
         metrics = [Metric(roc_auc_score), Metric(precision_score),
                    Metric(accuracy_score), Metric(confusion_matrix),
@@ -151,14 +151,14 @@ class TestDeepChemHyperparameterOpt(TestCase):
 
         opt_metric = 'roc_auc'
 
-        best_model, best_hyperparams, all_results = optimizer.hyperparam_search("deepchem",
-                                                                                params_dict,
-                                                                                self.dataset,
-                                                                                opt_metric,
-                                                                                cv=3,
-                                                                                n_iter_search=1,
-                                                                                n_jobs=1,
-                                                                                seed=123)
+        best_model, best_hyperparams, all_results = optimizer.hyperparameter_search("deepchem",
+                                                                                    params_dict,
+                                                                                    self.dataset,
+                                                                                    opt_metric,
+                                                                                    cv=3,
+                                                                                    n_iter_search=1,
+                                                                                    n_jobs=1,
+                                                                                    seed=123)
 
     def test_GAT(self):
         def gat_builder(graph_attention_layers, n_attention_heads, dropout, predictor_hidden_feats,
@@ -185,7 +185,7 @@ class TestDeepChemHyperparameterOpt(TestCase):
         featurizer = deepChemFeaturizers.MolGraphConvFeat()
         featurizer.featurize(self.dataset)
 
-        optimizer = HyperparamOpt_CV(gat_builder, mode=mode)
+        optimizer = HyperparameterOptimizerCV(gat_builder, mode=mode)
 
         metrics = [Metric(roc_auc_score), Metric(precision_score),
                    Metric(accuracy_score), Metric(confusion_matrix),
@@ -193,14 +193,14 @@ class TestDeepChemHyperparameterOpt(TestCase):
 
         opt_metric = 'roc_auc'
 
-        best_model, best_hyperparams, all_results = optimizer.hyperparam_search("deepchem",
-                                                                                params_dict,
-                                                                                self.dataset,
-                                                                                opt_metric,
-                                                                                cv=3,
-                                                                                n_iter_search=1,
-                                                                                n_jobs=1,
-                                                                                seed=123)
+        best_model, best_hyperparams, all_results = optimizer.hyperparameter_search("deepchem",
+                                                                                    params_dict,
+                                                                                    self.dataset,
+                                                                                    opt_metric,
+                                                                                    cv=3,
+                                                                                    n_iter_search=1,
+                                                                                    n_jobs=1,
+                                                                                    seed=123)
 
     def test_chemception(self):
         def chemception_builder(img_spec, img_size, base_filters, inception_blocks,
@@ -232,7 +232,7 @@ class TestDeepChemHyperparameterOpt(TestCase):
         featurizer = deepChemFeaturizers.SmileImageFeat()
         featurizer.featurize(self.dataset)
 
-        optimizer = HyperparamOpt_CV(chemception_builder, mode=mode)
+        optimizer = HyperparameterOptimizerCV(chemception_builder, mode=mode)
 
         metrics = [Metric(roc_auc_score), Metric(precision_score),
                    Metric(accuracy_score), Metric(confusion_matrix),
@@ -240,14 +240,14 @@ class TestDeepChemHyperparameterOpt(TestCase):
 
         opt_metric = 'roc_auc'
 
-        best_model, best_hyperparams, all_results = optimizer.hyperparam_search("deepchem",
-                                                                                params_dict,
-                                                                                self.dataset,
-                                                                                opt_metric,
-                                                                                cv=3,
-                                                                                n_iter_search=1,
-                                                                                n_jobs=1,
-                                                                                seed=123)
+        best_model, best_hyperparams, all_results = optimizer.hyperparameter_search("deepchem",
+                                                                                    params_dict,
+                                                                                    self.dataset,
+                                                                                    opt_metric,
+                                                                                    cv=3,
+                                                                                    n_iter_search=1,
+                                                                                    n_jobs=1,
+                                                                                    seed=123)
 
     def test_quick(self):
 

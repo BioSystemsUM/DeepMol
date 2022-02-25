@@ -2,8 +2,7 @@
 date: 28/04/2021
 '''
 
-from typing import Optional, List, Type
-from copy import deepcopy
+from typing import Optional, List, Type, Sequence
 import numpy as np
 
 from loaders.loaders import CSVLoader
@@ -39,6 +38,15 @@ class DeepChemModel(Model):
     models that allows deepchem models to be trained on `Dataset` objects
     and evaluated with the metrics in Metrics.
     """
+
+    def fit_on_batch(self, X: Sequence, y: Sequence):
+        pass
+
+    def get_task_type(self) -> str:
+        pass
+
+    def get_num_tasks(self) -> int:
+        pass
 
     def __init__(self,
                  model: deep_model,
@@ -113,7 +121,7 @@ class DeepChemModel(Model):
             self.model.fit(new_dataset, nb_epoch=self.epochs)
 
     def predict(self, dataset: Dataset,
-                transformers: List[dc.trans.NormalizationTransformer] = []) -> np.ndarray:
+                transformers: List[dc.trans.NormalizationTransformer] = None) -> np.ndarray:
         """Makes predictions on dataset.
         Parameters
         ----------
@@ -129,6 +137,8 @@ class DeepChemModel(Model):
         np.ndarray
             The value is a return value of `predict` method of the DeepChem model.
         """
+        if transformers is None:
+            transformers = []
         new_dataset = NumpyDataset(
             X=dataset.X,
             y=dataset.y,
@@ -147,18 +157,19 @@ class DeepChemModel(Model):
             return res
         else:
             new_res = np.squeeze(
-                res)  # this works for all regression models (Keras and PyTorch) and is more general than the commented code above
+                res)  # this works for all regression models (Keras and PyTorch) and is more general than the
+            # commented code above
 
         return new_res
 
-    def predict_on_batch(self, X: Dataset) -> np.ndarray:
+    def predict_on_batch(self, dataset: Dataset) -> np.ndarray:
         """Makes predictions on batch of data.
         Parameters
         ----------
         dataset: Dataset
             Dataset to make prediction on.
         """
-        return super(DeepChemModel, self).predict(X)
+        return super(DeepChemModel, self).predict(dataset)
 
     def save(self):
         """Saves deepchem model to disk using joblib."""
@@ -172,10 +183,12 @@ class DeepChemModel(Model):
                        dataset: Dataset,
                        metric: Metric,
                        splitter: Type[Splitter],
-                       transformers: List[dc.trans.NormalizationTransformer] = [],
+                       transformers: List[dc.trans.NormalizationTransformer] = None,
                        folds: int = 3):
         # TODO: add option to choose between splitters (later, for now we only have random)
         # splitter = RandomSplitter()
+        if transformers is None:
+            transformers = []
         datasets = splitter.k_fold_split(dataset, folds)
 
         train_scores = []
@@ -191,6 +204,7 @@ class DeepChemModel(Model):
             dummy_model = DeepChemModel(self.model)
 
             print('Train Score: ')
+            #TODO: isto está testado ? estes transformers nao é um boleano
             train_score = dummy_model.evaluate(train_ds, metric, transformers)
             train_scores.append(train_score[metric.name])
             avg_train_score += train_score[metric.name]
@@ -207,8 +221,3 @@ class DeepChemModel(Model):
 
         return best_model, train_score_best_model, test_score_best_model, train_scores, test_scores, avg_train_score / folds, avg_test_score / folds
 
-
-if __name__ == "__main__":
-    # TODO: To test functions but need to fix erros with imports first
-    ds = CSVLoader('../preprocessed_dataset.csv', 'Smiles', ['Class'], 'PubChem CID', chunk_size=1000)
-    print(ds)

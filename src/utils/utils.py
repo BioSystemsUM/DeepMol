@@ -3,10 +3,25 @@ import random
 import pandas as pd
 import joblib
 import os
-from typing import Any, cast, IO
+from typing import Any, cast, IO, List
 import gzip
 import pickle
 import numpy as np
+
+from deepchem.trans import DAGTransformer, IRVTransformer
+from deepchem.data import NumpyDataset
+from datasets.datasets import Dataset
+
+from rdkit.Chem import rdMolDescriptors, rdDepictor
+from rdkit.Chem import Draw
+from IPython.display import SVG
+
+from rdkit.Chem.Draw import rdMolDraw2D
+from rdkit import Chem
+import tempfile
+from PIL import Image
+
+from IPython.display import display
 
 
 def load_pickle_file(input_file: str) -> Any:
@@ -80,7 +95,7 @@ def load_from_disk(filename: str) -> Any:
         raise ValueError("Unrecognized filetype for %s" % filename)
 
 
-def normalize_labels_shape(y_pred):
+def normalize_labels_shape(y_pred: List):
     """Function to transform output from predict_proba (prob(0) prob(1))
     to predict format (0 or 1).
     Parameters
@@ -111,14 +126,10 @@ def normalize_labels_shape(y_pred):
 date: 28/04/2021
 '''
 
-from deepchem.trans import DAGTransformer, IRVTransformer
-from deepchem.data import NumpyDataset
-from datasets.datasets import Dataset
-
 
 def dag_transformation(dataset: Dataset, max_atoms: int = 10):
-    '''Function to transform ConvMol adjacency lists to DAG calculation orders.
-    Adapted from deepchem'''
+    """Function to transform ConvMol adjacency lists to DAG calculation orders.
+    Adapted from deepchem"""
     new_dataset = NumpyDataset(
         X=dataset.X,
         y=dataset.y,
@@ -134,8 +145,8 @@ def dag_transformation(dataset: Dataset, max_atoms: int = 10):
 
 
 def irv_transformation(dataset: Dataset, K: int = 10, n_tasks: int = 1):
-    '''Function to transfrom ECFP to IRV features, used by MultitaskIRVClassifier as preprocessing step
-    Adapted from deepchem'''
+    """Function to transfrom ECFP to IRV features, used by MultitaskIRVClassifier as preprocessing step
+    Adapted from deepchem"""
     try:
         dummy_y = dataset.y[:, n_tasks]
     except IndexError:
@@ -156,6 +167,7 @@ def irv_transformation(dataset: Dataset, K: int = 10, n_tasks: int = 1):
 
 # DRAWING
 
+# TODO: check this (two keys)
 MACCSsmartsPatts = {
     1: ('?', 0),  # ISOTOPE
     2: ('[#104,#105,#106,#107,#106,#109,#110,#111,#112]', 0),  # atomic num >103 Not complete
@@ -252,7 +264,8 @@ MACCSsmartsPatts = {
          0),  # QHAACH2A
     91:
         (
-            '[$([!#6;!#1;!H0]~*~*~*~[CH2]~*),$([!#6;!#1;!H0;R]1@[R]@[R]@[R]@[CH2;R]1),$([!#6;!#1;!H0]~[R]1@[R]@[R]@[CH2;R]1),$([!#6;!#1;!H0]~*~[R]1@[R]@[CH2;R]1)]',
+            '[$([!#6;!#1;!H0]~*~*~*~[CH2]~*),$([!#6;!#1;!H0;R]1@[R]@[R]@[R]@[CH2;R]1),$([!#6;!#1;!H0]~[R]1@[R]@[R]@['
+            'CH2;R]1),$([!#6;!#1;!H0]~*~[R]1@[R]@[CH2;R]1)]',
             0),  # QHAAACH2A
     92: ('[#8]~[#6](~[#7])~[#6]', 0),  # OC(N)C
     93: ('[!#6;!#1]~[CH3]', 0),  # QCH3
@@ -265,7 +278,10 @@ MACCSsmartsPatts = {
     100: ('*~[CH2]~[#7]', 0),  # ACH2N
     101:
         (
-            '[$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]1),$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]1),$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]1),$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]1),$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]1),$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]1),$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]1)]',
+            '[$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]1),$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]1),$([R]@1@[R]@[R]@[R]@['
+            'R]@[R]@[R]@[R]@[R]@[R]1),$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]1),$([R]@1@[R]@[R]@[R]@[R]@[R]@['
+            'R]@[R]@[R]@[R]@[R]@[R]1),$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]1),$([R]@1@[R]@[R]@[R]@['
+            'R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]1)]',
             0),  # 8M Ring or larger. This only handles up to ring sizes of 14
     102: ('[!#6;!#1]~[#8]', 0),  # QO
     103: ('Cl', 0),  # CL
@@ -295,7 +311,8 @@ MACCSsmartsPatts = {
     127: ('*@*!@[#8]', 1),  # A$A!O > 1 (&...) Spec Incomplete
     128:
         (
-            '[$(*~[CH2]~*~*~*~[CH2]~*),$([R]1@[CH2;R]@[R]@[R]@[R]@[CH2;R]1),$(*~[CH2]~[R]1@[R]@[R]@[CH2;R]1),$(*~[CH2]~*~[R]1@[R]@[CH2;R]1)]',
+            '[$(*~[CH2]~*~*~*~[CH2]~*),$([R]1@[CH2;R]@[R]@[R]@[R]@[CH2;R]1),$(*~[CH2]~[R]1@[R]@[R]@[CH2;R]1),'
+            '$(*~[CH2]~*~[R]1@[R]@[CH2;R]1)]',
             0),  # ACH2AAACH2A
     129: ('[$(*~[CH2]~*~*~[CH2]~*),$([R]1@[CH2]@[R]@[R]@[CH2;R]1),$(*~[CH2]~[R]1@[R]@[CH2;R]1)]',
           0),  # ACH2AACH2A
@@ -337,11 +354,6 @@ MACCSsmartsPatts = {
     165: ('[R]', 0),  # Ring
     166: ('?', 0),  # Fragments  FIX: this can't be done in SMARTS
 }
-
-from rdkit.Chem.Draw import rdMolDraw2D
-from rdkit import Chem
-import tempfile
-from PIL import Image
 
 
 ###############################
@@ -390,7 +402,7 @@ def draw_MACCS_Pattern(smiles, smarts_patt_index, path=None):
                                            highlightBondColors=bond_cols)
 
         d.FinishDrawing()
-        if path == None:
+        if path is None:
             with tempfile.TemporaryDirectory() as tmpdirname:
                 d.WriteDrawingText(tmpdirname + 'mol.png')
                 im = Image.open(tmpdirname + 'mol.png')
@@ -406,10 +418,6 @@ def draw_MACCS_Pattern(smiles, smarts_patt_index, path=None):
 ###############################
 ##### MORGAN FINGERPRINTS #####
 ###############################
-
-from rdkit.Chem import rdMolDescriptors, rdDepictor, Mol
-from rdkit.Chem import Draw
-from IPython.display import SVG
 
 
 def draw_morgan_bits(molecule, bits, radius=2, nBits=2048):
@@ -542,9 +550,6 @@ def draw_rdk_bits(smiles, bits, minPath=2, maxPath=7, fpSize=2048):
         raise ValueError('Bits must be intenger, list of integers or ON!')
 
 
-from IPython.display import display
-
-
 def draw_rdk_bit_on_molecule(mol_smiles, bit, minPath=1, maxPath=7, fpSize=2048, path_dir=None, molSize=(450, 200)):
     try:
         mol = Chem.MolFromSmiles(mol_smiles)
@@ -565,7 +570,7 @@ def draw_rdk_bit_on_molecule(mol_smiles, bit, minPath=1, maxPath=7, fpSize=2048,
         d = rdMolDraw2D.MolDraw2DCairo(molSize[0], molSize[1])
         rdMolDraw2D.PrepareAndDrawMolecule(d, mol, highlightBonds=info[bit][i])
         d.FinishDrawing()
-        if path_dir == None:
+        if path_dir is None:
             with tempfile.TemporaryDirectory() as tmpdirname:
                 d.WriteDrawingText(tmpdirname + 'mol_' + str(i) + '.png')
                 im = Image.open(tmpdirname + 'mol_' + str(i) + '.png')

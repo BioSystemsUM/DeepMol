@@ -15,7 +15,7 @@ from splitters.splitters import RandomSplitter, SingletaskStratifiedSplitter
 from models.deepchem_models import DeepChemModel
 from metrics.metrics import Metric
 from metrics.metrics_functions import roc_auc_score, precision_score, accuracy_score
-from parameter_optimization.hyperparameter_optimization import HyperparamOpt_Valid
+from parameter_optimization.hyperparameter_optimization import HyperparameterOptimizerValidation
 # import preprocessing as preproc
 from utils import utils as preproc
 # from imbalanced_learn.ImbalancedLearn import RandomOverSampler
@@ -395,10 +395,10 @@ def hyperoptimgraph(dataset):
               'dense_layer_size': [128, 144, 198],
               'dropout': [0.0, 0.25, 0.5]}
 
-    optimizer = HyperparamOpt_Valid(graphconvbuilder)
+    optimizer = HyperparameterOptimizerValidation(graphconvbuilder)
 
-    best_rf, best_hyperparams, all_results = optimizer.hyperparam_search(params, train_dataset, valid_dataset,
-                                                                         Metric(roc_auc_score))
+    best_rf, best_hyperparams, all_results = optimizer.hyperparameter_search(params, train_dataset, valid_dataset,
+                                                                             Metric(roc_auc_score))
 
     metrics = [Metric(roc_auc_score), Metric(precision_score), Metric(accuracy_score)]
 
@@ -435,8 +435,8 @@ def hyperoptimmpnn(dataset):
 
     optimizer = HyperparamOpt_Val(mpnnbuilder)
 
-    best_rf, best_hyperparams, all_results = optimizer.hyperparam_search(params, train_dataset, valid_dataset,
-                                                                         Metric(roc_auc_score))
+    best_rf, best_hyperparams, all_results = optimizer.hyperparameter_search(params, train_dataset, valid_dataset,
+                                                                             Metric(roc_auc_score))
 
     metrics = [Metric(roc_auc_score), Metric(precision_score), Metric(accuracy_score)]
 
@@ -471,10 +471,10 @@ def hyperoptimgat(dataset):
               'predictor_hidden_feats': [128, 256],
               'predictor_dropout': [0.0, 0.25],
               'number_atom_features': [30, 45]}
-    optimizer = HyperparamOpt_Valid(gatbuilder)
+    optimizer = HyperparameterOptimizerValidation(gatbuilder)
 
-    best_rf, best_hyperparams, all_results = optimizer.hyperparam_search(params, train_dataset, valid_dataset,
-                                                                         Metric(roc_auc_score))
+    best_rf, best_hyperparams, all_results = optimizer.hyperparameter_search(params, train_dataset, valid_dataset,
+                                                                             Metric(roc_auc_score))
 
     metrics = [Metric(roc_auc_score), Metric(precision_score), Metric(accuracy_score)]
 
@@ -509,10 +509,10 @@ def hyperoptimgcn(dataset):
               'predictor_dropout': [0.0, 0.25],
               'number_atom_features': [30, 45],
               'learning_rate': [0.001, 0.01]}
-    optimizer = HyperparamOpt_Valid(gcnbuilder)
+    optimizer = HyperparameterOptimizerValidation(gcnbuilder)
 
-    best_rf, best_hyperparams, all_results = optimizer.hyperparam_search(params, train_dataset, valid_dataset,
-                                                                         Metric(roc_auc_score))
+    best_rf, best_hyperparams, all_results = optimizer.hyperparameter_search(params, train_dataset, valid_dataset,
+                                                                             Metric(roc_auc_score))
 
     metrics = [Metric(roc_auc_score), Metric(precision_score), Metric(accuracy_score)]
 
@@ -548,10 +548,10 @@ def hyperoptimcnn(dataset):
               'bias_init_consts': [1.0, 2.0],
               'weight_decay_penalty': [0.0, 0.25],
               'dropouts': [0.25, 0.5, 0.75]}
-    optimizer = HyperparamOpt_Valid(cnnbuilder)
+    optimizer = HyperparameterOptimizerValidation(cnnbuilder)
 
-    best_rf, best_hyperparams, all_results = optimizer.hyperparam_search(params, train_dataset, valid_dataset,
-                                                                         Metric(roc_auc_score))
+    best_rf, best_hyperparams, all_results = optimizer.hyperparameter_search(params, train_dataset, valid_dataset,
+                                                                             Metric(roc_auc_score))
 
     metrics = [Metric(roc_auc_score), Metric(precision_score), Metric(accuracy_score)]
 

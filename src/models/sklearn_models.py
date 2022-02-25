@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Sequence
 
 import numpy as np
 from sklearn.base import BaseEstimator
@@ -28,11 +28,16 @@ class SklearnModel(Model):
     and evaluated with the metrics in Metrics.
     """
 
-    def __init__(self,
-                 model: BaseEstimator,
-                 mode: Optional[str] = None,
-                 model_dir: Optional[str] = None):  # ,
-        # **kwargs):
+    def fit_on_batch(self, X: Sequence, y: Sequence):
+        pass
+
+    def get_task_type(self) -> str:
+        pass
+
+    def get_num_tasks(self) -> int:
+        pass
+
+    def __init__(self, model: BaseEstimator, mode: Optional[str] = None, model_dir: Optional[str] = None, **kwargs):
         """
         Parameters
         ----------
@@ -46,6 +51,7 @@ class SklearnModel(Model):
         kwargs: dict
         """
 
+        super().__init__(model, model_dir, **kwargs)
         self.model = model
         self.mode = mode
         self.model_dir = model_dir
@@ -87,14 +93,14 @@ class SklearnModel(Model):
         except AttributeError:
             return self.model.predict(dataset.X)
 
-    def predict_on_batch(self, X: Dataset) -> np.ndarray:
+    def predict_on_batch(self, dataset: Dataset) -> np.ndarray:
         """Makes predictions on batch of data.
         Parameters
         ----------
         dataset: Dataset
           Dataset to make prediction on.
         """
-        return super(SklearnModel, self).predict(X)
+        return super(SklearnModel, self).predict(dataset)
 
     def save(self):
         """Saves scikit-learn model to disk using joblib."""

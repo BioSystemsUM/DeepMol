@@ -1,11 +1,14 @@
 import numpy as np
 import csv
 
-from typing import Optional, Union, Tuple, Dict, List, Iterable, Any
-Score = Dict[str, float]
+from typing import Union, Tuple, Dict, List, Optional
+
+from numpy import ndarray
 
 from datasets.datasets import Dataset
 from metrics.metrics import Metric
+
+Score = Dict[str, float]
 
 
 def _process_metric_input(metrics: Metric) -> List[Metric]:
@@ -44,13 +47,14 @@ def _process_metric_input(metrics: Metric) -> List[Metric]:
             raise ValueError("Metrics must be metrics.Metric objects.")
     return final_metrics
 
+
 class Evaluator(object):
     """Class that evaluates a model on a given dataset.
     The evaluator class is used to evaluate a `Model` class on
     a given `Dataset` object.
     """
 
-    def __init__(self, model, dataset: Dataset):#, metric: Metric):
+    def __init__(self, model, dataset: Dataset):  # , metric: Metric):
 
         """Initialize this evaluator
         Parameters
@@ -65,7 +69,8 @@ class Evaluator(object):
         self.model = model
         self.dataset = dataset
 
-    def output_statistics(self, scores: Score, stats_out: str):
+    @staticmethod
+    def output_statistics(scores: Score, stats_out: str):
         """ Write computed stats to file.
         Parameters
         ----------
@@ -103,7 +108,7 @@ class Evaluator(object):
     def compute_model_performance(self,
                                   metrics: Union[Metric, List[Metric]],
                                   per_task_metrics: bool = False,
-                                  n_classes: int = 2) -> Union[Score, Tuple[Score, Score]]:
+                                  n_classes: int = 2) -> Tuple[Dict[Optional[str], ndarray], Union[None, Dict]]:
         """
         Computes statistics of model on test data and saves results to csv.
 
@@ -129,8 +134,8 @@ class Evaluator(object):
             If `per_task_metrics == True`, then returns a second dictionary
             of scores for each task separately.
         """
-        
-         # Process input metrics
+
+        # Process input metrics
         metrics = _process_metric_input(metrics)
 
         y = self.dataset.y
@@ -155,7 +160,6 @@ class Evaluator(object):
                 multitask_scores[metric.name] = results
 
         if not per_task_metrics:
-            return multitask_scores
+            return multitask_scores, None
         else:
             return multitask_scores, all_task_scores
-

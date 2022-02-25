@@ -1,6 +1,7 @@
 import numpy as np
-from typing import Callable, Optional, Any
+from typing import Callable, Optional, Any, Tuple, Union, List
 from utils.utils import normalize_labels_shape
+
 
 class Metric(object):
     """Class for computing machine learning metrics.
@@ -16,7 +17,7 @@ class Metric(object):
                  n_tasks: Optional[int] = None,
                  classification_handling_mode: Optional[str] = None,
                  threshold_value: Optional[float] = None):
-        #TODO: review threshold values and change to deal with a variable threshold (i.e. different from 0.5)
+        # TODO: review threshold values and change to deal with a variable threshold (i.e. different from 0.5)
         """
         Parameters
         ----------
@@ -48,7 +49,6 @@ class Metric(object):
           "threshold-one-hot" apply a thresholding operation to values with this
           threshold.
         """
-
 
         self.metric = metric
         if task_averager is None:
@@ -107,7 +107,8 @@ class Metric(object):
                                           "median_absolute_error"]:
                 mode = "regression"
             else:
-                raise ValueError("Please specify the mode of this metric. mode must be 'regression' or 'classification'")
+                raise ValueError(
+                    "Please specify the mode of this metric. mode must be 'regression' or 'classification'")
 
         self.mode = mode
         self.n_tasks = n_tasks
@@ -124,7 +125,7 @@ class Metric(object):
                        n_tasks: Optional[int] = None,
                        n_classes: int = 2,
                        per_task_metrics: bool = False,
-                       **kwargs) -> np.ndarray:
+                       **kwargs) -> Tuple[Any, Union[float, List[float]]]:
         """Compute a performance metric for each task.
         Parameters
         ----------
@@ -155,30 +156,30 @@ class Metric(object):
             else:
                 n_tasks = self.n_tasks
 
-        #TODO: Needs to be specified to deal with multitasking
-        #y_true = normalize_labels_shape(y_true, mode=self.mode, n_tasks=n_tasks, n_classes=n_classes)
-        #y_pred = normalize_prediction_shape(y_pred, mode=self.mode, n_tasks=n_tasks, n_classes=n_classes)
-        #if self.mode == "classification":
+        # TODO: Needs to be specified to deal with multitasking
+        # y_true = normalize_labels_shape(y_true, mode=self.mode, n_tasks=n_tasks, n_classes=n_classes)
+        # y_pred = normalize_prediction_shape(y_pred, mode=self.mode, n_tasks=n_tasks, n_classes=n_classes)
+        # if self.mode == "classification":
         #    y_true = handle_classification_mode(y_true, self.classification_handling_mode, self.threshold_value)
         #    y_pred = handle_classification_mode(y_pred, self.classification_handling_mode, self.threshold_value)
 
-        #n_samples = y_true.shape[0]
+        # n_samples = y_true.shape[0]
 
         computed_metrics = []
 
-        #assuming this is provided with values per column for each task
-        #TODO: check this out (needs to be changed to deal with multitasking)
-        #print(y_true)
-        #print(y_pred)
+        # assuming this is provided with values per column for each task
+        # TODO: check this out (needs to be changed to deal with multitasking)
+        # print(y_true)
+        # print(y_pred)
         for task in range(n_tasks):
-            y_task = y_true#[:, task]
-            y_pred_task = y_pred#[:, task]
+            y_task = y_true  # [:, task]
+            y_pred_task = y_pred  # [:, task]
 
             metric_value = self.compute_singletask_metric(y_task,
                                                           y_pred_task,
                                                           **kwargs)
             computed_metrics.append(metric_value)
-        print(str(self.metric.__name__)+': \n', computed_metrics[0])
+        print(str(self.metric.__name__) + ': \n', computed_metrics[0])
         if n_tasks == 1:
             computed_metrics = computed_metrics[0]  # type: ignore
 
@@ -220,17 +221,17 @@ class Metric(object):
         else:
             raise ValueError("Only classification and regression are supported for metrics calculations.")
 
-        try :
+        try:
             metric_value = self.metric(y_true, y_pred, **kwargs)
         except Exception as e:
-            #deal with different shapes of the otput of predict and predict_proba
-            if len(y_pred.shape)==3: #output of the deepchem MultitaskClassifier model
+            # deal with different shapes of the otput of predict and predict_proba
+            if len(y_pred.shape) == 3:  # output of the deepchem MultitaskClassifier model
                 y_pred_2 = []
                 for p in y_pred:
                     y_pred_2.append(p[0])
                 y_pred_mod = normalize_labels_shape(y_pred_2)
                 metric_value = self.metric(y_true, y_pred_mod, **kwargs)
-            else :
+            else:
                 y_pred_mod = normalize_labels_shape(y_pred)
                 metric_value = self.metric(y_true, y_pred_mod, **kwargs)
         return metric_value

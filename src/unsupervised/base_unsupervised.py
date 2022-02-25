@@ -9,6 +9,7 @@ import seaborn as sns
 
 from sklearn import cluster, decomposition, manifold
 
+
 # TODO: plot legends and labels are made for sweet vs non sweet --> change it to be general
 class UnsupervisedLearn(object):
     """Class for unsupervised learning.
@@ -25,13 +26,9 @@ class UnsupervisedLearn(object):
         self.features = None
 
     def runUnsupervised(self, dataset: Dataset, plot=True):
-
         self.dataset = dataset
 
-
         self.features = dataset.X
-
-
 
         x = self._runUnsupervised(plot=plot)
 
@@ -51,13 +48,7 @@ class PCA(UnsupervisedLearn):
     to a lower dimensional space.
     """
 
-    def __init__(self,
-                 n_components=None,
-                 copy=True,
-                 whiten=False,
-                 svd_solver='auto',
-                 tol=0.0,
-                 iterated_power='auto',
+    def __init__(self, n_components=None, copy=True, whiten=False, svd_solver='auto', tol=0.0, iterated_power='auto',
                  random_state=None):
         """
         Parameters
@@ -118,6 +109,7 @@ class PCA(UnsupervisedLearn):
             multiple function calls.
 
         """
+        super().__init__()
         self.n_components = n_components
         self.copy = copy
         self.whiten = whiten
@@ -125,7 +117,6 @@ class PCA(UnsupervisedLearn):
         self.tol = tol
         self.iterated_power = iterated_power
         self.random_state = random_state
-
 
     def _runUnsupervised(self, plot=True):
         """Fit the model with X and apply the dimensionality reduction on X."""
@@ -145,7 +136,6 @@ class PCA(UnsupervisedLearn):
                             ids=self.dataset.ids,
                             features2keep=self.dataset.features2keep,
                             n_tasks=self.dataset.n_tasks)
-
 
     def _plot(self):
 
@@ -195,17 +185,17 @@ class PCA(UnsupervisedLearn):
 
         if self.n_components is None:
             self.n_components = self.dataset.X.shape[1]
-            print('%i Components PCA: ' %(self.n_components))
+            print('%i Components PCA: ' % (self.n_components))
         else:
-            print('%i Components PCA: ' %(self.n_components))
+            print('%i Components PCA: ' % (self.n_components))
 
         pca_all = decomposition.PCA(n_components=self.n_components,
-                                      copy=self.copy,
-                                      whiten=self.whiten,
-                                      svd_solver=self.svd_solver,
-                                      tol=self.tol,
-                                      iterated_power=self.iterated_power,
-                                      random_state=self.random_state)
+                                    copy=self.copy,
+                                    whiten=self.whiten,
+                                    svd_solver=self.svd_solver,
+                                    tol=self.tol,
+                                    iterated_power=self.iterated_power,
+                                    random_state=self.random_state)
         components_all = pca_all.fit_transform(self.features)
 
         total_var = pca_all.explained_variance_ratio_.sum() * 100
@@ -233,7 +223,6 @@ class PCA(UnsupervisedLearn):
                       )
 
         fig.show()
-
 
 
 class TSNE(UnsupervisedLearn):
@@ -350,7 +339,6 @@ class TSNE(UnsupervisedLearn):
         self.angle = angle
         self.n_jobs = n_jobs
 
-
     def _runUnsupervised(self, plot=True):
         """Fit X into an embedded space and return that transformed output."""
         X_embedded = manifold.TSNE(n_components=self.n_components,
@@ -371,13 +359,12 @@ class TSNE(UnsupervisedLearn):
         if plot:
             self._plot()
 
-        return NumpyDataset(mols = self.dataset.mols,
+        return NumpyDataset(mols=self.dataset.mols,
                             X=X_embedded.fit_transform(self.features),
                             y=self.dataset.y,
                             ids=self.dataset.ids,
                             features2keep=self.dataset.features2keep,
                             n_tasks=self.dataset.n_tasks)
-
 
     def _plot(self):
         dic = {0: "Not Active (0)", 1: "Active (1)"}
@@ -514,7 +501,6 @@ class KMeans(UnsupervisedLearn):
         self.copy_x = copy_x
         self.algorithm = algorithm
 
-
     def _runUnsupervised(self, plot=True):
         """Compute cluster centers and predict cluster index for each sample."""
 
@@ -567,13 +553,11 @@ class KMeans(UnsupervisedLearn):
         print('Creating a K-means cluster with ' + str(elbow.knee) + ' clusters...')
         return elbow.knee
 
-
-
     def _plot(self):
-        #TODO: check the best approach to this problem
+        # TODO: check the best approach to this problem
         if self.features.shape[1] > 11:
             print('Reduce the number of features to less than ten to get plot interpretability!')
-        else :
+        else:
             kmeans = cluster.KMeans(n_clusters=self.n_clusters,
                                     init=self.init,
                                     n_init=self.n_init,
@@ -596,4 +580,3 @@ class KMeans(UnsupervisedLearn):
             classes = classes.rename({0: 'classes'}, axis=1)
             ds = pd.concat((pd.DataFrame(self.features), classes), axis=1)
             sns.pairplot(ds, hue='classes')
-

@@ -13,7 +13,7 @@ class Dataset(ABC):
     """
 
     def __init__(self) -> None:
-        pass
+        self._features2keep = None
 
     def __len__(self) -> int:
         """Get the number of elements in the dataset."""
@@ -58,6 +58,14 @@ class Dataset(ABC):
     @abstractmethod
     def ids(self, value: np.ndarray):
         raise NotImplementedError
+
+    @property
+    def features2keep(self):
+        return self._features2keep
+
+    @features2keep.setter
+    def features2keep(self, value: np.array):
+        self._features2keep = value
 
     @property
     @abstractmethod
@@ -455,7 +463,7 @@ class NumpyDataset(Dataset):
             print('Features are not the same length/type... '
                   '\nRecalculate features for all inputs! '
                   '\nAppending empty array in dataset features!')
-            return NumpyDataset(mols, np.empty(), y, ids)
+            return NumpyDataset(mols, None, y, ids)
         else:
             return NumpyDataset(mols, X, y, ids, self.features2keep)
 

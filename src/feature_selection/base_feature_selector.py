@@ -18,6 +18,8 @@ class BaseFeatureSelector(ABC):
     """
 
     def __init__(self):
+        self.y_fs = None
+        self.features_fs = None
         if self.__class__ == BaseFeatureSelector:
             raise Exception('Abstract class BaseFeatureSelector should not be instantiated')
 

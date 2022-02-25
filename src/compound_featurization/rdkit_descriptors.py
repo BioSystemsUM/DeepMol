@@ -7,8 +7,8 @@ from rdkit.Chem import Mol, rdMolDescriptors, AllChem, MolFromSmiles, Descriptor
 from rdkit.Chem.rdForceFieldHelpers import UFFOptimizeMoleculeConfs
 from rdkit.ML.Descriptors import MoleculeDescriptors
 
-from Datasets.Datasets import Dataset
-from compoundFeaturization.baseFeaturizer import MolecularFeaturizer
+from datasets.datasets import Dataset
+from compound_featurization.base_featurizer import MolecularFeaturizer
 import numpy as np
 
 import sys

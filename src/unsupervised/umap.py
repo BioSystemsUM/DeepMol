@@ -1,4 +1,4 @@
-from unsupervised.baseUnsupervised import UnsupervisedLearn
+from unsupervised.base_unsupervised import UnsupervisedLearn
 from umap.parametric_umap import ParametricUMAP
 import plotly.express as px
 

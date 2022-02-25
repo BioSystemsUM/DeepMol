@@ -2,10 +2,10 @@ import os
 from copy import copy
 from unittest import TestCase
 
-from compoundFeaturization.rdkitFingerprints import AtomPairFingerprintCallbackHash, MorganFingerprint, \
+from compound_featurization.rdkit_fingerprints import AtomPairFingerprintCallbackHash, MorganFingerprint, \
     MACCSkeysFingerprint, \
     LayeredFingerprint, RDKFingerprint, AtomPairFingerprint
-from loaders.Loaders import CSVLoader
+from loaders.loaders import CSVLoader
 from tests.unit_tests.featurizers.test_featurizers import FeaturizerTestCase
 import numpy as np
 

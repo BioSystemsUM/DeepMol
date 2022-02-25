@@ -6,10 +6,10 @@ from typing import Optional, List, Type
 from copy import deepcopy
 import numpy as np
 
-from loaders.Loaders import CSVLoader
-from metrics.Metrics import Metric
-from models.Models import Model
-from Datasets.Datasets import Dataset
+from loaders.loaders import CSVLoader
+from metrics.metrics import Metric
+from models.models import Model
+from datasets.datasets import Dataset
 from deepchem.models.torch_models import TorchModel
 from deepchem.models import SeqToSeq, WGAN, Model as deep_model
 from deepchem.data import NumpyDataset

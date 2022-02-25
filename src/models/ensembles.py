@@ -3,10 +3,10 @@ from typing import List, Iterable
 
 import numpy as np
 
-from Datasets.Datasets import Dataset
-from evaluator.Evaluator import Evaluator
-from metrics.Metrics import Metric
-from models.Models import Model
+from datasets.datasets import Dataset
+from evaluator.evaluator import Evaluator
+from metrics.metrics import Metric
+from models.models import Model
 
 
 class Ensemble(ABC):

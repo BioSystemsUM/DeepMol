@@ -1,11 +1,11 @@
-from models.Models import Model
-from models.sklearnModels import SklearnModel
-from metrics.Metrics import Metric
+from models.models import Model
+from models.sklearn_models import SklearnModel
+from metrics.metrics import Metric
 from splitters.splitters import RandomSplitter, SingletaskStratifiedSplitter
 from typing import Optional, Callable
 from tensorflow.keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
 import numpy as np
-from Datasets.Datasets import Dataset
+from datasets.datasets import Dataset
 from sklearn.base import clone
 
 

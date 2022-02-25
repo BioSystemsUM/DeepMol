@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 from typing import Any, Optional
-from compoundFeaturization.baseFeaturizer import MolecularFeaturizer
+from compound_featurization.base_featurizer import MolecularFeaturizer
 from gensim.models import word2vec
 from mol2vec.features import mol2alt_sentence, MolSentence, DfVec
 
@@ -79,7 +79,7 @@ class Mol2Vec(MolecularFeaturizer):
         self.mol2alt_sentence = mol2alt_sentence
         if pretrain_model_path is None:
             BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            pretrain_model_path = os.path.join(BASE_DIR,  "compoundFeaturization", "mol2vec_models", "model_300dim.pkl")
+            pretrain_model_path = os.path.join(BASE_DIR,  "compound_featurization", "mol2vec_models", "model_300dim.pkl")
         self.model = word2vec.Word2Vec.load(pretrain_model_path)
 
     def _featurize(self, mol: Any) -> np.ndarray:

@@ -1,8 +1,8 @@
 import os
 from unittest import TestCase
 
-from compoundFeaturization.rdkitFingerprints import MorganFingerprint
-from loaders.Loaders import CSVLoader
+from compound_featurization.rdkit_fingerprints import MorganFingerprint
+from loaders.loaders import CSVLoader
 import pandas as pd
 
 

@@ -3,10 +3,10 @@ from typing import Optional
 import numpy as np
 from sklearn.base import BaseEstimator
 
-from models.Models import Model
-from Datasets.Datasets import Dataset
+from models.models import Model
+from datasets.datasets import Dataset
 from splitters.splitters import RandomSplitter, SingletaskStratifiedSplitter
-from metrics.Metrics import Metric
+from metrics.metrics import Metric
 
 from utils.utils import load_from_disk, save_to_disk
 

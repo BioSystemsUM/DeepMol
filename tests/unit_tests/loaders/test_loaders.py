@@ -1,7 +1,7 @@
 import os
 from unittest import TestCase
 
-from loaders.Loaders import SDFLoader
+from loaders.loaders import SDFLoader
 
 
 class TestLoaders(TestCase):

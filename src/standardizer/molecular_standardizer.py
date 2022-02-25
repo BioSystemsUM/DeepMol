@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 from rdkit import Chem
-from Datasets.Datasets import Dataset
+from datasets.datasets import Dataset
 from rdkit.Chem import rdmolfiles, Mol
 from rdkit.Chem import rdmolops
 import numpy as np

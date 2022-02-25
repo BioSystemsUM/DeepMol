@@ -4,7 +4,7 @@ from unittest import TestCase
 from rdkit import DataStructs
 from rdkit.Chem import AllChem, MolFromSmiles
 
-from loaders.Loaders import CSVLoader, SDFLoader
+from loaders.loaders import CSVLoader, SDFLoader
 from splitters.splitters import SimilaritySplitter, ScaffoldSplitter, ButinaSplitter
 
 import numpy as np

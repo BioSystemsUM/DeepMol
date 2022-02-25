@@ -7,8 +7,8 @@ from rdkit.Chem import rdmolfiles
 from rdkit.Chem import rdmolops
 from rdkit.Chem.rdchem import Mol
 
-from Datasets.Datasets import Dataset
-from scalers.baseScaler import BaseScaler
+from datasets.datasets import Dataset
+from scalers.base_scaler import BaseScaler
 from utils.errors import PreConditionViolationException
 
 

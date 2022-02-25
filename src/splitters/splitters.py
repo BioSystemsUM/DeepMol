@@ -7,7 +7,7 @@ from typing import Tuple, List, Optional, Type
 from rdkit import Chem, DataStructs
 from rdkit.Chem import AllChem, Mol, MolFromSmiles
 
-from Datasets.Datasets import Dataset, NumpyDataset
+from datasets.datasets import Dataset, NumpyDataset
 
 from sklearn.model_selection import KFold, StratifiedKFold
 
@@ -85,7 +85,7 @@ def get_fingerprints_for_each_class(mols, dataset):
 
 
 class Splitter(ABC):
-    """Splitters split up Datasets into pieces for training/validation/testing.
+    """Splitters split up datasets into pieces for training/validation/testing.
     In machine learning applications, it's often necessary to split up a dataset
     into training/validation/test sets. Or to k-fold split a dataset for cross-validation.
     """

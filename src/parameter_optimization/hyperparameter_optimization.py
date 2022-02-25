@@ -1,11 +1,11 @@
 """Hyperparameter Optimization Class"""
 
 import sklearn
-from models.Models import Model
-from models.sklearnModels import SklearnModel
-from models.kerasModels import KerasModel
-from metrics.Metrics import Metric
-from Datasets.Datasets import Dataset
+from models.models import Model
+from models.sklearn_models import SklearnModel
+from models.keras_models import KerasModel
+from metrics.metrics import Metric
+from datasets.datasets import Dataset
 from typing import Dict, Any, Optional, Tuple, Type
 from functools import reduce
 from operator import mul
@@ -18,7 +18,7 @@ import tempfile
 import os
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV, StratifiedKFold, KFold
 from keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
-from parameterOptimization.deepchem_hyperparamopt import DeepchemGridSearchCV, DeepchemRandomSearchCV
+from parameter_optimization.deepchem_hyperparameter_optimization import DeepchemGridSearchCV, DeepchemRandomSearchCV
 
 
 def _convert_hyperparam_dict_to_filename(hyper_params: Dict[str, Any]) -> str:

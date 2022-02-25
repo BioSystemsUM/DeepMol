@@ -6,7 +6,7 @@ from rdkit import Chem
 from rdkit.Chem import MolFromSmiles
 from rdkit.Chem.rdMolAlign import AlignMol
 
-from compoundFeaturization.rdkitDescriptors import ThreeDimensionalMoleculeGenerator, All3DDescriptors, AutoCorr3D, \
+from compound_featurization.rdkit_descriptors import ThreeDimensionalMoleculeGenerator, All3DDescriptors, AutoCorr3D, \
     RadialDistributionFunction, PlaneOfBestFit, MORSE, WHIM, RadiusOfGyration, InertialShapeFactor, Eccentricity, \
     Asphericity, SpherocityIndex, PrincipalMomentsOfInertia, NormalizedPrincipalMomentsRatios, \
     generate_conformers_to_sdf_file, TwoDimensionDescriptors
@@ -53,14 +53,14 @@ class Test2DDescriptors(FeaturizerTestCase, TestCase):
     def test_dummy_test(self):
         dir_path = os.path.join(os.path.dirname(os.path.abspath(".")))
         dataset = os.path.join(dir_path, "tests", "data", "negative_cases1.csv")
-        from loaders.Loaders import CSVLoader
+        from loaders.loaders import CSVLoader
 
         loader = CSVLoader(dataset,
                            mols_field='smiles',
                            labels_fields='sweet')
 
         dataset = loader.create_dataset()
-        from compoundFeaturization.rdkitFingerprints import AtomPairFingerprintCallbackHash
+        from compound_featurization.rdkit_fingerprints import AtomPairFingerprintCallbackHash
 
         AtomPairFingerprintCallbackHash(nBits=1024, includeChirality=True).featurize(dataset)
 

@@ -4,8 +4,8 @@ import csv
 from typing import Optional, Union, Tuple, Dict, List, Iterable, Any
 Score = Dict[str, float]
 
-from Datasets.Datasets import Dataset
-from metrics.Metrics import Metric
+from datasets.datasets import Dataset
+from metrics.metrics import Metric
 
 
 def _process_metric_input(metrics: Metric) -> List[Metric]:

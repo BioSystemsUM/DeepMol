@@ -2,7 +2,7 @@ import joblib
 import numpy as np
 import sklearn.preprocessing as preprocessing
 
-from scalers.baseScaler import BaseScaler
+from scalers.base_scaler import BaseScaler
 
 
 class StandardScaler(BaseScaler):

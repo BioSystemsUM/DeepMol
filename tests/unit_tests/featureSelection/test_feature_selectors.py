@@ -1,11 +1,11 @@
 import os
 from unittest import TestCase
 
-from compoundFeaturization.rdkitDescriptors import TwoDimensionDescriptors
-from compoundFeaturization.rdkitFingerprints import MorganFingerprint
-from featureSelection.baseFeatureSelector import BorutaAlgorithm
-from loaders.Loaders import CSVLoader
-from scalers.sklearnScalers import StandardScaler
+from compound_featurization.rdkit_descriptors import TwoDimensionDescriptors
+from compound_featurization.rdkit_fingerprints import MorganFingerprint
+from feature_selection.base_feature_selector import BorutaAlgorithm
+from loaders.loaders import CSVLoader
+from scalers.sklearn_scalers import StandardScaler
 
 
 class TestFeatureSelectors(TestCase):

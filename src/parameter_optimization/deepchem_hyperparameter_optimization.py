@@ -4,7 +4,7 @@ from collections import defaultdict
 import numpy as np
 from sklearn.model_selection import ParameterGrid, ParameterSampler
 from sklearn.metrics._scorer import SCORERS
-from metrics.Metrics import Metric
+from metrics.metrics import Metric
 from splitters.splitters import RandomSplitter, SingletaskStratifiedSplitter
 
 

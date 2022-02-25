@@ -1,6 +1,6 @@
 from rdkit.Chem.rdMolDescriptors import GetAtomPairAtomCode
 
-from compoundFeaturization.baseFeaturizer import MolecularFeaturizer
+from compound_featurization.base_featurizer import MolecularFeaturizer
 from rdkit.Chem import rdMolDescriptors, MACCSkeys, rdmolops
 import numpy as np
 from typing import Any

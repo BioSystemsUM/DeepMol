@@ -113,7 +113,7 @@ date: 28/04/2021
 
 from deepchem.trans import DAGTransformer, IRVTransformer
 from deepchem.data import NumpyDataset
-from Datasets.Datasets import Dataset
+from datasets.datasets import Dataset
 
 
 def dag_transformation(dataset: Dataset, max_atoms: int = 10):

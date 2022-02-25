@@ -1,19 +1,19 @@
-from compoundFeaturization.rdkitFingerprints import MorganFingerprint, MACCSkeysFingerprint, LayeredFingerprint
-from compoundFeaturization.rdkitFingerprints import RDKFingerprint, AtomPairFingerprintCallbackHash
-from compoundFeaturization.mol2vec import Mol2Vec
-from loaders.Loaders import CSVLoader
-from featureSelection.baseFeatureSelector import LowVarianceFS, KbestFS, PercentilFS, RFECVFS, SelectFromModelFS
+from compound_featurization.rdkit_fingerprints import MorganFingerprint, MACCSkeysFingerprint, LayeredFingerprint
+from compound_featurization.rdkit_fingerprints import RDKFingerprint, AtomPairFingerprintCallbackHash
+from compound_featurization.mol2vec import Mol2Vec
+from loaders.loaders import CSVLoader
+from feature_selection.base_feature_selector import LowVarianceFS, KbestFS, PercentilFS, RFECVFS, SelectFromModelFS
 from splitters.splitters import SingletaskStratifiedSplitter, RandomSplitter
-from models.sklearnModels import SklearnModel
-from metrics.Metrics import Metric
-from metrics.metricsFunctions import roc_auc_score, precision_score, accuracy_score, confusion_matrix, classification_report
-from parameterOptimization.HyperparameterOpt import GridHyperparamOpt
+from models.sklearn_models import SklearnModel
+from metrics.metrics import Metric
+from metrics.metrics_functions import roc_auc_score, precision_score, accuracy_score, confusion_matrix, classification_report
+from parameter_optimization.hyperparameter_optimization import GridHyperparamOpt
 import preprocessing as preproc
-from imbalanced_learn.ImbalancedLearn import RandomOverSampler, SMOTEENN
+from imbalanced_learn.imbalanced_learn import RandomOverSampler, SMOTEENN
 import numpy as np
 
-from standardizer.CustomStandardizer import CustomStandardizer, heavy_standardisation
-from unsupervised.baseUnsupervised import PCA
+from standardizer.custom_standardizer import CustomStandardizer, heavy_standardisation
+from unsupervised.base_unsupervised import PCA
 
 
 standardizer_vr = CustomStandardizer(params=heavy_standardisation)
@@ -54,10 +54,10 @@ print(ds.get_shape())
 print('-----------------------------------------------------')
 
 ds = LowVarianceFS(0.15).featureSelection(ds)
-#ds = KbestFS().featureSelection(ds)
-#ds = PercentilFS().featureSelection(ds)
-#ds = RFECVFS().featureSelection(ds)
-#ds = SelectFromModelFS().featureSelection(ds)
+#ds = KbestFS().feature_selection(ds)
+#ds = PercentilFS().feature_selection(ds)
+#ds = RFECVFS().feature_selection(ds)
+#ds = SelectFromModelFS().feature_selection(ds)
 
 ds.get_shape()
 print(len(np.where(ds.y==0)[0]), len(np.where(ds.y==1)[0]))

@@ -2,20 +2,20 @@
 date: 28/04/2021
 '''
 
-from compoundFeaturization.rdkitFingerprints import MorganFingerprint, MACCSkeysFingerprint, LayeredFingerprint
-# from compoundFeaturization.rdkitFingerprints import RDKFingerprint, AtomPairFingerprint
-from compoundFeaturization.deepChemFeaturizers import ConvMolFeat, WeaveFeat, CoulombFeat, SmileImageFeat, \
+from compound_featurization.rdkit_fingerprints import MorganFingerprint, MACCSkeysFingerprint, LayeredFingerprint
+# from compound_featurization.rdkitFingerprints import RDKFingerprint, AtomPairFingerprint
+from compound_featurization.deepchem_featurizers import ConvMolFeat, WeaveFeat, CoulombFeat, SmileImageFeat, \
     SmilesSeqFeat, MolGraphConvFeat
-# from compoundFeaturization.mol2vec import Mol2Vec
-# from Datasets.Datasets import NumpyDataset
-from loaders.Loaders import CSVLoader
-from featureSelection.baseFeatureSelector import LowVarianceFS, KbestFS, PercentilFS, RFECVFS, SelectFromModelFS
+# from compound_featurization.mol2vec import Mol2Vec
+# from datasets.datasets import NumpyDataset
+from loaders.loaders import CSVLoader
+from feature_selection.base_feature_selector import LowVarianceFS, KbestFS, PercentilFS, RFECVFS, SelectFromModelFS
 from splitters.splitters import RandomSplitter, SingletaskStratifiedSplitter
 # from models.sklearnModels import SklearnModel
-from models.DeepChemModels import DeepChemModel
-from metrics.Metrics import Metric
-from metrics.metricsFunctions import roc_auc_score, precision_score, accuracy_score
-from parameterOptimization.HyperparameterOpt import HyperparamOpt_Valid
+from models.deepchem_models import DeepChemModel
+from metrics.metrics import Metric
+from metrics.metrics_functions import roc_auc_score, precision_score, accuracy_score
+from parameter_optimization.hyperparameter_optimization import HyperparamOpt_Valid
 # import preprocessing as preproc
 from utils import utils as preproc
 # from imbalanced_learn.ImbalancedLearn import RandomOverSampler
@@ -39,12 +39,12 @@ print('-----------------------------------------------------')
 
 # ds.get_shape()
 
-# ds = LowVarianceFS(0.15).featureSelection(ds)
+# ds = LowVarianceFS(0.15).feature_selection(ds)
 
-# ds = KbestFS().featureSelection(ds)
-# ds = PercentilFS().featureSelection(ds)
-# ds = RFECVFS().featureSelection(ds)
-# ds = SelectFromModelFS().featureSelection(ds)
+# ds = KbestFS().feature_selection(ds)
+# ds = PercentilFS().feature_selection(ds)
+# ds = RFECVFS().feature_selection(ds)
+# ds = SelectFromModelFS().feature_selection(ds)
 
 # train_dataset = RandomOverSampler().sample(train_dataset)
 

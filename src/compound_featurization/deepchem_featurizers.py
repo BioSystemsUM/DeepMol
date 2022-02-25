@@ -5,11 +5,11 @@ date: 28/04/2021
 import numpy as np
 from rdkit.Chem.rdchem import Mol
 
-from Datasets.Datasets import Dataset
+from datasets.datasets import Dataset
 from deepchem.utils.conformers import ConformerGenerator
 from deepchem.feat import RDKitDescriptors, SmilesToImage, SmilesToSeq, CoulombMatrix, CoulombMatrixEig, \
     ConvMolFeaturizer, WeaveFeaturizer, MolGraphConvFeaturizer, RawFeaturizer
-from compoundFeaturization.baseFeaturizer import MolecularFeaturizer
+from compound_featurization.base_featurizer import MolecularFeaturizer
 from rdkit import Chem
 from typing import List, Any, Optional, Dict, Iterable, Union
 

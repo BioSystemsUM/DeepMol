@@ -2,7 +2,7 @@ import os
 import sys
 from abc import ABC, abstractmethod
 
-from loaders.Loaders import CSVLoader
+from loaders.loaders import CSVLoader
 
 
 class StandardizerBaseTestCase(ABC):

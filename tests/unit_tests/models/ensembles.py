@@ -4,11 +4,11 @@ from unittest import TestCase
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import roc_auc_score, precision_score, accuracy_score, confusion_matrix, classification_report
 
-from compoundFeaturization.rdkitFingerprints import MorganFingerprint
-from loaders.Loaders import CSVLoader, SDFLoader
-from metrics.Metrics import Metric
+from compound_featurization.rdkit_fingerprints import MorganFingerprint
+from loaders.loaders import CSVLoader, SDFLoader
+from metrics.metrics import Metric
 from models.ensembles import VotingClassifier
-from models.sklearnModels import SklearnModel
+from models.sklearn_models import SklearnModel
 from splitters.splitters import SingletaskStratifiedSplitter
 
 

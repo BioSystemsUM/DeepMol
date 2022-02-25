@@ -4,7 +4,7 @@ from typing import Iterable
 import numpy as np
 from rdkit.Chem import Mol
 
-from compoundFeaturization.baseFeaturizer import MolecularFeaturizer
+from compound_featurization.base_featurizer import MolecularFeaturizer
 
 
 class MixedFeaturizer(MolecularFeaturizer):

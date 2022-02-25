@@ -10,17 +10,17 @@ from tensorflow.python.keras import Sequential
 from tensorflow.python.keras.layers import Dense, Dropout, GaussianNoise, Reshape, Conv1D, Flatten
 from tensorflow.keras.optimizers import Adadelta, Adam, RMSprop
 
-from compoundFeaturization.mixedDescriptors import MixedFeaturizer
-from compoundFeaturization.rdkitDescriptors import AutoCorr3D, All3DDescriptors, RadialDistributionFunction, \
+from compound_featurization.mixed_descriptors import MixedFeaturizer
+from compound_featurization.rdkit_descriptors import AutoCorr3D, All3DDescriptors, RadialDistributionFunction, \
     PlaneOfBestFit, MORSE, WHIM, RadiusOfGyration, InertialShapeFactor, Eccentricity, Asphericity, \
     SpherocityIndex, PrincipalMomentsOfInertia, NormalizedPrincipalMomentsRatios, \
     ThreeDimensionalMoleculeGenerator, generate_conformers_to_sdf_file, get_all_3D_descriptors
-from compoundFeaturization.rdkitFingerprints import MorganFingerprint
-from loaders.Loaders import SDFLoader, CSVLoader
-from metrics.Metrics import Metric
-from models.DeepChemModels import DeepChemModel
-from models.kerasModels import KerasModel
-from models.sklearnModels import SklearnModel
+from compound_featurization.rdkit_fingerprints import MorganFingerprint
+from loaders.loaders import SDFLoader, CSVLoader
+from metrics.metrics import Metric
+from models.deepchem_models import DeepChemModel
+from models.keras_models import KerasModel
+from models.sklearn_models import SklearnModel
 from splitters.splitters import SingletaskStratifiedSplitter
 
 

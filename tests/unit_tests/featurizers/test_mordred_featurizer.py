@@ -3,7 +3,7 @@ from unittest import TestCase
 
 import numpy as np
 
-from compoundFeaturization.mordredDescriptors import MordredFeaturizer
+from compound_featurization.mordredDescriptors import MordredFeaturizer
 from unit_tests.featurizers.test_featurizers import FeaturizerTestCase
 
 

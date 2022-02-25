@@ -3,9 +3,9 @@ import shutil
 import tempfile
 from typing import List, Optional, Sequence
 import numpy as np
-from Datasets.Datasets import Dataset
-from evaluator.Evaluator import Evaluator
-from metrics.Metrics import Metric
+from datasets.datasets import Dataset
+from evaluator.evaluator import Evaluator
+from metrics.metrics import Metric
 
 from sklearn.base import BaseEstimator
 

@@ -7,13 +7,13 @@ from deepchem.models.layers import DTNNEmbedding, Highway
 from sklearn.metrics import roc_auc_score, accuracy_score, precision_score, recall_score, confusion_matrix, \
     classification_report, f1_score
 
-from compoundFeaturization import deepChemFeaturizers
-from loaders.Loaders import CSVLoader
-from metrics.Metrics import Metric
-from metrics.metricsFunctions import prc_auc_score
-from models.DeepChemModels import DeepChemModel
-from models.kerasModels import KerasModel
-from parameterOptimization.HyperparameterOpt import HyperparamOpt_CV
+from compound_featurization import deepchem_featurizers
+from loaders.loaders import CSVLoader
+from metrics.metrics import Metric
+from metrics.metrics_functions import prc_auc_score
+from models.deepchem_models import DeepChemModel
+from models.keras_models import KerasModel
+from parameter_optimization.hyperparameter_optimization import HyperparamOpt_CV
 
 
 class TestDeepChemHyperparameterOpt(TestCase):

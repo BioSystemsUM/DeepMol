@@ -129,17 +129,17 @@ to select only the features kept after feature selection) and the number of
 samples to load (by default loads the entire dataset).
 
 ```python
-from loaders.Loaders import CSVLoader
+from loaders.loaders import CSVLoader
 
 # load a dataset from a CSV (define data path, field with the molecules,
 # field with the labels (optional), field with ids (optional), etc.
-dataset = CSVLoader(dataset_path='data_path.csv', 
-                    mols_field='Smiles', 
-                    labels_fields='Class', 
+dataset = CSVLoader(dataset_path='data_path.csv',
+                    mols_field='Smiles',
+                    labels_fields='Class',
                     id_field='ID')
 dataset = dataset.create_dataset()
 
-#print shape of the dataset (mols, X, y) 
+# print shape of the dataset (mols, X, y) 
 dataset.get_shape()
 ```
 
@@ -183,9 +183,9 @@ Mol2Vec can also be computed. More complex molecular embeddings like the
 Seq2Seq and transformer-based are in  development and will be added soon.
 
 ```python
-from compoundFeaturization.rdkitFingerprints import MorganFingerprint
+from compound_featurization.rdkit_fingerprints import MorganFingerprint
 
-#Compute morgan fingerprints for molecules in the previous loaded dataset
+# Compute morgan fingerprints for molecules in the previous loaded dataset
 dataset = MorganFingerprint(radius=2, size=1024).featurize(dataset)
 ```
 
@@ -209,12 +209,12 @@ KBest, Percentile, Recursive Feature Elimination and selecting features based on
 importance weights.
 
 ```python
-from featureSelection.baseFeatureSelector import LowVarianceFS
+from feature_selection.base_feature_selector import LowVarianceFS
 
-#Feature Selection to remove features with low variance across molecules
+# Feature Selection to remove features with low variance across molecules
 dataset = LowVarianceFS(0.15).featureSelection(dataset)
 
-#print shape of the dataset to see difference in the X shape (less features)
+# print shape of the dataset to see difference in the X shape (less features)
 dataset.get_shape()
 ```
 
@@ -276,20 +276,21 @@ Check this **[jupyter notebook](https://github.com/BioSystemsUM/DeepMol/blob/mas
 
 ```python
 from sklearn.ensemble import RandomForestClassifier
-from models.sklearnModels import SklearnModel
+from models.sklearn_models import SklearnModel
 
-#Scikit-Learn Random Forest
+# Scikit-Learn Random Forest
 rf = RandomForestClassifier()
-#wrapper around scikit learn models
+# wrapper around scikit learn models
 model = SklearnModel(model=rf)
 # model training
 model.fit(train_dataset)
 
-from metrics.Metrics import Metric
-from metrics.metricsFunctions import r2_score, roc_auc_score, precision_score, accuracy_score, confusion_matrix, classification_report, f1_score
+from metrics.metrics import Metric
+from metrics.metrics_functions import r2_score, roc_auc_score, precision_score, accuracy_score, confusion_matrix,
 
+classification_report, f1_score
 
-#cross validate model on the full dataset
+# cross validate model on the full dataset
 model.cross_validate(dataset, Metric(roc_auc_score), folds=3)
 ```
 
@@ -328,39 +329,39 @@ Check this **[jupyter notebook](https://github.com/BioSystemsUM/DeepMol/blob/mas
 ```python
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout
-from metrics.Metrics import Metric
-
+from metrics.metrics import Metric
 
 input_dim = train_dataset.X.shape[1]
 
 
 def create_model(optimizer='adam', dropout=0.5, input_dim=input_dim):
-    # create model
-    model = Sequential()
-    model.add(Dense(12, input_dim=input_dim, activation='relu'))
-    model.add(Dropout(dropout))
-    model.add(Dense(8, activation='relu'))
-    model.add(Dense(1, activation='sigmoid'))
-    # Compile model
-    model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
-    return model
+  # create model
+  model = Sequential()
+  model.add(Dense(12, input_dim=input_dim, activation='relu'))
+  model.add(Dropout(dropout))
+  model.add(Dense(8, activation='relu'))
+  model.add(Dense(1, activation='sigmoid'))
+  # Compile model
+  model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+  return model
 
-from models.kerasModels import KerasModel
-model = KerasModel(create_model, epochs = 5, verbose=1, optimizer='adam')
 
-#train model
+from models.keras_models import KerasModel
+
+model = KerasModel(create_model, epochs=5, verbose=1, optimizer='adam')
+
+# train model
 model.fit(train_dataset)
 
-#make prediction on the test dataset with the model
+# make prediction on the test dataset with the model
 model.predict(test_dataset)
 
-#evaluate model using multiple metrics
-metrics = [Metric(roc_auc_score), 
-           Metric(precision_score), 
-           Metric(accuracy_score), 
-           Metric(confusion_matrix), 
+# evaluate model using multiple metrics
+metrics = [Metric(roc_auc_score),
+           Metric(precision_score),
+           Metric(accuracy_score),
+           Metric(confusion_matrix),
            Metric(classification_report)]
-
 
 print('Training set score:', model.evaluate(train_dataset, metrics))
 print('Test set score:', model.evaluate(test_dataset, metrics))
@@ -374,16 +375,17 @@ Using DeepChem models:
 Check this **[jupyter notebook](https://github.com/BioSystemsUM/DeepMol/blob/master/src/tests/deepchem_test.ipynb)** for a complete example!
 
 ```python
-from compoundFeaturization.deepChemFeaturizers import WeaveFeat
+from compound_featurization.deepchem_featurizers import WeaveFeat
 from deepchem.models import MPNNModel
-from models.DeepChemModels import DeepChemModel
-from metrics.Metrics import Metric
+from models.deepchem_models import DeepChemModel
+from metrics.metrics import Metric
 from splitters.splitters import SingletaskStratifiedSplitter
 
 ds = WeaveFeat().featurize(dataset)
 splitter = SingletaskStratifiedSplitter()
-train_dataset, valid_dataset, test_dataset = splitter.train_valid_test_split(dataset=ds, frac_train=0.6, frac_valid=0.2, frac_test=0.2)
-mpnn = MPNNModel(n_tasks = 1, n_pair_feat=14, n_atom_feat=75, n_hidden=75, T=1, M=1,  mode='classification')
+train_dataset, valid_dataset, test_dataset = splitter.train_valid_test_split(dataset=ds, frac_train=0.6, frac_valid=0.2,
+                                                                             frac_test=0.2)
+mpnn = MPNNModel(n_tasks=1, n_pair_feat=14, n_atom_feat=75, n_hidden=75, T=1, M=1, mode='classification')
 model_mpnn = DeepChemModel(mpnn)
 # Model training
 model_mpnn.fit(train_dataset)
@@ -405,21 +407,21 @@ Grid and randomized hyperparameter optimization is provided using cross-validati
 or a held-out validation set.
 
 ```python
-from parameterOptimization.HyperparameterOpt import HyperparamOpt_Valid, HyperparamOpt_CV
-#Hyperparameter Optimization (using the above created keras model)
+from parameter_optimization.hyperparameter_optimization import HyperparamOpt_Valid, HyperparamOpt_CV
+
+# Hyperparameter Optimization (using the above created keras model)
 optimizer = HyperparamOpt_Valid(create_model)
 
-params_dict = {'optimizer' : ['adam', 'rmsprop'],
-              'dropout' : [0.2, 0.4, 0.5]}
+params_dict = {'optimizer': ['adam', 'rmsprop'],
+               'dropout': [0.2, 0.4, 0.5]}
 
-best_model, best_hyperparams, all_results = optimizer.hyperparam_search(params_dict, train_dataset, 
+best_model, best_hyperparams, all_results = optimizer.hyperparam_search(params_dict, train_dataset,
                                                                         valid_dataset, Metric(roc_auc_score))
-
 
 print(best_hyperparams)
 print(best_model)
 
-#Evaluate model
+# Evaluate model
 best_model.evaluate(test_dataset, metrics)
 ```
 
@@ -431,7 +433,7 @@ negatively) a certain prediction can be calculated and visualized in different
 ways:
 
 ```python
-from featureImportance.shapValues import ShapValues
+from feature_importance.shap_values import ShapValues
 
 shap_calc = ShapValues(test_dataset, model)
 shap_calc.computePermutationShap()
@@ -490,10 +492,10 @@ draw_MACCS_Pattern(smi, patt_number)
 
 Multiple methods to deal with unbalanced datasets can be used to do oversampling,
 undersampling or a mixture of both (Random, SMOTE, SMOTEENN, SMOTETomek and 
-ClusterCentroids). 
+ClusterCentroids).
 
 ```python
-from imbalanced_learn.ImbalancedLearn import SMOTEENN
+from imbalanced_learn.imbalanced_learn import SMOTEENN
 
 train_dataset = SMOTEENN().sample(train_dataset)
 ```

@@ -3,7 +3,7 @@ from abc import abstractmethod, ABC
 
 import os
 
-from loaders.Loaders import CSVLoader
+from loaders.loaders import CSVLoader
 
 
 class FeaturizerTestCase(ABC):
@@ -31,7 +31,7 @@ class FeaturizerTestCase(ABC):
 
         self.dataset_invalid_smiles = loader.create_dataset()
 
-        self.mol2vec_model = os.path.join(dir_path, "compoundFeaturization", "mol2vec_models", "model_300dim.pkl")
+        self.mol2vec_model = os.path.join(dir_path, "compound_featurization", "mol2vec_models", "model_300dim.pkl")
 
     @abstractmethod
     def test_featurize(self):

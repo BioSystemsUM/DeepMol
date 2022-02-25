@@ -1,6 +1,6 @@
 from abc import abstractmethod, ABC
 
-from Datasets.Datasets import Dataset
+from datasets.datasets import Dataset
 from sklearn.feature_selection import VarianceThreshold, SelectKBest, chi2, SelectPercentile, RFECV, SelectFromModel
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 import numpy as np

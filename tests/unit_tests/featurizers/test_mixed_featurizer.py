@@ -1,11 +1,11 @@
 from copy import copy
 from unittest import TestCase
 
-from compoundFeaturization.mixedDescriptors import MixedFeaturizer
-from compoundFeaturization.mol2vec import Mol2Vec
-from compoundFeaturization.rdkitDescriptors import All3DDescriptors
-from compoundFeaturization.rdkitFingerprints import MorganFingerprint, AtomPairFingerprintCallbackHash
-from scalers.sklearnScalers import StandardScaler
+from compound_featurization.mixed_descriptors import MixedFeaturizer
+from compound_featurization.mol2vec import Mol2Vec
+from compound_featurization.rdkit_descriptors import All3DDescriptors
+from compound_featurization.rdkit_fingerprints import MorganFingerprint, AtomPairFingerprintCallbackHash
+from scalers.sklearn_scalers import StandardScaler
 from tests.unit_tests.featurizers.test_featurizers import FeaturizerTestCase
 
 import numpy as np

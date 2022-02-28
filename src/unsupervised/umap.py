@@ -1,6 +1,7 @@
-from unsupervised.baseUnsupervised import UnsupervisedLearn
+from unsupervised.base_unsupervised import UnsupervisedLearn
 from umap.parametric_umap import ParametricUMAP
 import plotly.express as px
+
 
 class UMAP(UnsupervisedLearn):
     """Class to perform Uniform Manifold Approximation and Projection (UMAP) .
@@ -9,15 +10,9 @@ class UMAP(UnsupervisedLearn):
         (https://github.com/lmcinnes/umap)
         """
 
-    def __init__(self,
-                 n_neighbors=15,
-                 n_components=2,
-                 metric='euclidean',
-                 n_epochs=None,
-                 learning_rate=1.0,
-                 low_memory=True,
-                 random_state=None):
-        #TODO: comments
+    def __init__(self, n_neighbors=15, n_components=2, metric='euclidean', n_epochs=None, learning_rate=1.0,
+                 low_memory=True, random_state=None):
+        # TODO: comments
         """
         Parameters
         ----------
@@ -29,6 +24,7 @@ class UMAP(UnsupervisedLearn):
             values should be in the range 2 to 100.
         """
 
+        super().__init__()
         self.n_neighbors = n_neighbors
         self.n_components = n_components
         self.metric = metric
@@ -36,7 +32,6 @@ class UMAP(UnsupervisedLearn):
         self.learning_rate = learning_rate
         self.low_memory = low_memory
         self.random_state = random_state
-
 
     def _runUnsupervised(self, plot=True):
         """Compute cluster centers and predict cluster index for each sample."""
@@ -56,7 +51,7 @@ class UMAP(UnsupervisedLearn):
                 raise ValueError('Only 2 components UMAP supported!')
 
             self._plot(embedding, self.dataset.y)
-            #points(embedding, labels=self.dataset.y)
+            # points(embedding, labels=self.dataset.y)
 
         return embedding
 

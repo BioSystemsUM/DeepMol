@@ -122,11 +122,6 @@ def normalize_labels_shape(y_pred: List):
     return np.array(labels)
 
 
-'''author: Bruno Pereira
-date: 28/04/2021
-'''
-
-
 def dag_transformation(dataset: Dataset, max_atoms: int = 10):
     """Function to transform ConvMol adjacency lists to DAG calculation orders.
     Adapted from deepchem"""

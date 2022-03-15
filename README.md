@@ -29,6 +29,7 @@ operations on molecular data.
     - [Unbalanced Datasets](#unbalanced-datasets)
 - [About Us](#about-us)
 - [Citing DeepMol](#citing-deepmol)
+  - [Related Publications](#related-publications)
 - [License](#licensing)
 
 
@@ -513,6 +514,18 @@ a Ciência e a Tecnologia.
 ## Citing DeepMol
 
 Manuscript under preparation.
+
+### Publications using DeepMol
+
+Baptista D., Correia J., Pereira B., Rocha M. (2022) "A Comparison of Different Compound Representations for Drug Sensitivity Prediction". In: Rocha M., Fdez-Riverola F., Mohamad M.S., Casado-Vara R. (eds) Practical Applications of Computational Biology & Bioinformatics, 15th International Conference (PACBB 2021). PACBB 2021. Lecture Notes in Networks and Systems, vol 325. Springer, Cham. https://doi.org/10.1007/978-3-030-86258-9_15
+
+<!---
+Baptista D., Correia J., Pereira B., Rocha M.  "Evaluating molecular representations in machine learning models for drug response prediction and interpretability" [Under revision]
+
+DeepSweet (POSTER) ...
+
+DeepSweet (Submission) ...
+--->
 
 ## Licensing
 

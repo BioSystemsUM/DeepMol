@@ -145,12 +145,12 @@ class SklearnModel(Model):
             dummy_model.fit(train_ds)
 
             print('Train Score: ')
-            train_score = dummy_model.evaluate(train_ds, metric)
+            train_score = dummy_model.evaluate(train_ds, metric)[0]
             train_scores.append(train_score[metric.name])
             avg_train_score += train_score[metric.name]
 
             print('Test Score: ')
-            test_score = dummy_model.evaluate(test_ds, metric)
+            test_score = dummy_model.evaluate(test_ds, metric)[0]
             test_scores.append(test_score[metric.name])
             avg_test_score += test_score[metric.name]
 

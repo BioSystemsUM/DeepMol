@@ -52,9 +52,7 @@ class SklearnModel(Model):
         """
 
         super().__init__(model, model_dir, **kwargs)
-        self.model = model
         self.mode = mode
-        self.model_dir = model_dir
         self.model_type = 'sklearn'
 
     def fit(self, dataset: Dataset) -> None:

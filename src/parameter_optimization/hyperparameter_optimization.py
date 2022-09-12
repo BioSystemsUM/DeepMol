@@ -252,7 +252,7 @@ class HyperparameterOptimizerValidation(HyperparameterOptimizer):
                 except Exception as e:
                     print(e)
 
-                multitask_scores = model.evaluate(valid_dataset, [metric])
+                multitask_scores = model.evaluate(valid_dataset, [metric])[0]
                 valid_score = multitask_scores[metric.name]
                 hp_str = _convert_hyperparam_dict_to_filename(hyper_params)
                 all_scores[hp_str] = valid_score
@@ -278,7 +278,7 @@ class HyperparameterOptimizerValidation(HyperparameterOptimizer):
             best_model, best_hyperparams = model, hyperparameter_tuple
             return best_model, best_hyperparams, all_scores
 
-        multitask_scores = best_model.evaluate(train_dataset, [metric])
+        multitask_scores = best_model.evaluate(train_dataset, [metric])[0]
         train_score = multitask_scores[metric.name]
         print("Best hyperparameters: %s" % str(best_hyperparams))
         print("train_score: %f" % train_score)

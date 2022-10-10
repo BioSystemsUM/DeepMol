@@ -15,8 +15,9 @@ from splitters.splitters import SingletaskStratifiedSplitter
 class TestEnsembles(TestCase):
 
     def setUp(self) -> None:
-        dir_path = os.path.join(os.path.dirname(os.path.abspath(".")))
-        dataset = os.path.join(dir_path, "tests", "data", "dataset_sweet_3d_balanced.sdf")
+        self.data_path = os.path.join(os.path.dirname(os.path.abspath(os.curdir)), 'tests', 'data')
+
+        dataset = os.path.join(self.data_path, "dataset_sweet_3d_balanced.sdf")
         loader = SDFLoader(dataset,
                            labels_fields='_SWEET')
 
@@ -44,8 +45,6 @@ class TestEnsembles(TestCase):
 
         evaluate = ensemble.evaluate(self.test_dataset, metrics)
 
-
-
     def test_hard_voting_classifier(self):
         rf_model = RandomForestClassifier()
         rf_model2 = RandomForestClassifier()
@@ -58,10 +57,7 @@ class TestEnsembles(TestCase):
         predictions = ensemble.predict(self.test_dataset)
         predictions = ensemble.predict(self.test_dataset, proba=True)
 
-
         metrics = [Metric(roc_auc_score), Metric(precision_score), Metric(accuracy_score), Metric(confusion_matrix),
                    Metric(classification_report)]
 
         evaluate = ensemble.evaluate(self.test_dataset, metrics)
-
-

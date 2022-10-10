@@ -55,12 +55,12 @@ class Mol2Vec(MolecularFeaturizer):
     def __init__(self, pretrain_model_path: Optional[str] = None,
                  radius: int = 1,
                  unseen: str = 'UNK',
-                 gather_method: str = 'sum', **kwargs):
+                 gather_method: str = 'sum'):
 
-        '''
+        """
         Parameters
         ----------
-        pretrain_file: str, optional
+        pretrain_model_path: str, optional
             The path for pretrained model. If this value is None, we use the model_300dim.pkl model.
             The model is trained on 20 million compounds downloaded from ZINC.
         radius: int, optional (default 1)
@@ -69,9 +69,9 @@ class Mol2Vec(MolecularFeaturizer):
             The string to used to replace uncommon words/identifiers while training.
         gather_method: str, optional (default 'sum')
             How to aggregate vectors of identifiers are extracted from Mol2vec. 'sum' or 'mean' is supported.
-        '''
+        """
 
-        super().__init__(**kwargs)
+        super().__init__()
         self.radius = radius
         self.unseen = unseen
         self.gather_method = gather_method
@@ -94,18 +94,18 @@ class Mol2Vec(MolecularFeaturizer):
         np.ndarray
           1D array of mol2vec fingerprint. The default length is 300.
         """
-        try:
-            sentence = MolSentence(self.mol2alt_sentence(mol, self.radius))
-            vec_identifiers = self.sentences2vec(
-                sentence, self.model, unseen=self.unseen)
-            if self.gather_method == 'sum':
-                feature = np.sum(vec_identifiers, axis=0)
-            elif self.gather_method == 'mean':
-                feature = np.mean(vec_identifiers, axis=0)
-            else:
-                raise ValueError(
-                    'Not supported gather_method type. Please set "sum" or "mean"')
-        except Exception as e:
-            feature = np.asarray(np.nan)
+        # try:
+        sentence = MolSentence(self.mol2alt_sentence(mol, self.radius))
+        vec_identifiers = self.sentences2vec(
+            sentence, self.model, unseen=self.unseen)
+        if self.gather_method == 'sum':
+            feature = np.sum(vec_identifiers, axis=0)
+        elif self.gather_method == 'mean':
+            feature = np.mean(vec_identifiers, axis=0)
+        else:
+            raise ValueError(
+                'Not supported gather_method type. Please set "sum" or "mean"')
+        # except Exception as e:
+        #     feature = np.asarray(np.nan)
 
         return feature

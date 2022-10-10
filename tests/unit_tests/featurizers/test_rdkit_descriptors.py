@@ -24,9 +24,11 @@ class Test2DDescriptors(FeaturizerTestCase, TestCase):
     def test_featurize_with_nan(self):
         dataset_rows_number = len(self.mini_dataset_to_test.mols)
         to_add = np.zeros(4)
+        ids_to_add = np.array([i for i in range(dataset_rows_number, dataset_rows_number + 4)])
 
         self.mini_dataset_to_test.mols = np.concatenate((self.mini_dataset_to_test.mols, to_add))
         self.mini_dataset_to_test.y = np.concatenate((self.mini_dataset_to_test.y, to_add))
+        self.mini_dataset_to_test.ids = np.concatenate((self.mini_dataset_to_test.ids, ids_to_add))
 
         dataset = copy(self.mini_dataset_to_test)
         TwoDimensionDescriptors().featurize(dataset)
@@ -88,9 +90,11 @@ class Test3DDescriptors(FeaturizerTestCase, TestCase):
     def test_featurize_with_nan(self):
         dataset_rows_number = len(self.mini_dataset_to_test.mols)
         to_add = np.zeros(4)
+        ids_to_add = np.array([i for i in range(dataset_rows_number, dataset_rows_number + 4)])
 
         self.mini_dataset_to_test.mols = np.concatenate((self.mini_dataset_to_test.mols, to_add))
         self.mini_dataset_to_test.y = np.concatenate((self.mini_dataset_to_test.y, to_add))
+        self.mini_dataset_to_test.ids = np.concatenate((self.mini_dataset_to_test.ids, ids_to_add))
 
         dataset = copy(self.mini_dataset_to_test)
         All3DDescriptors(mandatory_generation_of_conformers=True).featurize(dataset)
@@ -201,5 +205,5 @@ class Test3DDescriptors(FeaturizerTestCase, TestCase):
 
     def test_generate_conformers_and_export(self):
 
-        generate_conformers_to_sdf_file(self.mini_dataset_to_test, "temp.sdf")
+        generate_conformers_to_sdf_file(self.mini_dataset_to_test, "temp.sdf", n_conformations=1, max_iterations=1)
         os.remove("temp.sdf")

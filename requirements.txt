@@ -10,5 +10,6 @@ pillow==8.4.0
 h5py==3.1.0
 deepchem==2.5.0
 shap==0.41.0
-gensim==3.8.1
+gensim==4.2.0
 git+https://github.com/samoturk/mol2vec#egg=mol2vec
+git+https://github.com/chembl/ChEMBL_Structure_Pipeline.git@1.0.0

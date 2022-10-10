@@ -153,7 +153,7 @@ class NumpyDataset(Dataset):
             if self._X.size > 0:
                 if self.features2keep is not None:
                     if self.features2keep.size == 0:
-                        raise Exception("This dataset has no features")
+                        return np.empty((0, 0))
                     elif len(self._X.shape) == 2:
                         return self._X[:, self.features2keep]
                     else:

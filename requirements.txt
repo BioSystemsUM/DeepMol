@@ -12,4 +12,4 @@ deepchem==2.5.0
 shap==0.41.0
 gensim==4.2.0
 mol2vec @ git+https://github.com/samoturk/mol2vec#egg=mol2vec
-chembl_pipeline @ git+https://github.com/chembl/ChEMBL_Structure_Pipeline.git@1.0.0
+# chembl_pipeline @ git+https://github.com/chembl/ChEMBL_Structure_Pipeline.git@1.0.0

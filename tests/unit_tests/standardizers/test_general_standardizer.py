@@ -28,5 +28,5 @@ class GeneralStandardizer(StandardizerBaseTestCase, TestCase):
 
     def test_standardize(self):
         self.check_similarity(BasicStandardizer)
-        self.check_similarity(ChEMBLStandardizer)
+        # self.check_similarity(ChEMBLStandardizer)
         self.check_similarity(CustomStandardizer)

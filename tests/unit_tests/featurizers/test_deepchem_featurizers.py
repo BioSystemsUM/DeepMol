@@ -24,18 +24,3 @@ class TestDeepChemFeaturizers(FeaturizerTestCase, TestCase):
         dataset = copy(self.mini_dataset_to_test)
         WeaveFeat().featurize(dataset)
         self.assertEqual(dataset_rows_number, dataset.X.shape[0])
-
-        dataset_rows_number = len(self.dataset_to_test.mols)
-        to_add = np.zeros(4)
-
-        self.dataset_to_test.mols = np.concatenate((self.dataset_to_test.mols, to_add))
-        self.dataset_to_test.y = np.concatenate((self.dataset_to_test.y, to_add))
-        self.dataset_to_test.ids = np.concatenate((self.dataset_to_test.ids, ids_to_add))
-
-        dataset = copy(self.dataset_to_test)
-        WeaveFeat().featurize(dataset)
-        self.assertEqual(dataset_rows_number, dataset.X.shape[0])
-
-        dataset = copy(self.dataset_to_test)
-        CoulombFeat(150).featurize(dataset)
-        self.assertEqual(dataset_rows_number, dataset.X.shape[0])

@@ -1,0 +1,33 @@
+name: DeepMol
+channels:
+  - defaults
+dependencies:
+  - _libgcc_mutex=0.1=main
+  - _openmp_mutex=5.1=1_gnu
+  - ca-certificates=2022.07.19=h06a4308_0
+  - certifi=2022.9.14=py38h06a4308_0
+  - ld_impl_linux-64=2.38=h1181459_1
+  - libffi=3.3=he6710b0_2
+  - libgcc-ng=11.2.0=h1234567_1
+  - libgomp=11.2.0=h1234567_1
+  - libstdcxx-ng=11.2.0=h1234567_1
+  - ncurses=6.3=h5eee18b_3
+  - openssl=1.1.1q=h7f8727e_0
+  - pip=22.2.2=py38h06a4308_0
+  - python=3.8.13=h12debd9_0
+  - readline=8.1.2=h7f8727e_1
+  - setuptools=63.4.1=py38h06a4308_0
+  - sqlite=3.39.3=h5082296_0
+  - tk=8.6.12=h1ccaba5_0
+  - wheel=0.37.1=pyhd3eb1b0_0
+  - xz=5.2.6=h5eee18b_0
+  - zlib=1.2.12=h5eee18b_3
+  - pip:
+    - joblib==1.2.0
+    - numpy==1.23.3
+    - pillow==9.2.0
+    - rdkit-pypi==2022.3.5
+    - scikit-learn==1.1.2
+    - scipy==1.9.1
+    - sklearn==0.0
+    - threadpoolctl==3.1.0

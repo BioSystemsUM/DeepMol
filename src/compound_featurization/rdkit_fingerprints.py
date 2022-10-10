@@ -317,7 +317,6 @@ class AtomPairFingerprintCallbackHash(MolecularFeaturizer):
     Atom pair fingerprints
 
     Returns the atom-pair fingerprint for a molecule as an ExplicitBitVect
-
     """
 
     def __init__(self, nBits: int = 2048, minLength: int = 1, maxLength: int = 30,

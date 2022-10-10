@@ -39,6 +39,4 @@ jobs:
 
       - name: Test with tox
         run: |
-          eval `ssh-agent -s`
-          ssh-add - <<< '${{ secrets.MACHINE_USER_SHH_KEY }}'
           tox

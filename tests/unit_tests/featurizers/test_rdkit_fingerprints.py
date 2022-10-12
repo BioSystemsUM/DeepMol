@@ -1,11 +1,9 @@
-import os
 from copy import copy
 from unittest import TestCase
 
-from compound_featurization.rdkit_fingerprints import AtomPairFingerprintCallbackHash, MorganFingerprint, \
+from deepmol.compound_featurization import MorganFingerprint, \
     MACCSkeysFingerprint, \
     LayeredFingerprint, RDKFingerprint, AtomPairFingerprint
-from loaders.loaders import CSVLoader
 from tests.unit_tests.featurizers.test_featurizers import FeaturizerTestCase
 import numpy as np
 

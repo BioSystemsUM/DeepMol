@@ -1,8 +1,8 @@
 import os
 from unittest import TestCase
 
-from compound_featurization.rdkit_fingerprints import MorganFingerprint
-from loaders.loaders import CSVLoader
+from deepmol.compound_featurization import MorganFingerprint
+from deepmol.loaders.loaders import CSVLoader
 import pandas as pd
 
 

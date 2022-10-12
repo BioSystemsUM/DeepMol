@@ -4,8 +4,8 @@ from unittest import TestCase, skip
 from rdkit import DataStructs
 from rdkit.Chem import AllChem, MolFromSmiles
 
-from loaders.loaders import CSVLoader, SDFLoader
-from splitters.splitters import SimilaritySplitter, ScaffoldSplitter, ButinaSplitter
+from deepmol.loaders.loaders import CSVLoader, SDFLoader
+from deepmol.splitters.splitters import SimilaritySplitter, ScaffoldSplitter, ButinaSplitter
 
 import numpy as np
 

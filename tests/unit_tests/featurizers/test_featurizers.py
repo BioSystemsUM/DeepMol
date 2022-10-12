@@ -1,9 +1,8 @@
-import sys
 from abc import abstractmethod, ABC
 
 import os
 
-from loaders.loaders import CSVLoader
+from deepmol.loaders.loaders import CSVLoader
 
 
 class FeaturizerTestCase(ABC):

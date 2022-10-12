@@ -1,7 +1,7 @@
 from copy import copy
 from unittest import TestCase
 
-from compound_featurization.mol2vec import Mol2Vec
+from deepmol.compound_featurization.mol2vec import Mol2Vec
 from tests.unit_tests.featurizers.test_featurizers import FeaturizerTestCase
 import numpy as np
 

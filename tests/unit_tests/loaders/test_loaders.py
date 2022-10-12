@@ -1,7 +1,7 @@
 import os
 from unittest import TestCase
 
-from loaders.loaders import SDFLoader
+from deepmol.loaders.loaders import SDFLoader
 
 
 class TestLoaders(TestCase):

@@ -2,22 +2,22 @@
 date: 28/04/2021
 '''
 
-from compound_featurization.rdkit_fingerprints import MorganFingerprint, MACCSkeysFingerprint, LayeredFingerprint
+from deepmol.compound_featurization import MorganFingerprint
 # from compound_featurization.rdkitFingerprints import RDKFingerprint, AtomPairFingerprint
-from compound_featurization.deepchem_featurizers import ConvMolFeat, WeaveFeat, CoulombFeat, SmileImageFeat, \
-    SmilesSeqFeat, MolGraphConvFeat
+from deepmol.compound_featurization import ConvMolFeat, WeaveFeat, SmileImageFeat, \
+    MolGraphConvFeat
 # from compound_featurization.mol2vec import Mol2Vec
 # from datasets.datasets import NumpyDataset
-from loaders.loaders import CSVLoader
-from feature_selection.base_feature_selector import LowVarianceFS, KbestFS, PercentilFS, RFECVFS, SelectFromModelFS
-from splitters.splitters import RandomSplitter, SingletaskStratifiedSplitter
+from deepmol.loaders.loaders import CSVLoader
+from deepmol.feature_selection import LowVarianceFS
+from deepmol.splitters.splitters import SingletaskStratifiedSplitter
 # from models.sklearnModels import SklearnModel
-from models.deepchem_models import DeepChemModel
-from metrics.metrics import Metric
-from metrics.metrics_functions import roc_auc_score, precision_score, accuracy_score
-from parameter_optimization.hyperparameter_optimization import HyperparameterOptimizerValidation
+from deepmol.models.deepchem_models import DeepChemModel
+from deepmol.metrics.metrics import Metric
+from deepmol.metrics.metrics_functions import roc_auc_score, precision_score, accuracy_score
+from deepmol.parameter_optimization.hyperparameter_optimization import HyperparameterOptimizerValidation
 # import preprocessing as preproc
-from utils import utils as preproc
+from deepmol.utils import utils as preproc
 # from imbalanced_learn.ImbalancedLearn import RandomOverSampler
 # from deepchem.feat import WeaveFeaturizer, CoulombMatrix
 # from deepchem.utils.conformers import ConformerGenerator
@@ -191,7 +191,6 @@ def weavemodel(dataset):
 
 
 def chemcepmodel(dataset):
-    from deepchem.models import ChemCeption
     ds = SmileImageFeat().featurize(dataset)
     splitter = SingletaskStratifiedSplitter()
     train_dataset, valid_dataset, test_dataset = splitter.train_valid_test_split(dataset=ds, frac_train=0.6,
@@ -214,7 +213,6 @@ def chemcepmodel(dataset):
 
 
 def cnnmodel(dataset):
-    from deepchem.models import CNN
     ds = SmileImageFeat().featurize(dataset)
     splitter = SingletaskStratifiedSplitter()
     train_dataset, valid_dataset, test_dataset = splitter.train_valid_test_split(dataset=ds, frac_train=0.6,
@@ -307,7 +305,6 @@ def gatmodel(dataset):
 
 
 def gcnmodel(dataset):
-    from deepchem.models import GCNModel
     ds = MolGraphConvFeat().featurize(dataset)
     splitter = SingletaskStratifiedSplitter()
     train_dataset, valid_dataset, test_dataset = splitter.train_valid_test_split(dataset=ds, frac_train=0.6,
@@ -523,7 +520,6 @@ def hyperoptimgcn(dataset):
 
 def cnnbuilder(n_features, layer_filters, kernel_size, weight_init_stddevs, bias_init_consts, weight_decay_penalty,
                dropouts, model_dir=None):
-    from deepchem.models import CNN
     cnn = CNNModel(n_tasks=1,
                    n_features=n_features,
                    layer_filters=layer_filters,

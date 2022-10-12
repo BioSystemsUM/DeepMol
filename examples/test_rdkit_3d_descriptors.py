@@ -10,18 +10,18 @@ from tensorflow.python.keras import Sequential
 from tensorflow.python.keras.layers import Dense, Dropout, GaussianNoise, Reshape, Conv1D, Flatten
 from tensorflow.keras.optimizers import Adadelta, Adam, RMSprop
 
-from compound_featurization.mixed_descriptors import MixedFeaturizer
-from compound_featurization.rdkit_descriptors import AutoCorr3D, All3DDescriptors, RadialDistributionFunction, \
+from deepmol.compound_featurization import MixedFeaturizer
+from deepmol.compound_featurization.rdkit_descriptors import AutoCorr3D, All3DDescriptors, RadialDistributionFunction, \
     PlaneOfBestFit, MORSE, WHIM, RadiusOfGyration, InertialShapeFactor, Eccentricity, Asphericity, \
     SpherocityIndex, PrincipalMomentsOfInertia, NormalizedPrincipalMomentsRatios, \
     ThreeDimensionalMoleculeGenerator, generate_conformers_to_sdf_file, get_all_3D_descriptors
-from compound_featurization.rdkit_fingerprints import MorganFingerprint
-from loaders.loaders import SDFLoader, CSVLoader
-from metrics.metrics import Metric
-from models.deepchem_models import DeepChemModel
-from models.keras_models import KerasModel
-from models.sklearn_models import SklearnModel
-from splitters.splitters import SingletaskStratifiedSplitter
+from deepmol.compound_featurization import MorganFingerprint
+from deepmol.loaders.loaders import SDFLoader, CSVLoader
+from deepmol.metrics.metrics import Metric
+from deepmol.models.deepchem_models import DeepChemModel
+from deepmol.models.keras_models import KerasModel
+from deepmol.models.sklearn_models import SklearnModel
+from deepmol.splitters.splitters import SingletaskStratifiedSplitter
 
 
 class Test3DGeneration(TestCase):

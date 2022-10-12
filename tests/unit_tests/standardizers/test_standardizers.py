@@ -1,8 +1,7 @@
 import os
-import sys
 from abc import ABC, abstractmethod
 
-from loaders.loaders import CSVLoader
+from deepmol.loaders.loaders import CSVLoader
 
 
 class StandardizerBaseTestCase(ABC):

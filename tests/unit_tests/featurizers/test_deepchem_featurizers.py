@@ -3,7 +3,7 @@ from unittest import TestCase, skip
 
 import numpy as np
 
-from compound_featurization.deepchem_featurizers import WeaveFeat
+from deepmol.compound_featurization import WeaveFeat
 from unit_tests.featurizers.test_featurizers import FeaturizerTestCase
 
 

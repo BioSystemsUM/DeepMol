@@ -1,19 +1,16 @@
-from compound_featurization.rdkit_fingerprints import MorganFingerprint, MACCSkeysFingerprint, LayeredFingerprint
-from compound_featurization.rdkit_fingerprints import RDKFingerprint, AtomPairFingerprintCallbackHash
-from compound_featurization.mol2vec import Mol2Vec
-from loaders.loaders import CSVLoader
-from feature_selection.base_feature_selector import LowVarianceFS, KbestFS, PercentilFS, RFECVFS, SelectFromModelFS
-from splitters.splitters import SingletaskStratifiedSplitter, RandomSplitter
-from models.sklearn_models import SklearnModel
-from metrics.metrics import Metric
-from metrics.metrics_functions import roc_auc_score, precision_score, accuracy_score, confusion_matrix, classification_report
-from parameter_optimization.hyperparameter_optimization import GridHyperparamOpt
-import preprocessing as preproc
-from imbalanced_learn.imbalanced_learn import RandomOverSampler, SMOTEENN
+from deepmol.compound_featurization import MorganFingerprint
+from deepmol.loaders.loaders import CSVLoader
+from deepmol.feature_selection import LowVarianceFS
+from deepmol.splitters.splitters import SingletaskStratifiedSplitter
+from deepmol.models.sklearn_models import SklearnModel
+from deepmol.metrics.metrics import Metric
+from deepmol.metrics.metrics_functions import roc_auc_score, precision_score, accuracy_score, confusion_matrix, classification_report
+from deepmol.parameter_optimization.hyperparameter_optimization import GridHyperparamOpt
+from deepmol.imbalanced_learn.imbalanced_learn import SMOTEENN
 import numpy as np
 
-from standardizer.custom_standardizer import CustomStandardizer, heavy_standardisation
-from unsupervised.base_unsupervised import PCA
+from deepmol.standardizer.custom_standardizer import CustomStandardizer, heavy_standardisation
+from deepmol.unsupervised import PCA
 
 
 standardizer_vr = CustomStandardizer(params=heavy_standardisation)

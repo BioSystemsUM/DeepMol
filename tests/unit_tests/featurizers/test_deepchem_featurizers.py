@@ -1,9 +1,9 @@
 from copy import copy
-from unittest import TestCase
+from unittest import TestCase, skip
 
 import numpy as np
 
-from compound_featurization.deepchem_featurizers import WeaveFeat, CoulombFeat
+from compound_featurization.deepchem_featurizers import WeaveFeat
 from unit_tests.featurizers.test_featurizers import FeaturizerTestCase
 
 
@@ -12,6 +12,7 @@ class TestDeepChemFeaturizers(FeaturizerTestCase, TestCase):
     def test_featurize(self):
         pass
 
+    @skip("Not implemented yet")
     def test_featurize_with_nan(self):
         dataset_rows_number = len(self.mini_dataset_to_test.mols)
         to_add = np.zeros(4)

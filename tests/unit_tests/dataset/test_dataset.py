@@ -9,7 +9,7 @@ import pandas as pd
 class TestDataset(TestCase):
 
     def setUp(self) -> None:
-        dir_path = os.path.join(os.path.dirname(os.path.abspath(".")))
+        dir_path = os.path.dirname(os.path.abspath(os.curdir))
         dataset = os.path.join(dir_path, "tests", "data", "test_to_convert_to_sdf.csv")
         loader = CSVLoader(dataset,
                            mols_field='Standardized_Smiles',

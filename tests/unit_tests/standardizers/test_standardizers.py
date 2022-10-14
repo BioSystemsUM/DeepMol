@@ -3,11 +3,11 @@ from abc import ABC, abstractmethod
 
 from deepmol.loaders.loaders import CSVLoader
 
-
+from tests import TEST_DIR
 class StandardizerBaseTestCase(ABC):
 
     def setUp(self) -> None:
-        self.data_path = os.path.join(os.path.dirname(os.path.abspath(os.curdir)), 'tests', 'data')
+        self.data_path = os.path.join(TEST_DIR, 'tests', 'data')
         dataset = os.path.join(self.data_path, "test_to_convert_to_sdf.csv")
         loader = CSVLoader(dataset,
                            mols_field='Smiles',

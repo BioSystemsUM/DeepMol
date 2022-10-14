@@ -9,34 +9,35 @@ from deepmol.splitters.splitters import SimilaritySplitter, ScaffoldSplitter, Bu
 
 import numpy as np
 
+from tests import TEST_DIR
+
 
 @skip("Not completely implemented yet")
 class TestSplitters(TestCase):
 
     def setUp(self) -> None:
-        dataset = os.path.join(os.path.dirname(os.path.abspath(os.curdir)), "tests", "data", "test_to_convert_to_sdf"
-                                                                                             ".csv")
+        dataset = os.path.join(TEST_DIR, "data", "test_to_convert_to_sdf.csv")
         loader = CSVLoader(dataset,
                            mols_field='Standardized_Smiles',
                            labels_fields='Class')
 
         self.mini_dataset_to_test = loader.create_dataset()
 
-        dataset = os.path.join(os.path.dirname(os.path.abspath(os.curdir)), "tests", "data", "PC-3.csv")
+        dataset = os.path.join(TEST_DIR, "data", "PC-3.csv")
         loader = CSVLoader(dataset,
                            mols_field='smiles',
                            labels_fields='pIC50')
 
         self.dataset_to_test = loader.create_dataset()
 
-        dataset = os.path.join(os.path.dirname(os.path.abspath(os.curdir)), "tests", "data", "invalid_smiles_dataset.csv")
+        dataset = os.path.join(TEST_DIR, "data", "invalid_smiles_dataset.csv")
         loader = CSVLoader(dataset,
                            mols_field='Standardized_Smiles',
                            labels_fields='Class')
 
         self.invalid_smiles_dataset = loader.create_dataset()
 
-        dataset = os.path.join(os.path.dirname(os.path.abspath(os.curdir)), "tests", "data", "dataset_sweet_3d_balanced.sdf")
+        dataset = os.path.join(TEST_DIR, "data", "dataset_sweet_3d_balanced.sdf")
         loader = SDFLoader(dataset,
                            labels_fields='_SWEET')
 

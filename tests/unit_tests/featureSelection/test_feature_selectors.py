@@ -5,12 +5,13 @@ from deepmol.compound_featurization.rdkit_descriptors import TwoDimensionDescrip
 from deepmol.feature_selection import BorutaAlgorithm
 from deepmol.loaders.loaders import CSVLoader
 
+from tests import TEST_DIR
+
 
 class TestFeatureSelectors(TestCase):
 
     def setUp(self) -> None:
-        dir_path = os.path.dirname(os.path.abspath(os.curdir))
-        dataset = os.path.join(dir_path, "tests", "data", "test_to_convert_to_sdf.csv")
+        dataset = os.path.join(TEST_DIR, "data", "test_to_convert_to_sdf.csv")
         loader = CSVLoader(dataset,
                            mols_field='Standardized_Smiles',
                            labels_fields='Class')
@@ -25,8 +26,7 @@ class TestFeatureSelectors(TestCase):
 
     def test_boruta_algorithm_larger_dataset(self):
         import pandas as pd
-        dir_path = os.path.join(os.path.dirname(os.path.abspath(".")))
-        dataset = os.path.join(dir_path, "tests", "data", "test_to_convert_to_sdf.csv")
+        dataset = os.path.join(TEST_DIR, "data", "test_to_convert_to_sdf.csv")
         pandas_dset = pd.read_csv(dataset)
         columns = list(pandas_dset.columns[3:])
         TwoDimensionDescriptors().featurize(self.mini_dataset_to_test)

@@ -1,0 +1,17 @@
+rdkit-pypi==2022.3.5
+smilespe==0.0.3
+seaborn==0.12.0
+torch==1.12.1
+torchvision==0.13.1
+torchaudio==0.12.1
+dgl==0.9.1
+joblib==1.1.0
+pillow==8.4.0
+h5py==3.1.0
+deepchem==2.5.0
+shap==0.41.0
+gensim==4.2.0
+mol2vec @ git+https://github.com/samoturk/mol2vec#egg=mol2vec
+boruta==0.3
+tensorflow==2.10.0
+# chembl_pipeline @ git+https://github.com/chembl/ChEMBL_Structure_Pipeline.git@1.0.0

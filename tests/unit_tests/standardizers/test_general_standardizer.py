@@ -2,11 +2,10 @@ from copy import copy
 from unittest import TestCase
 
 from rdkit.Chem import rdMolDescriptors, MolFromSmiles
-from rdkit.DataStructs import BulkTanimotoSimilarity, TanimotoSimilarity
+from rdkit.DataStructs import TanimotoSimilarity
 
-from standardizer.basic_standardizer import BasicStandardizer
-from standardizer.chembl_standardizer import ChEMBLStandardizer
-from standardizer.custom_standardizer import CustomStandardizer
+from deepmol.standardizer.basic_standardizer import BasicStandardizer
+from deepmol.standardizer.custom_standardizer import CustomStandardizer
 from tests.unit_tests.standardizers.test_standardizers import StandardizerBaseTestCase
 
 
@@ -28,5 +27,5 @@ class GeneralStandardizer(StandardizerBaseTestCase, TestCase):
 
     def test_standardize(self):
         self.check_similarity(BasicStandardizer)
-        self.check_similarity(ChEMBLStandardizer)
+        # self.check_similarity(ChEMBLStandardizer)
         self.check_similarity(CustomStandardizer)

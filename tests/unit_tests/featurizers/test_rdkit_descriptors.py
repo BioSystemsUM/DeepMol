@@ -6,7 +6,7 @@ from rdkit import Chem
 from rdkit.Chem import MolFromSmiles
 from rdkit.Chem.rdMolAlign import AlignMol
 
-from compound_featurization.rdkit_descriptors import ThreeDimensionalMoleculeGenerator, All3DDescriptors, AutoCorr3D, \
+from deepmol.compound_featurization.rdkit_descriptors import ThreeDimensionalMoleculeGenerator, All3DDescriptors, AutoCorr3D, \
     RadialDistributionFunction, PlaneOfBestFit, MORSE, WHIM, RadiusOfGyration, InertialShapeFactor, Eccentricity, \
     Asphericity, SpherocityIndex, PrincipalMomentsOfInertia, NormalizedPrincipalMomentsRatios, \
     generate_conformers_to_sdf_file, TwoDimensionDescriptors
@@ -21,48 +21,21 @@ class Test2DDescriptors(FeaturizerTestCase, TestCase):
         TwoDimensionDescriptors().featurize(self.mini_dataset_to_test)
         self.assertEqual(5, self.mini_dataset_to_test.X.shape[0])
 
-        TwoDimensionDescriptors().featurize(self.dataset_to_test)
-        self.assertEqual(4294, self.dataset_to_test.X.shape[0])
-
     def test_featurize_with_nan(self):
         dataset_rows_number = len(self.mini_dataset_to_test.mols)
         to_add = np.zeros(4)
+        ids_to_add = np.array([i for i in range(dataset_rows_number, dataset_rows_number + 4)])
 
         self.mini_dataset_to_test.mols = np.concatenate((self.mini_dataset_to_test.mols, to_add))
         self.mini_dataset_to_test.y = np.concatenate((self.mini_dataset_to_test.y, to_add))
+        self.mini_dataset_to_test.ids = np.concatenate((self.mini_dataset_to_test.ids, ids_to_add))
 
         dataset = copy(self.mini_dataset_to_test)
         TwoDimensionDescriptors().featurize(dataset)
         self.assertEqual(dataset_rows_number, dataset.X.shape[0])
 
-        dataset_rows_number = len(self.dataset_to_test.mols)
-        to_add = np.zeros(4)
-
-        self.dataset_to_test.mols = np.concatenate((self.dataset_to_test.mols, to_add))
-        self.dataset_to_test.y = np.concatenate((self.dataset_to_test.y, to_add))
-
-        dataset = copy(self.dataset_to_test)
-        TwoDimensionDescriptors().featurize(dataset)
-        self.assertEqual(dataset_rows_number, dataset.X.shape[0])
-
     def test_with_invalid_smiles(self):
         TwoDimensionDescriptors().featurize(self.dataset_invalid_smiles)
-
-    def test_dummy_test(self):
-        dir_path = os.path.join(os.path.dirname(os.path.abspath(".")))
-        dataset = os.path.join(dir_path, "tests", "data", "negative_cases1.csv")
-        from loaders.loaders import CSVLoader
-
-        loader = CSVLoader(dataset,
-                           mols_field='smiles',
-                           labels_fields='sweet')
-
-        dataset = loader.create_dataset()
-        from compound_featurization.rdkit_fingerprints import AtomPairFingerprintCallbackHash
-
-        AtomPairFingerprintCallbackHash(nBits=1024, includeChirality=True).featurize(dataset)
-
-        dataset.remove_duplicates()
 
 
 class Test3DDescriptors(FeaturizerTestCase, TestCase):
@@ -117,9 +90,11 @@ class Test3DDescriptors(FeaturizerTestCase, TestCase):
     def test_featurize_with_nan(self):
         dataset_rows_number = len(self.mini_dataset_to_test.mols)
         to_add = np.zeros(4)
+        ids_to_add = np.array([i for i in range(dataset_rows_number, dataset_rows_number + 4)])
 
         self.mini_dataset_to_test.mols = np.concatenate((self.mini_dataset_to_test.mols, to_add))
         self.mini_dataset_to_test.y = np.concatenate((self.mini_dataset_to_test.y, to_add))
+        self.mini_dataset_to_test.ids = np.concatenate((self.mini_dataset_to_test.ids, ids_to_add))
 
         dataset = copy(self.mini_dataset_to_test)
         All3DDescriptors(mandatory_generation_of_conformers=True).featurize(dataset)
@@ -230,5 +205,5 @@ class Test3DDescriptors(FeaturizerTestCase, TestCase):
 
     def test_generate_conformers_and_export(self):
 
-        generate_conformers_to_sdf_file(self.mini_dataset_to_test, "temp.sdf")
+        generate_conformers_to_sdf_file(self.mini_dataset_to_test, "temp.sdf", n_conformations=1, max_iterations=1)
         os.remove("temp.sdf")

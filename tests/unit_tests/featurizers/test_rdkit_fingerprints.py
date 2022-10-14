@@ -1,27 +1,14 @@
-import os
 from copy import copy
 from unittest import TestCase
 
-from compound_featurization.rdkit_fingerprints import AtomPairFingerprintCallbackHash, MorganFingerprint, \
+from deepmol.compound_featurization import MorganFingerprint, \
     MACCSkeysFingerprint, \
     LayeredFingerprint, RDKFingerprint, AtomPairFingerprint
-from loaders.loaders import CSVLoader
 from tests.unit_tests.featurizers.test_featurizers import FeaturizerTestCase
 import numpy as np
 
 
 class TestRDKitFingerprints(FeaturizerTestCase, TestCase):
-
-    def test_featurize_morgan(self):
-        dir_path = os.path.join(os.path.dirname(os.path.abspath(".")))
-        dataset = os.path.join(dir_path, "tests", "data", "test_dataset.csv")
-        loader = CSVLoader(dataset,
-                           mols_field='mols',
-                           labels_fields='y')
-
-        test_dataset = loader.create_dataset()
-
-        MorganFingerprint().featurize(test_dataset)
 
     def test_featurize(self):
         # test Atom Pair fingerprints (without NaN generation)
@@ -44,9 +31,11 @@ class TestRDKitFingerprints(FeaturizerTestCase, TestCase):
     def test_featurize_with_nan(self):
         dataset_rows_number = len(self.mini_dataset_to_test.mols)
         to_add = np.zeros(4)
+        ids_to_add = np.array([i for i in range(dataset_rows_number, dataset_rows_number + 4)])
 
         self.mini_dataset_to_test.mols = np.concatenate((self.mini_dataset_to_test.mols, to_add))
         self.mini_dataset_to_test.y = np.concatenate((self.mini_dataset_to_test.y, to_add))
+        self.mini_dataset_to_test.ids = np.concatenate((self.mini_dataset_to_test.ids, ids_to_add))
 
         dataset = copy(self.mini_dataset_to_test)
         AtomPairFingerprint().featurize(dataset)

@@ -130,7 +130,7 @@ to select only the features kept after feature selection) and the number of
 samples to load (by default loads the entire dataset).
 
 ```python
-from loaders.loaders import CSVLoader
+from deepmol.loaders.loaders import CSVLoader
 
 # load a dataset from a CSV (define data path, field with the molecules,
 # field with the labels (optional), field with ids (optional), etc.
@@ -184,7 +184,7 @@ Mol2Vec can also be computed. More complex molecular embeddings like the
 Seq2Seq and transformer-based are in  development and will be added soon.
 
 ```python
-from compound_featurization.rdkit_fingerprints import MorganFingerprint
+from deepmol.compound_featurization import MorganFingerprint
 
 # Compute morgan fingerprints for molecules in the previous loaded dataset
 dataset = MorganFingerprint(radius=2, size=1024).featurize(dataset)
@@ -210,7 +210,7 @@ KBest, Percentile, Recursive Feature Elimination and selecting features based on
 importance weights.
 
 ```python
-from feature_selection.base_feature_selector import LowVarianceFS
+from deepmol.feature_selection import LowVarianceFS
 
 # Feature Selection to remove features with low variance across molecules
 dataset = LowVarianceFS(0.15).featureSelection(dataset)
@@ -229,7 +229,7 @@ It is possible to do unsupervised exploration of the datasets using PCA, tSNE,
 KMeans and UMAP.
 
 ```python
-from unsupervised.umap import UMAP
+from deepmol.unsupervised.umap import UMAP
 
 ump = UMAP().runUnsupervised(dataset)
 ```
@@ -244,11 +244,11 @@ Data can be split randomly or using stratified splitters. K-fold split, train-te
 split and train-validation-test split can be used.
 
 ```python
-from splitters.splitters import SingletaskStratifiedSplitter
+from deepmol.splitters.splitters import SingletaskStratifiedSplitter
 
-#Data Split
+# Data Split
 splitter = SingletaskStratifiedSplitter()
-train_dataset, valid_dataset, test_dataset = splitter.train_valid_test_split(dataset=dataset, frac_train=0.7, 
+train_dataset, valid_dataset, test_dataset = splitter.train_valid_test_split(dataset=dataset, frac_train=0.7,
                                                                              frac_valid=0.15, frac_test=0.15)
 print('Train:')
 train_dataset.get_shape()
@@ -277,7 +277,7 @@ Check this **[jupyter notebook](https://github.com/BioSystemsUM/DeepMol/blob/mas
 
 ```python
 from sklearn.ensemble import RandomForestClassifier
-from models.sklearn_models import SklearnModel
+from deepmol.models.sklearn_models import SklearnModel
 
 # Scikit-Learn Random Forest
 rf = RandomForestClassifier()
@@ -286,8 +286,9 @@ model = SklearnModel(model=rf)
 # model training
 model.fit(train_dataset)
 
-from metrics.metrics import Metric
-from metrics.metrics_functions import r2_score, roc_auc_score, precision_score, accuracy_score, confusion_matrix,
+from deepmol.metrics.metrics import Metric
+from deepmol.metrics.metrics_functions import r2_score, roc_auc_score, precision_score, accuracy_score,
+  confusion_matrix,
 
 classification_report, f1_score
 
@@ -330,7 +331,7 @@ Check this **[jupyter notebook](https://github.com/BioSystemsUM/DeepMol/blob/mas
 ```python
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout
-from metrics.metrics import Metric
+from deepmol.metrics.metrics import Metric
 
 input_dim = train_dataset.X.shape[1]
 
@@ -347,7 +348,7 @@ def create_model(optimizer='adam', dropout=0.5, input_dim=input_dim):
   return model
 
 
-from models.keras_models import KerasModel
+from deepmol.models.keras_models import KerasModel
 
 model = KerasModel(create_model, epochs=5, verbose=1, optimizer='adam')
 
@@ -376,11 +377,11 @@ Using DeepChem models:
 Check this **[jupyter notebook](https://github.com/BioSystemsUM/DeepMol/blob/master/src/tests/deepchem_test.ipynb)** for a complete example!
 
 ```python
-from compound_featurization.deepchem_featurizers import WeaveFeat
+from deepmol.compound_featurization import WeaveFeat
 from deepchem.models import MPNNModel
-from models.deepchem_models import DeepChemModel
-from metrics.metrics import Metric
-from splitters.splitters import SingletaskStratifiedSplitter
+from deepmol.models.deepchem_models import DeepChemModel
+from deepmol.metrics.metrics import Metric
+from deepmol.splitters.splitters import SingletaskStratifiedSplitter
 
 ds = WeaveFeat().featurize(dataset)
 splitter = SingletaskStratifiedSplitter()
@@ -408,8 +409,9 @@ Grid and randomized hyperparameter optimization is provided using cross-validati
 or a held-out validation set.
 
 ```python
-from parameter_optimization.hyperparameter_optimization import HyperparameterOptimizerValidation,
-  HyperparameterOptimizerCV
+from deepmol.parameter_optimization.hyperparameter_optimization import HyperparameterOptimizerValidation,
+
+HyperparameterOptimizerCV
 
 # Hyperparameter Optimization (using the above created keras model)
 optimizer = HyperparameterOptimizerValidation(create_model)
@@ -435,7 +437,7 @@ negatively) a certain prediction can be calculated and visualized in different
 ways:
 
 ```python
-from feature_importance.shap_values import ShapValues
+from deepmol.feature_importance import ShapValues
 
 shap_calc = ShapValues(test_dataset, model)
 shap_calc.computePermutationShap()
@@ -470,9 +472,8 @@ highlight the zone of the molecule that most contributed to a certain prediction
 for instance, the substructure in the molecule that most contributed to its 
 classification as an active or inactive molecule against a receptor.
 
-
 ```python
-from utils.utils import draw_MACCS_Pattern
+from deepmol.utils import draw_MACCS_Pattern
 
 patt_number = 54
 mol_number = 1
@@ -497,7 +498,7 @@ undersampling or a mixture of both (Random, SMOTE, SMOTEENN, SMOTETomek and
 ClusterCentroids).
 
 ```python
-from imbalanced_learn.imbalanced_learn import SMOTEENN
+from deepmol.imbalanced_learn.imbalanced_learn import SMOTEENN
 
 train_dataset = SMOTEENN().sample(train_dataset)
 ```

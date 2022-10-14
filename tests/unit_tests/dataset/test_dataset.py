@@ -1,16 +1,17 @@
 import os
 from unittest import TestCase
 
-from compound_featurization.rdkit_fingerprints import MorganFingerprint
-from loaders.loaders import CSVLoader
+from deepmol.compound_featurization import MorganFingerprint
+from deepmol.loaders.loaders import CSVLoader
 import pandas as pd
+
+from tests import TEST_DIR
 
 
 class TestDataset(TestCase):
 
     def setUp(self) -> None:
-        dir_path = os.path.join(os.path.dirname(os.path.abspath(".")))
-        dataset = os.path.join(dir_path, "tests", "data", "test_to_convert_to_sdf.csv")
+        dataset = os.path.join(TEST_DIR, "data", "test_to_convert_to_sdf.csv")
         loader = CSVLoader(dataset,
                            mols_field='Standardized_Smiles',
                            labels_fields='Class')
@@ -19,8 +20,7 @@ class TestDataset(TestCase):
         MorganFingerprint().featurize(self.dataset_to_test)
 
     def test_merge_datasets(self):
-        dir_path = os.path.join(os.path.dirname(os.path.abspath(".")))
-        dataset = os.path.join(dir_path, "tests", "data", "train_dataset.csv")
+        dataset = os.path.join(TEST_DIR, "data", "train_dataset.csv")
         pandas_dset = pd.read_csv(dataset)
         columns = list(pandas_dset.columns[3:])
 
@@ -33,8 +33,7 @@ class TestDataset(TestCase):
         self.dataset_to_test.merge([dataset])
 
     def test_load_dataset_with_features(self):
-        dir_path = os.path.join(os.path.dirname(os.path.abspath(".")))
-        dataset = os.path.join(dir_path, "tests", "data", "train_dataset.csv")
+        dataset = os.path.join(TEST_DIR, "data", "train_dataset.csv")
         pandas_dset = pd.read_csv(dataset)
         columns = list(pandas_dset.columns[3:])
 

@@ -18,12 +18,6 @@ class TestFeatureSelectors(TestCase):
 
         self.mini_dataset_to_test = loader.create_dataset()
 
-    def test_boruta_algorithm(self):
-
-        BorutaAlgorithm(max_iter=5, n_estimators=100).select_features(self.mini_dataset_to_test)
-        with self.assertRaises(Exception):
-            print(self.mini_dataset_to_test.X)
-
     def test_boruta_algorithm_larger_dataset(self):
         import pandas as pd
         dataset = os.path.join(TEST_DIR, "data", "test_to_convert_to_sdf.csv")

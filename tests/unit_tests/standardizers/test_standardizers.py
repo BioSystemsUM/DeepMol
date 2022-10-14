@@ -7,7 +7,7 @@ from tests import TEST_DIR
 class StandardizerBaseTestCase(ABC):
 
     def setUp(self) -> None:
-        self.data_path = os.path.join(TEST_DIR, 'tests', 'data')
+        self.data_path = os.path.join(TEST_DIR, 'data')
         dataset = os.path.join(self.data_path, "test_to_convert_to_sdf.csv")
         loader = CSVLoader(dataset,
                            mols_field='Smiles',

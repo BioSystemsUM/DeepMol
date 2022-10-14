@@ -11,11 +11,12 @@ from deepmol.models.ensembles import VotingClassifier
 from deepmol.models.sklearn_models import SklearnModel
 from deepmol.splitters.splitters import SingletaskStratifiedSplitter
 
+from tests import TEST_DIR
 
 class TestEnsembles(TestCase):
 
     def setUp(self) -> None:
-        self.data_path = os.path.join(os.path.dirname(os.path.abspath(os.curdir)), 'tests', 'data')
+        self.data_path = os.path.join(TEST_DIR, 'data')
 
         dataset = os.path.join(self.data_path, "dataset_sweet_3d_balanced.sdf")
         loader = SDFLoader(dataset,

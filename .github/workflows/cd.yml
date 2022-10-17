@@ -49,7 +49,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          upload_url: ${{ github.event.release.upload_url }}
           asset_path: ./${{ github.event.repository.name }}-${{ steps.get_version.outputs.version }}.zip
           asset_name: ${{ github.event.repository.name }}-${{ steps.get_version.outputs.version }}.zip
           asset_content_type: application/zip

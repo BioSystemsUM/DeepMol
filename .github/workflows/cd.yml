@@ -33,9 +33,17 @@ jobs:
       - name: Install dependencies
         run: python -m pip install --upgrade build
 
-      - name: Build package
+      - name: Setup SSH passphrase
         env:
-          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+          SSH_PASSPHRASE: ${{secrets.SSH_PASSPHRASE}}
+          SSH_PRIVATE_KEY: ${{secrets.MACHINE_USER_SHH_KEY}}
+        run: |
+          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+          echo 'echo $SSH_PASSPHRASE' > ~/.ssh_askpass && chmod +x ~/.ssh_askpass
+          echo "$SSH_PRIVATE_KEY" | tr -d '\r' | DISPLAY=None SSH_ASKPASS=~/.ssh_askpass ssh-add - >/dev/null
+
+
+      - name: Build package
         run: |
           eval `ssh-agent -s`
           ssh-add - <<< '${{ secrets.MACHINE_USER_SHH_KEY }}'

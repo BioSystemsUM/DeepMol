@@ -39,9 +39,9 @@ jobs:
           ssh-add - <<< '${{ secrets.MACHINE_USER_SHH_KEY }}'
           python3 -m build
           zip -r -j ${{ github.event.repository.name }}-${{ steps.get_version.outputs.version }}.zip dist
-          pip install git+ssh://git@github.com/BioSystemsUM/DeepMol.git@v0.0.1-beta#egg=deepmol
-          pip install dist/*.whl
-          python -c "import deepmol"
+#          pip install git+ssh://git@github.com/BioSystemsUM/DeepMol.git@v0.0.1-beta#egg=deepmol
+#          pip install dist/*.whl
+#          python -c "import deepmol"
 
       - name: Upload Release Asset
         id: upload-release-asset

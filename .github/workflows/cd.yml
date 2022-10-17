@@ -1,12 +1,9 @@
 name: Continuous Delivery
 
 on:
-  pull_request:
-    branches:
-      - master
   push:
-    branches:
-      - master
+    tags:
+      - 'v*'
 
 jobs:
   build:

@@ -3,11 +3,11 @@ name: Continuous Integration
 on:
   pull_request:
     branches:
-      - main
+      - master
       - develop
   push:
     branches:
-      - main
+      - master
       - develop
       - ci_cd
 

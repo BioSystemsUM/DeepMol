@@ -1,9 +1,7 @@
 # DeepMol
 
-**[README UNDER CONSTRUCTION!]**
-
 ### Description
-DeepMol is a python-based machine and deep learning framework for drug discovery. 
+DeepMol is a Python-based machine and deep learning framework for drug discovery. 
 It offers a variety of functionalities that enable a smoother approach to many 
 drug discovery and chemoinformatics problems. It uses Tensorflow, Keras, 
 Scikit-learn and DeepChem to build custom ML and DL models or 
@@ -15,7 +13,6 @@ operations on molecular data.
 - [Requirements](#requirements)
 - [Installation](#installation)
     - [Pip](#pip)
-    - [Docker](#docker)
 - [Getting Started](#getting-started)
     - [Load dataset from csv](#load-a-dataset-from-a-csv)
     - [Compound Standardization](#compound-standardization)
@@ -29,7 +26,7 @@ operations on molecular data.
     - [Unbalanced Datasets](#unbalanced-datasets)
 - [About Us](#about-us)
 - [Citing DeepMol](#citing-deepmol)
-  - [Related Publications](#related-publications)
+  - [Related Publications](#publications-using-deepmol)
 - [License](#licensing)
 
 
@@ -51,12 +48,13 @@ operations on molecular data.
 
 ### Pip
 
-Install DeepMol via pip or conda:
+Install DeepMol via pip:
 
 ```bash
-pip install deepmol #just for example (not working)
+pip install deepmol
 ```
 
+<!---
 or
 
 ```bash
@@ -100,6 +98,7 @@ git clone https://github.com/BioSystemsUM/DeepMol.git
 ```bash
 python setup.py install
 ```
+--->
 
 ## Getting Started
 
@@ -112,7 +111,7 @@ and data splitting. It also provides  methods to deal with unbalanced datasets,
 do unsupervised exploration of the data and compute feature importance as 
 shap values.
 
-The DeepMol framework is still under development and it is currently at a 
+The DeepMol framework is still under development, and it is currently at a 
 pre-release version. New models and features will be added in the future.
 
 
@@ -133,7 +132,7 @@ samples to load (by default loads the entire dataset).
 from deepmol.loaders.loaders import CSVLoader
 
 # load a dataset from a CSV (define data path, field with the molecules,
-# field with the labels (optional), field with ids (optional), etc.
+# field with the labels (optional), field with ids (optional), etc).
 dataset = CSVLoader(dataset_path='data_path.csv',
                     mols_field='Smiles',
                     labels_fields='Class',
@@ -144,16 +143,14 @@ dataset = dataset.create_dataset()
 dataset.get_shape()
 ```
 
-<p align="left">
-  <img src="https://github.com/BioSystemsUM/DeepMol/blob/be82712fbba9d2beab506f147862f3a6279ec594/src/docs/imgs/load_csv_output.png" width="800" />
-</p>
+![load_csv_image](docs/imgs/load_csv_output.png)
 
 ### Compound Standardization
 
 It is possible to standardize the loaded molecules using three option. Using
 a basic standardizer that only does sanitization (Kekulize, check valencies, 
 set aromaticity, conjugation and hybridization). A more complex standardizer can
-be costumized by choosing or not to perform specific tasks such as sanitization, 
+be customized by choosing or not to perform specific tasks such as sanitization, 
 remove isotope information, neutralize charges, remove stereochemistry and remove
 smaller fragments. Another possibility is to use the ChEMBL Standardizer.
 
@@ -190,18 +187,14 @@ from deepmol.compound_featurization import MorganFingerprint
 dataset = MorganFingerprint(radius=2, size=1024).featurize(dataset)
 ```
 
-<p align="left">
-  <img src="https://github.com/BioSystemsUM/DeepMol/blob/83360de6c79efec561f6a06ad7db755bbcf42f07/src/docs/imgs/featurization_output.png" width="800" />
-</p>
+![featurization_image](docs/imgs/featurization_output.png)
 
 ```python
 #print shape of the dataset to see difference in the X shape
 dataset.get_shape()
 ```
 
-<p align="left">
-  <img src="https://github.com/BioSystemsUM/DeepMol/blob/f392e01156625c2b81eede3c8e95a501faded30e/src/docs/imgs/get_shape_output.png" width="800" />
-</p>
+![get_shape_output](docs/imgs/get_shape_output.png)
 
 ### Feature Selection
 
@@ -215,13 +208,11 @@ from deepmol.feature_selection import LowVarianceFS
 # Feature Selection to remove features with low variance across molecules
 dataset = LowVarianceFS(0.15).featureSelection(dataset)
 
-# print shape of the dataset to see difference in the X shape (less features)
+# print shape of the dataset to see difference in the X shape (fewer features)
 dataset.get_shape()
 ```
 
-<p align="left">
-  <img src="https://github.com/BioSystemsUM/DeepMol/blob/f392e01156625c2b81eede3c8e95a501faded30e/src/docs/imgs/get_shape_output_2.png" width="800" />
-</p>
+![get_shape_output_2](docs/imgs/get_shape_output_2.png)
 
 ### Unsupervised Exploration
 
@@ -234,9 +225,7 @@ from deepmol.unsupervised.umap import UMAP
 ump = UMAP().runUnsupervised(dataset)
 ```
 
-<p align="left">
-  <img src="https://github.com/BioSystemsUM/DeepMol/blob/f392e01156625c2b81eede3c8e95a501faded30e/src/docs/imgs/umap_output.png" width="800" />
-</p>
+![umap_output](docs/imgs/umap_output.png)
 
 ### Data Split
 
@@ -258,9 +247,7 @@ print('\nTest:')
 test_dataset.get_shape()
 ```
 
-<p align="left">
-  <img src="https://github.com/BioSystemsUM/DeepMol/blob/f392e01156625c2b81eede3c8e95a501faded30e/src/docs/imgs/split_output.png" width="800" />
-</p>
+![split_output](docs/imgs/split_output.png)
 
 ### Build, train and evaluate a model
 
@@ -287,40 +274,33 @@ model = SklearnModel(model=rf)
 model.fit(train_dataset)
 
 from deepmol.metrics.metrics import Metric
-from deepmol.metrics.metrics_functions import r2_score, roc_auc_score, precision_score, accuracy_score,
-  confusion_matrix,
-
-classification_report, f1_score
+from deepmol.metrics.metrics_functions import roc_auc_score
 
 # cross validate model on the full dataset
 model.cross_validate(dataset, Metric(roc_auc_score), folds=3)
 ```
 
-<p align="left">
-  <img src="https://github.com/BioSystemsUM/DeepMol/blob/f392e01156625c2b81eede3c8e95a501faded30e/src/docs/imgs/cross_validation_output.png" width="800" />
-</p>
+![cross_validation_output](docs/imgs/cross_validation_output.png)
 
 ```python
 #evaluate the model using different metrics
 metrics = [Metric(roc_auc_score), Metric(precision_score), Metric(accuracy_score), Metric(confusion_matrix), 
            Metric(classification_report)]
 
-# evaluate the model on trining data
+# evaluate the model on training data
 print('Training Dataset: ')
 train_score = model.evaluate(train_dataset, metrics)
 
-# evaluate the model on trining data
+# evaluate the model on training data
 print('Validation Dataset: ')
 valid_score = model.evaluate(valid_dataset, metrics)
 
-# evaluate the model on trining data
+# evaluate the model on training data
 print('Test Dataset: ')
 test_score = model.evaluate(test_dataset, metrics)
 ```
 
-<p align="left">
-  <img src="https://github.com/BioSystemsUM/DeepMol/blob/f392e01156625c2b81eede3c8e95a501faded30e/src/docs/imgs/evaluate_output.png" width="800" />
-</p>
+![evaluate_output](docs/imgs/evaluate_output.png)
 
 #### Keras model example
 
@@ -443,25 +423,19 @@ shap_calc = ShapValues(test_dataset, model)
 shap_calc.computePermutationShap()
 ```
 
-<p align="left">
-  <img src="https://github.com/BioSystemsUM/DeepMol/blob/f392e01156625c2b81eede3c8e95a501faded30e/src/docs/imgs/calc_shap_output.png" width="800" />
-</p>
+![calc_shap_output](docs/imgs/calc_shap_output.png)
 
 ```python
 shap_calc.plotSampleExplanation(index=1, plot_type='waterfall')
 ```
 
-<p align="left">
-  <img src="https://github.com/BioSystemsUM/DeepMol/blob/f392e01156625c2b81eede3c8e95a501faded30e/src/docs/imgs/sample_explanation_output.png" width="800" />
-</p>
+![sample_explanation_output](docs/imgs/sample_explanation_output.png)
 
 ```python
 shap_calc.plotFeatureExplanation(index=115)
 ```
 
-<p align="left">
-  <img src="https://github.com/BioSystemsUM/DeepMol/blob/f392e01156625c2b81eede3c8e95a501faded30e/src/docs/imgs/feature_explanation_output.png" width="800" />
-</p>
+![feature_explanation_output](docs/imgs/feature_explanation_output.png)
 
 #### Draw relevant features
 
@@ -486,15 +460,14 @@ smi = test_dataset.mols[mol_number]
 
 draw_MACCS_Pattern(smi, patt_number)
 ```
-<p align="left">
-  <img src="https://github.com/BioSystemsUM/DeepMol/blob/f392e01156625c2b81eede3c8e95a501faded30e/src/docs/imgs/draw_maccs_output.png" width="800" />
-</p>
+
+![draw_maccs_output](docs/imgs/draw_maccs_output.png)
 
 
 ### Unbalanced Datasets
 
 Multiple methods to deal with unbalanced datasets can be used to do oversampling,
-undersampling or a mixture of both (Random, SMOTE, SMOTEENN, SMOTETomek and 
+under-sampling or a mixture of both (Random, SMOTE, SMOTEENN, SMOTETomek and 
 ClusterCentroids).
 
 ```python
@@ -520,12 +493,12 @@ Manuscript under preparation.
 
 Baptista D., Correia J., Pereira B., Rocha M. (2022) "A Comparison of Different Compound Representations for Drug Sensitivity Prediction". In: Rocha M., Fdez-Riverola F., Mohamad M.S., Casado-Vara R. (eds) Practical Applications of Computational Biology & Bioinformatics, 15th International Conference (PACBB 2021). PACBB 2021. Lecture Notes in Networks and Systems, vol 325. Springer, Cham. https://doi.org/10.1007/978-3-030-86258-9_15
 
+Baptista, Delora, Correia, João, Pereira, Bruno and Rocha, Miguel. "Evaluating molecular representations in machine learning models for drug response prediction and interpretability" Journal of Integrative Bioinformatics, vol. 19, no. 3, 2022, pp. 20220006. https://doi.org/10.1515/jib-2022-0006
+
+J. Capela, J. Correia, V. Pereira and M. Rocha, "Development of Deep Learning approaches to predict relationships between chemical structures and sweetness," 2022 International Joint Conference on Neural Networks (IJCNN), 2022, pp. 1-8, doi: 10.1109/IJCNN55064.2022.9891992. https://ieeexplore.ieee.org/abstract/document/9891992
+
 <!---
-Baptista D., Correia J., Pereira B., Rocha M.  "Evaluating molecular representations in machine learning models for drug response prediction and interpretability" [Under revision]
-
 DeepSweet (POSTER) ...
-
-DeepSweet (Submission) ...
 --->
 
 ## Licensing

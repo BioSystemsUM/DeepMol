@@ -13,7 +13,8 @@ from deepmol.utils.errors import PreConditionViolationException
 
 
 class MolecularFeaturizer(ABC):
-    """Abstract class for calculating a set of features for a molecule.
+    """
+    Abstract class for calculating a set of features for a molecule.
     A `MolecularFeaturizer` uses SMILES strings or RDKit molecule
     objects to represent molecules.
 
@@ -21,32 +22,36 @@ class MolecularFeaturizer(ABC):
     calculating features for a single molecule.
     """
 
-    def __init__(self, ):
-
+    def __init__(self):
         if self.__class__ == MolecularFeaturizer:
             raise Exception('Abstract class MolecularFeaturizer should not be instantiated')
 
-    def featurize(self, dataset: Dataset, log_every_n=1000,
+    def featurize(self,
+                  dataset: Dataset,
                   scaler: BaseScaler = None,
                   path_to_save_scaler: str = None,
-                  remove_nans_axis: int = 0):
+                  remove_nans_axis: int = 0,
+                  log_every_n=1000):
 
-        """Calculate features for molecules.
+        """
+        Calculate features for molecules.
+
         Parameters
         ----------
-        dataset: Dataset object
-          Dataset containing molecules to featurize
-        log_every_n: int, default 1000
-          Logging messages reported every `log_every_n` samples.
-        scaler: BaseScaler, default None
-          Scale the data
-        path_to_save_scaler: str, default None
-          File path to save scaler
-        remove_nans_axis: int, default 0
-          integer that defines in which axis the NaNs should be removed
+        dataset: Dataset
+            The dataset containing the molecules to featurize in dataset.mols.
+        scaler: BaseScaler
+            The scaler to use for scaling the generated features.
+        path_to_save_scaler: str
+            The path to save the scaler to.
+        remove_nans_axis: int
+            The axis to remove NaNs from. If None, no NaNs are removed.
+        log_every_n: int
+            Logging messages reported every `log_every_n` samples.
+
         Returns
         -------
-        dataset: Dataset object
+        dataset: Dataset
           The input Dataset containing a featurized representation of the molecules in Dataset.X.
         """
         molecules = dataset.mols

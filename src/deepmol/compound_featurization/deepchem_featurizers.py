@@ -1,21 +1,29 @@
-'''author: Bruno Pereira
-date: 28/04/2021
-'''
-
 import numpy as np
 from rdkit.Chem.rdchem import Mol
 
 from deepmol.datasets.datasets import Dataset
 from deepchem.utils.conformers import ConformerGenerator
-from deepchem.feat import SmilesToImage, SmilesToSeq, CoulombMatrix, CoulombMatrixEig, \
-    ConvMolFeaturizer, WeaveFeaturizer, MolGraphConvFeaturizer, RawFeaturizer
+from deepchem.feat import SmilesToImage, SmilesToSeq, CoulombMatrix, CoulombMatrixEig, ConvMolFeaturizer, \
+    WeaveFeaturizer, MolGraphConvFeaturizer, RawFeaturizer
 from deepmol.compound_featurization.base_featurizer import MolecularFeaturizer
 from rdkit import Chem
-from typing import Optional, Dict, Iterable, Union
+from typing import Optional, Dict, Union, List
 
 
-def find_maximum_number_atoms(molecules):
-    '''Finds maximum number of atoms within a set of molecules'''
+def find_maximum_number_atoms(molecules: List[Mol]):
+    """
+    Finds maximum number of atoms within a set of molecules
+
+    Parameters
+    ----------
+    molecules: List[Mol]
+        List of rdkit mol objects
+
+    Returns
+    -------
+    best: int
+        Maximum number of atoms in a molecule in the list.
+    """
     best = 0
     for i, mol in enumerate(molecules):
         try:
@@ -27,8 +35,22 @@ def find_maximum_number_atoms(molecules):
     return best
 
 
-def get_conformers(molecules, generator):
-    '''Gets conformers for molecules with a specific generator'''
+def get_conformers(molecules: List[Mol], generator: ConformerGenerator):
+    """
+    Gets conformers for molecules with a specific generator
+
+    Parameters
+    ----------
+    molecules: List[Mol]
+        List of rdkit mol objects
+    generator: ConformerGenerator
+        DeepChem conformer generator.
+
+    Returns
+    -------
+    new_conformations: List[Mol]
+        List of rdkit mol objects with conformers.
+    """
     new_conformations = []
     for i, mol in enumerate(molecules):
         try:
@@ -41,9 +63,23 @@ def get_conformers(molecules, generator):
     return new_conformations
 
 
-def get_dictionary_from_smiles(smiles, max_len):
-    '''Dictionary of character to index mapping
-    Adapted from deepchem'''
+def get_dictionary_from_smiles(smiles: str, max_len: int):
+    """
+    Dictionary of character to index mapping
+    Adapted from deepchem.
+
+    Parameters
+    ----------
+    smiles: str
+        SMILES string
+    max_len: int
+        Maximum length of SMILES string
+
+    Returns
+    -------
+    dictionary: Dict[str, int]
+        Dictionary of character to index mapping
+    """
 
     pad_token = "<pad>"
     out_of_vocab_token = "<unk>"
@@ -59,39 +95,54 @@ def get_dictionary_from_smiles(smiles, max_len):
 
 
 class ConvMolFeat(MolecularFeaturizer):
-    """Duvenaud graph convolution, adapted from deepchem.
+    """
+    Duvenaud graph convolution, adapted from deepchem.
     Vector of descriptors for each atom in a molecule.
     The featurizers computes that vector of local descriptors.
     """
 
-    def __init__(self, master_atom: bool = False, use_chirality: bool = False, atom_properties: Iterable[str] = [],
+    def __init__(self,
+                 master_atom: bool = False,
+                 use_chirality: bool = False,
+                 atom_properties: List[str] = None,
                  per_atom_fragmentation: bool = False):
         """
         Parameters
         ----------
-        master_atom: Boolean
-            if true create a fake atom with bonds to every other atom.
-            Default to False.
-        use_chirality: Boolean
-            if true then make the resulting atom features aware of the chirality
-            of the molecules in question. Default to False.
-        atom_properties: list of string or None
-            properties in the RDKit Mol object to use as additional atom-level features
-            in the larger molecular feature. If None, then no atom-level properties
-            are used. Default to None.
-        per_atom_fragmentation: Boolean
-            If True, then multiple "atom-depleted" versions of each molecule will be 
-            created (using featurize() method). Default to False.
+        master_atom: bool
+            If True, create a fake atom with bonds to every other atom.
+        use_chirality: bool
+            If True, include chirality information.
+        atom_properties: List[str]
+            List of atom properties to use as additional atom-level features in the larger molecular feature.
+        per_atom_fragmentation: bool
+            If True, then multiple "atom-depleted" versions of each molecule will be created.
         """
         super().__init__()
+        if atom_properties is None:
+            atom_properties = []
         self.master_atom = master_atom
         self.use_chirality = use_chirality
         self.atom_properties = atom_properties
         self.per_atom_fragmentation = per_atom_fragmentation
 
     def _featurize(self, mol: Union[Mol, str], log_every_n=1000):
-        # obtain new SMILE's strings
+        """
+        Featurizes a single molecule.
 
+        Parameters
+        ----------
+        mol: Union[Mol, str]
+            Molecule to featurize.
+        log_every_n: int
+            Log every n molecules.
+
+        Returns
+        -------
+        features: np.ndarray
+            Array of features.
+        """
+        # obtain new SMILE's strings
         if isinstance(mol, str):
             rdkit_mols = [Chem.MolFromSmiles(mol)]
         elif isinstance(mol, Mol):
@@ -111,24 +162,53 @@ class ConvMolFeat(MolecularFeaturizer):
         return feature[0]
 
 
-#    def _featurize(self, mol: Any)->np.ndarray:
-#        try:
-#            fp = ConvMolFeaturizer(master_atom = self.master_atom, use_chirality = self.use_chirality, atom_properties = self.atom_properties)._featurize(mol)
-#        except Exception as e:
-#            print('Error in smile: ' + str(mol))
-#            fp = np.empty(1024, dtype = float)
-#            fp[:] = np.NaN
-#        fp = np.asarray(fp, dtype = object)
-#        return fp
-
 class WeaveFeat(MolecularFeaturizer):
-    """Weave convolution featurization, adapted from deepchem.
-    Require a quadratic matrix of interaction descriptors for each
-    pair of atoms"""
+    """
+    Weave convolution featurization, adapted from deepchem.
+    Require a quadratic matrix of interaction descriptors for each pair of atoms.
+    """
+
+    def __init__(self,
+                 graph_distance: bool = True,
+                 explicit_H: bool = False,
+                 use_chirality: bool = False,
+                 max_pair_distance: int = None):
+        """
+        Parameters
+        ----------
+        graph_distance: bool
+            If True, use graph distance for distance features. Otherwise, use Euclidean distance. Molecules invoked must
+            have valid conformer information if this option is set.
+        explicit_H: bool
+            If true, model hydrogens in the molecule.
+        use_chirality: bool
+            If True, use chiral information in the featurization.
+        max_pair_distance: int
+            Maximum graph distance at which pair features are computed.
+        """
+        super().__init__()
+        self.graph_distance = graph_distance
+        self.explicit_H = explicit_H
+        self.use_chirality = use_chirality
+        self.max_pair_distance = max_pair_distance
 
     def _featurize(self, mol: Union[Mol, str], log_every_n=1000):
-        # obtain new SMILE's strings
+        """
+        Featurizes a single molecule.
 
+        Parameters
+        ----------
+        mol: Union[Mol, str]
+            Molecule to featurize.
+        log_every_n: int
+            Log every n molecules.
+
+        Returns
+        -------
+        features: np.ndarray
+            Array of features.
+        """
+        # obtain new SMILE's strings
         if isinstance(mol, str):
             rdkit_mols = [Chem.MolFromSmiles(mol)]
         elif isinstance(mol, Mol):
@@ -147,45 +227,26 @@ class WeaveFeat(MolecularFeaturizer):
 
         return feature[0]
 
-    def __init__(self, graph_distance: bool = True, explicit_H: bool = False, use_chirality: bool = False,
-                 max_pair_distance: Optional[int] = None):
-        """
-        Parameters
-        ----------
-        graph_distance: Boolean
-            If True, use graph distance for distance features. Otherwise,
-            use Euclidean distance. Molecules invoked must have valid conformer information
-            if this option is set. Default to True.
-        explicit_H: Boolean
-            If true, model hydrogens in the molecule. Default to False.
-        use_chirality: Boolean
-            If true, use chiral information in the featurization. Default to False.
-        max_pair_distance: Optional[int]
-            This value can be a positive integer or None. This parameter determines the maximum
-            graph distance at which pair features are computed. Default to None.
-        """
-        super().__init__()
-        self.graph_distance = graph_distance
-        self.explicit_H = explicit_H
-        self.use_chirality = use_chirality
-        self.max_pair_distance = max_pair_distance
-
 
 class MolGraphConvFeat(MolecularFeaturizer):
-    """Featurizer of general graph convolution networks for molecules.
-    Adapted from deepchem"""
+    """
+    Featurizer of general graph convolution networks for molecules.
+    Adapted from deepchem
+    """
 
-    def __init__(self, use_edges: bool = False, use_chirality: bool = False, use_partial_charge: bool = False):
+    def __init__(self,
+                 use_edges: bool = False,
+                 use_chirality: bool = False,
+                 use_partial_charge: bool = False):
         """
         Parameters
         ----------
-        use_edges: Boolean
-            Whether to use edge features or not. Default to False.
-        use_chirality: Boolean
-            Whether to use chirality information or not. Default to False.
-        use_partial_charge: Boolean
-            Whether to use partial chrage data or not. If True, computes gasteiger
-            charges. Default to False.
+        use_edges: bool
+            If True, use edge features.
+        use_chirality: bool
+            If True, use chirality information.
+        use_partial_charge: bool
+            If True, use partial charge information.
         """
         super().__init__()
         self.use_edges = use_edges
@@ -193,6 +254,21 @@ class MolGraphConvFeat(MolecularFeaturizer):
         self.use_partial_charge = use_partial_charge
 
     def _featurize(self, mol: Union[Mol, str], log_every_n=1000):
+        """
+        Featurizes a single molecule.
+
+        Parameters
+        ----------
+        mol: Union[Mol, str]
+            Molecule to featurize.
+        log_every_n: int
+            Log every n molecules.
+
+        Returns
+        -------
+        features: np.ndarray
+            Array of features.
+        """
         # obtain new SMILE's strings
 
         if isinstance(mol, str):
@@ -214,18 +290,25 @@ class MolGraphConvFeat(MolecularFeaturizer):
         return feature[0]
 
 
+# TODO: keep checking docstrings and typehints
 class CoulombFeat(MolecularFeaturizer):
-    """Calculate coulomb matrices for molecules.
-    Adapted from deepchem"""
+    """
+    Calculate coulomb matrices for molecules.
+    Adapted from deepchem
+    """
 
-    def __init__(self, max_atoms: int, remove_hydrogens: bool = False, randomize: bool = False, upper_tri: bool = False,
-                 n_samples: Optional[int] = 1, seed: Optional[int] = None):
+    def __init__(self,
+                 max_atoms: int,
+                 remove_hydrogens: bool = False,
+                 randomize: bool = False,
+                 upper_tri: bool = False,
+                 n_samples: Optional[int] = 1,
+                 seed: Optional[int] = None):
         """
         Parameters
         ----------
         max_atoms: int
-            The maximum number of atoms expected for molecules this featurizers will
-            process.
+            The maximum number of atoms expected for molecules this featurizers will process.
         remove_hydrogens: Boolean
             If True, remove hydrogens before processing them. Default to False.
         randomize: Boolean

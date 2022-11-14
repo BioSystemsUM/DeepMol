@@ -15,11 +15,9 @@ from deepmol.utils.errors import PreConditionViolationException
 class MolecularFeaturizer(ABC):
     """
     Abstract class for calculating a set of features for a molecule.
-    A `MolecularFeaturizer` uses SMILES strings or RDKit molecule
-    objects to represent molecules.
+    A `MolecularFeaturizer` uses SMILES strings or RDKit molecule objects to represent molecules.
 
-    Subclasses need to implement the _featurize method for
-    calculating features for a single molecule.
+    Subclasses need to implement the _featurize method for calculating features for a single molecule.
     """
 
     def __init__(self):
@@ -31,7 +29,7 @@ class MolecularFeaturizer(ABC):
                   scaler: BaseScaler = None,
                   path_to_save_scaler: str = None,
                   remove_nans_axis: int = 0,
-                  log_every_n=1000):
+                  log_every_n: int = 1000):
 
         """
         Calculate features for molecules.

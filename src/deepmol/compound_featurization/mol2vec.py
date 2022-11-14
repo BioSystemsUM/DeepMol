@@ -1,19 +1,20 @@
 import os
 
 import numpy as np
-from typing import Any, Optional
+from typing import Any, Optional, Iterable
 from deepmol.compound_featurization.base_featurizer import MolecularFeaturizer
 from gensim.models import word2vec
 from mol2vec.features import mol2alt_sentence, MolSentence
 
 
-def sentences2vec(sentences, model, unseen=None):
-    """Generate vectors for each sentence (list) in a list of sentences. Vector is simply a
-    sum of vectors for individual words.
+def sentences2vec(sentences: Iterable, model: word2vec.Word2Vec, unseen: str = None):
+    """
+    Generate vectors for each sentence (list) in a list of sentences. Vector is simply a sum of vectors for individual
+    words.
 
     Parameters
     ----------
-    sentences : list, array
+    sentences : Iterable
         List with sentences
     model : word2vec.Word2Vec
         Gensim word2vec model

@@ -170,7 +170,7 @@ class WeaveFeat(MolecularFeaturizer):
 
     def __init__(self,
                  graph_distance: bool = True,
-                 explicit_H: bool = False,
+                 explicit_h: bool = False,
                  use_chirality: bool = False,
                  max_pair_distance: int = None):
         """
@@ -179,7 +179,7 @@ class WeaveFeat(MolecularFeaturizer):
         graph_distance: bool
             If True, use graph distance for distance features. Otherwise, use Euclidean distance. Molecules invoked must
             have valid conformer information if this option is set.
-        explicit_H: bool
+        explicit_h: bool
             If true, model hydrogens in the molecule.
         use_chirality: bool
             If True, use chiral information in the featurization.
@@ -188,7 +188,7 @@ class WeaveFeat(MolecularFeaturizer):
         """
         super().__init__()
         self.graph_distance = graph_distance
-        self.explicit_H = explicit_H
+        self.explicit_h = explicit_h
         self.use_chirality = use_chirality
         self.max_pair_distance = max_pair_distance
 
@@ -219,7 +219,7 @@ class WeaveFeat(MolecularFeaturizer):
         # featurization process using DeepChem featurizers
         feature = WeaveFeaturizer(
             graph_distance=self.graph_distance,
-            explicit_H=self.explicit_H,
+            explicit_H=self.explicit_h,
             use_chirality=self.use_chirality,
             max_pair_distance=self.max_pair_distance).featurize(rdkit_mols)
 
@@ -290,7 +290,6 @@ class MolGraphConvFeat(MolecularFeaturizer):
         return feature[0]
 
 
-# TODO: keep checking docstrings and typehints
 class CoulombFeat(MolecularFeaturizer):
     """
     Calculate coulomb matrices for molecules.
@@ -302,24 +301,26 @@ class CoulombFeat(MolecularFeaturizer):
                  remove_hydrogens: bool = False,
                  randomize: bool = False,
                  upper_tri: bool = False,
-                 n_samples: Optional[int] = 1,
-                 seed: Optional[int] = None):
+                 n_samples: int = 1,
+                 max_conformers: int = 1,
+                 seed: int = None):
         """
         Parameters
         ----------
         max_atoms: int
             The maximum number of atoms expected for molecules this featurizers will process.
-        remove_hydrogens: Boolean
-            If True, remove hydrogens before processing them. Default to False.
-        randomize: Boolean
+        remove_hydrogens: bool
+            If True, remove hydrogens before processing them.
+        randomize: bool
             If True, randomize Coulomb matrices. Default to False.
-        upper_tri: Boolean
-            Generate only upper triangle part of Coulomb matrices. Default to False.
-        n_samples: Optional[int]
+        upper_tri: bool
+            Generate only upper triangle part of Coulomb matrices.
+        n_samples: int
             If 'randomize' is set to True, the number of random samples to draw.
-            Default to 1.
-        seed: Optional[int]
-            Random seed to use. Default to None.
+        max_conformers: int
+            Maximum number of conformers.
+        seed: int
+            Random seed to use.
         """
         super().__init__()
         self.max_atoms = max_atoms
@@ -327,13 +328,30 @@ class CoulombFeat(MolecularFeaturizer):
         self.randomize = randomize
         self.upper_tri = upper_tri
         self.n_samples = n_samples
+        self.max_conformers = max_conformers
         if seed is not None:
             seed = int(seed)
         self.seed = seed
 
-    def _featurize(self, mol: Union[Mol, str], max_conformers: int = 1, log_every_n=1000):
-        # obtain new SMILE's strings
+    def _featurize(self,
+                   mol: Union[Mol, str],
+                   log_every_n: int = 1000):
+        """
+        Featurizes a single molecule.
 
+        Parameters
+        ----------
+        mol: Union[Mol, str]
+            Molecule to featurize.
+        log_every_n: int
+            Log every n molecules.
+
+        Returns
+        -------
+        features: np.ndarray
+            Array of features.
+        """
+        # obtain new SMILE's strings
         if isinstance(mol, str):
             rdkit_mols = [Chem.MolFromSmiles(mol)]
         elif isinstance(mol, Mol):
@@ -341,7 +359,7 @@ class CoulombFeat(MolecularFeaturizer):
         else:
             rdkit_mols = None
 
-        generator = ConformerGenerator(max_conformers=max_conformers)
+        generator = ConformerGenerator(max_conformers=self.max_conformers)
         new_conformers = get_conformers(rdkit_mols, generator)
 
         # featurization process using DeepChem featurizers
@@ -360,73 +378,37 @@ class CoulombFeat(MolecularFeaturizer):
 
         return feature[0]
 
-    # def featurize(self, dataset: Dataset, max_conformers: int = 1, log_every_n=1000):
-    #     # obtain new SMILE's strings
-    #     print('Converting SMILES to Mol')
-    #     if isinstance(dataset.mols[0], str):
-    #         rdkit_mols = [Chem.MolFromSmiles(mol) for mol in dataset.mols]
-    #     elif isinstance(dataset.mols[0], Mol):
-    #         rdkit_mols = dataset.mols
-    #     else:
-    #         rdkit_mols = None
-    #
-    #     generator = ConformerGenerator(max_conformers=max_conformers)
-    #
-    #     # TO USE in case to add option for the software to find the parameter max_atoms
-    #     # maximum_number_atoms = find_maximum_number_atoms(new_smiles)
-    #
-    #     new_conformers = get_conformers(rdkit_mols, generator)
-    #     # featurization process using DeepChem featurizers
-    #     print('Featurizing datapoints')
-    #     featurizer = CoulombMatrix(
-    #         max_atoms=self.max_atoms,
-    #         remove_hydrogens=self.remove_hydrogens,
-    #         randomize=self.randomize,
-    #         upper_tri=self.upper_tri,
-    #         n_samples=self.n_samples,
-    #         seed=self.seed)
-    #
-    #     dataset.X = featurizer(new_conformers)
-    #
-    #     # identify which rows did not get featurized
-    #     indexes = []
-    #     for i, feat in enumerate(dataset.X):
-    #         if i % log_every_n == 0:
-    #             print('Analyzing datapoint %i' % i)
-    #         if feat.size == 0:
-    #             print('Failed to featurize datapoint %d, %s' % (i, dataset.mols[i]))
-    #             indexes.append(i)
-    #
-    #     # treat indexes with no featurization
-    #     dataset.remove_elements(indexes)
-    #     print('Elements with indexes: ', indexes, 'were removed due to lack of featurization.')
-    #
-    #     return dataset
-
 
 class CoulombEigFeat(MolecularFeaturizer):
-    """Calculate the eigen values of Coulomb matrices for molecules.
-    Adapted from deepchem"""
+    """
+    Calculate the eigen values of Coulomb matrices for molecules.
+    Adapted from deepchem
+    """
 
-    def __init__(self, max_atoms: int, remove_hydrogens: bool = False, randomize: bool = False,
-                 n_samples: Optional[int] = 1, seed: Optional[int] = None, max_conformers: int = 1):
+    def __init__(self,
+                 max_atoms: int,
+                 remove_hydrogens: bool = False,
+                 randomize: bool = False,
+                 n_samples: int = 1,
+                 max_conformers: int = 1,
+                 seed: int = None):
         """
         Parameters
         ----------
         max_atoms: int
-            The maximum number of atoms expected for molecules this featurizers will
-            process.
-        remove_hydrogens: Boolean
-            If True, remove hydrogens before processing them. Default to False.
-        randomize: Boolean
-            If True, randomize Coulomb matrices. Default to False.
-        n_samples: Optional[int]
+            The maximum number of atoms expected for molecules this featurizers will process.
+        remove_hydrogens: bool
+            If True, remove hydrogens before processing them.
+        randomize: bool
+            If True, randomize Coulomb matrices.
+        n_samples: int
             If 'randomize' is set to True, the number of random samples to draw.
-            Default to 1.
-        seed: Optional[int]
-            Random seed to use. Default to None.
+        max_conformers: int
+            maximum number of conformers.
+        seed: int
+            Random seed to use.
         """
-
+        super().__init__()
         self.max_atoms = max_atoms
         self.remove_hydrogens = remove_hydrogens
         self.randomize = randomize
@@ -436,9 +418,23 @@ class CoulombEigFeat(MolecularFeaturizer):
         self.seed = seed
         self.max_conformers = max_conformers
 
-    def _featurize(self, mol: Union[Mol, str], max_conformers: int = 1, log_every_n=1000):
-        # obtain new SMILE's strings
+    def _featurize(self, mol: Union[Mol, str], log_every_n: int = 1000):
+        """
+        Featurizes a single molecule.
 
+        Parameters
+        ----------
+        mol: Union[Mol, str]
+            Molecule to featurize.
+        log_every_n: int
+            Log every n molecules.
+
+        Returns
+        -------
+        features: np.ndarray
+            Array of features.
+        """
+        # obtain new SMILE's strings
         if isinstance(mol, str):
             rdkit_mols = [Chem.MolFromSmiles(mol)]
         elif isinstance(mol, Mol):
@@ -446,7 +442,7 @@ class CoulombEigFeat(MolecularFeaturizer):
         else:
             rdkit_mols = None
 
-        generator = ConformerGenerator(max_conformers=max_conformers)
+        generator = ConformerGenerator(max_conformers=self.max_conformers)
 
         # TO USE in case to add option for the software to find the parameter max_atoms
         # maximum_number_atoms = find_maximum_number_atoms(new_smiles)
@@ -468,65 +464,29 @@ class CoulombEigFeat(MolecularFeaturizer):
 
         return feature[0]
 
-    # def featurize(self, dataset: Dataset, max_conformers: int = 1, log_every_n=1000):
-    #     # obtain new SMILE's strings
-    #     print('Converting SMILES to Mol')
-    #     if isinstance(dataset.mols[0], str):
-    #         rdkit_mols = [Chem.MolFromSmiles(mol) for mol in dataset.mols]
-    #     elif isinstance(dataset.mols[0], Mol):
-    #         rdkit_mols = dataset.mols
-    #     else:
-    #         rdkit_mols = None
-    #
-    #     generator = ConformerGenerator(max_conformers=max_conformers)
-    #
-    #     # TO USE in case to add option for the software to find the parameter max_atoms
-    #     # maximum_number_atoms = find_maximum_number_atoms(new_smiles)
-    #
-    #     new_conformers = get_conformers(rdkit_mols, generator)
-    #     # featurization process using DeepChem featurizers
-    #     print('Featurizing datapoints')
-    #     featurizer = CoulombMatrixEig(
-    #         max_atoms=self.max_atoms,
-    #         remove_hydrogens=self.remove_hydrogens,
-    #         randomize=self.randomize,
-    #         n_samples=self.n_samples,
-    #         seed=self.seed)
-    #
-    #     dataset.X = featurizer(new_conformers)
-    #
-    #     # identify which rows did not get featurized
-    #     indexes = []
-    #     for i, feat in enumerate(dataset.X):
-    #         if i % log_every_n == 0:
-    #             print('Analyzing datapoint %i' % i)
-    #         if feat.size == 0:
-    #             print('Failed to featurize datapoint %d, %s' % (i, dataset.mols[i]))
-    #             indexes.append(i)
-    #
-    #     # treat indexes with no featurization
-    #     dataset.remove_elements(indexes)
-    #     print('Elements with indexes: ', indexes, 'were removed due to lack of featurization.')
-    #
-    #     return dataset
-
 
 class SmileImageFeat(MolecularFeaturizer):
-    """Converts SMILE string to image.
-    Adapted from deepchem"""
+    """
+    Converts SMILE string to image.
+    Adapted from deepchem
+    """
 
-    def __init__(self, img_size: int = 80, res: float = 0.5, max_len: int = 250, img_spec: str = "std"):
+    def __init__(self,
+                 img_size: int = 80,
+                 res: float = 0.5,
+                 max_len: int = 250,
+                 img_spec: str = "std"):
         """
         Parameters
         ----------
         img_size: int
-            Size of the image tensor. Default to 80.
+            Size of the image tensor.
         res: float
-            Displays the resolution of each pixel in Angstrom. Default to 0.5.
+            Displays the resolution of each pixel in Angstrom.
         max_len: int
-            Maximum allowed length of SMILES string. Default to 250.
+            Maximum allowed length of SMILES string.
         img_spec: str
-            Indicates the channel organization of the image tensor. Default to 'std'.
+            Indicates the channel organization of the image tensor.
         """
         super().__init__()
         if img_spec not in ["std", "engd"]:
@@ -539,7 +499,19 @@ class SmileImageFeat(MolecularFeaturizer):
         self.embed = int(img_size * res / 2)
 
     def _featurize(self, mol: Union[Mol, str]):
+        """
+        Featurizes a single molecule.
 
+        Parameters
+        ----------
+        mol: Union[Mol, str]
+            Molecule to featurize.
+
+        Returns
+        -------
+        features: np.ndarray
+                Array of features.
+        """
         if isinstance(mol, str):
             rdkit_mols = [Chem.MolFromSmiles(mol)]
         elif isinstance(mol, Mol):
@@ -562,20 +534,24 @@ class SmileImageFeat(MolecularFeaturizer):
 
 
 class SmilesSeqFeat:
-    """Takes SMILES strings and turns into a sequence.
-    Adapated from deepchem"""
+    """
+    Takes SMILES strings and turns into a sequence.
+    Adapated from deepchem
+    """
 
-    def __init__(self, char_to_idx: Dict[str, int] = None, max_len: int = 250, pad_len: int = 10):
+    def __init__(self,
+                 char_to_idx: Dict[str, int] = None,
+                 max_len: int = 250,
+                 pad_len: int = 10):
         """
         Parameters
         ----------
         char_to_idx: Dict
             Dictionary containing character to index mappings for unique characters.
-            Default to None.
         max_len: int
-            Maximum allowed length of the SMILES string. Default to 250.
+            Maximum allowed length of the SMILES string.
         pad_len: int
-            Amount of padding to add on either side of the SMILES seq. Default to 10
+            Amount of padding to add on either side of the SMILES seq.
         """
         super().__init__()
         self.char_to_idx = char_to_idx
@@ -583,9 +559,23 @@ class SmilesSeqFeat:
         self.pad_len = pad_len
 
     def featurize(self, dataset: Dataset, log_every_n=1000):
-        # Getting the dictionary if it is None
-        if self.char_to_idx == None:
+        """
+        Featurizes a single molecule.
 
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to featurize.
+        log_every_n: int
+            Log every n molecules.
+
+        Returns
+        -------
+        features: np.ndarray
+            Array of features.
+        """
+        # Getting the dictionary if it is None
+        if self.char_to_idx is None:
             if isinstance(dataset.mols[0], Mol):
                 smiles = [Chem.MolToSmiles(mol) for mol in dataset.mols]
             elif isinstance(dataset.mols[0], str):
@@ -629,9 +619,11 @@ class SmilesSeqFeat:
         return dataset
 
 
-class CGCNNFeat():
-    """Calculate structure graph features for crystals.
-    Adapted from deepchem. Not implemented (outside molecular domain)"""
+class CGCNNFeat:
+    """
+    Calculate structure graph features for crystals.
+    Adapted from deepchem. Not implemented (outside molecular domain)
+    """
 
     def __init__(self, radius: float = 8.0, max_neighbors: float = 12, step: float = 0.2):
         self.radius = radius

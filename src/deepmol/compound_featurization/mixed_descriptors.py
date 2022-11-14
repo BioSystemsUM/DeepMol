@@ -3,7 +3,7 @@ from typing import Iterable
 import numpy as np
 from rdkit.Chem import Mol
 
-from deepmol.compound_featurization.base_featurizer import MolecularFeaturizer
+from deepmol.compound_featurization import MolecularFeaturizer
 
 
 class MixedFeaturizer(MolecularFeaturizer):
@@ -22,7 +22,7 @@ class MixedFeaturizer(MolecularFeaturizer):
         super().__init__()
         self.featurizers = featurizers
 
-    def _featurize(self, mol: Mol) -> np.ndarray:
+    def _featurize(self, mol: Mol):
         """
         Featurization with mix of featurizers.
 

@@ -1,14 +1,10 @@
 from abc import ABC, abstractmethod
 
 import numpy as np
+from rdkit.Chem import MolFromSmiles, rdmolfiles, rdmolops, Mol, MolToSmiles
 
-from rdkit import Chem
-from rdkit.Chem import rdmolfiles
-from rdkit.Chem import rdmolops
-from rdkit.Chem.rdchem import Mol
-
-from deepmol.datasets.datasets import Dataset
-from deepmol.scalers.base_scaler import BaseScaler
+from deepmol.datasets import Dataset
+from deepmol.scalers import BaseScaler
 from deepmol.utils.errors import PreConditionViolationException
 
 
@@ -64,7 +60,7 @@ class MolecularFeaturizer(ABC):
             try:
                 if isinstance(mol, str):
                     # mol must be a RDKit Mol object, so parse a SMILES
-                    molobj = Chem.MolFromSmiles(mol)
+                    molobj = MolFromSmiles(mol)
                     if molobj is None:
                         dataset.remove_elements([mol_id])
                         mol_convertable = False
@@ -84,8 +80,8 @@ class MolecularFeaturizer(ABC):
                 exit(1)
 
             except Exception as e:
-                if isinstance(mol, Chem.rdchem.Mol):
-                    mol = Chem.MolToSmiles(mol)
+                if isinstance(mol, Mol):
+                    mol = MolToSmiles(mol)
                 print("Failed to featurize datapoint %d, %s. Appending empty array" % (i, mol))
                 print("Exception message: {}".format(e))
                 dataset.remove_elements([mol_id])

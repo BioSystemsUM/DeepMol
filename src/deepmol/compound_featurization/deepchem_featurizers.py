@@ -1,13 +1,13 @@
-import numpy as np
-from rdkit.Chem.rdchem import Mol
+from typing import List, Union, Dict
 
-from deepmol.datasets.datasets import Dataset
-from deepchem.utils.conformers import ConformerGenerator
-from deepchem.feat import SmilesToImage, SmilesToSeq, CoulombMatrix, CoulombMatrixEig, ConvMolFeaturizer, \
-    WeaveFeaturizer, MolGraphConvFeaturizer, RawFeaturizer
-from deepmol.compound_featurization.base_featurizer import MolecularFeaturizer
-from rdkit import Chem
-from typing import Optional, Dict, Union, List
+import numpy as np
+from deepchem.feat import ConvMolFeaturizer, WeaveFeaturizer, MolGraphConvFeaturizer, CoulombMatrix, CoulombMatrixEig, \
+    SmilesToImage, SmilesToSeq, RawFeaturizer
+from deepchem.utils import ConformerGenerator
+from rdkit.Chem import Mol, MolFromSmiles, MolToSmiles
+
+from deepmol.compound_featurization import MolecularFeaturizer
+from deepmol.datasets import Dataset
 
 
 def find_maximum_number_atoms(molecules: List[Mol]):
@@ -63,15 +63,15 @@ def get_conformers(molecules: List[Mol], generator: ConformerGenerator):
     return new_conformations
 
 
-def get_dictionary_from_smiles(smiles: str, max_len: int):
+def get_dictionary_from_smiles(smiles: List[str], max_len: int):
     """
     Dictionary of character to index mapping
     Adapted from deepchem.
 
     Parameters
     ----------
-    smiles: str
-        SMILES string
+    smiles: List[str]
+        List of SMILES string
     max_len: int
         Maximum length of SMILES string
 
@@ -144,7 +144,7 @@ class ConvMolFeat(MolecularFeaturizer):
         """
         # obtain new SMILE's strings
         if isinstance(mol, str):
-            rdkit_mols = [Chem.MolFromSmiles(mol)]
+            rdkit_mols = [MolFromSmiles(mol)]
         elif isinstance(mol, Mol):
             rdkit_mols = [mol]
         else:
@@ -210,7 +210,7 @@ class WeaveFeat(MolecularFeaturizer):
         """
         # obtain new SMILE's strings
         if isinstance(mol, str):
-            rdkit_mols = [Chem.MolFromSmiles(mol)]
+            rdkit_mols = [MolFromSmiles(mol)]
         elif isinstance(mol, Mol):
             rdkit_mols = [mol]
         else:
@@ -272,7 +272,7 @@ class MolGraphConvFeat(MolecularFeaturizer):
         # obtain new SMILE's strings
 
         if isinstance(mol, str):
-            rdkit_mols = [Chem.MolFromSmiles(mol)]
+            rdkit_mols = [MolFromSmiles(mol)]
         elif isinstance(mol, Mol):
             rdkit_mols = [mol]
         else:
@@ -333,9 +333,7 @@ class CoulombFeat(MolecularFeaturizer):
             seed = int(seed)
         self.seed = seed
 
-    def _featurize(self,
-                   mol: Union[Mol, str],
-                   log_every_n: int = 1000):
+    def _featurize(self, mol: Union[Mol, str], log_every_n: int = 1000):
         """
         Featurizes a single molecule.
 
@@ -353,7 +351,7 @@ class CoulombFeat(MolecularFeaturizer):
         """
         # obtain new SMILE's strings
         if isinstance(mol, str):
-            rdkit_mols = [Chem.MolFromSmiles(mol)]
+            rdkit_mols = [MolFromSmiles(mol)]
         elif isinstance(mol, Mol):
             rdkit_mols = [mol]
         else:
@@ -436,7 +434,7 @@ class CoulombEigFeat(MolecularFeaturizer):
         """
         # obtain new SMILE's strings
         if isinstance(mol, str):
-            rdkit_mols = [Chem.MolFromSmiles(mol)]
+            rdkit_mols = [MolFromSmiles(mol)]
         elif isinstance(mol, Mol):
             rdkit_mols = [mol]
         else:
@@ -513,7 +511,7 @@ class SmileImageFeat(MolecularFeaturizer):
                 Array of features.
         """
         if isinstance(mol, str):
-            rdkit_mols = [Chem.MolFromSmiles(mol)]
+            rdkit_mols = [MolFromSmiles(mol)]
         elif isinstance(mol, Mol):
             rdkit_mols = [mol]
         else:
@@ -577,7 +575,7 @@ class SmilesSeqFeat:
         # Getting the dictionary if it is None
         if self.char_to_idx is None:
             if isinstance(dataset.mols[0], Mol):
-                smiles = [Chem.MolToSmiles(mol) for mol in dataset.mols]
+                smiles = [MolToSmiles(mol) for mol in dataset.mols]
             elif isinstance(dataset.mols[0], str):
                 smiles = dataset.mols
             else:
@@ -590,7 +588,7 @@ class SmilesSeqFeat:
         # obtain new SMILE's strings
         print('Converting SMILES to Mol')
         if isinstance(dataset.mols[0], str):
-            rdkit_mols = [Chem.MolFromSmiles(mol) for mol in dataset.mols]
+            rdkit_mols = [MolFromSmiles(mol) for mol in dataset.mols]
         elif isinstance(dataset.mols[0], Mol):
             rdkit_mols = dataset.mols
         else:
@@ -646,7 +644,7 @@ class RawFeat(MolecularFeaturizer):
     def _featurize(self, mol: Union[Mol, str], log_every_n=1000):
 
         if isinstance(mol, Mol):
-            smiles = Chem.MolToSmiles(mol)
+            smiles = MolToSmiles(mol)
         elif isinstance(mol, str):
             smiles = mol
         else:

@@ -1,3 +1,5 @@
+from typing import Union, List
+
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 from tensorflow.keras.models import Sequential
@@ -9,7 +11,34 @@ from tensorflow.keras.optimizers import Adadelta, Adam, RMSprop
 # TODO: add more pre-defined models
 
 
-def rf_model_builder(n_estimators=100, max_features='auto', class_weight=None):
+def rf_model_builder(n_estimators: int = 100,
+                     max_features: Union[int, float, str] = 'auto',
+                     class_weight: dict = None):
+    """
+    Builds a random forest model.
+
+    Parameters
+    ----------
+    n_estimators : int
+        Number of trees in the forest.
+    max_features : Union[int, float, str]
+        The number of features to consider when looking for the best split:
+        - If int, then consider `max_features` features at each split.
+        - If float, then `max_features` is a percentage and `int(max_features * n_features)` features are considered at
+        each split.
+        - If "auto", then `max_features=sqrt(n_features)`.
+        - If "sqrt", then `max_features=sqrt(n_features)`.
+        - If "log2", then `max_features=log2(n_features)`.
+        - If None, then `max_features=n_features`.
+    class_weight : dict
+        Weights associated with classes in the form `{class_label: weight}`.
+        If not given, all classes are supposed to have weight one.
+
+    Returns
+    -------
+    rf_model: RandomForestClassifier
+        Random forest model.
+    """
     if class_weight is None:
         class_weight = {0: 1., 1: 1.}
     rf_model = RandomForestClassifier(n_estimators=n_estimators, max_features=max_features,
@@ -17,21 +46,72 @@ def rf_model_builder(n_estimators=100, max_features='auto', class_weight=None):
     return rf_model
 
 
-def svm_model_builder(C=1, gamma='auto', kernel='rfb'):
+def svm_model_builder(C: float = 1.0, gamma: Union[str, float] = 'auto', kernel: Union[str, callable] = 'rfb'):
+    """
+    Builds a support vector machine model.
+
+    Parameters
+    ----------
+    C : float
+        Penalty parameter C of the error term.
+    gamma : Union[str, float]
+        Kernel coefficient for 'rbf', 'poly' and 'sigmoid'.
+            - if 'scale' is passed then it uses 1 / (n_features * X.var()) as value of gamma;
+            - if 'auto', uses 1 / n_features.
+    kernel : str
+        Specifies the kernel type to be used in the algorithm.
+        It must be one of 'linear', 'poly', 'rbf', 'sigmoid', 'precomputed' or a callable.
+
+    Returns
+    -------
+    svm_model: SVC
+        Support vector machine model.
+    """
     svm_model = SVC(C=C, gamma=gamma, kernel=kernel)
     return svm_model
 
 
-def create_dense_model(input_dim=1024,
-                       n_hidden_layers=1,
-                       layers_units=None,
-                       dropouts=None,
-                       activations=None,
-                       batch_normalization=None,
-                       l1_l2=None,
-                       loss='binary_crossentropy',
-                       optimizer='adam',
-                       metrics=None):
+def create_dense_model(input_dim: int = 1024,
+                       n_hidden_layers: int = 1,
+                       layers_units: List[int] = None,
+                       dropouts: List[float] = None,
+                       activations: List[str] = None,
+                       batch_normalization: List[bool] = None,
+                       l1_l2: List[float] = None,
+                       loss: str = 'binary_crossentropy',
+                       optimizer: str = 'adam',
+                       metrics: List[str] = None):
+    """
+    Builds a dense neural network model.
+
+    Parameters
+    ----------
+    input_dim : int
+        Number of features.
+    n_hidden_layers : int
+        Number of hidden layers.
+    layers_units : List[int]
+        Number of units in each hidden layer.
+    dropouts : List[float]
+        Dropout rate in each hidden layer.
+    activations : List[str]
+        Activation function in each hidden layer.
+    batch_normalization : List[bool]
+        Whether to use batch normalization in each hidden layer.
+    l1_l2 : List[float]
+        L1 and L2 regularization in each hidden layer.
+    loss : str
+        Loss function.
+    optimizer : str
+        Optimizer.
+    metrics : List[str]
+        Metrics to be evaluated by the model during training and testing.
+
+    Returns
+    -------
+    model : Sequential
+        Dense neural network model.
+    """
     # assert n_hidden_layers+2 = len(layers_units) == len(activations) == len(dropouts)+1 == len(
     # batch_normalization)+1 len(l1_l2)+2 create model
     if metrics is None:
@@ -63,19 +143,53 @@ def create_dense_model(input_dim=1024,
     return model
 
 
-def make_cnn_model(input_dim=1024,
-                   g_noise=0.05,
-                   DENSE=128,
-                   DROPOUT=0.5,
-                   C1_K=8,
-                   C1_S=32,
-                   C2_K=16,
-                   C2_S=32,
-                   activation='relu',
-                   loss='binary_crossentropy',
-                   optimizer='adadelta',
-                   learning_rate=0.01,
-                   metrics='accuracy'):
+def make_cnn_model(input_dim: int = 1024,
+                   g_noise: float = 0.05,
+                   DENSE: int = 128,
+                   DROPOUT: float = 0.5,
+                   C1_K: int = 8,
+                   C1_S: int = 32,
+                   C2_K: int = 16,
+                   C2_S: int = 32,
+                   activation: str = 'relu',
+                   loss: str = 'binary_crossentropy',
+                   optimizer: str = 'adadelta',
+                   learning_rate: float = 0.01,
+                   metrics: Union[str, List[str]] = 'accuracy'):
+    """
+    Builds a 1D convolutional neural network model.
+
+    Parameters
+    ----------
+    input_dim : int
+        Number of features.
+    g_noise : float
+        Gaussian noise.
+    DENSE : int
+        Number of units in the dense layer.
+    DROPOUT : float
+        Dropout rate.
+    C1_K : int
+        The dimensionality of the output space (i.e. the number of output filters in the convolution) of the first
+        convolutional layer.
+    C1_S : int
+        Kernel size specifying the length of the 1D convolution window of the first convolutional layer.
+    C2_K : int
+        The dimensionality of the output space (i.e. the number of output filters in the convolution) of the second
+        convolutional layer.
+    C2_S : int
+        Kernel size specifying the length of the 1D convolution window of the second convolutional layer.
+    activation : str
+        Activation function of the Conv1D and Dense layers.
+    loss : str
+        Loss function.
+    optimizer : str
+        Optimizer.
+    learning_rate : float
+        Learning rate.
+    metrics : Union[str, List[str]]
+        Metrics to be evaluated by the model during training and testing.
+    """
     model = Sequential()
     # Adding a bit of GaussianNoise also works as regularization
     model.add(GaussianNoise(g_noise, input_shape=(input_dim,)))
@@ -97,5 +211,4 @@ def make_cnn_model(input_dim=1024,
         opt = optimizer
 
     model.compile(loss=loss, optimizer=opt, metrics=metrics)
-
     return model

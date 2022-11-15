@@ -1,15 +1,11 @@
-'''author: Bruno Pereira
-date: 28/04/2021
-'''
-
-from typing import Optional, List, Type, Sequence
+from typing import List, Sequence, Union
 import numpy as np
 
 from deepmol.metrics.metrics import Metric
-from deepmol.models.models import Model
 from deepmol.datasets import Dataset
 from deepchem.models.torch_models import TorchModel
-from deepchem.models import SeqToSeq, WGAN, Model as deep_model
+from deepchem.models import SeqToSeq, WGAN
+from deepchem.models import Model as BaseDeepChemModel
 from deepchem.data import NumpyDataset
 import deepchem as dc
 
@@ -17,48 +13,47 @@ from deepmol.splitters.splitters import Splitter
 from deepmol.utils.utils import load_from_disk, save_to_disk
 
 
-def generate_sequences(epochs, train_smiles):
+def generate_sequences(epochs: int, train_smiles: List[Union[str, int]]):
     """
-    Function to generate the input/output pairs for SeqToSeq model
-    Taken from DeepChem tutorials
-    :param epochs: hyperparameter that defines the number of times  that the learning algorithm
-    will work through the entire training dataset
-    :param train_smiles: the ids of the samples in the dataset (smiles)
-    :return: yields a pair of smile strings for epochs x len(train_smiles)
+    Function to generate the input/output pairs for SeqToSeq model.
+    Taken from DeepChem tutorials.
+
+    Parameters
+    ----------
+    epochs : int
+        Number of epochs to train the model.
+    train_smiles : List[str]
+        The ids of the samples in the dataset (smiles)
+
+    Returns
+    -------
+    yields a pair of smile strings for epochs x len(train_smiles)
     """
     for i in range(epochs):
         for smile in train_smiles:
             yield smile, smile
 
 
-class DeepChemModel(Model):
-    """Wrapper class that wraps deepchem models.
-    The `DeepChemModel` class provides a wrapper around deepchem
-    models that allows deepchem models to be trained on `Dataset` objects
-    and evaluated with the metrics in Metrics.
+class DeepChemModel(BaseDeepChemModel):
+    """
+    Wrapper class that wraps deepchem models.
+    The `DeepChemModel` class provides a wrapper around deepchem models that allows deepchem models to be trained on
+    `Dataset` objects and evaluated with the metrics in Metrics.
     """
 
-    def fit_on_batch(self, X: Sequence, y: Sequence):
-        pass
-
-    def get_task_type(self) -> str:
-        pass
-
-    def get_num_tasks(self) -> int:
-        pass
-
     def __init__(self,
-                 model: deep_model,
-                 model_dir: Optional[str] = None,
+                 model: BaseDeepChemModel,
+                 model_dir: str = None,
                  **kwargs):
         """
+        Initializes a DeepChemModel.
+
         Parameters
         ----------
-        model: deep_model
+        model: BaseDeepChemModel
           The model instance which inherits a DeepChem `Model` Class.
         model_dir: str, optional (default None)
-          If specified the model will be stored in this directory. Else, a
-          temporary directory will be used.
+          If specified the model will be stored in this directory. Else, a temporary directory will be used.
         kwargs: dict
           kwargs['use_weights'] is a bool which determines if we pass weights into
           self.model.fit().
@@ -81,14 +76,19 @@ class DeepChemModel(Model):
         else:
             self.n_tasks = 1
 
-        # for model in NON_WEIGHTED_MODELS:
-        #     if isinstance(self.model, model):
-        #         self.use_weights = False
-
         if 'epochs' in kwargs:
             self.epochs = kwargs['epochs']
         else:
             self.epochs = 30
+
+    def fit_on_batch(self, X: Sequence, y: Sequence, w: Sequence):
+        raise NotImplementedError
+
+    def get_task_type(self) -> str:
+        raise NotImplementedError
+
+    def get_num_tasks(self) -> int:
+        raise NotImplementedError
 
     def fit(self, dataset: Dataset) -> None:
         """Fits DeepChemModel to data.
@@ -119,9 +119,13 @@ class DeepChemModel(Model):
         else:
             self.model.fit(new_dataset, nb_epoch=self.epochs)
 
-    def predict(self, dataset: Dataset,
-                transformers: List[dc.trans.NormalizationTransformer] = None) -> np.ndarray:
-        """Makes predictions on dataset.
+    def predict(self,
+                dataset: Dataset,
+                transformers: List[dc.trans.NormalizationTransformer] = None
+                ) -> np.ndarray:
+        """
+        Makes predictions on dataset.
+
         Parameters
         ----------
         dataset: Dataset
@@ -162,7 +166,9 @@ class DeepChemModel(Model):
         return new_res
 
     def predict_on_batch(self, dataset: Dataset) -> np.ndarray:
-        """Makes predictions on batch of data.
+        """
+        Makes predictions on batch of data.
+
         Parameters
         ----------
         dataset: Dataset
@@ -171,19 +177,46 @@ class DeepChemModel(Model):
         return super(DeepChemModel, self).predict(dataset)
 
     def save(self):
-        """Saves deepchem model to disk using joblib."""
+        """
+        Saves deepchem model to disk using joblib.
+        """
         save_to_disk(self.model, self.get_model_filename(self.model_dir))
 
     def reload(self):
-        """Loads deepchem model from joblib file on disk."""
+        """
+        Loads deepchem model from joblib file on disk.
+        """
         self.model = load_from_disk(self.get_model_filename(self.model_dir))
 
     def cross_validate(self,
                        dataset: Dataset,
                        metric: Metric,
-                       splitter: Type[Splitter],
+                       splitter: Splitter,
                        transformers: List[dc.trans.NormalizationTransformer] = None,
                        folds: int = 3):
+        """
+        Cross validates the model on the specified dataset.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to cross validate on.
+        metric: Metric
+            Metric to evaluate the model on.
+        splitter: Splitter
+            Splitter to split the dataset into train and test sets.
+        transformers: List[Transformer]
+            Transformers that the input data has been transformed by.
+        folds: int
+            Number of folds to use for cross validation.
+
+        Returns
+        -------
+        Tuple[DeepChemModel, float, float, List[float], List[float], float, float]
+            The first element is the best model, the second is the train score of the best model, the third is the train
+            score of the best model, the fourth is the test scores of all models, the fifth is the average train scores
+            of all folds and the sixth is the average test score of all folds.
+        """
         # TODO: add option to choose between splitters (later, for now we only have random)
         # splitter = RandomSplitter()
         if transformers is None:
@@ -203,13 +236,13 @@ class DeepChemModel(Model):
             dummy_model = DeepChemModel(self.model)
 
             print('Train Score: ')
-            #TODO: isto está testado ? estes transformers nao é um boleano
-            train_score = dummy_model.evaluate(train_ds, metric, transformers)
+            # TODO: isto está testado ? estes transformers nao é um boleano
+            train_score = dummy_model.evaluate(train_ds, [metric], transformers)
             train_scores.append(train_score[metric.name])
             avg_train_score += train_score[metric.name]
 
             print('Test Score: ')
-            test_score = dummy_model.evaluate(test_ds, metric, transformers)
+            test_score = dummy_model.evaluate(test_ds, [metric], transformers)
             test_scores.append(test_score[metric.name])
             avg_test_score += test_score[metric.name]
 
@@ -219,4 +252,3 @@ class DeepChemModel(Model):
                 best_model = dummy_model
 
         return best_model, train_score_best_model, test_score_best_model, train_scores, test_scores, avg_train_score / folds, avg_test_score / folds
-

@@ -11,22 +11,23 @@ from sklearn.base import BaseEstimator
 
 
 class Model(BaseEstimator):
-    """Abstract base class for ML/DL models.
+    """
+    Abstract base class for ML/DL models.
     """
 
-    def __init__(self, model=None, model_dir: Optional[str] = None, **kwargs) -> None:
-        """Abstract class for all models.
+    def __init__(self, model: BaseEstimator = None, model_dir: str = None, **kwargs) -> None:
+        """
+        Abstract class for all models.
         This is an abstact class and should not be invoked directly.
 
         Parameters
         ----------
-        model: object
-            Wrapper around ScikitLearn/Keras/Tensorflow model object.
-        model_dir: str, optional (default None)
-            Path to directory where model will be stored. If not specified,
-            model will be stored in a temporary directory.
+        model: BaseEstimator
+            Wrapper around ScikitLearn/Keras/Tensorflow/DeepChem model object.
+        model_dir: str
+            Path to directory where model will be stored. If not specified, model will be stored in a temporary
+            directory.
         """
-
         if self.__class__.__name__ == "Model":
             raise ValueError(
                 "This constructor is for an abstract class and should never be called directly. Can only call from "
@@ -46,11 +47,16 @@ class Model(BaseEstimator):
         self.model_class = model.__class__
 
     def __del__(self):
+        """
+        Delete model directory if it was created by this object.
+        """
         if 'model_dir_is_temp' in dir(self) and self.model_dir_is_temp:
             shutil.rmtree(self.model_dir)
 
     def fit_on_batch(self, X: Sequence, y: Sequence):
-        """Perform a single step of training.
+        """
+        Perform a single step of training.
+
         Parameters
         ----------
         X: np.ndarray
@@ -63,6 +69,7 @@ class Model(BaseEstimator):
     def predict_on_batch(self, X: Sequence):
         """
         Makes predictions on given batch of new data.
+
         Parameters
         ----------
         X: np.ndarray
@@ -80,6 +87,16 @@ class Model(BaseEstimator):
     def get_model_filename(model_dir: str) -> str:
         """
         Given model directory, obtain filename for the model itself.
+
+        Parameters
+        ----------
+        model_dir: str
+            Path to directory where model is stored.
+
+        Returns
+        -------
+        str
+            Path to model file.
         """
         return os.path.join(model_dir, "model.joblib")
 
@@ -87,11 +104,22 @@ class Model(BaseEstimator):
     def get_params_filename(model_dir: str) -> str:
         """
         Given model directory, obtain filename for the model itself.
+
+        Parameters
+        ----------
+        model_dir: str
+            Path to directory where model is stored.
+
+        Returns
+        -------
+        str
+            Path to file where model parameters are stored.
         """
         return os.path.join(model_dir, "model_params.joblib")
 
     def save(self) -> None:
-        """Function for saving models.
+        """
+        Function for saving models.
         Each subclass is responsible for overriding this method.
         """
         raise NotImplementedError("Each class model must implement its own save method.")
@@ -99,6 +127,7 @@ class Model(BaseEstimator):
     def fit(self, dataset: Dataset):
         """
         Fits a model on data in a Dataset object.
+
         Parameters
         ----------
         dataset: Dataset
@@ -109,6 +138,7 @@ class Model(BaseEstimator):
     def predict(self, dataset: Dataset) -> np.ndarray:
         """
         Uses self to make predictions on provided Dataset object.
+
         Parameters
         ----------
         dataset: Dataset
@@ -141,11 +171,11 @@ class Model(BaseEstimator):
         ----------
         dataset: Dataset
             Dataset object.
-        metrics: Metric / List[Metric]
+        metrics: Union[List[Metric], Metric]
             The set of metrics provided.
-        per_task_metrics: bool, optional (default False)
+        per_task_metrics: bool
             If true, return computed metric for each task on multitask dataset.
-        n_classes: int, optional (default None)
+        n_classes: int
             If specified, will use `n_classes` as the number of unique classes.
 
         Returns
@@ -153,13 +183,10 @@ class Model(BaseEstimator):
         multitask_scores: dict
             Dictionary mapping names of metrics to metric scores.
         all_task_scores: dict, optional
-            If `per_task_metrics == True` is passed as a keyword argument,
-            then returns a second dictionary of scores for each task
-            separately.
+            If `per_task_metrics == True` is passed as a keyword argument, then returns a second dictionary of scores
+            for each task separately.
         """
-
         evaluator = Evaluator(self, dataset)
-
         return evaluator.compute_model_performance(metrics,
                                                    per_task_metrics=per_task_metrics,
                                                    n_classes=n_classes)

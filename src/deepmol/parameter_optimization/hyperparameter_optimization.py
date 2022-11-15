@@ -1,32 +1,35 @@
 """Hyperparameter Optimization Class"""
-
-import sklearn
-from deepmol.models.models import Model
-from deepmol.models.sklearn_models import SklearnModel
-from deepmol.models.keras_models import KerasModel
-from deepmol.metrics.metrics import Metric
-from deepmol.datasets import Dataset
-from typing import Dict, Any, Optional, Tuple, Type
-from functools import reduce
-from operator import mul
-import itertools
 import collections
-import numpy as np
+import itertools
+import os
 import random
 import shutil
 import tempfile
-import os
-from sklearn.model_selection import GridSearchCV, RandomizedSearchCV, StratifiedKFold, KFold
-from keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
-from deepmol.parameter_optimization.deepchem_hyperparameter_optimization import DeepchemGridSearchCV, DeepchemRandomSearchCV
+from functools import reduce
+from operator import mul
+from typing import Dict, Any, Union, Tuple
+
+import numpy as np
+import sklearn
+from sklearn.model_selection import StratifiedKFold, KFold, RandomizedSearchCV, GridSearchCV
+from tensorflow.python.keras.wrappers.scikit_learn import KerasRegressor, KerasClassifier
+
+from deepmol.datasets import Dataset
+from deepmol.metrics import Metric
+from deepmol.models import SklearnModel, KerasModel
+from deepmol.models.models import Model
+from deepmol.parameter_optimization import DeepchemRandomSearchCV, DeepchemGridSearchCV
 
 
 def _convert_hyperparam_dict_to_filename(hyper_params: Dict[str, Any]) -> str:
-    """Function that converts a dictionary of hyperparameters to a string that can be a filename.
+    """
+    Function that converts a dictionary of hyperparameters to a string that can be a filename.
+
     Parameters
     ----------
     hyper_params: Dict
       Maps string of hyperparameter name to int/float/string/list etc.
+
     Returns
     -------
     filename: str
@@ -46,8 +49,20 @@ def _convert_hyperparam_dict_to_filename(hyper_params: Dict[str, Any]) -> str:
     return filename
 
 
-def validate_metrics(metrics):
-    """Validate single and multi metrics"""
+def validate_metrics(metrics: Union[Dict, str, Metric]):
+    """
+    Validate single and multi metrics.
+
+    Parameters
+    ----------
+    metrics: Union[Dict, str, Metric]
+        The metrics to validate.
+
+    Returns
+    -------
+    all_metrics: List
+        The list of validated metrics.
+    """
     if isinstance(metrics, dict):
         all_metrics = []
         for m in metrics.values():
@@ -71,20 +86,23 @@ def validate_metrics(metrics):
 
 
 class HyperparameterOptimizer(object):
-    """Abstract superclass for hyperparameter search classes.
+    """
+    Abstract superclass for hyperparameter search classes.
     """
 
-    def __init__(self, model_builder: Type[Model], mode: str = None):
-        """Initialize Hyperparameter Optimizer.
+    def __init__(self, model_builder: callable, mode: str = None):
+        """
+        Initialize Hyperparameter Optimizer.
         Note this is an abstract constructor which should only be used by subclasses.
 
         Parameters
         ----------
-        model_builder: constructor function.
-            This parameter must be constructor function which returns an
-            object which is an instance of `Models`. This function
-            must accept two arguments, `model_params` of type `dict` and
-            'model_dir', a string specifying a path to a model directory.
+        model_builder: callable
+            This parameter must be constructor function which returns an object which is an instance of `Models`.
+            This function must accept two arguments, `model_params` of type `dict` and 'model_dir', a string specifying
+            a path to a model directory.
+        mode: str
+            The mode of the model. Can be 'classification' or 'regression'.
         """
         if self.__class__.__name__ == "HyperparamOpt":
             raise ValueError("HyperparamOpt is an abstract superclass and cannot be directly instantiated. "
@@ -98,34 +116,37 @@ class HyperparameterOptimizer(object):
                               valid_dataset: Dataset,
                               metric: Metric,
                               use_max: bool = True,
-                              logdir: Optional[str] = None,
+                              logdir: str = None,
                               **kwargs) -> Tuple[Model, Dict[str, Any], Dict[str, float]]:
-        """Conduct Hyperparameter search.
-      This method defines the common API shared by all hyperparameter
-      optimization subclasses. Different classes will implement
-      different search methods but they must all follow this common API.
+        """
+        Conduct Hyperparameter search.
 
-      Parameters
-      ----------
-      params_dict: Dict
-        Dictionary mapping strings to values. Note that the
-        precise semantics of `params_dict` will change depending on the
-        optimizer that you're using.
-      train_dataset: Dataset
-        dataset used for training
-      valid_dataset: Dataset
-        dataset used for validation(optimization on valid scores)
-      metric: Metric
-        metric used for evaluation
-      use_max: bool, optional
-        If True, return the model with the highest score.
-      logdir: str, optional
-        The directory in which to store created models. If not set, will
-        use a temporary directory.
-      Returns
-      -------
-      Tuple[`best_model`, `best_hyperparams`, `all_scores`]
-      """
+        This method defines the common API shared by all hyperparameter optimization subclasses. Different classes will
+        implement different search methods, but they must all follow this common API.
+
+        Parameters
+        ----------
+        params_dict: Dict
+            Dictionary mapping strings to values. Note that the precise semantics of `params_dict` will change depending
+            on the optimizer that you're using.
+        train_dataset: Dataset
+            The training dataset.
+        valid_dataset: Dataset
+            The validation dataset.
+        metric: Metric
+            The metric to optimize.
+        use_max: bool
+            If True, return the model with the highest score.
+        logdir: str
+            The directory in which to store created models. If not set, will use a temporary directory.
+        **kwargs: Dict
+            Additional keyword arguments to pass to the model constructor.
+
+        Returns
+        -------
+        Tuple[Model, Dict[str, Any], Dict[str, float]]:
+            A tuple containing the best model, the best hyperparameters, and all scores.
+        """
         raise NotImplementedError
 
 
@@ -145,39 +166,39 @@ class HyperparameterOptimizerValidation(HyperparameterOptimizer):
                               n_jobs: int = 1,
                               verbose: int = 0,
                               use_max: bool = True,
-                              logdir: Optional[str] = None,
+                              logdir: str = None,
                               **kwargs):
+        """
+        Perform hyperparams search according to params_dict.
+        Each key to hyperparams_dict is a model_param. The values should be a list of potential values for that
+        hyperparameter.
 
-        """Perform hyperparams search according to params_dict.
-        Each key to hyperparams_dict is a model_param. The values should
-        be a list of potential values for that hyperparam.
         Parameters
         ----------
         params_dict: Dict
-            Maps hyperparameter names (strings) to lists of possible
-            parameter values.
+            Dictionary mapping hyperparameter names (strings) to lists of possible parameter values.
         train_dataset: Dataset
-            dataset used for training
+            The training dataset.
         valid_dataset: Dataset
-            dataset used for validation(optimization on valid scores)
+            The validation dataset.
         metric: Metric
-            metric used for evaluation
-        n_iter_search: int or None, optional
-            Number of random combinations of parameters to test, if None performs complete grid search
+            The metric to optimize.
+        n_iter_search: int
+            Number of random combinations of parameters to test, if None performs complete grid search.
         n_jobs: int
-            Number of jobs
+            Number of jobs to run in parallel.
         verbose: int
-            Verbose mode
-        use_max: bool, optional
+            Controls the verbosity: the higher, the more messages.
+        use_max: bool
             If True, return the model with the highest score.
-        logdir: str, optional
-            The directory in which to store created models. If not set, will
-            use a temporary directory.
+        logdir: str
+            The directory in which to store created models. If not set, will use a temporary directory.
+
         Returns
         -------
-        Tuple[`best_model`, `best_hyperparams`, `all_scores`]
+        Tuple[Model, Dict[str, Any], Dict[str, float]]:
+            A tuple containing the best model, the best hyperparameters, and all scores.
         """
-
         if self.mode is None:
             # TODO: better way of doint this
             if len(set(train_dataset.y)) > 2:
@@ -302,40 +323,44 @@ class HyperparameterOptimizerCV(HyperparameterOptimizer):
                               n_iter_search: int = 15,
                               n_jobs: int = 1,
                               verbose: int = 0,
-                              logdir: Optional[str] = None,
-                              seed: Optional[int] = None,
+                              logdir: str = None,
+                              seed: int = None,
                               **kwargs):
 
-        """Perform hyperparams search according to params_dict.
-        Each key to hyperparams_dict is a model_param. The values should
-        be a list of potential values for that hyperparam.
+        """
+        Perform hyperparams search according to params_dict.
+        Each key to hyperparams_dict is a model_param. The values should be a list of potential values for that
+        hyperparameter.
+
         Parameters
         ----------
         model_type: str
-            string identifying the type of model (sklearn or keras)
+            Type of model to use. Must be one of 'sklearn', 'keras', and 'deepchem'.
         params_dict: Dict
-            Maps hyperparameter names (strings) to lists of possible
-            parameter values.
+            Dictionary mapping hyperparameter names (strings) to lists of possible parameter values.
         train_dataset: Dataset
-            dataset used for training
+            Dataset to train on.
         metric: Metric
-            metric used for evaluation
+            Metric to optimize over.
         cv: int
-            number of folds to perform in the cross validation
-        n_iter_search: int or None, optional
-            Number of random combinations of parameters to test, if None performs complete grid search
+            Number of cross-validation folds to perform.
+        n_iter_search: int
+            Number of hyperparameter combinations to try.
         n_jobs: int
-            Number of jobs
+            Number of jobs to run in parallel.
         verbose: int
-            Verbose mode
+            Verbosity level.
+        logdir: str
+            The directory in which to store created models. If not set, will use a temporary directory.
         seed: int
-            Seed to be able to reproduce the results
-        logdir: str, optional
-            The directory in which to store created models. If not set, will
-            use a temporary directory.
+            Random seed to use.
+        kwargs: dict
+            Additional keyword arguments to pass to the model constructor.
+
         Returns
         -------
-        Tuple['best_model', 'best_hyperparams', 'all_scores']
+        Tuple[Model, Dict[str, Any], Dict[str, float]]:
+            A tuple containing the best model, the best hyperparameters, and all scores.
         """
         # TODO: better way of doing this
         if self.mode is None:
@@ -375,13 +400,6 @@ class HyperparameterOptimizerCV(HyperparameterOptimizer):
         number_combinations = reduce(mul, [len(vals) for vals in params_dict.values()])
         if number_combinations > n_iter_search:
             print("Fitting %d random models from a space of %d possible models." % (n_iter_search, number_combinations))
-            # if self.mode == 'classification':
-            #     grid = RandomizedSearchCV(estimator = model, param_distributions = params_dict,
-            #                               scoring = metrics, n_jobs=n_jobs, cv=StratifiedKFold(n_splits=cv),
-            #                               verbose=verbose, n_iter = n_iter_search, refit=False)
-            # else: grid = RandomizedSearchCV(estimator = model, param_distributions = params_dict,
-            #                                 scoring = metrics, n_jobs=n_jobs, cv=cv,
-            #                                 verbose=verbose, n_iter = n_iter_search, refit=False)
             if model_type == 'deepchem':
                 grid = DeepchemRandomSearchCV(model_build_fn=model, param_distributions=params_dict, scoring=metrics,
                                               cv=cv, mode=self.mode, n_iter=n_iter_search, refit=True,

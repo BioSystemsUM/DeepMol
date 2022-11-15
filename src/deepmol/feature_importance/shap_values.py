@@ -1,25 +1,47 @@
-import shap
 import pandas as pd
+import shap
+
+from deepmol.datasets import Dataset
+from deepmol.models.models import Model
 
 
-# TODO: Add more features (different plots and methods)
-class ShapValues(object):
-    '''
-    ...
-    '''
+class ShapValues:
+    """
+    SHAP (SHapley Additive exPlanations) wrapper for DeepMol
+    It allows to compute and analyze the SHAP values of DeepMol models.
+    """
 
-    def __init__(self, dataset, model):
-        '''
-        :param dataset:
-        :param model:
-        '''
+    def __init__(self, dataset: Dataset, model: Model):
+        """
+        Initialize the ShapValues object
 
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset object
+        model: Model
+            Model object
+        """
         self.dataset = dataset
         self.model = model
         self.shap_values = None
 
     # TODO: masker not working
-    def computePermutationShap(self, masker=False, plot=True, max_evals = 500, **kwargs):
+    def computePermutationShap(self, masker: bool = False, plot: bool = True, max_evals: int = 500, **kwargs):
+        """
+        Compute the SHAP values using the Permutation explainer.
+
+        Parameters
+        ----------
+        masker: bool
+            If True, use a Partition masker to explain the model predictions on the given dataset
+        plot: bool
+            If True, plot the SHAP values
+        max_evals: int
+            Maximum number of iterations
+        kwargs: dict
+            Additional arguments for the plot function
+        """
         columns_names = ['feat_' + str(i + 1) for i in range(self.dataset.X.shape[1])]
         X = pd.DataFrame(self.dataset.X, columns=columns_names)
 
@@ -51,7 +73,19 @@ class ShapValues(object):
 
     # TODO: masker not working
     # TODO: too much iterations needed (remove?)
-    def computeExactShap(self, masker=False, plot=True, **kwargs):
+    def computeExactShap(self, masker: bool = False, plot: bool = True, **kwargs):
+        """
+        Compute the SHAP values using the Exact explainer.
+
+        Parameters
+        ----------
+        masker: bool
+            If True, use a Partition masker to explain the model predictions on the given dataset
+        plot: bool
+            If True, plot the SHAP values
+        kwargs: dict
+            Additional arguments for the plot function
+        """
         columns_names = ['feat_' + str(i + 1) for i in range(self.dataset.X.shape[1])]
         X = pd.DataFrame(self.dataset.X, columns=columns_names)
 
@@ -81,7 +115,17 @@ class ShapValues(object):
                 shap.plots.beeswarm(self.shap_values, **kwargs)
 
     # TODO: check why force is not working (maybe java plugin is missing?)
-    def plotSampleExplanation(self, index=0, plot_type='waterfall'):
+    def plotSampleExplanation(self, index: int = 0, plot_type: str = 'waterfall'):
+        """
+        Plot the SHAP values of a single sample.
+
+        Parameters
+        ----------
+        index: int
+            Index of the sample to explain
+        plot_type: str
+            Type of plot to use. Can be 'waterfall' or 'force'
+        """
         if self.shap_values is None:
             print('Shap values not computed yet! Computing shap values...')
             self.computeShap(plot=False)
@@ -96,8 +140,16 @@ class ShapValues(object):
         else:
             raise ValueError('Plot type must be waterfall or force!')
 
-    def plotFeatureExplanation(self, index='all'):
-        if index == 'all':
+    def plotFeatureExplanation(self, index: int = None):
+        """
+        Plot the SHAP values of a single feature.
+
+        Parameters
+        ----------
+        index: int
+            Index of the feature to explain
+        """
+        if index is None:
             # summarize the effects of all the features
             shap.plots.beeswarm(self.shap_values)
         else:
@@ -105,6 +157,9 @@ class ShapValues(object):
             shap.plots.scatter(self.shap_values[:, index], color=self.shap_values)
 
     def plotHeatMap(self):
+        """
+        Plot the SHAP values of all the features as a heatmap.
+        """
         if self.shap_values is not None:
             shap.plots.heatmap(self.shap_values)
         else:

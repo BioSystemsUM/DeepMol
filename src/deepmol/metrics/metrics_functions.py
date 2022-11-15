@@ -1,6 +1,6 @@
-'''
+"""
 Script containing imports of metrics and new metric functions.
-'''
+"""
 
 from scipy.stats import pearsonr
 from scipy.stats import spearmanr
@@ -45,6 +45,7 @@ def pearson_score(y, y_pred):
 
 def spearman_score(y, y_pred):
     return spearmanr(y, y_pred)[0]
+
 
 def prc_auc_score(y, y_pred):
     precision, recall, _ = precision_recall_curve(y, y_pred)

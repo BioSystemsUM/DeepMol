@@ -1,2 +1,1 @@
-from .base_feature_selector import KbestFS, LowVarianceFS, \
-    PercentilFS, RFECVFS, SelectFromModelFS, BorutaAlgorithm
+from .base_feature_selector import KbestFS, LowVarianceFS, PercentilFS, RFECVFS, SelectFromModelFS, BorutaAlgorithm

@@ -1,19 +1,54 @@
 """Hyperparameter Optimization Classes for DeepchemModel models"""
-
 from collections import defaultdict
+from typing import Union
+
 import numpy as np
+from sklearn.metrics import SCORERS
 from sklearn.model_selection import ParameterGrid, ParameterSampler
-from sklearn.metrics._scorer import SCORERS
-from deepmol.metrics.metrics import Metric
-from deepmol.splitters.splitters import RandomSplitter, SingletaskStratifiedSplitter
+
+from deepmol.datasets import Dataset
+from deepmol.metrics import Metric
+from deepmol.splitters import SingletaskStratifiedSplitter, RandomSplitter
 
 
 # TODO: it would probably be better if we tried to create a scikit-learn wrapper for DeepchemModel models,
 #  similar to KerasRegressor and KerasClassifier (not sure it would work though)
 class DeepchemBaseSearchCV(object):
+    """
+    Base class for hyperparameter search with cross-validation for DeepChemModels.
+    """
 
-    def __init__(self, model_build_fn, param_grid, scoring, refit, cv, mode, random_state=None,
-                 return_train_score=False):
+    def __init__(self,
+                 model_build_fn: callable,
+                 param_grid: Union[dict, ParameterGrid, ParameterSampler],
+                 scoring: str,
+                 refit: bool,
+                 cv: int,
+                 mode: str,
+                 random_state: int = None,
+                 return_train_score: bool = False):
+        """
+        Initialize the hyperparameter search.
+
+        Parameters
+        ----------
+        model_build_fn: callable
+            A function that builds a DeepchemModel model.
+        param_grid: dict
+            The hyperparameter grid to search.
+        scoring: str
+            The metric to use for scoring.
+        refit: bool
+            If True, refit the best model on the whole dataset.
+        cv: int
+            The number of folds for cross-validation.
+        mode: str
+            The mode of the model. Can be 'classification' or 'regression'.
+        random_state: int
+            The random state to use for the cross-validation.
+        return_train_score: bool
+            If True, return the training scores.
+        """
         self.build_fn = model_build_fn
         self.param_grid = param_grid
         # TODO: it would be easier if we could just pass a Metric object instead
@@ -39,7 +74,15 @@ class DeepchemBaseSearchCV(object):
         self.best_estimator_ = None
         self.cv_results_ = None
 
-    def fit(self, dataset):
+    def fit(self, dataset: Dataset):
+        """
+        Run hyperparameter search with cross-validation.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The dataset to use for the hyperparameter search.
+        """
         results_dict = defaultdict(list)
 
         # split dataset into folds
@@ -92,18 +135,85 @@ class DeepchemBaseSearchCV(object):
 
 
 class DeepchemGridSearchCV(DeepchemBaseSearchCV):
+    """
+    Hyperparameter search with cross-validation for DeepChemModels using a grid search.
+    """
 
-    def __init__(self, model_build_fn, param_grid, scoring, refit, cv, mode, random_state=None,
-                 return_train_score=False):
+    def __init__(self,
+                 model_build_fn: callable,
+                 param_grid: dict,
+                 scoring: str,
+                 refit: bool,
+                 cv: int,
+                 mode: str,
+                 random_state: int = None,
+                 return_train_score: bool = False):
+        """
+        Initialize the hyperparameter search.
+
+        Parameters
+        ----------
+        model_build_fn: callable
+            A function that builds a DeepchemModel model.
+        param_grid: dict
+            The hyperparameter grid to search.
+        scoring: str
+            The metric to use for scoring.
+        refit: bool
+            If True, refit the best model on the whole dataset.
+        cv: int
+            The number of folds for cross-validation.
+        mode: str
+            The mode of the model. Can be 'classification' or 'regression'.
+        random_state: int
+            The random state to use for the cross-validation.
+        return_train_score: bool
+            If True, return the training scores.
+        """
         self.param_grid = ParameterGrid(param_grid)
         super().__init__(model_build_fn=model_build_fn, param_grid=self.param_grid, scoring=scoring, refit=refit, cv=cv,
                          mode=mode, random_state=random_state, return_train_score=return_train_score)
 
 
 class DeepchemRandomSearchCV(DeepchemBaseSearchCV):
+    """
+    Hyperparameter search with cross-validation for DeepChemModels using a random search.
+    """
 
-    def __init__(self, model_build_fn, param_distributions, scoring, refit, cv, mode, random_state=None,
-                 return_train_score=False, n_iter=20):
+    def __init__(self,
+                 model_build_fn: callable,
+                 param_distributions: dict,
+                 scoring: str,
+                 refit: bool,
+                 cv: int,
+                 mode: str,
+                 random_state: int = None,
+                 return_train_score: bool = False,
+                 n_iter: int = 20):
+        """
+        Initialize the hyperparameter search.
+
+        Parameters
+        ----------
+        model_build_fn: callable
+            A function that builds a DeepchemModel model.
+        param_distributions: dict
+            The hyperparameter grid to search.
+        scoring: str
+            The metric to use for scoring.
+        refit: bool
+            If True, refit the best model on the whole dataset.
+        cv: int
+            The number of folds for cross-validation.
+        mode: str
+            The mode of the model. Can be 'classification' or 'regression'.
+        random_state: int
+            The random state to use for the cross-validation.
+        return_train_score: bool
+            If True, return the training scores.
+        n_iter: int
+            The number of iterations to perform.
+        """
         self.param_grid = list(ParameterSampler(param_distributions, n_iter, random_state=random_state))
         super().__init__(model_build_fn=model_build_fn, param_grid=self.param_grid, scoring=scoring, refit=refit, cv=cv,
                          mode=mode, random_state=random_state, return_train_score=return_train_score)

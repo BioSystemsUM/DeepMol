@@ -10,16 +10,33 @@ from deepmol.models.models import Model
 
 
 class Ensemble(ABC):
+    """
+    Abstract class for ensembles of models.
+    """
 
     def __init__(self, models: List[Model]):
+        """
+        Initializes an ensemble of models.
+
+        Parameters
+        ----------
+        models: List[Model]
+            List of models to be used in the ensemble.
+        """
         self.models = models
 
     def fit(self, dataset: Dataset):
+        """
+        Fits the models to the specified dataset.
+        """
         for model in self.models:
             model.fit(dataset)
 
     @abstractmethod
     def predict(self, dataset: Dataset):
+        """
+        Predicts the labels for the specified dataset.
+        """
         raise NotImplementedError()
 
     def evaluate(self,
@@ -34,11 +51,11 @@ class Ensemble(ABC):
         ----------
         dataset: Dataset
             Dataset object.
-        metrics: Metric / List[Metric]
+        metrics: List[Metric]
             The set of metrics provided.
-        per_task_metrics: bool, optional (default False)
+        per_task_metrics: bool
             If true, return computed metric for each task on multitask dataset.
-        n_classes: int, optional (default None)
+        n_classes: int
             If specified, will use `n_classes` as the number of unique classes.
 
         Returns
@@ -46,25 +63,51 @@ class Ensemble(ABC):
         multitask_scores: dict
             Dictionary mapping names of metrics to metric scores.
         all_task_scores: dict, optional
-            If `per_task_metrics == True` is passed as a keyword argument,
-            then returns a second dictionary of scores for each task
-            separately.
+            If `per_task_metrics == True` is passed as a keyword argument, then returns a second dictionary of scores
+            for each task separately.
         """
-
         evaluator = Evaluator(self, dataset)
-
         return evaluator.compute_model_performance(metrics,
                                                    per_task_metrics=per_task_metrics,
                                                    n_classes=n_classes)
 
 
 class VotingClassifier(Ensemble):
+    """
+    VotingClassifier Ensemble.
+    It uses a voting strategy to predict the labels of a dataset.
+    """
 
-    def __init__(self, models: List[Model], voting="soft"):
+    def __init__(self, models: List[Model], voting: str = "soft"):
+        """
+        Initializes a VotingClassifier ensemble.
+
+        Parameters
+        ----------
+        models: List[Model]
+            List of models to be used in the ensemble.
+        voting: str
+            Voting strategy to use. Can be either 'soft' or 'hard'.
+        """
         super().__init__(models)
         self.voting = voting
 
-    def predict(self, dataset: Dataset, proba=False):
+    def predict(self, dataset: Dataset, proba: bool = False):
+        """
+        Predicts the labels for the specified dataset.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset object.
+        proba: bool
+            If true, returns the probabilities instead of class labels.
+
+        Returns
+        -------
+        final_result: np.ndarray
+            Predicted labels or probabilities.
+        """
         assert len(self.models) > 0
 
         n_labels = len(np.unique(dataset.y))

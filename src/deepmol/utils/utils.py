@@ -3,7 +3,7 @@ import random
 import pandas as pd
 import joblib
 import os
-from typing import Any, cast, IO, List
+from typing import Any, cast, IO, List, Union
 import gzip
 import pickle
 import numpy as np
@@ -95,7 +95,7 @@ def load_from_disk(filename: str) -> Any:
         raise ValueError("Unrecognized filetype for %s" % filename)
 
 
-def normalize_labels_shape(y_pred: List):
+def normalize_labels_shape(y_pred: Union[List, np.ndarray]):
     """Function to transform output from predict_proba (prob(0) prob(1))
     to predict format (0 or 1).
     Parameters

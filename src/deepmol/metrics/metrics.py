@@ -1,5 +1,7 @@
+from typing import Tuple, Any, Union, List
+
 import numpy as np
-from typing import Callable, Optional, Any, Tuple, Union, List
+
 from deepmol.utils.utils import normalize_labels_shape
 
 
@@ -10,46 +12,41 @@ class Metric(object):
     """
 
     def __init__(self,
-                 metric: Callable[..., float],
-                 task_averager: Optional[Callable[..., Any]] = None,
-                 name: Optional[str] = None,
-                 mode: Optional[str] = None,
-                 n_tasks: Optional[int] = None,
-                 classification_handling_mode: Optional[str] = None,
-                 threshold_value: Optional[float] = None):
+                 metric: callable,
+                 task_averager: callable = None,
+                 name: str = None,
+                 mode: str = None,
+                 n_tasks: int = None,
+                 classification_handling_mode: str = None,
+                 threshold_value: float = None):
         # TODO: review threshold values and change to deal with a variable threshold (i.e. different from 0.5)
         """
         Parameters
         ----------
-        metric: function
-          Function that takes args y_true, y_pred (in that order) and
-          computes desired score.
-        task_averager: function, default None
-          If not None, should be a function that averages metrics across
-          tasks.
-        name: str, default None
-          Name of this metric
-        mode: str, default None
-          Should be "classification" or "regression."
-        n_tasks: int, default None
-          The number of tasks this class is expected to handle.
-        classification_handling_mode: str, default None
-          Models by default predict class probabilities for
-          classification problems. This means that for a given singletask
-          prediction, after shape normalization, the prediction will be a
-          numpy array of shape `(N, n_classes)` with class probabilities.
-          It can take on the following values:
-          - None: default value. Pass in `y_pred` directy into the metric.
-          - "threshold": Use `threshold_predictions` to threshold `y_pred`. Use
-            `threshold_value` as the desired threshold.
-          - "threshold-one-hot": Use `threshold_predictions` to threshold `y_pred`
-            using `threshold_values`, then apply `to_one_hot` to output.
-        threshold_value: float, default None
-          If set, and `classification_handling_mode` is "threshold" or
-          "threshold-one-hot" apply a thresholding operation to values with this
-          threshold.
+        metric: callable
+            Callable that takes args y_true, y_pred (in that order) and computes desired score.
+        task_averager: callable
+            If not None, should be a function that averages metrics across tasks.
+        name: str
+            Name of this metric
+        mode: str
+            Should be "classification" or "regression."
+        n_tasks: int
+            The number of tasks this class is expected to handle.
+        classification_handling_mode: str
+            Models by default predict class probabilities for classification problems. This means that for a given
+            singletask prediction, after shape normalization, the prediction will be a numpy array of shape
+            `(N, n_classes)` with class probabilities.
+            It can take on the following values:
+            - None: default value. Pass in `y_pred` directy into the metric.
+            - "threshold": Use `threshold_predictions` to threshold `y_pred`. Use `threshold_value` as the desired
+            threshold.
+            - "threshold-one-hot": Use `threshold_predictions` to threshold `y_pred` using `threshold_values`, then
+            apply `to_one_hot` to output.
+        threshold_value: float
+            If set, and `classification_handling_mode` is "threshold" or "threshold-one-hot" apply a thresholding
+            operation to values with this threshold.
         """
-
         self.metric = metric
         if task_averager is None:
             self.task_averager = np.mean
@@ -122,29 +119,32 @@ class Metric(object):
     def compute_metric(self,
                        y_true: np.ndarray,
                        y_pred: np.ndarray,
-                       n_tasks: Optional[int] = None,
+                       n_tasks: int = None,
                        n_classes: int = 2,
                        per_task_metrics: bool = False,
                        **kwargs) -> Tuple[Any, Union[float, List[float]]]:
-        """Compute a performance metric for each task.
+        """
+        Compute a performance metric for each task.
+
         Parameters
         ----------
         y_true: np.ndarray
-          An np.ndarray containing true values for each task.
+            An np.ndarray containing true values for each task.
         y_pred: np.ndarray
-          An np.ndarray containing predicted values for each task.
-        n_tasks: int, default None
-          The number of tasks this class is expected to handle.
-        n_classes: int, default 2
-          Number of classes in data for classification tasks.
-        per_task_metrics: bool, default False
-          If true, return computed metric for each task on multitask dataset.
+            An np.ndarray containing predicted values for each task.
+        n_tasks: int
+            The number of tasks this class is expected to handle.
+        n_classes: int
+            Number of classes in data for classification tasks.
+        per_task_metrics: bool
+            If true, return computed metric for each task on multitask dataset.
         kwargs: dict
-          Will be passed on to self.metric
+            Will be passed on to self.metric
+
         Returns
         -------
-        np.ndarray
-          A numpy array containing metric values for each task.
+        Tuple[Any, Union[float, List[float]]]
+            Tuple with the task averager computed value and a numpy array containing metric values for each task.
         """
 
         if n_tasks is None:
@@ -196,19 +196,22 @@ class Metric(object):
                                   y_true: np.ndarray,
                                   y_pred: np.ndarray,
                                   **kwargs) -> float:
-        """Compute a metric value.
+        """
+        Compute a metric value for a singletask problem.
+
         Parameters
         ----------
         y_true: `np.ndarray`
-          True values array.
+            True values array.
         y_pred: `np.ndarray`
-          Predictions array.
+            Predictions array.
         kwargs: dict
-          Will be passed on to self.metric
+            Will be passed on to self.metric
+
         Returns
         -------
         metric_value: float
-          The computed value of the metric.
+            The computed value of the metric.
         """
 
         if self.mode == "regression":

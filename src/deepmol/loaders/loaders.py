@@ -11,13 +11,15 @@ import numpy as np
 import pandas as pd
 
 
-def load_csv_file(input_file, fields, sep=',', header=0, chunk_size=None):
-    """Load data as pandas dataframe from CSV files.
+def load_csv_file(input_file: str, fields: list, sep: str = ',', header: int = 0, chunk_size: int = None):
+    """
+    Load data as pandas dataframe from CSV files.
+
     Parameters
     ----------
     input_file: str
         data path
-    fields: np.ndarray
+    fields: list
         fields to keep
     sep: str
         separator
@@ -28,7 +30,7 @@ def load_csv_file(input_file, fields, sep=',', header=0, chunk_size=None):
     Returns
     -------
     pd.DataFrame
-        Dataframe with size chunk size.
+        Dataframe with chunk size.
     """
 
     if chunk_size is None:
@@ -40,7 +42,10 @@ def load_csv_file(input_file, fields, sep=',', header=0, chunk_size=None):
         return df[fields].sample(chunk_size)
 
 
-def load_sdf_file(input_file):
+def load_sdf_file(input_file: str):
+    """
+    Load data as pandas dataframe from SDF files.
+    """
     supplier = SDMolSupplier(input_file)
     mols, attempts = [], 0
 
@@ -48,80 +53,42 @@ def load_sdf_file(input_file):
         mols = list(supplier)
         attempts += 1
     print(f"Loaded {len(mols)} molecules after {attempts} attempts.")
-
     return mols
 
 
-"""
-class BaseDataLoader(object):
-    '''bla bla
-    '''
-
-    def __init__(self,
-                 data_path: str,
-                 mols_field: str,
-                 id_field: Optional[str] = None,
-                 labels_fields: Optional[Union[List[str], str]] = None,
-                 features_fields: Optional[Union[List[str], str]] = None,
-                 features2keep: Optional[np.ndarray] = None,
-                 shard_size: Optional[int] = None,
-                 in_memory: Optional[bool] = True,
-                 log_every_n: int = 1000):
-        ''' Construct a BaseDataLoader object.
-
-        #...
-
-        '''
-
-        if self.__class__ is BaseDataLoader:
-            raise ValueError(
-                "BaseDataLoader should never be instantiated directly. Use a subclass instead."
-                )
-
-        self.data_path = data_path
-        self.mols_field = mols_field
-        self.id_field = id_field
-        self.labels_fields = labels_fields
-        self.features_fields = features_fields
-        self.features2keep = features2keep
-        self.shard_size = shard_size
-
-        if in_memory:
-            self.dataset_type = 'numpy'
-        else :
-            #TODDO: implement a dataset class to store datasets in disk instead of memory
-            self.dataset_type = 'disk'
-            raise NotImplementedError
-        self.log_every_n = log_every_n
-
-
-    def create_dataset(self) -> NumpyDataset:
-        '''bla bla
-        '''
-        raise NotImplementedError    
-
-"""
-
-
 class CSVLoader(object):
-    """A Loader to directly read data from a CSV.
+    """
+    A Loader to directly read data from a CSV.
     Assumes a coma separated with header file!
     """
 
     def __init__(self,
                  dataset_path: str,
                  mols_field: str,
-                 id_field: Optional[str] = None,
-                 labels_fields: Optional[Union[List[str], str]] = None,
-                 features_fields: Optional[Union[List[str], str]] = None,
-                 features2keep: Optional[np.ndarray] = None,
-                 shard_size: Optional[int] = None):
-        """Initialize this object.
+                 id_field: str = None,
+                 labels_fields: Union[List[str], str] = None,
+                 features_fields: Union[List[str], str] = None,
+                 features2keep: List[Union[str, int]] = None,
+                 shard_size: int = None):
+        """
+        Initialize the CSVLoader.
+
         Parameters
         ----------
-        dataset_path: string
+        dataset_path: str
             path to the dataset file
-        ...
+        mols_field: str
+            field containing the molecules'
+        id_field: str
+            field containing the ids
+        labels_fields: Union[List[str], str]
+            field containing the labels
+        features_fields: Union[List[str], str]
+            field containing the features
+        features2keep: List[Union[str, int]]
+            features to keep
+        shard_size: int
+            size of the shard to load
         """
 
         if not isinstance(dataset_path, str):
@@ -173,29 +140,52 @@ class CSVLoader(object):
         self.fields2keep = fields2keep
 
     @staticmethod
-    def _get_dataset(dataset_path, fields=None, sep=',', header=0, chunk_size=None):
-        """Loads data with size chunk_size.
+    def _get_dataset(dataset_path: str,
+                     fields: List[str] = None,
+                     sep: str = ',',
+                     header: int = 0,
+                     chunk_size: int = None):
+        """
+        Loads data with size chunk_size.
+
         Parameters
         ----------
         dataset_path: str
-            Filename to process
-        fields
-        chunk_size: int, optional
-            The size of a shard of data to process at a time.
+            path to the dataset file
+        fields: List[str]
+            fields to keep
         sep: str
             separator
         header: int
             the row where the header is
-        fields: np.ndarray
-            fields to keep
+        chunk_size: int
+            size of the shard to load
+
         Returns
         -------
         pd.DataFrame
-            Dataframe
+            Dataframe with chunk size.
         """
         return load_csv_file(dataset_path, fields, sep, header, chunk_size)
 
-    def create_dataset(self, sep=',', header=0, in_memory=True):
+    def create_dataset(self, sep: str = ',', header: int = 0, in_memory: bool = True):
+        """
+        Creates a dataset from the CSV file.
+
+        Parameters
+        ----------
+        sep: str
+            separator
+        header: int
+            the row where the header is
+        in_memory: bool
+            whether to load the dataset in memory or not
+
+        Returns
+        -------
+        NumpyDataset
+            Dataset with the data.
+        """
         if in_memory:
             dataset = self._get_dataset(self.dataset_path, fields=self.fields2keep, sep=sep, header=header,
                                         chunk_size=self.shard_size)
@@ -229,22 +219,34 @@ class CSVLoader(object):
 
 
 class SDFLoader(object):
-    """A Loader to directly read data from a SDF.
-        """
+    """
+    A Loader to directly read data from a SDF.
+    """
 
     def __init__(self,
                  dataset_path: str,
-                 id_field: Optional[str] = None,
-                 labels_fields: Optional[Union[List[str], str]] = None,
-                 features_fields: Optional[Union[List[str], str]] = None,
-                 features2keep: Optional[np.ndarray] = None,
+                 id_field: str = None,
+                 labels_fields: Union[List[str], str] = None,
+                 features_fields: Union[List[str], str] = None,
+                 features2keep: List[Union[str, int]] = None,
                  shard_size: Optional[int] = None):
-        """Initialize this object.
+        """
+        Initialize the SDFLoader.
+
         Parameters
         ----------
-        dataset_path: string
+        dataset_path: str
             path to the dataset file
-        ...
+        id_field: str
+            field containing the ids
+        labels_fields: Union[List[str], str]
+            field containing the labels
+        features_fields: Union[List[str], str]
+            field containing the features
+        features2keep: List[Union[str, int]]
+            features to keep
+        shard_size: int
+            size of the shard to load
         """
 
         if not isinstance(dataset_path, str):
@@ -294,15 +296,28 @@ class SDFLoader(object):
 
     @property
     def mols_handler(self):
+        """
+        Returns the molecules' handler.
+        """
         return self._mols_handler
 
     @mols_handler.setter
-    def mols_handler(self, value):
+    def mols_handler(self, value: str):
+        """
+        Sets the molecules' handler.
+
+        Parameters
+        ----------
+        value: str
+            molecules' handler
+        """
         self._mols_handler = value
 
     @staticmethod
-    def _get_dataset(dataset_path):
-        """Loads data from path.
+    def _get_dataset(dataset_path: str):
+        """
+        Loads data from path.
+
         Parameters
         ----------
         dataset_path: str
@@ -315,6 +330,19 @@ class SDFLoader(object):
         return load_sdf_file(dataset_path)
 
     def create_dataset(self, in_memory=True):
+        """
+        Creates a dataset from the SDF file.
+
+        Parameters
+        ----------
+        in_memory: bool
+            whether to load the dataset in memory or not
+
+        Returns
+        -------
+        NumpyDataset
+            Dataset with the data.
+        """
         if in_memory:
             self.mols_handler = self._get_dataset(self.dataset_path)
             X = []
@@ -371,45 +399,3 @@ class SDFLoader(object):
 
         else:
             raise NotImplementedError
-
-
-"""
-class DatabaseLoader(BaseDataLoader):
-    '''bla bla
-    '''
-
-    def __init__(self):
-        super().__init__()
-        
-
-class JSONLoader(BaseDataLoader):
-    '''bla bla
-    '''
-
-    def __init__(self):
-        super().__init__()
-
-
-class SDFLoader(BaseDataLoader):
-    '''bla bla
-    '''
-
-    def __init__(self):
-        super().__init__()
-
-class FASTALoader(BaseDataLoader):
-    '''bla bla
-    '''
-
-    def __init__(self):
-        super().__init__()
-
-
-class ImageLoader(BaseDataLoader):
-    '''bla bla
-    '''
-
-    def __init__(self):
-        super().__init__()
-
-"""

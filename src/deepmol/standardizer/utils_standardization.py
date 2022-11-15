@@ -1,21 +1,22 @@
 from copy import deepcopy
-from rdkit.Chem import AddHs, GetMolFrags, Kekulize, MolToInchi, MolFromInchi, MolFromSmarts, MolFromSmiles, \
-    RemoveStereochemistry, MolToSmiles, RemoveHs
+
+from rdkit.Chem import Mol, RemoveStereochemistry, GetMolFrags, AddHs, RemoveHs, Kekulize
 from rdkit.Chem.Descriptors import MolWt
 from rdkit.Chem.MolStandardize import rdMolStandardize
 
 
-def remove_isotope_info(mol):
+def remove_isotope_info(mol: Mol) -> Mol:
     """
     Remove isotope information from a molecule.
+
     Parameters
     ----------
-    mol: RDKit Mol object
-        molecule
+    mol: Mol
+        RDKit Mol object
 
     Returns
     ----------
-    mol: RDKit Mol object
+    mol: Mol
         molecule without isotope insformation
     """
     mol = deepcopy(mol)
@@ -26,17 +27,18 @@ def remove_isotope_info(mol):
     return mol
 
 
-def uncharge(mol):
+def uncharge(mol: Mol) -> Mol:
     """
     Neutralize a molecule.
+
     Parameters
     ----------
-    mol: RDKit Mol object
-        molecule
+    mol: Mol
+        RDKit Mol object
 
     Returns
     ----------
-    mol: RDKit Mol object
+    mol: Mol
         neutralized molecule
     """
     mol = deepcopy(mol)
@@ -47,17 +49,18 @@ def uncharge(mol):
     return mol
 
 
-def remove_stereo(mol):
+def remove_stereo(mol: Mol) -> Mol:
     """
     Remove stereochemistry from a molecule.
+
     Parameters
     ----------
-    mol: RDKit Mol object
-        molecule
+    mol: Mol
+        RDKit Mol object
 
     Returns
     ----------
-    mol: RDKit Mol object
+    mol: Mol
         molecule without stereochemistry
     """
     mol = deepcopy(mol)
@@ -67,13 +70,14 @@ def remove_stereo(mol):
     return mol
 
 
-def count_non_hs_atoms(mol):
+def count_non_hs_atoms(mol: Mol) -> int:
     """
     Count the number of atoms in a molecule excluding Hs.
+
     Parameters
     ----------
-    mol: RDKit Mol object
-        molecule
+    mol: Mol
+        RDKit Mol object
 
     Returns
     ----------
@@ -87,19 +91,18 @@ def count_non_hs_atoms(mol):
     return ans
 
 
-def keep_biggest(mol):
+def keep_biggest(mol: Mol) -> Mol:
     """
-    Keep only the biggest fragment according to number
-    of non H atoms or molecular weight if tied.
+    Keep only the biggest fragment according to number of non H atoms or molecular weight if tied.
 
     Parameters
     ----------
-    mol: RDKit Mol object
-        molecule
+    mol: Mol
+        RDKit Mol object
 
     Returns
     ----------
-    mol: RDKit Mol object
+    mol: Mol
         biggest fragment of the molecule
     """
     molfrags = GetMolFrags(mol, asMols=True, sanitizeFrags=False)
@@ -116,53 +119,56 @@ def keep_biggest(mol):
     return mol_out
 
 
-def add_hydrogens(mol, addCoords=True):
-    """Explicit all hydrogens.
+def add_hydrogens(mol: Mol, addCoords: bool = True) -> Mol:
+    """
+    Explicit all hydrogens.
 
     Parameters
     ----------
-    mol: RDKit Mol object
-        molecule
+    mol: Mol
+        RDKit Mol object
     addCoords: bool
         Add coordinate to added Hs
 
     Returns
     ----------
-    mol: RDKit Mol object
+    mol: Mol
         molecule with all Hs explicit.
     """
     return AddHs(mol, explicitOnly=False, addCoords=addCoords)
 
 
-def remove_hydrogens(mol, addCoords=True):
-    """Implicit all hydrogens.
+def remove_hydrogens(mol: Mol, addCoords: bool = True) -> Mol:
+    """
+    Implicit all hydrogens.
 
     Parameters
     ----------
-    mol: RDKit Mol object
-        molecule
+    mol: Mol
+        RDKit Mol object
     addCoords: bool
         Add coordinate to added Hs
 
     Returns
     ----------
-    mol: RDKit Mol object
+    mol: Mol
         molecule with all Hs implicit.
     """
     return RemoveHs(mol, explicitOnly=False, addCoords=addCoords)
 
 
-def kekulize(mol):
-    """Kekulize compound.
+def kekulize(mol: Mol) -> Mol:
+    """
+    Kekulize compound.
 
     Parameters
     ----------
-    mol: RDKit Mol object
-        molecule
+    mol: Mol
+        RDKit Mol object
 
     Returns
     ----------
-    mol: RDKit Mol object
+    mol: Mol
         kekulized molecule
     """
     mol = deepcopy(mol)

@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 
-from rdkit import Chem
-from deepmol.datasets import Dataset
-from rdkit.Chem import rdmolfiles, Mol
-from rdkit.Chem import rdmolops
 import numpy as np
+from rdkit import Chem
+from rdkit.Chem import rdmolfiles, rdmolops, Mol
+
+from deepmol.datasets import Dataset
 
 
 class MolecularStandardizer(ABC):
@@ -13,19 +13,28 @@ class MolecularStandardizer(ABC):
     """
 
     def __init__(self):
-        """Standardizer for molecules.
-        Parameters
-        ----------
-        Returns
-        -------
-        dataset: Dataset object
-          The input Dataset containing a standardized representation of the molecules in Dataset.mols.
         """
-
+        Standardizer for molecules.
+        """
         if self.__class__ == MolecularStandardizer:
             raise Exception('Abstract class MolecularStandardizer should not be instantiated')
 
-    def standardize(self, dataset: Dataset, log_every_n=1000):
+    def standardize(self, dataset: Dataset, log_every_n: int = 1000):
+        """
+        Standardizes a dataset of molecules.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to standardize.
+        log_every_n: int
+            Log every n molecules.
+
+        Returns
+        -------
+        dataset: Dataset
+            Standardized dataset.
+        """
         molecules = dataset.mols
 
         stand_mols = []
@@ -67,5 +76,18 @@ class MolecularStandardizer(ABC):
         return dataset
 
     @abstractmethod
-    def _standardize(self, mol: Mol):
+    def _standardize(self, mol: Mol) -> Mol:
+        """
+        Standardizes a molecule.
+
+        Parameters
+        ----------
+        mol: Mol
+            RDKit Mol object
+
+        Returns
+        -------
+        mol: Mol
+            Standardized mol.
+        """
         raise NotImplementedError

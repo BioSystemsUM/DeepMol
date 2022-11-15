@@ -4,26 +4,41 @@ import plotly.express as px
 
 
 class UMAP(UnsupervisedLearn):
-    """Class to perform Uniform Manifold Approximation and Projection (UMAP) .
+    """
+    Class to perform Uniform Manifold Approximation and Projection (UMAP).
 
-        Wrapper around umap package.
-        (https://github.com/lmcinnes/umap)
-        """
+    Wrapper around umap package.
+    (https://github.com/lmcinnes/umap)
+    """
 
-    def __init__(self, n_neighbors=15, n_components=2, metric='euclidean', n_epochs=None, learning_rate=1.0,
-                 low_memory=True, random_state=None):
-        # TODO: comments
+    def __init__(self,
+                 n_neighbors: int = 15,
+                 n_components: int = 2,
+                 metric: str = 'euclidean',
+                 n_epochs: int = None,
+                 learning_rate: float = 1.0,
+                 low_memory: bool = True,
+                 random_state: int = None):
         """
+        Initialize UMAP.
+
         Parameters
         ----------
-        n_neighbors: float (optional, default 15)
-            The size of local neighborhood (in terms of number of neighboring
-            sample points) used for manifold approximation. Larger values
-            result in more global views of the manifold, while smaller
-            values result in more local data being preserved. In general
-            values should be in the range 2 to 100.
+        n_neighbors : int
+            The size of local neighborhood.
+        n_components : int
+            The dimension of the space to embed into.
+        metric : str
+            The metric to use for the computation.
+        n_epochs : int
+            The number of training epochs to use when optimizing the low dimensional embedding.
+        learning_rate : float
+            The initial learning rate for the embedding optimization.
+        low_memory : bool
+            If True, use a more memory efficient nearest neighbor implementation.
+        random_state : int
+            The random seed to use.
         """
-
         super().__init__()
         self.n_neighbors = n_neighbors
         self.n_components = n_components
@@ -34,7 +49,19 @@ class UMAP(UnsupervisedLearn):
         self.random_state = random_state
 
     def _runUnsupervised(self, plot=True):
-        """Compute cluster centers and predict cluster index for each sample."""
+        """
+        Compute cluster centers and predict cluster index for each sample.
+
+        Parameters
+        ----------
+        plot : bool
+            If True, plot the embedding.
+
+        Returns
+        -------
+        embedding : array
+            The embedding of the training data in low-dimensional space.
+        """
 
         embedder = ParametricUMAP(n_neighbors=self.n_neighbors,
                                   n_components=self.n_components,
@@ -56,7 +83,16 @@ class UMAP(UnsupervisedLearn):
         return embedding
 
     def _plot(self, embedding, Y_train):
+        """
+        Plot the embedding.
 
+        Parameters
+        ----------
+        embedding : array
+            The embedding of the training data in low-dimensional space.
+        Y_train : array
+            The labels of the training data.
+        """
         print('2 Components UMAP: ')
 
         dic = {0: "Not Active (0)", 1: "Active (1)"}

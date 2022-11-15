@@ -1,10 +1,8 @@
-from rdkit.Chem import Cleanup, SanitizeMol, SanitizeFlags
-from rdkit.Chem.AllChem import AssignStereochemistry
-from deepmol.standardizer.utils_standardization import remove_isotope_info, uncharge, remove_stereo, kekulize, \
-    keep_biggest, add_hydrogens
+from rdkit.Chem import Mol, Cleanup, SanitizeMol, SanitizeFlags, AssignStereochemistry
 
-from deepmol.standardizer.molecular_standardizer import MolecularStandardizer
-from typing import Any
+from deepmol.standardizer import MolecularStandardizer
+from deepmol.standardizer.utils_standardization import remove_isotope_info, uncharge, remove_stereo, keep_biggest, \
+    add_hydrogens, kekulize
 
 # Customizable standardizer and custom parameters
 # adapted from https://github.com/brsynth/RetroPathRL
@@ -27,17 +25,18 @@ heavy_standardisation = {
     'NEUTRALISE_CHARGE_LATE': True}
 
 
-def custom_standardizer(mol,
-                        REMOVE_ISOTOPE=True,
-                        NEUTRALISE_CHARGE=True,
-                        REMOVE_STEREO=False,
-                        KEEP_BIGGEST=True,
-                        ADD_HYDROGEN=True,
-                        KEKULIZE=True,
-                        NEUTRALISE_CHARGE_LATE=True):
-    """Tunable sequence of filters for standardization.
+def custom_standardizer(mol: Mol,
+                        REMOVE_ISOTOPE: bool = True,
+                        NEUTRALISE_CHARGE: bool = True,
+                        REMOVE_STEREO: bool = False,
+                        KEEP_BIGGEST: bool = True,
+                        ADD_HYDROGEN: bool = True,
+                        KEKULIZE: bool = True,
+                        NEUTRALISE_CHARGE_LATE: bool = True):
+    """
+    Tunable sequence of filters for standardization.
 
-    Operations will made in the following order:
+    Operations will be made in the following order:
      1 RDKit Cleanup      -- always
      2 RDKIT SanitizeMol  -- always
      3 Remove isotope     -- optional (default: True)
@@ -48,6 +47,30 @@ def custom_standardizer(mol,
      8 RDKit SanitizeMol  -- if any (6, 7)
      9 Add hydrogens      -- optional (default: True)
     10 Kekulize           -- optional (default: True)
+
+    Parameters
+    ----------
+    mol: Mol
+        RDKit Mol object
+    REMOVE_ISOTOPE: bool
+        Remove isotope information from the molecule.
+    NEUTRALISE_CHARGE: bool
+        Neutralise the charge of the molecule.
+    REMOVE_STEREO: bool
+        Remove stereo information from the molecule.
+    KEEP_BIGGEST: bool
+        Keep only the biggest fragment of the molecule.
+    ADD_HYDROGEN: bool
+        Add explicit hydrogens to the molecule.
+    KEKULIZE: bool
+        Kekulize the molecule.
+    NEUTRALISE_CHARGE_LATE: bool
+        Neutralise the charge of the molecule after sanitization.
+
+    Returns
+    -------
+    mol: Mol
+        Standardized mol.
     """
 
     Cleanup(mol)
@@ -86,7 +109,8 @@ def custom_standardizer(mol,
 
 
 class CustomStandardizer(MolecularStandardizer):
-    """...
+    """
+    Standardizes a molecule using a custom set of steps.
     """
     simple_standardisation = {
         'REMOVE_ISOTOPE': False,
@@ -97,35 +121,37 @@ class CustomStandardizer(MolecularStandardizer):
         'KEKULIZE': False,
         'NEUTRALISE_CHARGE_LATE': True}
 
-    def __init__(self, params=None):
+    def __init__(self, params: dict = None):
         """
+        Initializes the standardizer.
+
         Parameters
         ----------
-        params: dict, optional (default simple_standardization params)
-            Parameters containing which steps of standardization to take.
+        params: dict
+            Dictionary containing which steps of standardization to make.
         """
-
         super().__init__()
         if params is None:
             params = simple_standardisation
         self.params = params
 
-    def _standardize(self, mol: Any):
-        """Standardizes a molecule SMILES using a custom set of steps.
-         Parameters
+    def _standardize(self, mol: Mol) -> Mol:
+        """
+        Standardizes a molecule SMILES using a custom set of steps.
+
+        Parameters
         ----------
-        mol: rdkit.Chem.rdchem.Mol
+        mol: Mol
             RDKit Mol object
+
         Returns
         -------
-        mol: str
-            Standardized mol SMILES.
+        mol: Mol
+            Standardized Mol.
         """
-
         try:
             mol = custom_standardizer(mol, **self.params)
         except Exception as e:
             print(e)
             print('error in standardizing smile: ' + str(mol))
-
         return mol

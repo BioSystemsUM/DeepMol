@@ -1,3 +1,6 @@
+from abc import abstractmethod, ABC
+from typing import Union
+
 from deepmol.datasets import Dataset, NumpyDataset
 
 import pandas as pd
@@ -11,8 +14,9 @@ from sklearn import cluster, decomposition, manifold
 
 
 # TODO: plot legends and labels are made for sweet vs non sweet --> change it to be general
-class UnsupervisedLearn(object):
-    """Class for unsupervised learning.
+class UnsupervisedLearn(ABC):
+    """
+    Class for unsupervised learning.
 
     A UnsupervisedLearn sampler receives a Dataset object and performs unsupervised learning.
 
@@ -20,94 +24,110 @@ class UnsupervisedLearn(object):
     """
 
     def __init__(self):
+        """
+        Initialize the UnsupervisedLearn object.
+        """
         if self.__class__ == UnsupervisedLearn:
             raise Exception('Abstract class UnsupervisedLearn should not be instantiated')
-
         self.features = None
 
-    def runUnsupervised(self, dataset: Dataset, plot=True):
+    def runUnsupervised(self, dataset: Dataset, plot: bool = True):
+        """
+        Run unsupervised learning.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The dataset to perform unsupervised learning.
+        plot: bool
+            If True, plot the results of unsupervised learning.
+
+        Returns
+        -------
+        x: NumpyDataset
+            The dataset with the unsupervised features in dataset.X.
+        """
         self.dataset = dataset
-
         self.features = dataset.X
-
         x = self._runUnsupervised(plot=plot)
-
         return x
 
-    def plot(self):
-        NotImplementedError("Each subclass must implement its own plot method.")
+    @abstractmethod
+    def _runUnsupervised(self, plot: bool = True):
+        """
+        Run unsupervised learning.
+
+        Parameters
+        ----------
+        plot: bool
+            If True, plot the results of unsupervised learning.
+
+        Returns
+        -------
+        x: NumpyDataset
+            The dataset with the unsupervised features in dataset.X.
+        """
+        raise NotImplementedError
 
 
 class PCA(UnsupervisedLearn):
-    """Class to perform principal component analysis (PCA).
+    """
+    Class to perform principal component analysis (PCA).
 
     Wrapper around scikit-learn PCA
     (https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html#sklearn.decomposition.PCA)
 
-    Linear dimensionality reduction using Singular Value Decomposition of the data to project it
-    to a lower dimensional space.
+    Linear dimensionality reduction using Singular Value Decomposition of the data to project it to a lower dimensional
+    space.
     """
 
-    def __init__(self, n_components=None, copy=True, whiten=False, svd_solver='auto', tol=0.0, iterated_power='auto',
-                 random_state=None):
+    def __init__(self,
+                 n_components: Union[int, float, str] = None,
+                 copy: bool = True,
+                 whiten: bool = False,
+                 svd_solver: str = 'auto',
+                 tol: float = 0.0,
+                 iterated_power: Union[int, str] = 'auto',
+                 random_state: int = None):
         """
         Parameters
         ----------
-        n_components: int, float, None or str (default None)
+        n_components: Union[int, float, str]
             Number of components to keep. if n_components is not set all components are kept:
-
-            n_components == min(n_samples, n_features)
             If n_components == 'mle' and svd_solver == 'full', Minka’s MLE is used to guess the dimension.
             Use of n_components == 'mle' will interpret svd_solver == 'auto' as svd_solver == 'full'.
-
             If 0 < n_components < 1 and svd_solver == 'full', select the number of components such that the amount
             of variance that needs to be explained is greater than the percentage specified by n_components.
-
             If svd_solver == 'arpack', the number of components must be strictly less than the minimum of n_features
             and n_samples.
-
-            Hence, the None case results in: n_components == min(n_samples, n_features) - 1
-
-        copy: bool, (default True)
+        copy: bool
             If False, data passed to fit are overwritten and running fit(X).transform(X) will not yield the expected
             results, use fit_transform(X) instead.
-
-        whiten: bool, optional (default False)
-            When True (False by default) the components_ vectors are multiplied by the square root of n_samples and
-            then divided by the singular values to ensure uncorrelated outputs with unit component-wise variances.
-
-            Whitening will remove some information from the transformed signal (the relative variance scales of the
-            components) but can sometime improve the predictive accuracy of the downstream estimators by making their
-            data respect some hard-wired assumptions.
-
-        svd_solver: str {‘auto’, ‘full’, ‘arpack’, ‘randomized’}, (default auto)
+        whiten: bool
+            When True the components_ vectors are multiplied by the square root of n_samples and then divided by the
+            singular values to ensure uncorrelated outputs with unit component-wise variances.
+        svd_solver: str {‘auto’, ‘full’, ‘arpack’, ‘randomized’}
             If auto :
                 The solver is selected by a default policy based on X.shape and n_components: if the input data is
                 larger than 500x500 and the number of components to extract is lower than 80% of the smallest dimension
-                of the data, then the more efficient ‘randomized’ method is enabled. Otherwise the exact full SVD is
+                of the data, then the more efficient ‘randomized’ method is enabled. Otherwise, the exact full SVD is
                 computed and optionally truncated afterwards.
-
             If full :
                 run exact full SVD calling the standard LAPACK solver via scipy.linalg.svd and select the components
                 by postprocessing
-
             If arpack :
                 run SVD truncated to n_components calling ARPACK solver via scipy.sparse.linalg.svds. It requires
                 strictly 0 < n_components < min(X.shape)
-
             If randomized :
                 run randomized SVD by the method of Halko et al.
-
-        tol: float >= 0, optional (default 0.0)
+        tol: float
             Tolerance for singular values computed by svd_solver == ‘arpack’.
-
-        iterated_power: int >= 0, or ‘auto’, (default auto)
-            Number of iterations for the power method computed by svd_solver == ‘randomized’.
-
-        random_state: int, RandomState instance, (default None)
-            Used when svd_solver == ‘arpack’ or ‘randomized’. Pass an int for reproducible results across
-            multiple function calls.
-
+        iterated_power: Union[int, str]
+            Number of iterations for the power method computed by svd_solver == ‘randomized’. 'auto' selects it
+            automatically.
+        random_state: int
+            Used when svd_solver == ‘arpack’ or ‘randomized’. Pass an int for reproducible results across multiple
+            function calls.
         """
         super().__init__()
         self.n_components = n_components
@@ -119,7 +139,14 @@ class PCA(UnsupervisedLearn):
         self.random_state = random_state
 
     def _runUnsupervised(self, plot=True):
-        """Fit the model with X and apply the dimensionality reduction on X."""
+        """
+        Fit the model with X and apply the dimensionality reduction on X.
+
+        Parameters
+        ----------
+        plot: bool
+            If True, plot the results of unsupervised learning.
+        """
         pca = decomposition.PCA(n_components=self.n_components,
                                 copy=self.copy,
                                 whiten=self.whiten,
@@ -138,7 +165,9 @@ class PCA(UnsupervisedLearn):
                             n_tasks=self.dataset.n_tasks)
 
     def _plot(self):
-
+        """
+        Plot the results of unsupervised learning (PCA).
+        """
         print('2 Components PCA: ')
         pca2comps = decomposition.PCA(n_components=2,
                                       copy=self.copy,
@@ -185,9 +214,9 @@ class PCA(UnsupervisedLearn):
 
         if self.n_components is None:
             self.n_components = self.dataset.X.shape[1]
-            print('%i Components PCA: ' % (self.n_components))
+            print('%i Components PCA: ' % self.n_components)
         else:
-            print('%i Components PCA: ' % (self.n_components))
+            print('%i Components PCA: ' % self.n_components)
 
         pca_all = decomposition.PCA(n_components=self.n_components,
                                     copy=self.copy,
@@ -226,7 +255,8 @@ class PCA(UnsupervisedLearn):
 
 
 class TSNE(UnsupervisedLearn):
-    """Class to perform t-distributed Stochastic Neighbor Embedding (TSNE).
+    """
+    Class to perform t-distributed Stochastic Neighbor Embedding (TSNE).
 
     Wrapper around scikit-learn TSNE
     (https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html#sklearn.manifold.TSNE)
@@ -324,6 +354,7 @@ class TSNE(UnsupervisedLearn):
             joblib.parallel_backend context. -1 means using all processors.
 
         """
+        super().__init__()
         self.n_components = n_components
         self.perplexity = perplexity
         self.early_exaggeration = early_exaggeration
@@ -432,65 +463,56 @@ class KMeans(UnsupervisedLearn):
 
     def __init__(self,
                  n_clusters='elbow',
-                 init='k-means++',
-                 n_init=10,
-                 max_iter=300,
-                 tol=0.0001,
-                 verbose=0,
-                 random_state=None,
-                 copy_x=True,
-                 algorithm='auto'):
+                 init: str = 'k-means++',
+                 n_init: int = 10,
+                 max_iter: int = 300,
+                 tol: float = 0.0001,
+                 verbose: int = 0,
+                 random_state: int = None,
+                 copy_x: bool = True,
+                 algorithm: str = 'auto'):
         """
+        Initialize KMeans object.
+
         Parameters
         ----------
-        n_clusters: int, 'calculate', default=8
+        n_clusters: Union[int, str]
             The number of clusters to form as well as the number of centroids to generate.
             'elbow' uses the elbow method to determine the most suited number of clusters.
-
-        init: {‘k-means++’, ‘random’, ndarray, callable}, default=’k-means++’
+        init: str {‘k-means++’, ‘random’, ndarray, callable}
             Method for initialization:
                 ‘k-means++’ : selects initial cluster centers for k-mean clustering in a smart way to speed up
                 convergence. See section Notes in k_init for more details.
-
                 ‘random’: choose n_clusters observations (rows) at random from data for the initial centroids.
-
-                If an ndarray is passed, it should be of shape (n_clusters, n_features) and gives the initial centers.
-
+                If a ndarray is passed, it should be of shape (n_clusters, n_features) and gives the initial centers.
                 If a callable is passed, it should take arguments X, n_clusters and a random state and return an
                 initialization.
-
-        n_init: int, default=10
+        n_init: int
             Number of time the k-means algorithm will be run with different centroid seeds. The final results will be
             the best output of n_init consecutive runs in terms of inertia.
-
-        max_iter: int, default=300
+        max_iter: int
             Maximum number of iterations of the k-means algorithm for a single run.
-
-        tol: float, default=1e-4
-            Relative tolerance with regards to Frobenius norm of the difference in the cluster centers of two
+        tol: float
+            Relative tolerance in regard to Frobenius norm of the difference in the cluster centers of two
             consecutive iterations to declare convergence.
-
-        verbose: int, default=0
+        verbose: int
             Verbosity mode.
-
-        random_state: int, RandomState instance, default=None
+        random_state: int
             Determines random number generation for centroid initialization. Use an int to make the randomness
             deterministic.
-
-        copy_x: bool, default=True
+        copy_x: bool
             When pre-computing distances it is more numerically accurate to center the data first. If copy_x is True
             (default), then the original data is not modified. If False, the original data is modified, and put back
             before the function returns, but small numerical differences may be introduced by subtracting and then
             adding the data mean. Note that if the original data is not C-contiguous, a copy will be made even if
             copy_x is False. If the original data is sparse, but not in CSR format, a copy will be made even if copy_x
             is False.
-
-        algorithm: {“auto”, “full”, “elkan”}, default=”auto”
+        algorithm: str {“auto”, “full”, “elkan”}
             K-means algorithm to use. The classical EM-style algorithm is “full”. The “elkan” variation is more
-            efficient on data with well-defined clusters, by using the triangle inequality. However it’s more memory
+            efficient on data with well-defined clusters, by using the triangle inequality. However, it’s more memory
             intensive due to the allocation of an extra array of shape (n_samples, n_clusters).
-
         """
+        super().__init__()
         self.n_clusters = n_clusters
         self.init = init
         self.n_init = n_init
@@ -502,7 +524,19 @@ class KMeans(UnsupervisedLearn):
         self.algorithm = algorithm
 
     def _runUnsupervised(self, plot=True):
-        """Compute cluster centers and predict cluster index for each sample."""
+        """
+        Compute cluster centers and predict cluster index for each sample.
+
+        Parameters
+        ----------
+        plot: bool
+            Whether to plot the results or not.
+
+        Returns
+        -------
+        k_means.labels_: ndarray
+            Index of the cluster each sample belongs to.
+        """
 
         if self.n_clusters == 'elbow':
             self.n_clusters = self.elbow()
@@ -524,6 +558,14 @@ class KMeans(UnsupervisedLearn):
         return k_means.labels_
 
     def elbow(self):
+        """
+        Determine the optimal number of clusters using the elbow method.
+
+        Returns
+        -------
+        int
+            The optimal number of clusters.
+        """
         wcss = []
         for i in range(1, 11):
             kmeans_elbow = cluster.KMeans(n_clusters=i,
@@ -554,6 +596,9 @@ class KMeans(UnsupervisedLearn):
         return elbow.knee
 
     def _plot(self):
+        """
+        Plot the results of the clustering.
+        """
         # TODO: check the best approach to this problem
         if self.features.shape[1] > 11:
             print('Reduce the number of features to less than ten to get plot interpretability!')

@@ -4,9 +4,8 @@ from unittest import TestCase
 from rdkit.Chem import rdMolDescriptors, MolFromSmiles
 from rdkit.DataStructs import TanimotoSimilarity
 
-from deepmol.standardizer.basic_standardizer import BasicStandardizer
-from deepmol.standardizer.custom_standardizer import CustomStandardizer
-from tests.unit_tests.standardizers.test_standardizers import StandardizerBaseTestCase
+from deepmol.standardizer import BasicStandardizer, CustomStandardizer
+from unit_tests.standardizers.test_standardizers import StandardizerBaseTestCase
 
 
 class GeneralStandardizer(StandardizerBaseTestCase, TestCase):

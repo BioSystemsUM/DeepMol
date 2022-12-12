@@ -863,7 +863,7 @@ class Asphericity(ThreeDimensionDescriptor):
             If True, the conformers are generated and optimized before the descriptors are calculated.
         """
         super().__init__(mandatory_generation_of_conformers)
-        self.descriptor_function = rdMolDescriptors.CalcEccentricity
+        self.descriptor_function = rdMolDescriptors.CalcAsphericity
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -900,7 +900,7 @@ class SpherocityIndex(ThreeDimensionDescriptor):
             If True, the conformers are generated and optimized before the descriptors are calculated.
         """
         super().__init__(mandatory_generation_of_conformers)
-        self.descriptor_function = rdMolDescriptors.CalcEccentricity
+        self.descriptor_function = rdMolDescriptors.CalcSpherocityIndex
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -935,7 +935,6 @@ class PrincipalMomentsOfInertia(ThreeDimensionDescriptor):
             If True, the conformers are generated and optimized before the descriptors are calculated.
         """
         super().__init__(mandatory_generation_of_conformers)
-        self.descriptor_function = rdMolDescriptors.CalcEccentricity
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """

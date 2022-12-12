@@ -132,7 +132,7 @@ class ThreeDimensionalMoleculeGenerator:
                 return True
         return False
 
-    def generate_conformers(self, new_mol: Mol, ETKDG_version: int = 1, **kwargs):
+    def generate_conformers(self, new_mol: Mol, etkdg_version: int = 1, **kwargs):
         """
         method to generate three-dimensional conformers
 
@@ -140,7 +140,7 @@ class ThreeDimensionalMoleculeGenerator:
         ----------
         new_mol: Mol
           Mol object from rdkit
-        ETKDG_version: int
+        etkdg_version: int
           version of the experimental-torsion-knowledge distance geometry (ETKDG) algorithm
         kwargs: dict
             Parameters for the ETKDG algorithm.
@@ -153,17 +153,17 @@ class ThreeDimensionalMoleculeGenerator:
 
         new_mol = Chem.AddHs(new_mol)
 
-        if ETKDG_version == 1:
+        if etkdg_version == 1:
             AllChem.EmbedMultipleConfs(new_mol, numConfs=self.n_conformations,
                                        params=AllChem.ETKDG(), **kwargs)
 
-        elif ETKDG_version == 2:
+        elif etkdg_version == 2:
             AllChem.EmbedMultipleConfs(new_mol, numConfs=self.n_conformations,
-                                       params=Chem.rdDistGeom.ETKDGv2(), **kwargs)
+                                       params=AllChem.ETKDGv2(), **kwargs)
 
-        elif ETKDG_version == 3:
+        elif etkdg_version == 3:
             AllChem.EmbedMultipleConfs(new_mol, numConfs=self.n_conformations,
-                                       params=Chem.rdDistGeom.ETKDGv3(), **kwargs)
+                                       params=AllChem.ETKDGv3(), **kwargs)
 
         else:
             print("Choose ETKDG's valid version (1,2 or 3)")
@@ -247,7 +247,7 @@ def get_all_3D_descriptors(mol):
 
 def generate_conformers(generator: ThreeDimensionalMoleculeGenerator,
                         new_mol: Union[Mol, str],
-                        ETKG_version: int = 1,
+                        etkg_version: int = 1,
                         optimization_mode: str = "MMFF94"):
     """
     Method to generate three-dimensional conformers and optimize them.
@@ -258,7 +258,7 @@ def generate_conformers(generator: ThreeDimensionalMoleculeGenerator,
         Class to generate three-dimensional conformers and optimize them.
     new_mol: Union[Mol, str]
         Mol object from rdkit or SMILES string to generate conformers and optimize them.
-    ETKG_version: int
+    etkg_version: int
         version of the experimental-torsion-knowledge distance geometry (ETKDG) algorithm.
     optimization_mode: str
         mode for the molecular geometry optimization (MMFF or UFF variants).
@@ -271,7 +271,7 @@ def generate_conformers(generator: ThreeDimensionalMoleculeGenerator,
     if isinstance(new_mol, str):
         new_mol = MolFromSmiles(new_mol)
 
-    new_mol = generator.generate_conformers(new_mol, ETKG_version)
+    new_mol = generator.generate_conformers(new_mol, etkg_version)
     new_mol = generator.optimize_molecular_geometry(new_mol, optimization_mode)
     return new_mol
 
@@ -280,10 +280,10 @@ def generate_conformers(generator: ThreeDimensionalMoleculeGenerator,
 def generate_conformers_to_sdf_file(dataset: Dataset,
                                     file_path: str,
                                     n_conformations: int = 20,
-                                    max_iterations: int = 2000,
+                                    max_iterations: int = 5,
                                     threads: int = 1,
                                     timeout_per_molecule: int = 12,
-                                    ETKG_version: int = 1,
+                                    etkg_version: int = 1,
                                     optimization_mode: str = "MMFF94"):
     """
     Generate conformers using the experimental-torsion-knowledge distance geometry (ETKDG) algorithm from RDKit,
@@ -303,7 +303,7 @@ def generate_conformers_to_sdf_file(dataset: Dataset,
         Number of threads.
     timeout_per_molecule: int
         The number of seconds in which the conformers are to be generated.
-    ETKG_version: int
+    etkg_version: int
         Version of the experimental-torsion-knowledge distance geometry (ETKDG) algorithm.
     optimization_mode: str
         Mode for the molecular geometry optimization (MMFF or UFF).
@@ -329,8 +329,6 @@ def generate_conformers_to_sdf_file(dataset: Dataset,
             Character length of bar.
         fill: str
             Bar fill character.
-        printEnd: str
-            end character (e.g. "\r", "\r\n\
         """
         percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
         filledLength = int(length * iteration // total)
@@ -348,7 +346,7 @@ def generate_conformers_to_sdf_file(dataset: Dataset,
     for i in range(mol_set.shape[0]):
         printProgressBar(i, mol_set.shape[0])
         try:
-            m2 = generate_conformers(generator, mol_set[i], ETKG_version, optimization_mode)
+            m2 = generate_conformers(generator, mol_set[i], etkg_version, optimization_mode)
             label = dataset.y[i]
             m2.SetProp("_Class", "%f" % label)
             if dataset.ids is not None and dataset.ids.size > 0:
@@ -389,7 +387,7 @@ class TwoDimensionDescriptors(MolecularFeaturizer):
             Array with all 2D descriptors from rdkit.
         """
         calc = MoleculeDescriptors.MolecularDescriptorCalculator([x[0] for x in Descriptors._descList])
-        #header = calc.GetDescriptorNames()
+        # header = calc.GetDescriptorNames()
 
         try:
             descriptors = calc.CalcDescriptors(mol)

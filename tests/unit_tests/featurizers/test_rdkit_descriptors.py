@@ -40,14 +40,14 @@ class Test2DDescriptors(FeaturizerTestCase, TestCase):
 
 class Test3DDescriptors(FeaturizerTestCase, TestCase):
 
-    def molecular_geometry_generation_and_optimization(self, smiles, method, ETKG_version, generator):
+    def molecular_geometry_generation_and_optimization(self, smiles, method, etkg_version, generator):
         mol_raw = MolFromSmiles(smiles)
         mol_raw2 = MolFromSmiles(smiles)
         new_mol = MolFromSmiles(smiles)
-        new_mol = generator.generate_conformers(new_mol, ETKG_version)
+        new_mol = generator.generate_conformers(new_mol, etkg_version)
         conformer_1_before = new_mol.GetConformer(1)
         conformers = new_mol.GetConformers()
-        self.assertEquals(len(conformers), 10)
+        self.assertEqual(len(conformers), 10)
         new_mol = generator.optimize_molecular_geometry(new_mol, method)
 
         conformer_1_after = new_mol.GetConformer(1)
@@ -67,7 +67,7 @@ class Test3DDescriptors(FeaturizerTestCase, TestCase):
         mol = MolFromSmiles("CC(CC(C)(O)C=C)=CC=CC")
         mol = generator.generate_conformers(mol, 1)
         conformers = mol.GetConformers()
-        self.assertEqual(len(conformers), 20)
+        self.assertEqual(len(conformers), 5)
 
         new_generator = ThreeDimensionalMoleculeGenerator(n_conformations=10)
         mol_raw = MolFromSmiles("CC(CC(C)(O)C=C)=CC=C")

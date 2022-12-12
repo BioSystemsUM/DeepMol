@@ -87,8 +87,8 @@ class ThreeDimensionalMoleculeGenerator:
     """
 
     def __init__(self,
-                 n_conformations: int = 20,
-                 max_iterations: int = 2000,
+                 n_conformations: int = 5,
+                 max_iterations: int = 5,
                  threads: int = 1,
                  timeout_per_molecule: int = 40):
         """
@@ -482,7 +482,7 @@ class ThreeDimensionDescriptor(MolecularFeaturizer):
             fp = np.empty(80, dtype=float)
             fp[:] = np.NaN
 
-        fp = np.asarray(fp, dtype=np.float)
+        fp = np.asarray(fp, dtype=float)
         return fp
 
     def _featurize(self, mol: Mol):
@@ -494,7 +494,7 @@ class All3DDescriptors(MolecularFeaturizer):
     Class to generate all three-dimensional descriptors.
     """
 
-    def __init__(self, mandatory_generation_of_conformers=False):
+    def __init__(self, mandatory_generation_of_conformers=True):
         """
         Initialize the class.
 
@@ -545,7 +545,7 @@ class All3DDescriptors(MolecularFeaturizer):
             fp = np.empty(size, dtype=float)
             fp[:] = np.NaN
 
-        fp = np.asarray(fp, dtype=np.float)
+        fp = np.asarray(fp, dtype=float)
         return fp
 
 
@@ -974,7 +974,7 @@ class PrincipalMomentsOfInertia(ThreeDimensionDescriptor):
             pmi = np.empty(3, dtype=float)
             pmi[:] = np.NaN
 
-        pmi = np.asarray(pmi, dtype=np.float)
+        pmi = np.asarray(pmi, dtype=float)
         return pmi
 
 
@@ -1035,5 +1035,5 @@ class NormalizedPrincipalMomentsRatios(ThreeDimensionDescriptor):
             npr = np.empty(2, dtype=float)
             npr[:] = np.NaN
 
-        npr = np.asarray(npr, dtype=np.float)
+        npr = np.asarray(npr, dtype=float)
         return npr

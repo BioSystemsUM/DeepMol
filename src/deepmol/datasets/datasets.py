@@ -124,34 +124,6 @@ class Dataset(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_mols(self) -> np.ndarray:
-        """
-        Get the molecules (e.g. SMILES format) vector for this dataset as a single numpy array.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def get_X(self) -> np.ndarray:
-        """
-        Get the features array for this dataset as a single numpy array.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def get_y(self) -> np.ndarray:
-        """
-        Get the y (tasks) vector for this dataset as a single numpy array.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def get_ids(self) -> np.ndarray:
-        """
-        Get the ids vector for this dataset as a single numpy array.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
     def remove_nan(self, axis: int = 0):
         """
         Remove the nan values from the dataset.
@@ -461,46 +433,6 @@ class NumpyDataset(Dataset):
         print('Mols_shape: ', self.len_mols())
         print('Features_shape: ', self.len_X())
         print('Labels_shape: ', self.len_y())
-
-    def get_mols(self) -> Union[List[str], List[Mol], None]:
-        """
-        Get the features array for this dataset as a single numpy array.
-        """
-        if self.mols is not None:
-            return self.mols
-        else:
-            print("Molecules not defined!")
-            return None
-
-    def get_X(self) -> Union[np.ndarray, None]:
-        """
-        Get the X vector for this dataset as a single numpy array.
-        """
-        if self.X is not None:
-            return self.X
-        else:
-            print("X not defined!")
-            return None
-
-    def get_y(self) -> Union[np.ndarray, None]:
-        """
-        Get the y vector for this dataset as a single numpy array.
-        """
-        if self.y is not None:
-            return self.y
-        else:
-            print("y not defined!")
-            return None
-
-    def get_ids(self) -> Union[np.ndarray, None]:
-        """
-        Get the ids vector for this dataset as a single numpy array.
-        """
-        if self.ids is not None:
-            return self.ids
-        else:
-            print("ids not defined!")
-            return None
 
     def remove_duplicates(self):
         """

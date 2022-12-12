@@ -1,0 +1,23 @@
+rdkit-pypi==2022.9.3: preprocessing, deep_learning, machine_learning, test
+smilespe==0.0.3: preprocessing, deep_learning, machine_learning, test
+seaborn==0.12.0: preprocessing, deep_learning, machine_learning, test
+joblib==1.1.0: preprocessing, deep_learning, machine_learning, test
+pillow==8.4.0: preprocessing, deep_learning, machine_learning, test
+h5py==3.1.0: preprocessing, deep_learning, machine_learning, test
+shap==0.41.0: deep_learning, machine_learning
+gensim==4.2.0: preprocessing
+imblearn: preprocessing
+chembl_structure_pipeline==1.1.0: preprocessing
+torch==1.12.1: deep_learning
+torchvision==0.13.1: deep_learning
+torchaudio==0.12.1: deep_learning
+dgl==0.9.1: deep_learning
+deepchem==2.5.0: deep_learning
+tensorflow==2.10.0: deep_learning
+boruta==0.3: preprocessing
+sklearn: machine_learning
+pytest>=7.1.1: test
+pytest-cov>=3.0.0: test
+mypy>=0.942: test
+flake8>=4.0.1: test
+tox>=3.25.0: test

@@ -50,9 +50,21 @@ operations on molecular data.
 
 Install DeepMol via pip:
 
+If you intend to install all the deepmol modules' dependencies:
+
 ```bash
-pip install deepmol
+pip install deepmol[all]
 ```
+
+Extra modules:
+
+```bash
+pip install deepmol[preprocessing]
+pip install deepmol[machine_learning]
+pip install deepmol[deep_learning]
+```
+
+
 
 <!---
 or

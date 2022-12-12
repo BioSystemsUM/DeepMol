@@ -139,67 +139,67 @@ class Test3DDescriptors(FeaturizerTestCase, TestCase):
     def test_featurize_to_fail(self):
 
         with self.assertRaises(SystemExit) as cm:
-            All3DDescriptors().featurize(self.mini_dataset_to_test)
+            All3DDescriptors(mandatory_generation_of_conformers=False).featurize(self.mini_dataset_to_test)
 
         self.assertEqual(cm.exception.code, 1)
 
         with self.assertRaises(SystemExit) as cm:
-            AutoCorr3D().featurize(self.mini_dataset_to_test)
+            AutoCorr3D(mandatory_generation_of_conformers=False).featurize(self.mini_dataset_to_test)
 
         self.assertEqual(cm.exception.code, 1)
 
         with self.assertRaises(SystemExit) as cm:
-            RadialDistributionFunction().featurize(self.mini_dataset_to_test)
+            RadialDistributionFunction(mandatory_generation_of_conformers=False).featurize(self.mini_dataset_to_test)
 
         self.assertEqual(cm.exception.code, 1)
 
         with self.assertRaises(SystemExit) as cm:
-            PlaneOfBestFit().featurize(self.mini_dataset_to_test)
+            PlaneOfBestFit(mandatory_generation_of_conformers=False).featurize(self.mini_dataset_to_test)
 
         self.assertEqual(cm.exception.code, 1)
 
         with self.assertRaises(SystemExit) as cm:
-            MORSE().featurize(self.mini_dataset_to_test)
+            MORSE(mandatory_generation_of_conformers=False).featurize(self.mini_dataset_to_test)
 
         self.assertEqual(cm.exception.code, 1)
 
         with self.assertRaises(SystemExit) as cm:
-            WHIM().featurize(self.mini_dataset_to_test)
+            WHIM(mandatory_generation_of_conformers=False).featurize(self.mini_dataset_to_test)
 
         self.assertEqual(cm.exception.code, 1)
 
         with self.assertRaises(SystemExit) as cm:
-            RadiusOfGyration().featurize(self.mini_dataset_to_test)
+            RadiusOfGyration(mandatory_generation_of_conformers=False).featurize(self.mini_dataset_to_test)
 
         self.assertEqual(cm.exception.code, 1)
 
         with self.assertRaises(SystemExit) as cm:
-            InertialShapeFactor().featurize(self.mini_dataset_to_test)
+            InertialShapeFactor(mandatory_generation_of_conformers=False).featurize(self.mini_dataset_to_test)
 
         self.assertEqual(cm.exception.code, 1)
 
         with self.assertRaises(SystemExit) as cm:
-            Eccentricity().featurize(self.mini_dataset_to_test)
+            Eccentricity(mandatory_generation_of_conformers=False).featurize(self.mini_dataset_to_test)
 
         self.assertEqual(cm.exception.code, 1)
 
         with self.assertRaises(SystemExit) as cm:
-            Asphericity().featurize(self.mini_dataset_to_test)
+            Asphericity(mandatory_generation_of_conformers=False).featurize(self.mini_dataset_to_test)
 
         self.assertEqual(cm.exception.code, 1)
 
         with self.assertRaises(SystemExit) as cm:
-            SpherocityIndex().featurize(self.mini_dataset_to_test)
+            SpherocityIndex(mandatory_generation_of_conformers=False).featurize(self.mini_dataset_to_test)
 
         self.assertEqual(cm.exception.code, 1)
 
         with self.assertRaises(SystemExit) as cm:
-            PrincipalMomentsOfInertia().featurize(self.mini_dataset_to_test)
+            PrincipalMomentsOfInertia(mandatory_generation_of_conformers=False).featurize(self.mini_dataset_to_test)
 
         self.assertEqual(cm.exception.code, 1)
 
         with self.assertRaises(SystemExit) as cm:
-            NormalizedPrincipalMomentsRatios().featurize(self.mini_dataset_to_test)
+            NormalizedPrincipalMomentsRatios(mandatory_generation_of_conformers=False).featurize(self.mini_dataset_to_test)
 
         self.assertEqual(cm.exception.code, 1)
 

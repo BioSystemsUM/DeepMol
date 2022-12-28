@@ -64,13 +64,10 @@ pip install deepmol[machine_learning]
 pip install deepmol[deep_learning]
 ```
 
-
-
-<!---
-or
+Also, you should install mol2vec and its dependencies:
 
 ```bash
-conda install -c conda-forge deepmol #just for example (not working)
+pip install git+https://github.com/samoturk/mol2vec#egg=mol2vec
 ```
 
 ### Docker

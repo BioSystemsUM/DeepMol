@@ -7,7 +7,7 @@ torchaudio==0.12.1
 dgl==0.9.1
 joblib==1.1.0
 pillow==8.4.0
-h5py==3.1.0
+h5py==3.7.0
 deepchem==2.5.0
 shap==0.41.0
 gensim==4.2.0

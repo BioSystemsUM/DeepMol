@@ -1,14 +1,16 @@
 from unittest import TestCase
 
 from deepchem.models import MultitaskClassifier
+from keras.layers import Dense, Dropout, GaussianNoise, Flatten
+from keras.optimizers import Adadelta, Adam
 from rdkit.Chem.rdMolAlign import AlignMol
 from rdkit.Chem.rdmolfiles import MolFromSmiles
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import roc_auc_score, classification_report, precision_score, accuracy_score, confusion_matrix
 from sklearn.svm import SVC
 from tensorflow.python.keras import Sequential
-from tensorflow.python.keras.layers import Dense, Dropout, GaussianNoise, Reshape, Conv1D, Flatten
-from tensorflow.keras.optimizers import Adadelta, Adam, RMSprop
+from tensorflow.python.keras.layers import Reshape, Conv1D
+from tensorflow.python.keras.optimizer_v1 import RMSprop
 
 from deepmol.compound_featurization import MixedFeaturizer
 from deepmol.compound_featurization.rdkit_descriptors import AutoCorr3D, All3DDescriptors, RadialDistributionFunction, \
@@ -22,7 +24,6 @@ from deepmol.models.deepchem_models import DeepChemModel
 from deepmol.models.keras_models import KerasModel
 from deepmol.models.sklearn_models import SklearnModel
 from deepmol.splitters.splitters import SingletaskStratifiedSplitter
-
 
 class Test3DGeneration(TestCase):
 

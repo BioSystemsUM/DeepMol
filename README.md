@@ -50,15 +50,24 @@ operations on molecular data.
 
 Install DeepMol via pip:
 
+If you intend to install all the deepmol modules' dependencies:
+
 ```bash
-pip install deepmol
+pip install deepmol[all]
 ```
 
-<!---
-or
+Extra modules:
 
 ```bash
-conda install -c conda-forge deepmol #just for example (not working)
+pip install deepmol[preprocessing]
+pip install deepmol[machine_learning]
+pip install deepmol[deep_learning]
+```
+
+Also, you should install mol2vec and its dependencies:
+
+```bash
+pip install git+https://github.com/samoturk/mol2vec#egg=mol2vec
 ```
 
 ### Docker

@@ -1,7 +1,7 @@
 import os
 import shutil
 import tempfile
-from typing import List, Optional, Sequence, Union
+from typing import List, Sequence, Union
 import numpy as np
 from deepmol.datasets import Dataset
 from deepmol.evaluator.evaluator import Evaluator

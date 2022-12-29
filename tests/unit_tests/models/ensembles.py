@@ -13,6 +13,7 @@ from deepmol.splitters.splitters import SingletaskStratifiedSplitter
 
 from tests import TEST_DIR
 
+
 class TestEnsembles(TestCase):
 
     def setUp(self) -> None:

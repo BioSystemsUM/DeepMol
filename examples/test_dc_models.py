@@ -1,7 +1,10 @@
 '''author: Bruno Pereira
 date: 28/04/2021
 '''
+import os
+from unittest import TestCase
 
+from deepchem.models import GraphConvModel
 from deepmol.compound_featurization import MorganFingerprint
 # from compound_featurization.rdkitFingerprints import RDKFingerprint, AtomPairFingerprint
 from deepmol.compound_featurization import ConvMolFeat, WeaveFeat, SmileImageFeat, \
@@ -15,7 +18,8 @@ from deepmol.splitters.splitters import SingletaskStratifiedSplitter
 from deepmol.models.deepchem_models import DeepChemModel
 from deepmol.metrics.metrics import Metric
 from deepmol.metrics.metrics_functions import roc_auc_score, precision_score, accuracy_score
-from deepmol.parameter_optimization.hyperparameter_optimization import HyperparameterOptimizerValidation
+from deepmol.parameter_optimization.hyperparameter_optimization import HyperparameterOptimizerValidation, \
+    HyperparameterOptimizerCV
 # import preprocessing as preproc
 from deepmol.utils import utils as preproc
 # from imbalanced_learn.ImbalancedLearn import RandomOverSampler
@@ -23,6 +27,7 @@ from deepmol.utils import utils as preproc
 # from deepchem.utils.conformers import ConformerGenerator
 # from deepchem.trans import IRVTransformer
 import numpy as np
+from sklearn.metrics import classification_report, confusion_matrix
 
 # from rdkit import Chem
 

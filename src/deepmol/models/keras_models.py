@@ -3,9 +3,9 @@ from deepmol.models.sklearn_models import SklearnModel
 from deepmol.metrics.metrics import Metric
 from deepmol.splitters.splitters import RandomSplitter, SingletaskStratifiedSplitter
 from typing import Sequence
-from tensorflow.keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
 import numpy as np
 from deepmol.datasets import Dataset
+from keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
 from sklearn.base import clone
 
 

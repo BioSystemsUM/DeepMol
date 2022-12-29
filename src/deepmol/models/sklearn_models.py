@@ -1,4 +1,4 @@
-from typing import Optional, Sequence
+from typing import Sequence
 
 import numpy as np
 from sklearn.base import BaseEstimator

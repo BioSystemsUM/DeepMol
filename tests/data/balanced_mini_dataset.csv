@@ -1,0 +1,15 @@
+PubChem CID;ChEMBL ID;IUPAC Name;Alternative Name;Molecular Formula;InchiKey;Smiles;Class;Sweetness Value
+0;-;-;-;-;-;O(C(=O)C(NC(=O)C(N)CC(O)=O)CCCCNOC(=O)C)C;1;
+0;-;-;-;-;-;COc1ccc(C2OCc3ccccc3O2)cc1OC(=O)Nc1ccc([N+](=O)[O-])cc1;1;
+0;-;-;-;-;-;C=C1C[C@]23CC[C@@H]4[C@@](C)(CCC[C@@]4(C)C(=O)O)[C@@H]2CC[C@@]1(O[C@H]1OC(CO)C(O)C(O)C1O[C@@H]1OC(CO)C(O)C(O)C1O)C3;1;
+0;-;-;-;-;-;N[C@@H](C[C@@](O)(CC1=NCc2ccccc21)C(=O)O)C(=O)O;1;
+0;-;-;-;-;-;COc1ccc(cc1O)CCc1ccccc1CO;1;
+0;-;-;-;-;-;O=C(Oc1cc(ccc1O)C1OCc2c(S1)cccc2)Oc1ccc(cc1)N(=O)=O;1;
+0;-;-;-;-;-;COC(=O)C(NC(=O)C(CC(=O)O)N)CCCNOC(=O)C;1;
+0;-;-;-;-;-;Clc1ccc(cc1)C[N](Cc1ccccc1)(CC(=O)Nc1c(C)cccc1C)C;0;
+0;-;-;-;-;-;CCCCCN1C(=O)c2ccc(cc2S1(=O)=O)[N+](=O)[O-];0;
+0;-;-;-;-;-;COc1ccc(cc1O)C1SCc2c(CS1)cccc2;0;
+0;-;-;-;-;-;CC(=C)C1[C@H]2C[C@@]3(C)[C@](O)([C@@H]4O[C@@H]4[C@@]35CO5)[C@@H]1C(=O)O2;0;
+0;-;-;-;-;-;OCC1OC(Oc2:c:c:c:c:c:2)C(O)[C@@H](O)[C@@H]1O;0;
+0;-;-;-;-;-;COC(=O)C1C(C)(C)CCC2C1(COC(=O)C)C1C(O)CC3CC1(C(=O)O2)C(=O)C3C;0;
+0;-;-;-;-;-;CC(=O)OCC12C(CCC(C2C(=O)O)(C)C)OC(=O)C23C1C(O)CC(C2)C(C3=O)C;0;

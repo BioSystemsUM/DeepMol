@@ -1,6 +1,7 @@
 from typing import List, Sequence, Union
 import numpy as np
 
+from deepmol.evaluator import Evaluator
 from deepmol.metrics.metrics import Metric
 from deepmol.datasets import Dataset
 from deepchem.models.torch_models import TorchModel
@@ -252,3 +253,33 @@ class DeepChemModel(BaseDeepChemModel):
                 best_model = dummy_model
 
         return best_model, train_score_best_model, test_score_best_model, train_scores, test_scores, avg_train_score / folds, avg_test_score / folds
+
+    def evaluate(self,
+                 dataset: Dataset,
+                 metrics: List[Metric],
+                 per_task_metrics: bool = False,
+                 n_classes: int = 2):
+        """
+        Evaluates the performance of the model on the provided dataset.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to evaluate the model on.
+        metrics: List[Metric]
+            Metrics to evaluate the model on.
+        per_task_metrics: bool
+            If true, return computed metric for each task on multitask dataset.
+        n_classes: int
+            Number of classes in the dataset.
+
+        Returns
+        -------
+        Tuple[Dict, Dict]
+            multitask_scores: dict
+                Dictionary mapping names of metrics to metric scores.
+            all_task_scores: dict
+                If `per_task_metrics == True`, then returns a second dictionary of scores for each task separately.
+        """
+        evaluator = Evaluator(self, dataset)
+        return evaluator.compute_model_performance(metrics, per_task_metrics=per_task_metrics, n_classes=n_classes)

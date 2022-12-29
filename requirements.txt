@@ -16,3 +16,4 @@ boruta==0.3
 tensorflow==2.10.0
 chembl_structure_pipeline==1.1.0
 scikit-learn==1.2.0
+imblearn

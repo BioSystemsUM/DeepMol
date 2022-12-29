@@ -101,9 +101,9 @@ class DeepchemBaseSearchCV(object):
             for train_dataset, test_dataset in datasets:
                 model = self.build_fn(**param_combination)  # creates a new DeepchemModel
                 model.fit(train_dataset)
-                train_score = model.evaluate(train_dataset, [self.metric])
+                train_score, _ = model.evaluate(train_dataset, [self.metric])
                 train_scores.append(train_score[self.metric.name])
-                test_score = model.evaluate(test_dataset, [self.metric])
+                test_score, _ = model.evaluate(test_dataset, [self.metric])
                 test_scores.append(test_score[self.metric.name])
 
             results_dict['mean_train_score'].append(np.mean(train_scores))

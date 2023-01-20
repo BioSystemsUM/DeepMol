@@ -11,14 +11,15 @@ from typing import Dict, Any, Union, Tuple
 
 import numpy as np
 import sklearn
+from keras.wrappers.scikit_learn import KerasRegressor, KerasClassifier
 from sklearn.model_selection import StratifiedKFold, KFold, RandomizedSearchCV, GridSearchCV
-from tensorflow.python.keras.wrappers.scikit_learn import KerasRegressor, KerasClassifier
 
 from deepmol.datasets import Dataset
 from deepmol.metrics import Metric
 from deepmol.models import SklearnModel, KerasModel
 from deepmol.models.models import Model
-from deepmol.parameter_optimization import DeepchemRandomSearchCV, DeepchemGridSearchCV
+from deepmol.parameter_optimization.deepchem_hyperparameter_optimization import DeepchemRandomSearchCV, \
+    DeepchemGridSearchCV
 
 
 def _convert_hyperparam_dict_to_filename(hyper_params: Dict[str, Any]) -> str:
@@ -318,7 +319,7 @@ class HyperparameterOptimizerCV(HyperparameterOptimizer):
                               model_type: str,
                               params_dict: Dict,
                               train_dataset: Dataset,
-                              metric: Metric,
+                              metric: str,
                               cv: int = 3,
                               n_iter_search: int = 15,
                               n_jobs: int = 1,

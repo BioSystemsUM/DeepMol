@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
+from typing import Union, Tuple
 
 import numpy as np
 from rdkit.Chem import MolFromSmiles, rdmolfiles, rdmolops, Mol, MolToSmiles
 
 from deepmol.datasets import Dataset
+from deepmol.parallelism.multiprocessing import JoblibMultiprocessing
 from deepmol.scalers import BaseScaler
 from deepmol.utils.errors import PreConditionViolationException
 
@@ -19,6 +21,57 @@ class MolecularFeaturizer(ABC):
     def __init__(self):
         if self.__class__ == MolecularFeaturizer:
             raise Exception('Abstract class MolecularFeaturizer should not be instantiated')
+
+        self.multiprocessing_cls = JoblibMultiprocessing()
+
+    def _featurize_mol(self, mol: Mol, mol_id: Union[int, str]) -> Tuple[np.ndarray, bool]:
+        """
+        Calculate features for a single molecule.
+
+        Parameters
+        ----------
+        mol: Mol
+            The molecule to featurize.
+
+        Returns
+        -------
+        features: np.ndarray
+            The features for the molecule.
+        """
+        mol_convertable = True
+
+        remove_mol = False
+
+        try:
+            if isinstance(mol, str):
+                # mol must be a RDKit Mol object, so parse a SMILES
+                mol_object = MolFromSmiles(mol)
+                if mol_object is None:
+                    remove_mol = True
+                    mol_convertable = False
+                try:
+                    # SMILES is unique, so set a canonical order of atoms
+                    new_order = rdmolfiles.CanonicalRankAtoms(mol_object)
+                    mol_object = rdmolops.RenumberAtoms(mol_object, new_order)
+                    mol = mol_object
+                except Exception as e:
+                    mol = mol
+
+            if mol_convertable:
+                feat = self._featurize(mol)
+                return feat
+
+        except PreConditionViolationException:
+            exit(1)
+
+        except Exception as e:
+            if isinstance(mol, Mol):
+                mol = MolToSmiles(mol)
+            print("Failed to featurize datapoint %d, %s. Appending empty array" % (mol_id, mol))
+            print("Exception message: {}".format(e))
+            remove_mol = True
+
+        return feat, remove_mol
 
     def featurize(self,
                   dataset: Dataset,
@@ -52,39 +105,9 @@ class MolecularFeaturizer(ABC):
         dataset_ids = dataset.ids
 
         features = []
+
         for i, mol in enumerate(molecules):
-            mol_id = dataset_ids[i]
-            mol_convertable = True
-            if i % log_every_n == 0:
-                print("Featurizing datapoint %i" % i)
-            try:
-                if isinstance(mol, str):
-                    # mol must be a RDKit Mol object, so parse a SMILES
-                    molobj = MolFromSmiles(mol)
-                    if molobj is None:
-                        dataset.remove_elements([mol_id])
-                        mol_convertable = False
-                    try:
-                        # SMILES is unique, so set a canonical order of atoms
-                        new_order = rdmolfiles.CanonicalRankAtoms(molobj)
-                        molobj = rdmolops.RenumberAtoms(molobj, new_order)
-                        mol = molobj
-                    except Exception as e:
-                        mol = mol
-
-                if mol_convertable:
-                    feat = self._featurize(mol)
-                    features.append(feat)
-
-            except PreConditionViolationException:
-                exit(1)
-
-            except Exception as e:
-                if isinstance(mol, Mol):
-                    mol = MolToSmiles(mol)
-                print("Failed to featurize datapoint %d, %s. Appending empty array" % (i, mol))
-                print("Exception message: {}".format(e))
-                dataset.remove_elements([mol_id])
+            self._featurize_mol(mol, dataset_ids[i])
 
         if isinstance(features[0], np.ndarray):
             features = np.vstack(features)

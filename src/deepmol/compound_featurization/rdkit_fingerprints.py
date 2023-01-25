@@ -63,7 +63,7 @@ class MorganFingerprint(MolecularFeaturizer):
             print('error in smile: ' + str(mol))
             fp = np.empty(self.size, dtype=float)
             fp[:] = np.NaN
-        fp = np.asarray(fp, dtype=np.float)
+        fp = np.asarray(fp, dtype=np.float64)
         return fp
 
 

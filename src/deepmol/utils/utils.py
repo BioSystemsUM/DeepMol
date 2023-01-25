@@ -12,7 +12,7 @@ from deepchem.trans import DAGTransformer, IRVTransformer
 from deepchem.data import NumpyDataset
 from deepmol.datasets import Dataset
 
-from rdkit.Chem import rdMolDescriptors, rdDepictor, Mol, RDKFingerprint
+from rdkit.Chem import rdMolDescriptors, rdDepictor, Mol, RDKFingerprint, rdmolfiles, rdmolops
 from rdkit.Chem import Draw
 from IPython.display import SVG
 
@@ -22,6 +22,30 @@ import tempfile
 from PIL import Image
 
 from IPython.display import display
+
+
+def canonicalize_mol_object(mol_object: Mol) -> Mol:
+    """
+    Canonicalize a molecule object.
+
+    Parameters
+    ----------
+    mol_object: Mol
+        Molecule object to canonicalize.
+
+    Returns
+    -------
+    Tuple[Mol]
+        Canonicalized molecule object.
+    """
+    try:
+        # SMILES is unique, so set a canonical order of atoms
+        new_order = rdmolfiles.CanonicalRankAtoms(mol_object)
+        mol_object = rdmolops.RenumberAtoms(mol_object, new_order)
+    except Exception as e:
+        mol_object = mol_object
+
+    return mol_object
 
 
 def load_pickle_file(input_file: str) -> Any:

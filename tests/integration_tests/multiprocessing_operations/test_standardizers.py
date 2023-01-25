@@ -20,26 +20,26 @@ class TestStandardizers(TestMultiprocessing):
 
     def test_standardizers_small_dataset(self):
         mols = copy(self.small_dataset_to_test.mols)
-        BasicStandardizer().standardize(self.small_dataset_to_test)
+        BasicStandardizer(n_jobs=2).standardize(self.small_dataset_to_test)
         self.assert_order(self.small_dataset_to_test.mols, self.small_pandas_dataset, BasicStandardizer())
 
         self.small_dataset_to_test.mols = mols
-        ChEMBLStandardizer().standardize(self.small_dataset_to_test)
+        ChEMBLStandardizer(n_jobs=2).standardize(self.small_dataset_to_test)
         self.assert_order(self.small_dataset_to_test.mols, self.small_pandas_dataset, ChEMBLStandardizer())
 
         self.small_dataset_to_test.mols = mols
-        CustomStandardizer().standardize(self.small_dataset_to_test)
+        CustomStandardizer(n_jobs=2).standardize(self.small_dataset_to_test)
         self.assert_order(self.small_dataset_to_test.mols, self.small_pandas_dataset, CustomStandardizer())
 
     def test_standardizers_big_dataset(self):
         mols = deepcopy(self.big_dataset_to_test.mols)
-        BasicStandardizer().standardize(self.big_dataset_to_test)
+        BasicStandardizer(n_jobs=10).standardize(self.big_dataset_to_test)
         self.assert_order(self.big_dataset_to_test.mols, self.big_pandas_dataset, BasicStandardizer())
 
         self.big_dataset_to_test.mols = deepcopy(mols)
-        ChEMBLStandardizer().standardize(self.big_dataset_to_test)
+        ChEMBLStandardizer(n_jobs=10).standardize(self.big_dataset_to_test)
         self.assert_order(self.big_dataset_to_test.mols, self.big_pandas_dataset, ChEMBLStandardizer())
 
         self.big_dataset_to_test.mols = deepcopy(mols)
-        CustomStandardizer().standardize(self.big_dataset_to_test)
+        CustomStandardizer(n_jobs=10).standardize(self.big_dataset_to_test)
         self.assert_order(self.big_dataset_to_test.mols, self.big_pandas_dataset, CustomStandardizer())

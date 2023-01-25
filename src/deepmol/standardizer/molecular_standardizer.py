@@ -14,14 +14,27 @@ class MolecularStandardizer(ABC):
     Class for handling the standardization of molecules.
     """
 
-    def __init__(self):
+    def __init__(self, n_jobs: int = -1):
         """
         Standardizer for molecules.
         """
-        if self.__class__ == MolecularStandardizer:
-            raise Exception('Abstract class MolecularStandardizer should not be instantiated')
+        self.n_jobs = n_jobs
 
     def _standardize_mol(self, mol: Mol) -> Mol:
+        """
+        Standardizes a single molecule.
+
+        Parameters
+        ----------
+        mol: Mol
+            RDKit Mol object
+
+        Returns
+        -------
+        mol: Mol
+            Standardized mol.
+        """
+
         mol_object = None
         try:
             if isinstance(mol, str):
@@ -34,12 +47,12 @@ class MolecularStandardizer(ABC):
             assert mol_object is not None
 
             return Chem.MolToSmiles(self._standardize(mol_object), canonical=True)
-        except Exception as e:
+        except Exception:
             if isinstance(mol, Chem.rdchem.Mol):
                 mol = Chem.MolToSmiles(mol, canonical=True)
             return mol
 
-    def standardize(self, dataset: Dataset, n_jobs=-1):
+    def standardize(self, dataset: Dataset):
         """
         Standardizes a dataset of molecules.
 
@@ -47,8 +60,6 @@ class MolecularStandardizer(ABC):
         ----------
         dataset: Dataset
             Dataset to standardize.
-        n_jobs: int
-            Number of jobs to use for parallelization. If -1, all available cores are used.
 
         Returns
         -------
@@ -57,7 +68,7 @@ class MolecularStandardizer(ABC):
         """
         molecules = dataset.mols
 
-        multiprocessing_cls = JoblibMultiprocessing(n_jobs=n_jobs, process=self._standardize_mol)
+        multiprocessing_cls = JoblibMultiprocessing(n_jobs=self.n_jobs, process=self._standardize_mol)
 
         result = list(multiprocessing_cls.run(molecules))
 

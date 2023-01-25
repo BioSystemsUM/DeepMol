@@ -1,3 +1,5 @@
+import re
+import traceback
 from abc import ABC, abstractmethod
 from typing import List, Iterable
 
@@ -29,6 +31,13 @@ class MultiprocessingClass(ABC):
         Returns the function to use for multiprocessing.
         """
         return self._process
+
+    def run_iteratively(self, items: Iterable):
+        """
+        Does not run multiprocessing due to an error pickleling the process function.
+        """
+        for item in items:
+            yield self.process(item)
 
     @abstractmethod
     def run(self, items: Iterable) -> Iterable:
@@ -69,15 +78,25 @@ class JoblibMultiprocessing(MultiprocessingClass):
         """
         # TODO: Add support for progress bar
 
-        # verifying if the process is a zip and convert it to a list
-        if isinstance(items, zip):
-            items = list(items)
+        try:
+            # verifying if the process is a zip and convert it to a list
+            if isinstance(items, zip):
+                items = list(items)
 
-        # verifying if the first element is a tuple, if so one must use the args parameter *item
-        if isinstance(items[0], tuple):
-            results = Parallel(n_jobs=self.n_jobs, backend="multiprocessing")(delayed(self.process)(*item)
+            # verifying if the first element is a tuple, if so one must use the args parameter *item
+            if isinstance(items[0], tuple):
+                results = Parallel(n_jobs=self.n_jobs, backend="multiprocessing")(delayed(self.process)(*item)
+                                                                                  for item in items)
+            else:
+                results = Parallel(n_jobs=self.n_jobs, backend="multiprocessing")(delayed(self.process)(item)
                                                                               for item in items)
-        else:
-            results = Parallel(n_jobs=self.n_jobs, backend="multiprocessing")(delayed(self.process)(item)
-                                                                              for item in items)
+
+        except TypeError as e:
+            tb = traceback.format_exc()
+            if re.match("cannot pickle '.*' object", str(e)):
+                print("Failed to pickle process function. Using iterative multiprocessing instead.")
+                results = self.run_iteratively(items)
+            else:
+                raise e
+
         return results

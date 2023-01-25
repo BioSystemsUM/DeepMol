@@ -410,7 +410,7 @@ class ThreeDimensionDescriptor(MolecularFeaturizer):
     Class to generate three-dimensional descriptors.
     """
 
-    def __init__(self, mandatory_generation_of_conformers):
+    def __init__(self, mandatory_generation_of_conformers: bool, n_jobs: int = -1):
         """
         Initialize the class.
 
@@ -418,12 +418,14 @@ class ThreeDimensionDescriptor(MolecularFeaturizer):
         ----------
         mandatory_generation_of_conformers: bool
             If True, the conformers are generated and optimized before the descriptors are calculated.
+        n_jobs: int
+            Number of jobs to run in parallel.
         """
         self.descriptor_function = None
         self.mandatory_generation_of_conformers = mandatory_generation_of_conformers
         if self.mandatory_generation_of_conformers:
             self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
-        super().__init__()
+        super().__init__(n_jobs=n_jobs)
 
     @property
     def descriptor_function(self):
@@ -507,7 +509,7 @@ class All3DDescriptors(MolecularFeaturizer):
         if self.generate_conformers:
             self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
 
-        super().__init__()
+        super().__init__(n_jobs=1)
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """

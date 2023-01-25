@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 from deepmol.loaders.loaders import CSVLoader
 
 from tests import TEST_DIR
+
+
 class StandardizerBaseTestCase(ABC):
 
     def setUp(self) -> None:

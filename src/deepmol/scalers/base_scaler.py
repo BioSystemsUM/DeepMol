@@ -37,7 +37,7 @@ class BaseScaler(ABC):
         """
         raise NotImplementedError
 
-    def save_scaler(self, file_path: str):
+    def save(self, file_path: str):
         """
         Saves the scaler object to a file.
 

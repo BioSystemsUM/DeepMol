@@ -48,6 +48,6 @@ class MixedFeaturizer(MolecularFeaturizer):
             final_features = np.empty(80, dtype=float)
             final_features[:] = np.NaN
 
-        final_features = np.asarray(final_features, dtype=np.float)
+        final_features = np.asarray(final_features, dtype=np.float64)
 
         return final_features

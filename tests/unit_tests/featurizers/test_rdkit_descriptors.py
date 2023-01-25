@@ -194,12 +194,14 @@ class Test3DDescriptors(FeaturizerTestCase, TestCase):
         self.assertEqual(cm.exception.code, 1)
 
         with self.assertRaises(SystemExit) as cm:
-            PrincipalMomentsOfInertia(mandatory_generation_of_conformers=False).featurize(self.mini_dataset_to_test)
+            PrincipalMomentsOfInertia(mandatory_generation_of_conformers=False).featurize(self.mini_dataset_to_test,
+                                                                                          n_jobs=1)
 
         self.assertEqual(cm.exception.code, 1)
 
         with self.assertRaises(SystemExit) as cm:
-            NormalizedPrincipalMomentsRatios(mandatory_generation_of_conformers=False).featurize(self.mini_dataset_to_test)
+            NormalizedPrincipalMomentsRatios(mandatory_generation_of_conformers=False).featurize(self.mini_dataset_to_test,
+                                                                                                 n_jobs=1)
 
         self.assertEqual(cm.exception.code, 1)
 

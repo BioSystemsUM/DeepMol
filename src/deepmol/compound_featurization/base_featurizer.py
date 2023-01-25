@@ -19,9 +19,8 @@ class MolecularFeaturizer(ABC):
     Subclasses need to implement the _featurize method for calculating features for a single molecule.
     """
 
-    def __init__(self):
-        if self.__class__ == MolecularFeaturizer:
-            raise Exception('Abstract class MolecularFeaturizer should not be instantiated')
+    def __init__(self, n_jobs: int = -1):
+        self.n_jobs = n_jobs
 
     @staticmethod
     def _convert_smiles_to_mol(mol: str) -> Tuple[Mol, bool, bool]:
@@ -97,7 +96,6 @@ class MolecularFeaturizer(ABC):
 
     def featurize(self,
                   dataset: Dataset,
-                  n_jobs: int = -1,
                   scaler: BaseScaler = None,
                   path_to_save_scaler: str = None,
                   remove_nans_axis: int = 0
@@ -110,8 +108,6 @@ class MolecularFeaturizer(ABC):
         ----------
         dataset: Dataset
             The dataset containing the molecules to featurize in dataset.mols.
-        n_jobs: int
-            The number of jobs to use for featurization. If -1, all available cores are used.
         scaler: BaseScaler
             The scaler to use for scaling the generated features.
         path_to_save_scaler: str
@@ -127,7 +123,7 @@ class MolecularFeaturizer(ABC):
         molecules = dataset.mols
         dataset_ids = dataset.ids
 
-        multiprocessing_cls = JoblibMultiprocessing(process=self._featurize_mol, n_jobs=n_jobs)
+        multiprocessing_cls = JoblibMultiprocessing(process=self._featurize_mol, n_jobs=self.n_jobs)
         features = multiprocessing_cls.run(zip(molecules, dataset_ids))
 
         features, remove_mols = zip(*features)

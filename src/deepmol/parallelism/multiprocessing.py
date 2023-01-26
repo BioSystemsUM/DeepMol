@@ -1,7 +1,6 @@
 import re
-import traceback
 from abc import ABC, abstractmethod
-from typing import List, Iterable
+from typing import Iterable
 
 from joblib import Parallel, delayed
 
@@ -32,12 +31,17 @@ class MultiprocessingClass(ABC):
         """
         return self._process
 
-    def run_iteratively(self, items: Iterable):
+    def run_iteratively(self, items: list):
         """
-        Does not run multiprocessing due to an error pickleling the process function.
+        Does not run multiprocessing due to an error pickleling the process function or other.
         """
-        for item in items:
-            yield self.process(item)
+        if isinstance(items[0], tuple):
+
+            for item in items:
+                yield self.process(*item)
+        else:
+            for item in items:
+                yield self.process(item)
 
     @abstractmethod
     def run(self, items: Iterable) -> Iterable:
@@ -89,12 +93,11 @@ class JoblibMultiprocessing(MultiprocessingClass):
                                                                                   for item in items)
             else:
                 results = Parallel(n_jobs=self.n_jobs, backend="multiprocessing")(delayed(self.process)(item)
-                                                                              for item in items)
+                                                                                  for item in items)
 
         except TypeError as e:
-            tb = traceback.format_exc()
             if re.match("cannot pickle '.*' object", str(e)):
-                print("Failed to pickle process function. Using iterative multiprocessing instead.")
+                print("Failed to pickle process function. Processing the input iteratively instead.")
                 results = self.run_iteratively(items)
             else:
                 raise e

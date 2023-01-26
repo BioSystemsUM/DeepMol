@@ -1,6 +1,7 @@
 import inspect
 import sys
 import traceback
+import warnings
 from typing import Union
 
 import numpy as np
@@ -410,7 +411,7 @@ class ThreeDimensionDescriptor(MolecularFeaturizer):
     Class to generate three-dimensional descriptors.
     """
 
-    def __init__(self, mandatory_generation_of_conformers: bool, n_jobs: int = -1):
+    def __init__(self, mandatory_generation_of_conformers: bool, **kwargs):
         """
         Initialize the class.
 
@@ -418,14 +419,15 @@ class ThreeDimensionDescriptor(MolecularFeaturizer):
         ----------
         mandatory_generation_of_conformers: bool
             If True, the conformers are generated and optimized before the descriptors are calculated.
-        n_jobs: int
-            Number of jobs to run in parallel.
         """
         self.descriptor_function = None
         self.mandatory_generation_of_conformers = mandatory_generation_of_conformers
         if self.mandatory_generation_of_conformers:
             self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
-        super().__init__(n_jobs=n_jobs)
+
+        if "n_jobs" in kwargs:
+            warnings.warn("Three Dimension Descriptors do not support parallelization. n_jobs will be ignored.")
+        super().__init__(n_jobs=1)
 
     @property
     def descriptor_function(self):

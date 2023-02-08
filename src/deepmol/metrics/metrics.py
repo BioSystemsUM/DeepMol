@@ -225,9 +225,12 @@ class Metric(object):
             raise ValueError("Only classification and regression are supported for metrics calculations.")
 
         try:
+            if self.name in ["roc_auc_score", "prc_auc_score"]:
+                y_pred = y_pred[:, 1]
+
             metric_value = self.metric(y_true, y_pred, **kwargs)
         except Exception as e:
-            # deal with different shapes of the otput of predict and predict_proba
+            # deal with different shapes of the output of predict and predict_proba
             if len(y_pred.shape) == 3:  # output of the deepchem MultitaskClassifier model
                 y_pred_2 = []
                 for p in y_pred:

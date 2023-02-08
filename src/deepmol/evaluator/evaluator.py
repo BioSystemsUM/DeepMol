@@ -142,19 +142,11 @@ class Evaluator(object):
 
         # Compute multitask metrics
         for metric in metrics:
-            if metric.name in ["roc_auc_score", "prc_auc_score"]:
-                y_pred_prob = self.model.predict_proba(self.dataset)
-                results = metric.compute_metric(y,
-                                                y_pred_prob,
-                                                per_task_metrics=per_task_metrics,
-                                                n_tasks=n_tasks,
-                                                n_classes=n_classes)
-            else:
-                results = metric.compute_metric(y,
-                                                y_pred,
-                                                per_task_metrics=per_task_metrics,
-                                                n_tasks=n_tasks,
-                                                n_classes=n_classes)
+            results = metric.compute_metric(y,
+                                            y_pred,
+                                            per_task_metrics=per_task_metrics,
+                                            n_tasks=n_tasks,
+                                            n_classes=n_classes)
             if per_task_metrics:
                 multitask_scores[metric.name], computed_metrics = results
                 all_task_scores[metric.name] = computed_metrics

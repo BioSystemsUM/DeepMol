@@ -159,6 +159,11 @@ class Model(BaseEstimator):
         y_pred = np.concatenate(y_preds)
         return y_pred
 
+    def predict_proba(self, dataset: Dataset) -> np.ndarray:
+
+        y_pred = self.model.predict_proba(dataset.X)
+        return y_pred
+
     def evaluate(self,
                  dataset: Dataset,
                  metrics: Union[List[Metric], Metric],

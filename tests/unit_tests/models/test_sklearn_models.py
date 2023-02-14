@@ -19,7 +19,9 @@ class TestSklearnModel(ModelsTestCase, TestCase):
         MorganFingerprint().featurize(self.mini_dataset_to_test)
 
         splitter = SingletaskStratifiedSplitter()
-        train_dataset, test_dataset = splitter.train_test_split(self.mini_dataset_to_test)
+        # with 0.8 train test split sometimes the splitter returns a test_dataset with only one class which causes an
+        # error: "ValueError: Only one class present in y_true. ROC AUC score is not defined in that case."
+        train_dataset, test_dataset = splitter.train_test_split(self.mini_dataset_to_test, frac_train=0.6)
 
         model.fit(train_dataset)
 

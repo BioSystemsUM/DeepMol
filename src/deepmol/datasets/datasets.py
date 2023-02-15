@@ -391,6 +391,9 @@ class NumpyDataset(Dataset):
             self._ids = [str(uuid.uuid4().hex) for i in range(self.mols.shape[0])]
         elif len(set(value)) != len(value):
             raise ValueError(f"Ids must be unique! Got {value}.")
+        elif len(value) != len(self.mols):
+            raise ValueError(f"Length of ids vector must be equal to length of mols vector. "
+                             f"Got {len(value)} values and {len(self.mols)} molecules.")
         else:
             self._ids = np.array([str(i) for i in value])
 

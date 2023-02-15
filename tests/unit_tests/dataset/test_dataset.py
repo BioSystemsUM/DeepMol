@@ -44,6 +44,14 @@ class TestDataset(TestCase):
         self.base_dataset.X = []
         self.assertIsNone(self.base_dataset.X)
 
+        self.base_dataset.ids = None
+        self.assertEqual(len(self.base_dataset.ids), len(self.base_dataset.mols))
+
+        with self.assertRaises(ValueError):
+            self.base_dataset.ids = [1, 2]
+        with self.assertRaises(ValueError):
+            self.base_dataset.ids = [1, 1, 3, 4]
+
     def test_remove_duplicates(self):
         smiles = ['C', 'CC', 'CCC']
         features = [[1, 0, 1], [0, 1, 0], [1, 0, 1]]
@@ -101,10 +109,10 @@ class TestDataset(TestCase):
                      [np.nan, 0.0, 1.0],
                      [np.nan, 0.0, 1.0],
                      [np.nan, 0.0, 1.0]]
-        dataset.ids = [1, 2, 3, 4, 5]
+        dataset.ids = [1, 2, 3, 4]
         dataset.remove_nan(axis=1)
         self.assertEqual(len(dataset), 4)
-        self.assertEqual(len(dataset.ids), 5)
+        self.assertEqual(len(dataset.ids), 4)
         self.assertEqual(dataset.X.shape[1], 1)
         dataset.remove_nan()
         self.assertEqual(len(dataset), 4)

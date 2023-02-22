@@ -371,7 +371,7 @@ class NumpyDataset(Dataset):
         if value is not None and value.size > 0:
             self._ids = value
         else:
-            self._ids = [i for i in range(self.mols.shape[0])]
+            self._ids = np.array([i for i in range(self.mols.shape[0])])
 
     @property
     def features2keep(self):

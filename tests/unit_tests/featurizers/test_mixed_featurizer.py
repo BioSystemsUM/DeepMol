@@ -26,7 +26,7 @@ class TestMixedFeaturizer(FeaturizerTestCase, TestCase):
 
         self.mini_dataset_to_test.mols = np.concatenate((self.mini_dataset_to_test.mols, to_add))
         self.mini_dataset_to_test.y = np.concatenate((self.mini_dataset_to_test.y, to_add))
-        self.mini_dataset_to_test.ids = np.concatenate((self.mini_dataset_to_test.y, ids_to_add))
+        self.mini_dataset_to_test.ids = np.concatenate((self.mini_dataset_to_test.ids, ids_to_add))
 
         dataset = copy(self.mini_dataset_to_test)
         descriptors = [All3DDescriptors(mandatory_generation_of_conformers=True), MorganFingerprint()]

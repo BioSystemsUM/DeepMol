@@ -6,7 +6,8 @@ from rdkit import Chem
 from rdkit.Chem import MolFromSmiles
 from rdkit.Chem.rdMolAlign import AlignMol
 
-from deepmol.compound_featurization.rdkit_descriptors import ThreeDimensionalMoleculeGenerator, All3DDescriptors, AutoCorr3D, \
+from deepmol.compound_featurization.rdkit_descriptors import ThreeDimensionalMoleculeGenerator, All3DDescriptors, \
+    AutoCorr3D, \
     RadialDistributionFunction, PlaneOfBestFit, MORSE, WHIM, RadiusOfGyration, InertialShapeFactor, Eccentricity, \
     Asphericity, SpherocityIndex, PrincipalMomentsOfInertia, NormalizedPrincipalMomentsRatios, \
     generate_conformers_to_sdf_file, TwoDimensionDescriptors
@@ -199,7 +200,8 @@ class Test3DDescriptors(FeaturizerTestCase, TestCase):
         self.assertEqual(cm.exception.code, 1)
 
         with self.assertRaises(SystemExit) as cm:
-            NormalizedPrincipalMomentsRatios(mandatory_generation_of_conformers=False).featurize(self.mini_dataset_to_test)
+            NormalizedPrincipalMomentsRatios(mandatory_generation_of_conformers=False).featurize(
+                self.mini_dataset_to_test)
 
         self.assertEqual(cm.exception.code, 1)
 

@@ -121,7 +121,7 @@ class CustomStandardizer(MolecularStandardizer):
         'KEKULIZE': False,
         'NEUTRALISE_CHARGE_LATE': True}
 
-    def __init__(self, params: dict = None):
+    def __init__(self, params: dict = None, **kwargs):
         """
         Initializes the standardizer.
 
@@ -130,7 +130,7 @@ class CustomStandardizer(MolecularStandardizer):
         params: dict
             Dictionary containing which steps of standardization to make.
         """
-        super().__init__()
+        super().__init__(**kwargs)
         if params is None:
             params = simple_standardisation
         self.params = params

@@ -5,6 +5,8 @@ from rdkit import Chem
 from rdkit.Chem import rdmolfiles, rdmolops, Mol
 
 from deepmol.datasets import Dataset
+from deepmol.parallelism.multiprocessing import JoblibMultiprocessing
+from deepmol.utils.utils import canonicalize_mol_object
 
 
 class MolecularStandardizer(ABC):
@@ -12,14 +14,45 @@ class MolecularStandardizer(ABC):
     Class for handling the standardization of molecules.
     """
 
-    def __init__(self):
+    def __init__(self, n_jobs: int = -1):
         """
         Standardizer for molecules.
         """
-        if self.__class__ == MolecularStandardizer:
-            raise Exception('Abstract class MolecularStandardizer should not be instantiated')
+        self.n_jobs = n_jobs
 
-    def standardize(self, dataset: Dataset, log_every_n: int = 1000):
+    def _standardize_mol(self, mol: Mol) -> Mol:
+        """
+        Standardizes a single molecule.
+
+        Parameters
+        ----------
+        mol: Mol
+            RDKit Mol object
+
+        Returns
+        -------
+        mol: Mol
+            Standardized mol.
+        """
+
+        mol_object = None
+        try:
+            if isinstance(mol, str):
+                # mol must be a RDKit Mol object, so parse a SMILES
+                mol_object = Chem.MolFromSmiles(mol)
+                mol_object = canonicalize_mol_object(mol_object)
+            elif isinstance(mol, Mol):
+                mol_object = canonicalize_mol_object(mol)
+
+            assert mol_object is not None
+
+            return Chem.MolToSmiles(self._standardize(mol_object), canonical=True)
+        except Exception:
+            if isinstance(mol, Chem.rdchem.Mol):
+                mol = Chem.MolToSmiles(mol, canonical=True)
+            return mol
+
+    def standardize(self, dataset: Dataset):
         """
         Standardizes a dataset of molecules.
 
@@ -27,8 +60,6 @@ class MolecularStandardizer(ABC):
         ----------
         dataset: Dataset
             Dataset to standardize.
-        log_every_n: int
-            Log every n molecules.
 
         Returns
         -------
@@ -37,41 +68,11 @@ class MolecularStandardizer(ABC):
         """
         molecules = dataset.mols
 
-        stand_mols = []
+        multiprocessing_cls = JoblibMultiprocessing(n_jobs=self.n_jobs, process=self._standardize_mol)
 
-        for i, mol in enumerate(molecules):
-            molobj = None
-            if i % log_every_n == 0:
-                print("Standardizing datapoint %i" % i)
-            try:
-                if isinstance(mol, str):
-                    # mol must be a RDKit Mol object, so parse a SMILES
-                    molobj = Chem.MolFromSmiles(mol)
-                    try:
-                        # SMILES is unique, so set a canonical order of atoms
-                        new_order = rdmolfiles.CanonicalRankAtoms(molobj)
-                        molobj = rdmolops.RenumberAtoms(molobj, new_order)
-                    except Exception as e:
-                        molobj = mol
-                elif isinstance(mol, Mol):
-                    try:
-                        molobj = mol
-                        # SMILES is unique, so set a canonical order of atoms
-                        new_order = rdmolfiles.CanonicalRankAtoms(molobj)
-                        molobj = rdmolops.RenumberAtoms(molobj, new_order)
-                    except Exception as e:
-                        molobj = mol
+        result = list(multiprocessing_cls.run(molecules))
 
-                assert molobj is not None
-
-                stand_mols.append(Chem.MolToSmiles(self._standardize(molobj)))
-            except Exception as e:
-                if isinstance(mol, Chem.rdchem.Mol):
-                    mol = Chem.MolToSmiles(mol)
-                print("Failed to featurize datapoint %d, %s. Appending non standardized mol" % (i, mol))
-                print("Exception message: {}".format(e))
-                stand_mols.append(mol)
-        dataset.mols = np.asarray(stand_mols)
+        dataset.mols = np.asarray(result)
 
         return dataset
 

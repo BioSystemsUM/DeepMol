@@ -41,13 +41,13 @@ class MolecularStandardizer(ABC):
             Standardized SMILES string.
         """
         try:
+            mol_object = mol
             if isinstance(mol, str):
                 # mol must be a RDKit Mol object, so parse a SMILES
-                mol = Chem.MolFromSmiles(mol)
-
-            mol_object = canonicalize_mol_object(mol)
+                mol_object = Chem.MolFromSmiles(mol_object)
 
             assert mol_object is not None
+            mol_object = canonicalize_mol_object(mol_object)
 
             return Chem.MolToSmiles(self._standardize(mol_object), canonical=True)
         except Exception:

@@ -2,6 +2,7 @@ name: Continuous Integration
 
 on:
   pull_request:
+    types: [synchronize, opened, reopened, edited]
     branches:
       - master
       - develop

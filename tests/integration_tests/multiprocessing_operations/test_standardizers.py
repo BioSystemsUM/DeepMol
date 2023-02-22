@@ -13,9 +13,9 @@ class TestStandardizers(TestMultiprocessing):
     def assert_order(self, molecules, dataset, method: MolecularStandardizer):
         for j in range(len(molecules)):
             m1 = Chem.MolFromSmiles(dataset.iloc[j, 6])
-            m1 = utils.canonicalize_mol_object(m1)
-            m1 = method._standardize(m1)
             if m1 is not None:
+                m1 = utils.canonicalize_mol_object(m1)
+                m1 = method._standardize(m1)
                 self.assertEqual(MolToSmiles(m1, canonical=True), molecules[j])
 
     def test_standardizers_small_dataset(self):

@@ -438,7 +438,7 @@ class NumpyDataset(Dataset):
 
     def remove_duplicates(self):
         """
-        Remove duplicated feaures from the dataset.
+        Remove duplicated features from the dataset.
         """
         unique, index = np.unique(self.X, return_index=True, axis=0)
         ids = self.ids[index]
@@ -607,7 +607,7 @@ class NumpyDataset(Dataset):
             mols = np.append(mols, ds.mols, axis=0)
         return NumpyDataset(mols, X, y, ids, self.features2keep)
 
-    def save_to_csv(self, path: str):
+    def to_csv(self, path: str):
         """
         Save the dataset to a csv file.
 
@@ -629,7 +629,7 @@ class NumpyDataset(Dataset):
 
         df.to_csv(path, index=False)
 
-    def load_features(self, path: str, sep: str = ',', header: int = 0):
+    def load_features(self, path: str, **kwargs):
         """
         Load features from a csv file.
 
@@ -637,15 +637,13 @@ class NumpyDataset(Dataset):
         ----------
         path: str
             Path to the csv file.
-        sep: str
-            Delimiter to use.
-        header: int
-            Row number to use as the column names.
+        kwargs:
+            Keyword arguments to pass to pandas.read_csv.
         """
-        df = pd.read_csv(path, sep=sep, header=header)
+        df = pd.read_csv(path, **kwargs)
         self.X = df.to_numpy()
 
-    def save_features(self, path: str = 'fingerprints.csv'):
+    def save_features(self, path: str = 'features.csv'):
         """
         Save the features to a csv file.
 

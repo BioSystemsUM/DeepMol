@@ -4,15 +4,15 @@ from unittest import TestCase
 from rdkit.Chem import rdMolDescriptors, MolFromSmiles
 from rdkit.DataStructs import TanimotoSimilarity
 
-from deepmol.standardizer import BasicStandardizer, CustomStandardizer
+from deepmol.standardizer import BasicStandardizer, CustomStandardizer, ChEMBLStandardizer
 from unit_tests.standardizers.test_standardizers import StandardizerBaseTestCase
 
 
 class GeneralStandardizer(StandardizerBaseTestCase, TestCase):
 
     def check_similarity(self, standardization_method: callable, **kwargs):
-        not_standardized_smiles_lst = copy(self.dataset_to_test.mols)
-        dataset = copy(self.dataset_to_test)
+        not_standardized_smiles_lst = self.original_smiles
+        dataset = copy(self.mock_dataset)
         standardization_method(**kwargs).standardize(dataset)
         for i in range(len(dataset.mols)):
             standardized_mol = MolFromSmiles(dataset.mols[i])
@@ -26,5 +26,5 @@ class GeneralStandardizer(StandardizerBaseTestCase, TestCase):
 
     def test_standardize(self):
         self.check_similarity(BasicStandardizer)
-        # self.check_similarity(ChEMBLStandardizer)
+        self.check_similarity(ChEMBLStandardizer)
         self.check_similarity(CustomStandardizer)

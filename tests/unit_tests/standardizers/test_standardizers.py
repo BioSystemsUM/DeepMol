@@ -1,7 +1,10 @@
 import os
 from abc import ABC, abstractmethod
+from unittest.mock import MagicMock
 
-from deepmol.loaders.loaders import CSVLoader
+import pandas as pd
+
+from deepmol.datasets import NumpyDataset
 
 from tests import TEST_DIR
 
@@ -9,13 +12,9 @@ from tests import TEST_DIR
 class StandardizerBaseTestCase(ABC):
 
     def setUp(self) -> None:
-        self.data_path = os.path.join(TEST_DIR, 'data')
-        dataset = os.path.join(self.data_path, "test_to_convert_to_sdf.csv")
-        loader = CSVLoader(dataset,
-                           mols_field='Smiles',
-                           labels_fields='Class')
-
-        self.dataset_to_test = loader.create_dataset()
+        data_path = os.path.join(TEST_DIR, 'data/test_to_convert_to_sdf.csv')
+        self.original_smiles = pd.read_csv(data_path, sep=',').Smiles.values
+        self.mock_dataset = MagicMock(spec=NumpyDataset, mols=self.original_smiles)
 
     @abstractmethod
     def test_standardize(self):

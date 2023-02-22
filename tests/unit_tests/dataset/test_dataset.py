@@ -211,7 +211,7 @@ class TestDataset(TestCase):
                           ids=[1, 2, 3, 4, 5],
                           features2keep=[0, 1, 2],
                           n_tasks=1)
-        df.save_to_csv(os.path.join(self.output_dir, 'test.csv'))
+        df.to_csv(os.path.join(self.output_dir, 'test.csv'))
         pd_df = pd.read_csv(os.path.join(self.output_dir, 'test.csv'))
         # ids + mols + y + features
         self.assertEqual(pd_df.shape, (len(df.mols), 3 + df.X.shape[1]))
@@ -222,9 +222,9 @@ class TestDataset(TestCase):
             d.save_features(os.path.join(self.output_dir, 'test.csv'))
 
         d1 = NumpyDataset(mols=['CCCCCCCCCC', 'CCCCCCCCCCCCCCC'],
-                            X=[[1, 0, 1], [0, 1, 0]],
-                            y=[1, 0],
-                            ids=[3, 4])
+                          X=[[1, 0, 1], [0, 1, 0]],
+                          y=[1, 0],
+                          ids=[3, 4])
         d1.save_features(os.path.join(self.output_dir, 'test.csv'))
 
         d2 = NumpyDataset(mols=['CCCCCCCCCC', 'CCCCCCCCCCCCCCC'])
@@ -234,4 +234,3 @@ class TestDataset(TestCase):
         for i in range(d1.X.shape[0]):
             for j in range(d1.X.shape[1]):
                 self.assertEqual(d1.X[i, j], d2.X[i, j])
-

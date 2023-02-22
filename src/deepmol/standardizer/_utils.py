@@ -53,7 +53,7 @@ def custom_standardizer(mol: Mol,
                         KEEP_BIGGEST: bool = True,
                         ADD_HYDROGEN: bool = True,
                         KEKULIZE: bool = True,
-                        NEUTRALISE_CHARGE_LATE: bool = True):
+                        NEUTRALISE_CHARGE_LATE: bool = True) -> Mol:
     """
     Tunable sequence of filters for standardization.
 

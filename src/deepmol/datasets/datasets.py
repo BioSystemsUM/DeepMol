@@ -310,7 +310,7 @@ class NumpyDataset(Dataset):
         self._X = X
         self._y = y
         if ids is None:
-            ids = np.array([str(uuid.uuid4().hex) for i in range(len(mols))])
+            ids = np.array([str(uuid.uuid4().hex) for _ in range(len(mols))])
         self._ids = ids
         self._n_tasks = n_tasks
 
@@ -466,7 +466,7 @@ class NumpyDataset(Dataset):
             The ids vector for this dataset.
         """
         if value is None:
-            self._ids = [str(uuid.uuid4().hex) for i in range(self.mols.shape[0])]
+            self._ids = [str(uuid.uuid4().hex) for _ in range(self.mols.shape[0])]
         elif len(set(value)) != len(value):
             raise ValueError(f"Ids must be unique! Got {value}.")
         elif len(value) != len(self.mols):

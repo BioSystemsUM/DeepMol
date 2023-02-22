@@ -19,7 +19,7 @@ class TestSklearnModel(ModelsTestCase, TestCase):
         MorganFingerprint().featurize(self.mini_dataset_to_test)
 
         splitter = SingletaskStratifiedSplitter()
-        train_dataset, test_dataset = splitter.train_test_split(self.mini_dataset_to_test)
+        train_dataset, test_dataset = splitter.train_test_split(self.mini_dataset_to_test, frac_train=0.6)
 
         model.fit(train_dataset)
 

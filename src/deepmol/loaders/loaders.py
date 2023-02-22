@@ -24,7 +24,7 @@ class CSVLoader(object):
                  labels_fields: Union[List[str], str] = None,
                  features_fields: Union[List[str], str] = None,
                  features2keep: List[Union[str, int]] = None,
-                 shard_size: int = None):
+                 shard_size: int = None) -> None:
         """
         Initialize the CSVLoader.
 
@@ -79,9 +79,8 @@ class CSVLoader(object):
     @staticmethod
     def _get_dataset(dataset_path: str,
                      fields: List[str] = None,
-                     sep: str = ',',
-                     header: int = 0,
-                     chunk_size: int = None):
+                     chunk_size: int = None,
+                     **kwargs) -> pd.DataFrame:
         """
         Loads data with size chunk_size.
 
@@ -91,38 +90,33 @@ class CSVLoader(object):
             path to the dataset file
         fields: List[str]
             fields to keep
-        sep: str
-            separator
-        header: int
-            the row where the header is
         chunk_size: int
             size of the shard to load
+        kwargs:
+            Keyword arguments to pass to pandas.read_csv.
 
         Returns
         -------
         pd.DataFrame
             Dataframe with chunk size.
         """
-        return load_csv_file(dataset_path, fields, sep, header, chunk_size)
+        return load_csv_file(dataset_path, fields, chunk_size, **kwargs)
 
-    def create_dataset(self, sep: str = ',', header: int = 0):
+    def create_dataset(self, **kwargs) -> NumpyDataset:
         """
         Creates a dataset from the CSV file.
 
         Parameters
         ----------
-        sep: str
-            separator
-        header: int
-            the row where the header is
+        kwargs:
+            Keyword arguments to pass to pandas.read_csv.
 
         Returns
         -------
         NumpyDataset
             Dataset with the data.
         """
-        dataset = self._get_dataset(self.dataset_path, fields=self.fields2keep, sep=sep, header=header,
-                                    chunk_size=self.shard_size)
+        dataset = self._get_dataset(self.dataset_path, fields=self.fields2keep, chunk_size=self.shard_size, **kwargs)
 
         mols = dataset[self.mols_field].to_numpy()
 
@@ -160,7 +154,7 @@ class SDFLoader(object):
                  labels_fields: Union[List[str], str] = None,
                  features_fields: Union[List[str], str] = None,
                  features2keep: List[Union[str, int]] = None,
-                 shard_size: Optional[int] = None):
+                 shard_size: Optional[int] = None) -> None:
         """
         Initialize the SDFLoader.
 
@@ -179,8 +173,6 @@ class SDFLoader(object):
         shard_size: int
             size of the shard to load
         """
-        self._mols_handler = None
-
         self.dataset_path = dataset_path
         self.id_field = id_field
         self.labels_fields = labels_fields
@@ -210,27 +202,8 @@ class SDFLoader(object):
 
         self.fields2keep = fields2keep
 
-    @property
-    def mols_handler(self):
-        """
-        Returns the molecules' handler.
-        """
-        return self._mols_handler
-
-    @mols_handler.setter
-    def mols_handler(self, value: str):
-        """
-        Sets the molecules' handler.
-
-        Parameters
-        ----------
-        value: str
-            molecules' handler
-        """
-        self._mols_handler = value
-
     @staticmethod
-    def _get_dataset(dataset_path: str, chunk_size: int = None):
+    def _get_dataset(dataset_path: str, chunk_size: int = None) -> np.ndarray:
         """
         Loads data from path.
 
@@ -247,25 +220,21 @@ class SDFLoader(object):
         """
         return load_sdf_file(dataset_path, chunk_size)
 
-    def create_dataset(self):
+    def create_dataset(self) -> NumpyDataset:
         """
         Creates a dataset from the SDF file.
-
-        Parameters
-        ----------
 
         Returns
         -------
         NumpyDataset
             Dataset with the data.
         """
-        self.mols_handler = self._get_dataset(self.dataset_path, self.shard_size)
+        molecules = self._get_dataset(self.dataset_path, self.shard_size)
         X = []
         y = []
         ids = []
         mols = []
-        for mol in self.mols_handler:
-
+        for mol in molecules:
             mols.append(mol)
             mol_feature = []
             if self.features_fields is not None:

@@ -4,6 +4,7 @@ import numpy as np
 from rdkit.Chem import Mol
 
 from deepmol.compound_featurization import MolecularFeaturizer
+from deepmol.loggers.logger import Logger
 
 
 class MixedFeaturizer(MolecularFeaturizer):
@@ -21,6 +22,8 @@ class MixedFeaturizer(MolecularFeaturizer):
         """
         super().__init__()
         self.featurizers = featurizers
+
+        self.logger = Logger()
 
     def _featurize(self, mol: Mol):
         """
@@ -44,7 +47,7 @@ class MixedFeaturizer(MolecularFeaturizer):
                 final_features = np.concatenate((final_features, current_features))
 
         except Exception:
-            print('error in smile: ' + str(mol))
+            self.logger.error('error in smile: ' + str(mol))
             final_features = np.empty(80, dtype=float)
             final_features[:] = np.NaN
 

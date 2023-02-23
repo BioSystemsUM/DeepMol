@@ -15,6 +15,7 @@ from keras.wrappers.scikit_learn import KerasRegressor, KerasClassifier
 from sklearn.model_selection import StratifiedKFold, KFold, RandomizedSearchCV, GridSearchCV
 
 from deepmol.datasets import Dataset
+from deepmol.loggers.logger import Logger
 from deepmol.metrics import Metric
 from deepmol.models import SklearnModel, KerasModel
 from deepmol.models.models import Model
@@ -64,24 +65,26 @@ def validate_metrics(metrics: Union[Dict, str, Metric]):
     all_metrics: List
         The list of validated metrics.
     """
+
+    logger = Logger()
     if isinstance(metrics, dict):
         all_metrics = []
         for m in metrics.values():
             if m in sklearn.metrics.SCORERS.keys() or isinstance(m, sklearn.metrics._scorer._PredictScorer):
                 all_metrics.append(m)
             else:
-                print(m, ' is not a valid scoring function. Use sorted(sklearn.metrics.SCORERS.keys()) '
-                         'to get valid options.')
+                logger.warning(f'{m} is not a valid scoring function. Use sorted(sklearn.metrics.SCORERS.keys()) '
+                               'to get valid options.')
     else:
         if metrics in sklearn.metrics.SCORERS.keys() or isinstance(metrics, sklearn.metrics._scorer._PredictScorer):
             all_metrics = metrics
         else:
-            print('WARNING: ', metrics, ' is not a valid scoring function. '
-                                        'Use sorted(sklearn.metrics.SCORERS.keys()) to get valid options.')
+            logger.warning(f'{metrics}, is not a valid scoring function. '
+                           'Use sorted(sklearn.metrics.SCORERS.keys()) to get valid options.')
 
     if not metrics:
         metrics = 'accuracy'
-        print('Using accuracy instead and ', metrics, ' on validation!\n \n')
+        logger.warning(f'Using accuracy instead and {metrics} on validation!')
 
     return metrics
 
@@ -110,6 +113,8 @@ class HyperparameterOptimizer(object):
                              "You probably want to instantiate a concrete subclass instead.")
         self.model_builder = model_builder
         self.mode = mode
+
+        self.logger = Logger()
 
     def hyperparameter_search(self,
                               params_dict: Dict[str, Any],
@@ -272,7 +277,7 @@ class HyperparameterOptimizerValidation(HyperparameterOptimizer):
                 try:
                     model.save()
                 except Exception as e:
-                    print(e)
+                    self.logger.error(e)
 
                 multitask_scores = model.evaluate(valid_dataset, [metric])[0]
                 valid_score = multitask_scores[metric.name]
@@ -295,7 +300,7 @@ class HyperparameterOptimizerValidation(HyperparameterOptimizer):
                 print("\tbest_validation_score so far: %f" % best_validation_score)
 
         if best_model is None:
-            print("No models trained correctly.")
+            self.logger.warning("No models trained correctly.")
             # arbitrarily return last model
             best_model, best_hyperparams = model, hyperparameter_tuple
             return best_model, best_hyperparams, all_scores

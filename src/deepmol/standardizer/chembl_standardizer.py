@@ -28,5 +28,5 @@ class ChEMBLStandardizer(MolecularStandardizer):
             mol = standardizer.standardize_mol(mol)
             mol, _ = standardizer.get_parent_mol(mol)
         except Exception as e:
-            print('error in standardizing smile: ' + str(mol))
+            self.logger.error('error in standardizing smile: ' + str(mol))
         return mol

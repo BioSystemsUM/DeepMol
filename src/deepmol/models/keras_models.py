@@ -1,3 +1,4 @@
+from deepmol.loggers.logger import Logger
 from deepmol.models.models import Model
 from deepmol.models.sklearn_models import SklearnModel
 from deepmol.metrics.metrics import Metric
@@ -63,6 +64,8 @@ class KerasModel(Model):
         self.model_builder = model_builder
         self.verbose = verbose
 
+        self.logger = Logger()
+
         if mode == 'classification':
             self.model = KerasClassifier(build_fn=model_builder, epochs=epochs, batch_size=batch_size,
                                          verbose=verbose, **kwargs)
@@ -103,8 +106,8 @@ class KerasModel(Model):
         try:
             return self.model.predict_proba(dataset.X)
         except AttributeError:
-            print(self.model)
-            print(type(self.model))
+            self.logger.info(str(self.model))
+            self.logger.info(str(type(self.model)))
             return self.model.predict(dataset.X)
 
     def predict_on_batch(self, X: Dataset) -> np.ndarray:

@@ -7,6 +7,7 @@ from mol2vec.features import mol2alt_sentence, MolSentence
 from rdkit.Chem import Mol
 
 from deepmol.compound_featurization import MolecularFeaturizer
+from deepmol.loggers.logger import Logger
 
 
 def sentences2vec(sentences: Iterable, model: Word2Vec, unseen: str = None):
@@ -85,6 +86,7 @@ class Mol2Vec(MolecularFeaturizer):
                                                "mol2vec_models",
                                                "model_300dim.pkl")
         self.model = word2vec.Word2Vec.load(pretrain_model_path)
+
 
     def _featurize(self, mol: Mol):
         """

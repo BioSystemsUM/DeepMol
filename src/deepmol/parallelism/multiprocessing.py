@@ -4,6 +4,8 @@ from typing import Iterable
 
 from joblib import Parallel, delayed
 
+from deepmol.loggers.logger import Logger
+
 
 class MultiprocessingClass(ABC):
     """
@@ -23,6 +25,8 @@ class MultiprocessingClass(ABC):
         """
         self.n_jobs = n_jobs
         self._process = process
+
+        self.logger = Logger()
 
     @property
     def process(self):
@@ -82,24 +86,24 @@ class JoblibMultiprocessing(MultiprocessingClass):
         """
         # TODO: Add support for progress bar
 
-        try:
-            # verifying if the process is a zip and convert it to a list
-            if isinstance(items, zip):
-                items = list(items)
+        # try:
+        # verifying if the process is a zip and convert it to a list
+        if isinstance(items, zip):
+            items = list(items)
 
-            # verifying if the first element is a tuple, if so one must use the args parameter *item
-            if isinstance(items[0], tuple):
-                results = Parallel(n_jobs=self.n_jobs, backend="multiprocessing")(delayed(self.process)(*item)
-                                                                                  for item in items)
-            else:
-                results = Parallel(n_jobs=self.n_jobs, backend="multiprocessing")(delayed(self.process)(item)
-                                                                                  for item in items)
+        # verifying if the first element is a tuple, if so one must use the args parameter *item
+        if isinstance(items[0], tuple):
+            results = Parallel(n_jobs=self.n_jobs, backend="multiprocessing")(delayed(self.process)(*item)
+                                                                              for item in items)
+        else:
+            results = Parallel(n_jobs=self.n_jobs, backend="multiprocessing")(delayed(self.process)(item)
+                                                                              for item in items)
 
-        except TypeError as e:
-            if re.match("cannot pickle '.*' object", str(e)):
-                print("Failed to pickle process function. Processing the input iteratively instead.")
-                results = self.run_iteratively(items)
-            else:
-                raise e
+        # except TypeError as e:
+        #     if re.match("cannot pickle '.*' object", str(e)):
+        #         self.logger.warning("Failed to pickle process function. Processing the input iteratively instead.")
+        #         results = self.run_iteratively(items)
+        #     else:
+        #         raise e
 
         return results

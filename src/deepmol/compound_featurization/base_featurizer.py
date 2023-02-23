@@ -5,6 +5,7 @@ import numpy as np
 from rdkit.Chem import MolFromSmiles, rdmolfiles, rdmolops, Mol, MolToSmiles
 
 from deepmol.datasets import Dataset
+from deepmol.loggers.logger import Logger
 from deepmol.parallelism.multiprocessing import JoblibMultiprocessing
 from deepmol.scalers import BaseScaler
 from deepmol.utils.errors import PreConditionViolationException
@@ -21,6 +22,8 @@ class MolecularFeaturizer(ABC):
 
     def __init__(self, n_jobs: int = -1):
         self.n_jobs = n_jobs
+
+        self.logger = Logger()
 
     @staticmethod
     def _convert_smiles_to_mol(mol: str) -> Tuple[Mol, bool, bool]:
@@ -92,8 +95,8 @@ class MolecularFeaturizer(ABC):
         except Exception as e:
             if isinstance(mol, Mol):
                 mol = MolToSmiles(mol)
-            print("Failed to featurize datapoint %d, %s. Appending empty array" % (mol_id, mol))
-            print("Exception message: {}".format(e))
+            self.logger.error("Failed to featurize datapoint %d, %s. Appending empty array" % (mol_id, mol))
+            self.logger.error("Exception message: {}".format(e))
             remove_mol = True
             return np.array([]), remove_mol
 
@@ -156,4 +159,4 @@ class MolecularFeaturizer(ABC):
 
     @abstractmethod
     def _featurize(self, mol: Mol):
-        raise NotImplementedError()
+        raise NotImplementedError

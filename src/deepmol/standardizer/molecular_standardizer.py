@@ -5,6 +5,7 @@ from rdkit import Chem
 from rdkit.Chem import rdmolfiles, rdmolops, Mol
 
 from deepmol.datasets import Dataset
+from deepmol.loggers.logger import Logger
 from deepmol.parallelism.multiprocessing import JoblibMultiprocessing
 from deepmol.utils.utils import canonicalize_mol_object
 
@@ -19,6 +20,8 @@ class MolecularStandardizer(ABC):
         Standardizer for molecules.
         """
         self.n_jobs = n_jobs
+
+        self.logger = Logger()
 
     def _standardize_mol(self, mol: Mol) -> Mol:
         """

@@ -8,6 +8,7 @@ from rdkit.Chem import Mol, MolFromSmiles, MolToSmiles
 
 from deepmol.compound_featurization import MolecularFeaturizer
 from deepmol.datasets import Dataset
+from deepmol.loggers.logger import Logger
 
 
 def find_maximum_number_atoms(molecules: List[Mol]):
@@ -24,6 +25,7 @@ def find_maximum_number_atoms(molecules: List[Mol]):
     best: int
         Maximum number of atoms in a molecule in the list.
     """
+    logger = Logger()
     best = 0
     for i, mol in enumerate(molecules):
         try:
@@ -31,7 +33,7 @@ def find_maximum_number_atoms(molecules: List[Mol]):
             if atoms > best:
                 best = atoms
         except Exception as e:
-            print('Molecule with index', i, 'was not converted from SMILES into RDKIT object')
+            logger.error(f'Molecule with index {i} was not converted from SMILES into rdkit object')
     return best
 
 
@@ -51,14 +53,16 @@ def get_conformers(molecules: List[Mol], generator: ConformerGenerator):
     new_conformations: List[Mol]
         List of rdkit mol objects with conformers.
     """
+    logger = Logger()
+
     new_conformations = []
     for i, mol in enumerate(molecules):
         try:
             conf = generator.generate_conformers(mol)
             new_conformations.append(conf)
         except Exception as e:
-            print('Molecules with index', i, 'was not able to achieve a correct conformation')
-            print('Appending empty list')
+            logger.error(f'Molecule with index {i} was not converted from SMILES into rdkit object')
+            logger.warning('Appending empty list')
             new_conformations.append([])
     return new_conformations
 
@@ -447,7 +451,6 @@ class CoulombEigFeat(MolecularFeaturizer):
 
         new_conformers = get_conformers(rdkit_mols, generator)
         # featurization process using DeepChem featurizers
-        print('Featurizing datapoints')
         featurizer = CoulombMatrixEig(
             max_atoms=self.max_atoms,
             remove_hydrogens=self.remove_hydrogens,
@@ -556,6 +559,8 @@ class SmilesSeqFeat:
         self.max_len = max_len
         self.pad_len = pad_len
 
+        self.logger = Logger()
+
     def featurize(self, dataset: Dataset, log_every_n=1000):
         """
         Featurizes a single molecule.
@@ -586,7 +591,6 @@ class SmilesSeqFeat:
         dataset.dictionary = self.char_to_idx
 
         # obtain new SMILE's strings
-        print('Converting SMILES to Mol')
         if isinstance(dataset.mols[0], str):
             rdkit_mols = [MolFromSmiles(mol) for mol in dataset.mols]
         elif isinstance(dataset.mols[0], Mol):
@@ -595,7 +599,6 @@ class SmilesSeqFeat:
             rdkit_mols = None
 
         # featurization process using DeepChem featurizers
-        print('Featurizing datapoints')
         dataset.X = SmilesToSeq(
             char_to_idx=self.char_to_idx,
             max_len=self.max_len,
@@ -605,13 +608,13 @@ class SmilesSeqFeat:
         indexes = []
         for i, feat in enumerate(dataset.X):
             if i % log_every_n == 0:
-                print('Analyzing datapoint %i' % i)
+                self.logger.info('Analyzing datapoint %i' % i)
             if len(feat) == 0:
-                print('Failed to featurize datapoint %d, %s' % (i, dataset.mols[i]))
+                self.logger.info('Failed to featurize datapoint %d, %s' % (i, dataset.mols[i]))
                 indexes.append(i)
         # treat indexes with no featurization
         dataset.remove_elements(indexes)
-        print('Elements with indexes: ', indexes, 'were removed due to lack of featurization.')
+        self.logger.warning(f'Elements with indexes: {indexes} were removed due to lack of featurization.')
         dataset.X = np.asarray([np.asarray(feat, dtype=object) for feat in dataset.X])
 
         return dataset

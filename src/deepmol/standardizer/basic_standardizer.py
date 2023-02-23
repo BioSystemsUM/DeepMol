@@ -44,5 +44,5 @@ class BasicStandardizer(MolecularStandardizer):
         try:
             mol = basic_standardizer(mol)
         except Exception as e:
-            print('error in standardizing smile: ' + str(mol))
+            self.logger.error('error in standardizing smile: ' + str(mol))
         return mol

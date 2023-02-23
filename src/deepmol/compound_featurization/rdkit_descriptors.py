@@ -12,6 +12,7 @@ from rdkit.ML.Descriptors import MoleculeDescriptors
 
 from deepmol.compound_featurization import MolecularFeaturizer
 from deepmol.datasets import Dataset
+from deepmol.loggers.logger import Logger
 from deepmol.utils.errors import PreConditionViolationException
 
 
@@ -26,15 +27,17 @@ def _no_conformers_message(e):
     """
     exc = traceback.format_exc()
 
+    logger = Logger()
+
     if isinstance(e, RuntimeError) and "molecule has no conformers" in exc \
             or isinstance(e, ValueError) and "Bad Conformer Id" in exc:
-        print("You have to generate molecular conformers for each molecule. \n"
-              "You can execute the following method: \n"
-              "rdkit3DDescriptors.generate_conformers_to_sdf_file(dataset: Dataset, file_path: str,"
-              " n_conformations: int,max_iterations: int, threads: int, timeout_per_molecule: int) \n"
-              "The result will be stored in a SDF format file which can be loaded with the "
-              "method: loaders.Loaders.SDFLoader()\n\n"
-              "Or set the generate_conformers parameter to True")
+        logger.error("You have to generate molecular conformers for each molecule. \n"
+                     "You can execute the following method: \n"
+                     "rdkit3DDescriptors.generate_conformers_to_sdf_file(dataset: Dataset, file_path: str,"
+                     " n_conformations: int,max_iterations: int, threads: int, timeout_per_molecule: int) \n"
+                     "The result will be stored in a SDF format file which can be loaded with the "
+                     "method: loaders.Loaders.SDFLoader()\n\n"
+                     "Or set the generate_conformers parameter to True")
 
         exit(1)
 
@@ -111,6 +114,8 @@ class ThreeDimensionalMoleculeGenerator:
         self.threads = threads
         self.timeout_per_molecule = timeout_per_molecule
 
+        self.logger = Logger()
+
     @staticmethod
     def check_if_mol_has_explicit_hydrogens(new_mol: Mol):
         """
@@ -167,7 +172,9 @@ class ThreeDimensionalMoleculeGenerator:
                                        params=AllChem.ETKDGv3(), **kwargs)
 
         else:
-            print("Choose ETKDG's valid version (1,2 or 3)")
+            message = "Choose ETKDG's valid version (1,2 or 3)"
+            self.logger.info(message)
+            warnings.warn(message)
             return None
 
         return new_mol
@@ -223,6 +230,8 @@ def get_all_3D_descriptors(mol):
     size = 639
     current_module = sys.modules[__name__]
 
+    logger = Logger()
+
     all_descriptors = np.empty(0, dtype=float)
     for name, featurizer_function in inspect.getmembers(current_module, inspect.isclass):
         try:
@@ -239,7 +248,7 @@ def get_all_3D_descriptors(mol):
                     raise Exception
 
         except Exception:
-            print('error in molecule: ' + str(mol))
+            logger.error('error in molecule: ' + str(mol))
             all_descriptors = np.empty(size, dtype=float)
             all_descriptors[:] = np.NaN
             break
@@ -372,6 +381,7 @@ class TwoDimensionDescriptors(MolecularFeaturizer):
         Initialize the class.
         """
         super().__init__()
+        self.logger = Logger()
 
     def _featurize(self, mol: Mol):
         """

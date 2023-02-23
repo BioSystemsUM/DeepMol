@@ -152,6 +152,6 @@ class CustomStandardizer(MolecularStandardizer):
         try:
             mol = custom_standardizer(mol, **self.params)
         except Exception as e:
-            print(e)
-            print('error in standardizing smile: ' + str(mol))
+            self.logger.error(e)
+            self.logger.error('error in standardizing smile: ' + str(mol))
         return mol

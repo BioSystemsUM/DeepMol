@@ -10,6 +10,8 @@ from deepmol.datasets import NumpyDataset
 import numpy as np
 import pandas as pd
 
+from deepmol.loggers.logger import Logger
+
 
 def load_csv_file(input_file: str, fields: list, sep: str = ',', header: int = 0, chunk_size: int = None):
     """
@@ -32,12 +34,13 @@ def load_csv_file(input_file: str, fields: list, sep: str = ',', header: int = 0
     pd.DataFrame
         Dataframe with chunk size.
     """
+    logger = Logger()
 
     if chunk_size is None:
         return pd.read_csv(input_file, sep=sep, header=header)[fields]
     else:
         df = pd.read_csv(input_file)
-        print("Loading shard of size %s." % (str(chunk_size)))
+        logger.info("Loading shard of size %s." % (str(chunk_size)))
         df = df.replace(np.nan, str(""), regex=True)
         return df[fields].sample(chunk_size)
 
@@ -46,13 +49,16 @@ def load_sdf_file(input_file: str):
     """
     Load data as pandas dataframe from SDF files.
     """
+
+    logger = Logger()
+
     supplier = SDMolSupplier(input_file)
     mols, attempts = [], 0
 
     while not mols and attempts < 10:
         mols = list(supplier)
         attempts += 1
-    print(f"Loaded {len(mols)} molecules after {attempts} attempts.")
+    logger.info(f"Loaded {len(mols)} molecules after {attempts} attempts.")
     return mols
 
 

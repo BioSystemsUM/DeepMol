@@ -57,7 +57,7 @@ class StandardScaler(BaseScaler):
         """
         self._scaler_object = value
 
-    def load_scaler(self, file_path: str):
+    def load(self, file_path: str):
         """
         Loads the scaler object from a file.
 
@@ -167,7 +167,7 @@ class MinMaxScaler(BaseScaler):
         """
         self._scaler_object = value
 
-    def load_scaler(self, file_path: str):
+    def load(self, file_path: str):
         """
         Loads the scaler object from a file.
 
@@ -268,7 +268,7 @@ class MaxAbsScaler(BaseScaler):
         """
         self._scaler_object = value
 
-    def load_scaler(self, file_path: str):
+    def load(self, file_path: str):
         """
         Loads the scaler object from a file.
 
@@ -391,7 +391,7 @@ class RobustScaler(BaseScaler):
         """
         self._scaler_object = value
 
-    def load_scaler(self, file_path: str):
+    def load(self, file_path: str):
         """
         Loads the scaler object from a file.
 
@@ -506,7 +506,7 @@ class PolynomialFeatures(BaseScaler):
         """
         self._scaler_object = value
 
-    def load_scaler(self, file_path: str):
+    def load(self, file_path: str):
         """
         Loads the scaler object from a file.
 
@@ -611,7 +611,7 @@ class Normalizer(BaseScaler):
         """
         self._scaler_object = value
 
-    def load_scaler(self, file_path: str):
+    def load(self, file_path: str):
         """
         Loads the scaler object from a file.
 
@@ -716,7 +716,7 @@ class Binarizer(BaseScaler):
         """
         self._scaler_object = value
 
-    def load_scaler(self, file_path: str):
+    def load(self, file_path: str):
         """
         Loads the scaler object from a file.
 
@@ -812,7 +812,7 @@ class KernelCenterer(BaseScaler):
         """
         self._scaler_object = value
 
-    def load_scaler(self, file_path: str):
+    def load(self, file_path: str):
         """
         Loads the scaler object from a file.
 
@@ -941,7 +941,7 @@ class QuantileTransformer(BaseScaler):
         """
         self._scaler_object = value
 
-    def load_scaler(self, file_path: str):
+    def load(self, file_path: str):
         """
         Loads the scaler object from a file.
 
@@ -1051,7 +1051,7 @@ class PowerTransformer(BaseScaler):
         """
         self._scaler_object = value
 
-    def load_scaler(self, file_path: str):
+    def load(self, file_path: str):
         """
         Loads the scaler object from a file.
 

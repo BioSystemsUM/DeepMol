@@ -32,7 +32,7 @@ simple_standardisation = {
     'NEUTRALISE_CHARGE': False,
     'REMOVE_STEREO': True,
     'KEEP_BIGGEST': False,
-    'ADD_HYDROGEN': True,
+    'ADD_HYDROGEN': False,
     'KEKULIZE': False,
     'NEUTRALISE_CHARGE_LATE': True}
 
@@ -115,6 +115,8 @@ def custom_standardizer(mol: Mol,
         SanitizeMol(mol, sanitizeOps=SanitizeFlags.SANITIZE_ALL, catchErrors=False)
     if ADD_HYDROGEN:
         mol = add_hydrogens(mol, addCoords=True)
+    else:
+        mol = remove_hydrogens(mol)
     if KEKULIZE:
         mol = kekulize(mol)
     return mol

@@ -12,14 +12,14 @@ class TestLogger(TestCase):
         self.log_file_name = os.path.join(TEST_DIR, "test.log")
         self.logger = Logger(file_path=self.log_file_name + "2", level=logging.DEBUG)
 
-    def tearDown(self) -> None:
+    def delete_file(self) -> None:
         if os.path.exists(self.log_file_name + "2"):
             os.remove(self.log_file_name + "2")
 
     def test_logger(self):
         Logger(file_path=self.log_file_name).info("Test")
-        self.assertTrue(os.path.exists(self.log_file_name))
-        with open(self.log_file_name, "r") as f:
+        self.assertTrue(os.path.exists(self.log_file_name + "2"))
+        with open(self.log_file_name + "2", "r") as f:
             self.assertIn("Test", f.readline())
 
     def test_singleton(self):
@@ -30,20 +30,23 @@ class TestLogger(TestCase):
         self.assertEqual(logger2, self.logger)
 
     def test_logger_at_class_level(self):
-        self.logger.info("Test")
+        Logger(file_path=self.log_file_name + "2", level=logging.DEBUG).info("Test")
 
         class Test:
-            logger = Logger(file_path=self.log_file_name)
+            logger = Logger(file_path=self.log_file_name + "2", level=logging.DEBUG)
 
-            def test(self):
+            def method(self):
                 self.logger.info("TEST inside class")
 
-        Test().test()
+        Test().method()
 
         self.assertTrue(os.path.exists(self.log_file_name + "2"))
         with open(self.log_file_name + "2", "r") as f:
+            f.readline()
             self.assertIn("Test", f.readline())
             self.assertIn("TEST inside class", f.readline())
+
+        self.delete_file()
 
     def test_pickle(self):
         import pickle

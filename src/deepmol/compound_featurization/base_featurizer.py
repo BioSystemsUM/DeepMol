@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Union, Tuple
 
 import numpy as np
-from rdkit.Chem import MolFromSmiles, rdmolfiles, rdmolops, Mol, MolToSmiles
+from rdkit.Chem import MolFromSmiles, Mol, MolToSmiles
 
 from deepmol.datasets import Dataset
 from deepmol.parallelism.multiprocessing import JoblibMultiprocessing
@@ -19,7 +19,15 @@ class MolecularFeaturizer(ABC):
     Subclasses need to implement the _featurize method for calculating features for a single molecule.
     """
 
-    def __init__(self, n_jobs: int = -1):
+    def __init__(self, n_jobs: int = -1) -> None:
+        """
+        Initializes the featurizer.
+
+        Parameters
+        ----------
+        n_jobs: int
+            The number of jobs to run in parallel in the featurization.
+        """
         self.n_jobs = n_jobs
 
     @staticmethod
@@ -102,7 +110,7 @@ class MolecularFeaturizer(ABC):
                   scaler: BaseScaler = None,
                   path_to_save_scaler: str = None,
                   remove_nans_axis: int = 0
-                  ):
+                  ) -> Dataset:
 
         """
         Calculate features for molecules.
@@ -136,9 +144,10 @@ class MolecularFeaturizer(ABC):
 
         features = np.array(features, dtype=object)
         features = features[~remove_mols_list]
-        # features = np.concatenate(features, axis=0)
 
-        if isinstance(features[0], np.ndarray):
+        if isinstance(features[0], np.ndarray) and len(features[0].shape) == 2:
+            pass
+        else:
             features = np.vstack(features)
         dataset.X = features
 

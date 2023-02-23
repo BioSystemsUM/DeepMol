@@ -17,7 +17,7 @@ class TestLoaders(TestCase):
         loader2 = SDFLoader(dataset, id_field='_ID', labels_fields='_Class', shard_size=2)
         dataset2 = loader2.create_dataset()
         self.assertEqual(len(dataset2.mols), 2)
-        self.assertIsNone(dataset2.X)
+        self.assertEqual(len(dataset2.X), 0)
         self.assertEqual(len(dataset2.y), 2)
 
         loader3 = SDFLoader(dataset,

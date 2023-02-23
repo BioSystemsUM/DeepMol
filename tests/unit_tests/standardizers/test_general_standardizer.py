@@ -50,9 +50,9 @@ class GeneralStandardizer(StandardizerBaseTestCase, TestCase):
             self.assertEqual(similarity, 1)
 
     def test_standardize(self):
-        self.check_similarity(BasicStandardizer, n_jobs=1)
-        self.check_similarity(ChEMBLStandardizer, n_jobs=1)
-        self.check_similarity(CustomStandardizer, n_jobs=1)
+        self.check_similarity(BasicStandardizer)
+        self.check_similarity(ChEMBLStandardizer)
+        self.check_similarity(CustomStandardizer)
 
     def test_custom_strandardizer_configurations(self):
         heavy_standardisation = {
@@ -63,4 +63,4 @@ class GeneralStandardizer(StandardizerBaseTestCase, TestCase):
             'ADD_HYDROGEN': True,
             'KEKULIZE': True,
             'NEUTRALISE_CHARGE_LATE': True}
-        self.check_similarity(CustomStandardizer, params=heavy_standardisation, n_jobs=1)
+        self.check_similarity(CustomStandardizer, params=heavy_standardisation)

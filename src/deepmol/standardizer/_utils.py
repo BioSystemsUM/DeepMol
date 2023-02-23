@@ -255,7 +255,7 @@ def add_hydrogens(mol: Mol, addCoords: bool = True) -> Mol:
     return AddHs(mol, explicitOnly=False, addCoords=addCoords)
 
 
-def remove_hydrogens(mol: Mol, addCoords: bool = True) -> Mol:
+def remove_hydrogens(mol: Mol) -> Mol:
     """
     Implicit all hydrogens.
 
@@ -271,7 +271,7 @@ def remove_hydrogens(mol: Mol, addCoords: bool = True) -> Mol:
     mol: Mol
         molecule with all Hs implicit.
     """
-    return RemoveHs(mol, explicitOnly=False, addCoords=addCoords)
+    return RemoveHs(mol, implicitOnly=False)
 
 
 def kekulize(mol: Mol) -> Mol:

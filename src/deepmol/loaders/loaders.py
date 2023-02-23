@@ -205,7 +205,7 @@ class CSVLoader(object):
             if self.id_field is not None:
                 ids = dataset[self.id_field].to_numpy()
             else:
-                ids = np.array([i for i in range(dataset.shape[0])])
+                ids = None
 
             return NumpyDataset(mols=mols,
                                 X=X,

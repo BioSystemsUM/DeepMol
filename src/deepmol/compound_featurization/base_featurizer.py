@@ -69,13 +69,16 @@ class MolecularFeaturizer(ABC):
             The features for the molecule.
         """
         is_mol_convertable = True
-
         remove_mol = False
-
         try:
             if isinstance(mol, str):
                 # mol must be a RDKit Mol object, so parse a SMILES
                 mol, is_mol_convertable, remove_mol = self._convert_smiles_to_mol(mol)
+            elif isinstance(mol, Mol):
+                mol = canonicalize_mol_object(mol)
+            else:
+                is_mol_convertable = False
+                remove_mol = True
 
             if is_mol_convertable:
                 feat = self._featurize(mol)

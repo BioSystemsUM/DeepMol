@@ -24,11 +24,20 @@ class GeneralStandardizer(StandardizerBaseTestCase, TestCase):
                 if standardization_method.__name__ == 'BasicStandardizer':
                     pass
                 elif standardization_method.__name__ == 'CustomStandardizer':
-                    if 'params' in kwargs:
-                        if kwargs['params']['KEEP_BIGGEST']:
-                            self.assertTrue(len(not_standardized_smiles_lst[i]) > len(dataset.mols[i]))
+                    tested = False
+                    if '.' in not_standardized_smiles_lst[i]:
+                        tested = True
+                        if standardization_method(**kwargs).params['KEEP_BIGGEST']:
                             self.assertTrue('.' not in dataset.mols[i])
-                            continue
+                    if '+' in not_standardized_smiles_lst[i] or '-' in not_standardized_smiles_lst[i]:
+                        tested = True
+                        if standardization_method(**kwargs).params['NEUTRALISE_CHARGE']:
+                            self.assertTrue('-' not in dataset.mols[i])
+                            self.assertTrue('+' not in dataset.mols[i])
+                    if tested:
+                        continue
+                    else:
+                        pass
                 else:
                     self.assertTrue('.' in not_standardized_smiles_lst[i])
                     self.assertTrue(len(not_standardized_smiles_lst[i]) > len(dataset.mols[i]))

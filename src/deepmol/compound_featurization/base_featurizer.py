@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 from typing import Union, Tuple
 
@@ -57,7 +58,7 @@ class MolecularFeaturizer(ABC):
 
         return mol, is_mol_convertable, remove_mol
 
-    def _featurize_mol(self, mol: Mol, mol_id: Union[int, str]) -> Tuple[np.ndarray, bool]:
+    def _featurize_mol(self, mol: Mol) -> Tuple[np.ndarray, bool]:
         """
         Calculate features for a single molecule.
 
@@ -73,9 +74,11 @@ class MolecularFeaturizer(ABC):
         """
         is_mol_convertable = True
         remove_mol = False
+        smiles = None
         try:
             if isinstance(mol, str):
                 # mol must be a RDKit Mol object, so parse a SMILES
+                smiles = mol
                 mol, is_mol_convertable, remove_mol = self._convert_smiles_to_mol(mol)
             elif isinstance(mol, Mol):
                 mol = canonicalize_mol_object(mol)
@@ -87,16 +90,18 @@ class MolecularFeaturizer(ABC):
                 feat = self._featurize(mol)
                 return feat, remove_mol
             else:
+                if isinstance(mol, Mol):
+                    smiles = MolToSmiles(mol)
+                logger = logging.getLogger(self.logger.logger)
+                logger.error(f"Failed to featurize {smiles}. Appending empty array")
                 return np.array([]), remove_mol
 
         except PreConditionViolationException:
             exit(1)
 
         except Exception as e:
-            if isinstance(mol, Mol):
-                mol = MolToSmiles(mol)
-            self.logger.error("Failed to featurize datapoint %d, %s. Appending empty array" % (mol_id, mol))
-            self.logger.error("Exception message: {}".format(e))
+            logger = logging.getLogger(self.logger.logger)
+            logger.error("Exception message: {}".format(e))
             remove_mol = True
             return np.array([]), remove_mol
 
@@ -127,10 +132,10 @@ class MolecularFeaturizer(ABC):
           The input Dataset containing a featurized representation of the molecules in Dataset.X.
         """
         molecules = dataset.mols
-        dataset_ids = dataset.ids
+        # dataset_ids = dataset.ids
 
         multiprocessing_cls = JoblibMultiprocessing(process=self._featurize_mol, n_jobs=self.n_jobs)
-        features = multiprocessing_cls.run(zip(molecules, dataset_ids))
+        features = multiprocessing_cls.run(molecules)
 
         features, remove_mols = zip(*features)
 

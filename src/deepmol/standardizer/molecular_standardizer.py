@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -22,6 +23,7 @@ class MolecularStandardizer(ABC):
         self.n_jobs = n_jobs
 
         self.logger = Logger()
+        self.logger.info(f"Standardizer {self.__class__.__name__} initialized with {n_jobs} jobs.")
 
     def _standardize_mol(self, mol: Mol) -> Mol:
         """

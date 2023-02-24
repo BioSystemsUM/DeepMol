@@ -1,3 +1,5 @@
+import logging
+
 from rdkit.Chem import SanitizeMol, Mol
 
 from deepmol.standardizer import MolecularStandardizer
@@ -44,5 +46,6 @@ class BasicStandardizer(MolecularStandardizer):
         try:
             mol = basic_standardizer(mol)
         except Exception as e:
-            self.logger.error('error in standardizing smile: ' + str(mol))
+            logger = logging.getLogger(self.logger.logger)
+            logger.error('error in standardizing smile: ' + str(mol))
         return mol

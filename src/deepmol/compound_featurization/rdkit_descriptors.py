@@ -490,7 +490,7 @@ class ThreeDimensionDescriptor(MolecularFeaturizer):
             raise e
 
         except Exception as e:
-            print('error in smile: ' + str(mol))
+            self.logger.error('error in smile: ' + str(mol))
             _no_conformers_message(e)
 
             fp = np.empty(80, dtype=float)

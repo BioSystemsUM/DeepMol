@@ -2,7 +2,7 @@ from typing import List, Dict, Any
 
 import numpy as np
 from deepchem.feat import ConvMolFeaturizer, WeaveFeaturizer, MolGraphConvFeaturizer, CoulombMatrix, CoulombMatrixEig, \
-    SmilesToImage, SmilesToSeq, MolGanFeaturizer
+    SmilesToImage, SmilesToSeq, MolGanFeaturizer, GraphMatrix
 from deepchem.feat.graph_data import GraphData
 from deepchem.feat.mol_graphs import ConvMol, WeaveMol
 from deepchem.utils import ConformerGenerator
@@ -147,6 +147,7 @@ class MolGanFeat(MolecularFeaturizer):
     Featurizer for MolGAN de-novo molecular generation model, adapted from deepchem
     (https://deepchem.readthedocs.io/en/latest/api_reference/featurizers.html?highlight=CGCNN#molganfeaturizer).
     It is wrapper for two matrices containing atom and bond type information.
+
     References:
     Nicola De Cao et al. “MolGAN: An implicit generative model for small molecular graphs” (2018),
     https://arxiv.org/abs/1805.11973
@@ -178,7 +179,7 @@ class MolGanFeat(MolecularFeaturizer):
         self.bond_labels = bond_labels
         self.atom_labels = atom_labels
 
-    def _featurize(self, mol: Mol) -> WeaveMol:
+    def _featurize(self, mol: Mol) -> GraphMatrix:
         """
         Featurizes a single molecule.
 
@@ -192,7 +193,7 @@ class MolGanFeat(MolecularFeaturizer):
         feature: WeaveMol
             The WeaveMol features of the molecule.
         """
-        # featurization process using DeepChem WeaveFeaturizer
+        # featurization process using DeepChem MolGanFeat
         feature = MolGanFeaturizer(max_atom_count=self.max_atom_count,
                                    kekulize=self.kekulize,
                                    bond_labels=self.bond_labels,

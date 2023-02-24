@@ -376,12 +376,11 @@ class TwoDimensionDescriptors(MolecularFeaturizer):
     It generates all descriptors from the RDKit library.
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         """
         Initialize the class.
         """
-        super().__init__()
-        self.logger = Logger()
+        super().__init__(**kwargs)
 
     def _featurize(self, mol: Mol):
         """
@@ -405,8 +404,8 @@ class TwoDimensionDescriptors(MolecularFeaturizer):
             if np.isnan(np.sum(descriptors)):
                 raise Exception
         except Exception as e:
-
-            print('error in smile: ' + str(mol))
+            self.logger = Logger()
+            self.logger.error('error in smile: ' + str(mol))
             _no_conformers_message(e)
 
             descriptors = np.empty(208, dtype=np.float64)
@@ -555,7 +554,7 @@ class All3DDescriptors(MolecularFeaturizer):
             raise e
 
         except Exception as e:
-            print('error in smile: ' + str(mol))
+            self.logger.error('error in smile: ' + str(mol))
             fp = np.empty(size, dtype=float)
             fp[:] = np.NaN
 

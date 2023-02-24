@@ -1,9 +1,8 @@
-import logging
 from abc import ABC, abstractmethod
-from typing import Union, Tuple
+from typing import Tuple
 
 import numpy as np
-from rdkit.Chem import MolFromSmiles, rdmolfiles, rdmolops, Mol, MolToSmiles
+from rdkit.Chem import MolFromSmiles, Mol, MolToSmiles
 
 from deepmol.datasets import Dataset
 from deepmol.loggers.logger import Logger
@@ -92,16 +91,16 @@ class MolecularFeaturizer(ABC):
             else:
                 if isinstance(mol, Mol):
                     smiles = MolToSmiles(mol)
-                logger = logging.getLogger(self.logger.logger)
-                logger.error(f"Failed to featurize {smiles}. Appending empty array")
+                self.logger = Logger()
+                self.logger.error(f"Failed to featurize {smiles}. Appending empty array")
                 return np.array([]), remove_mol
 
         except PreConditionViolationException:
             exit(1)
 
         except Exception as e:
-            logger = logging.getLogger(self.logger.logger)
-            logger.error("Exception message: {}".format(e))
+            self.logger = Logger()
+            self.logger.error("Exception message: {}".format(e))
             remove_mol = True
             return np.array([]), remove_mol
 

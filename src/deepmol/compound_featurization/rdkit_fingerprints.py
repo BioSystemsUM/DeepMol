@@ -63,8 +63,8 @@ class MorganFingerprint(MolecularFeaturizer):
                                                                 useBondTypes=self.bonds,
                                                                 useFeatures=self.features)
         except Exception as e:
-            logger = logging.getLogger(self.logger.logger)
-            logger.error('error in smile: ' + str(mol))
+            self.logger = Logger()
+            self.logger.error('error in smile: ' + str(mol))
             fp = np.empty(self.size, dtype=float)
             fp[:] = np.NaN
         fp = np.asarray(fp, dtype=np.float64)
@@ -77,11 +77,11 @@ class MACCSkeysFingerprint(MolecularFeaturizer):
     SMARTS-based implementation of the 166 public MACCS keys.
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         """
         Initialize a MACCSkeysFingerprint object.
         """
-        super().__init__()
+        super().__init__(**kwargs)
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -100,8 +100,8 @@ class MACCSkeysFingerprint(MolecularFeaturizer):
         try:
             fp = MACCSkeys.GenMACCSKeys(mol)
         except Exception as e:
-            logger = logging.getLogger(self.logger.logger)
-            logger.error('error in smile: ' + str(mol))
+            self.logger = Logger()
+            self.logger.error('error in smile: ' + str(mol))
             fp = np.empty(167, dtype=float)
             fp[:] = np.NaN
         fp = np.asarray(fp, dtype=np.float)
@@ -127,7 +127,8 @@ class LayeredFingerprint(MolecularFeaturizer):
                  maxPath: int = 7,
                  fpSize: int = 2048,
                  atomCounts: list = None,
-                 branchedPaths: bool = True):
+                 branchedPaths: bool = True,
+                 **kwargs):
         """
         Initialize a LayeredFingerprint object.
 
@@ -147,7 +148,7 @@ class LayeredFingerprint(MolecularFeaturizer):
         branchedPaths: bool
             Whether to include branched and unbranched paths in the fingerprint.
         """
-        super().__init__()
+        super().__init__(**kwargs)
         if atomCounts is None:
             atomCounts = []
         self.layerFlags = layerFlags
@@ -179,8 +180,8 @@ class LayeredFingerprint(MolecularFeaturizer):
                                              atomCounts=self.atomCounts,
                                              branchedPaths=self.branchedPaths)
         except Exception as e:
-            logger = logging.getLogger(self.logger.logger)
-            logger.error('error in smile: ' + str(mol))
+            self.logger = Logger()
+            self.logger.error('error in smile: ' + str(mol))
             fp = np.empty(self.fpSize, dtype=float)
             fp[:] = np.NaN
         fp = np.asarray(fp, dtype=np.float)
@@ -209,7 +210,8 @@ class RDKFingerprint(MolecularFeaturizer):
                  tgtDensity: float = 0.0,
                  minSize: int = 128,
                  branchedPaths: bool = True,
-                 useBondOrder: bool = True):
+                 useBondOrder: bool = True,
+                 **kwargs):
 
         """
         Initialize a RDKFingerprint object.
@@ -235,7 +237,7 @@ class RDKFingerprint(MolecularFeaturizer):
         useBondOrder: bool
             If True, both bond orders will be used in the path hashes
         """
-        super().__init__()
+        super().__init__(**kwargs)
         self.minPath = minPath
         self.maxPath = maxPath
         self.fpSize = fpSize
@@ -272,8 +274,8 @@ class RDKFingerprint(MolecularFeaturizer):
                                          useBondOrder=self.useBondOrder)
 
         except Exception as e:
-            logger = logging.getLogger(self.logger.logger)
-            logger.error('error in smile: ' + str(mol))
+            self.logger = Logger()
+            self.logger.error('error in smile: ' + str(mol))
             fp = np.empty(self.fpSize, dtype=float)
             fp[:] = np.NaN
         fp = np.asarray(fp, dtype=np.float)
@@ -294,7 +296,8 @@ class AtomPairFingerprint(MolecularFeaturizer):
                  nBitsPerEntry: int = 4,
                  includeChirality: bool = False,
                  use2D: bool = True,
-                 confId: int = -1):
+                 confId: int = -1,
+                 **kwargs):
         """
         Initialize an AtomPairFingerprint object.
 
@@ -315,7 +318,7 @@ class AtomPairFingerprint(MolecularFeaturizer):
         confId: int
             The conformation to use if 3D distances are being used return a pointer to the fingerprint.
         """
-        super().__init__()
+        super().__init__(**kwargs)
         self.nBits = nBits
         self.minLength = minLength
         self.maxLength = maxLength
@@ -347,8 +350,8 @@ class AtomPairFingerprint(MolecularFeaturizer):
                                                                         use2D=self.use2D,
                                                                         confId=self.confId)
         except Exception as e:
-            logger = logging.getLogger(self.logger.logger)
-            logger.error('error in smile: ' + str(mol))
+            self.logger = Logger()
+            self.logger.error('error in smile: ' + str(mol))
             fp = np.empty(self.nBits, dtype=float)
             fp[:] = np.NaN
         fp = np.asarray(fp, dtype=np.float)
@@ -368,7 +371,8 @@ class AtomPairFingerprintCallbackHash(MolecularFeaturizer):
                  maxLength: int = 30,
                  includeChirality: bool = False,
                  use2D: bool = True,
-                 confId: int = -1):
+                 confId: int = -1,
+                 **kwargs):
         """
         Initialize an AtomPairFingerprintCallbackHash object.
 
@@ -387,7 +391,7 @@ class AtomPairFingerprintCallbackHash(MolecularFeaturizer):
         confId: int
             The conformation to use if 3D distances are being used return a pointer to the fingerprint.
         """
-        super().__init__()
+        super().__init__(**kwargs)
         self.nBits = nBits
         self.minLength = minLength
         self.maxLength = maxLength
@@ -441,8 +445,8 @@ class AtomPairFingerprintCallbackHash(MolecularFeaturizer):
                         index = int(bit % self.nBits)
                         fp[index] = 1
         except Exception as e:
-            logger = logging.getLogger(self.logger.logger)
-            logger.error('error in smile: ' + str(mol))
+            self.logger = Logger()
+            self.logger.error('error in smile: ' + str(mol))
             fp = np.empty(self.nBits, dtype=float)
             fp[:] = np.NaN
         fp = np.asarray(fp, dtype=np.float)

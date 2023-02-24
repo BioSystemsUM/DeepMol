@@ -37,7 +37,7 @@ def canonicalize_mol_object(mol_object: Mol) -> Mol:
 
     Returns
     -------
-    Tuple[Mol]
+    Mol
         Canonicalized molecule object.
     """
     try:

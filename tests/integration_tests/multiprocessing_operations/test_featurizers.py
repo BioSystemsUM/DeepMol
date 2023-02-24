@@ -1,5 +1,3 @@
-from unittest import TestCase
-
 import numpy as np
 from rdkit.Chem import rdMolDescriptors, MolFromSmiles
 

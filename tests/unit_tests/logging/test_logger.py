@@ -9,8 +9,9 @@ from tests import TEST_DIR
 class TestLogger(TestCase):
 
     def setUp(self) -> None:
-        self.log_file_name = os.path.join(TEST_DIR, "test.log")
+        self.log_file_name = os.path.join(TEST_DIR, "test3.log")
         self.logger = Logger(file_path=self.log_file_name, level=logging.DEBUG)
+        self.logger.set_file_path(self.log_file_name)
 
     def delete_file(self) -> None:
         if os.path.exists(self.log_file_name):
@@ -21,6 +22,17 @@ class TestLogger(TestCase):
         self.assertTrue(os.path.exists(self.log_file_name))
         with open(self.log_file_name, "r") as f:
             self.assertIn("Test", f.readline())
+
+    def test_logger_set_level(self):
+        self.logger.set_level(logging.INFO)
+        self.assertEqual(self.logger.logger.level, logging.INFO)
+
+    def test_logger_set_file_path(self):
+        self.logger.set_file_path(self.log_file_name + "2")
+        self.assertEqual(self.logger.logger.name, self.log_file_name + "2")
+        self.logger.info("Test")
+        self.assertTrue(os.path.exists(self.log_file_name + "2"))
+        os.remove(self.log_file_name + "2")
 
     def test_singleton(self):
         logger1 = Logger(file_path=self.log_file_name)
@@ -59,7 +71,7 @@ class TestLogger(TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        log_file_name = os.path.join(TEST_DIR, "test.log")
+        log_file_name = os.path.join(TEST_DIR, "test3.log")
         if os.path.exists(log_file_name):
             os.remove(log_file_name)
 

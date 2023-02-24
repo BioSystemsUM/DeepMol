@@ -1,4 +1,3 @@
-import logging
 from typing import Iterable
 
 import numpy as np
@@ -48,8 +47,8 @@ class MixedFeaturizer(MolecularFeaturizer):
                 final_features = np.concatenate((final_features, current_features))
 
         except Exception:
-            logger = logging.getLogger(self.logger.logger)
-            logger.error('error in smile: ' + str(mol))
+            self.logger = Logger()
+            self.logger.error('error in smile: ' + str(mol))
             final_features = np.empty(80, dtype=float)
             final_features[:] = np.NaN
 

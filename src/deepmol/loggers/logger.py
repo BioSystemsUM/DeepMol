@@ -3,6 +3,8 @@ import logging
 import sys
 from logging.handlers import TimedRotatingFileHandler
 
+disabled_logger = False
+
 
 class SingletonMeta(type):
     """
@@ -36,17 +38,98 @@ class Logger(metaclass=SingletonMeta):
         level: int
             The level of the logger.
         """
-        self.logger = logging.getLogger(file_path)
 
-        formatter = logging.Formatter("%(asctime)s — %(levelname)s — %(message)s")
+        self.file_path = file_path
+        self.level = level
+        self.formatter = logging.Formatter("%(asctime)s — %(levelname)s — %(message)s")
+
+        self.file_path_changed = False
+        self.logger = None
+        self.console_handler = None
+        self.file_handler = None
+
+        if not disabled_logger:
+            self.create_handlers()
+
+    @staticmethod
+    def disable():
+        """
+        Disables the logger.
+        """
+        # disable all levels of logging
+        logging.disable(logging.DEBUG)
+        logging.disable(logging.INFO)
+        logging.disable(logging.CRITICAL)
+        logging.disable(logging.ERROR)
+        logging.disable(logging.WARNING)
+
+        global disabled_logger
+        disabled_logger = True
+
+    def enable(self):
+        """
+        Enables the logger.
+        """
+        # logging.disable(logging.NOTSET)
+        global disabled_logger
+        disabled_logger = False
+
+        if self.file_path_changed:
+            self.logger.removeHandler(self.file_handler)
+            self.file_path_changed = False
+            file_handler = TimedRotatingFileHandler(self.file_path, when='midnight')
+            self.file_handler = file_handler
+            self.file_handler.setFormatter(self.formatter)
+            self.logger.addHandler(self.file_handler)
+            self.logger.setLevel(self.level)
+        self.create_handlers()
+
+    def create_handlers(self):
+        """
+        Creates the handlers for the logger.
+        """
+        self.logger = logging.getLogger(self.file_path)
+
         self.console_handler = logging.StreamHandler(sys.stdout)
-        self.console_handler.setFormatter(formatter)
-        self.file_handler = TimedRotatingFileHandler(file_path, when='midnight')
-        self.file_handler.setFormatter(formatter)
-
-        self.logger.setLevel(level)
+        self.console_handler.setFormatter(self.formatter)
+        self.file_handler = TimedRotatingFileHandler(self.file_path, when='midnight')
+        self.file_handler.setFormatter(self.formatter)
         self.logger.addHandler(self.file_handler)
-        self.logger.propagate = False
+        self.logger.addHandler(self.console_handler)
+        self.logger.setLevel(self.level)
+
+    def set_file_path(self, file_path: str):
+        """
+        Sets the file path of the logger.
+
+        Parameters
+        ----------
+        file_path: str
+            The path to the log file.
+        """
+        self.file_path = file_path
+        self.file_path_changed = True
+        if not disabled_logger:
+            self.logger = logging.getLogger(self.file_path)
+            self.logger.removeHandler(self.file_handler)
+
+            file_handler = TimedRotatingFileHandler(file_path, when='midnight')
+            self.file_handler = file_handler
+            self.file_handler.setFormatter(self.formatter)
+            self.logger.addHandler(self.file_handler)
+            self.logger.addHandler(self.console_handler)
+            self.logger.setLevel(self.level)
+
+    def set_level(self, level: int):
+        """
+        Sets the level of the logger.
+
+        Parameters
+        ----------
+        level: int
+            The level of the logger.
+        """
+        self.logger.setLevel(level)
 
     def info(self, msg: str, **kwargs):
         """

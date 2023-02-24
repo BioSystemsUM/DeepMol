@@ -1,8 +1,6 @@
-import logging
-from logging import Logger
-
 from rdkit.Chem import Mol, Cleanup, SanitizeMol, SanitizeFlags, AssignStereochemistry
 
+from deepmol.loggers.logger import Logger
 from deepmol.standardizer import MolecularStandardizer
 from deepmol.standardizer.utils_standardization import remove_isotope_info, uncharge, remove_stereo, keep_biggest, \
     add_hydrogens, kekulize
@@ -155,7 +153,7 @@ class CustomStandardizer(MolecularStandardizer):
         try:
             mol = custom_standardizer(mol, **self.params)
         except Exception as e:
-            logger = logging.getLogger(self.logger.logger)
-            logger.error(e)
+            logger = Logger()
+            logger.error(str(e))
             logger.error('error in standardizing smile: ' + str(mol))
         return mol

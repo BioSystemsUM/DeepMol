@@ -145,7 +145,8 @@ class MolecularFeaturizer(ABC):
         features = np.array(features, dtype=object)
         features = features[~remove_mols_list]
 
-        if isinstance(features[0], np.ndarray) and len(features[0].shape) == 2:
+        if (isinstance(features[0], np.ndarray) and len(features[0].shape) == 2) or not isinstance(features[0],
+                                                                                                   np.ndarray):
             pass
         else:
             features = np.vstack(features)

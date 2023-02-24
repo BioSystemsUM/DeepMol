@@ -580,8 +580,15 @@ class NumpyDataset(Dataset):
             X = self.X
             for i in X:
                 if len(shape) == 2:
-                    if np.isnan(np.dot(i, i)):
-                        indexes.append(self.ids[j])
+                    # Deal with some DeepChem feature objects
+                    if not isinstance(i[0], float) or not isinstance(i[0], int):
+                        pass
+                    else:
+                        # check if numpy array is empty
+                        if i.size == 0:
+                            indexes.append(self.ids[j])
+                        elif np.isnan(np.dot(i, i)):
+                            indexes.append(self.ids[j])
                 elif isinstance(i, float) or isinstance(i, int):
                     if i is None or np.isnan(i):
                         indexes.append(self.ids[j])

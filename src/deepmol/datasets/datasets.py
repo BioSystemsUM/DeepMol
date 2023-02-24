@@ -581,7 +581,7 @@ class NumpyDataset(Dataset):
             for i in X:
                 if len(shape) == 2:
                     # Deal with some DeepChem feature objects
-                    if not isinstance(i[0], float) or not isinstance(i[0], int):
+                    if not isinstance(i[0], float) and not isinstance(i[0], int):
                         pass
                     else:
                         # check if numpy array is empty

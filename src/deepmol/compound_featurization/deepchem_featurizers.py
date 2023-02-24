@@ -1,8 +1,8 @@
-from typing import List, Dict
+from typing import List, Dict, Any
 
 import numpy as np
 from deepchem.feat import ConvMolFeaturizer, WeaveFeaturizer, MolGraphConvFeaturizer, CoulombMatrix, CoulombMatrixEig, \
-    SmilesToImage, SmilesToSeq
+    SmilesToImage, SmilesToSeq, MolGanFeaturizer
 from deepchem.feat.graph_data import GraphData
 from deepchem.feat.mol_graphs import ConvMol, WeaveMol
 from deepchem.utils import ConformerGenerator
@@ -138,6 +138,67 @@ class WeaveFeat(MolecularFeaturizer):
             max_pair_distance=self.max_pair_distance).featurize([mol])
 
         assert feature[0].get_atom_features() is not None
+
+        return feature[0]
+
+
+class MolGanFeat(MolecularFeaturizer):
+    """
+    Featurizer for MolGAN de-novo molecular generation model, adapted from deepchem
+    (https://deepchem.readthedocs.io/en/latest/api_reference/featurizers.html?highlight=CGCNN#molganfeaturizer).
+    It is wrapper for two matrices containing atom and bond type information.
+    References:
+    Nicola De Cao et al. “MolGAN: An implicit generative model for small molecular graphs” (2018),
+    https://arxiv.org/abs/1805.11973
+    """
+
+    def __init__(self,
+                 max_atom_count: int = 9,
+                 kekulize: bool = True,
+                 bond_labels: List[Any] = None,
+                 atom_labels: List[int] = None,
+                 **kwargs) -> None:
+        """
+        Parameters
+        ----------
+        max_atom_count: int
+            Maximum number of atoms used for the adjacency matrix creation.
+        kekulize: bool
+            If True, kekulize the molecule.
+        bond_labels: List[Any]
+            List of bond types used for the adjacency matrix creation.
+        atom_labels: List[int]
+            List of atomic numbers used for the adjacency matrix creation.
+        kwargs:
+            Additional arguments for the base class.
+        """
+        super().__init__(**kwargs)
+        self.max_atom_count = max_atom_count
+        self.kekulize = kekulize
+        self.bond_labels = bond_labels
+        self.atom_labels = atom_labels
+
+    def _featurize(self, mol: Mol) -> WeaveMol:
+        """
+        Featurizes a single molecule.
+
+        Parameters
+        ----------
+        mol: Mol
+            Molecule to featurize.
+
+        Returns
+        -------
+        feature: WeaveMol
+            The WeaveMol features of the molecule.
+        """
+        # featurization process using DeepChem WeaveFeaturizer
+        feature = MolGanFeaturizer(max_atom_count=self.max_atom_count,
+                                   kekulize=self.kekulize,
+                                   bond_labels=self.bond_labels,
+                                   atom_labels=self.atom_labels).featurize(mol)
+
+        assert feature[0].adjacency_matrix is not None
 
         return feature[0]
 

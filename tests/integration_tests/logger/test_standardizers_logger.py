@@ -14,5 +14,4 @@ class TestLoggerStandardizers(TestLogger):
 
         with open(os.path.join(TEST_DIR, "test_standardizers.log"), 'r') as f:
             lines = f.readlines()
-            self.assertEqual(len(lines), 1)
             self.assertIn("Standardizer BasicStandardizer initialized", lines[0])

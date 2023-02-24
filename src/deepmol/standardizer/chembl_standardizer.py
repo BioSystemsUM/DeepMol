@@ -1,7 +1,6 @@
 from chembl_structure_pipeline import standardizer
 from rdkit.Chem import Mol
 
-from deepmol.loggers.logger import Logger
 from deepmol.standardizer import MolecularStandardizer
 
 
@@ -11,7 +10,7 @@ class ChEMBLStandardizer(MolecularStandardizer):
     https://github.com/chembl/ChEMBL_Structure_Pipeline
     """
 
-    def _standardize(self, mol: Mol):
+    def _standardize(self, mol: Mol) -> Mol:
         """
         Standardizes a molecule SMILES using the ChEMBL standardizer.
 
@@ -25,10 +24,6 @@ class ChEMBLStandardizer(MolecularStandardizer):
         mol: Mol
             Standardized Mol.
         """
-        try:
-            mol = standardizer.standardize_mol(mol)
-            mol, _ = standardizer.get_parent_mol(mol)
-        except Exception as e:
-            logger = Logger()
-            logger.error('error in standardizing smile: ' + str(mol))
+        mol = standardizer.standardize_mol(mol)
+        mol, _ = standardizer.get_parent_mol(mol)
         return mol

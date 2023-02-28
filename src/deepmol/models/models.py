@@ -5,6 +5,7 @@ from typing import List, Sequence, Union
 import numpy as np
 from deepmol.datasets import Dataset
 from deepmol.evaluator.evaluator import Evaluator
+from deepmol.loggers.logger import Logger
 from deepmol.metrics.metrics import Metric
 
 from sklearn.base import BaseEstimator
@@ -45,6 +46,8 @@ class Model(BaseEstimator):
         self.model_dir = model_dir
         self.model = model
         self.model_class = model.__class__
+
+        self.logger = Logger()
 
     def __del__(self):
         """

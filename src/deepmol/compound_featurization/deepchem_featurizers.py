@@ -11,6 +11,7 @@ from rdkit.Chem import Mol, MolFromSmiles, MolToSmiles
 from deepmol.compound_featurization import MolecularFeaturizer
 from deepmol.compound_featurization._utils import get_conformers, get_dictionary_from_smiles
 from deepmol.datasets import Dataset
+from deepmol.loggers.logger import Logger
 
 
 class ConvMolFeat(MolecularFeaturizer):
@@ -525,6 +526,8 @@ class SmilesSeqFeat:
         self.char_to_idx = char_to_idx
         self.max_len = max_len
         self.pad_len = pad_len
+
+        self.logger = Logger()
 
     def featurize(self, dataset: Dataset) -> Dataset:
         """

@@ -6,6 +6,7 @@ from rdkit import Chem
 from rdkit.Chem import Mol
 
 from deepmol.datasets import Dataset
+from deepmol.loggers.logger import Logger
 from deepmol.parallelism.multiprocessing import JoblibMultiprocessing
 from deepmol.utils.utils import canonicalize_mol_object
 
@@ -25,6 +26,8 @@ class MolecularStandardizer(ABC):
             Number of jobs to run in parallel.
         """
         self.n_jobs = n_jobs
+        self.logger = Logger()
+        self.logger.info(f"Standardizer {self.__class__.__name__} initialized with {n_jobs} jobs.")
 
     def _standardize_mol(self, mol: Union[Mol, str]) -> Mol:
         """

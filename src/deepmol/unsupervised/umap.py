@@ -48,7 +48,7 @@ class UMAP(UnsupervisedLearn):
         self.low_memory = low_memory
         self.random_state = random_state
 
-    def _runUnsupervised(self, plot=True):
+    def _run_unsupervised(self, plot=True):
         """
         Compute cluster centers and predict cluster index for each sample.
 

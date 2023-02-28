@@ -231,7 +231,7 @@ KMeans and UMAP.
 ```python
 from deepmol.unsupervised.umap import UMAP
 
-ump = UMAP().runUnsupervised(dataset)
+ump = UMAP().run_unsupervised(dataset)
 ```
 
 ![umap_output](docs/imgs/umap_output.png)

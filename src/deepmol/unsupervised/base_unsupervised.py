@@ -12,6 +12,8 @@ import seaborn as sns
 
 from sklearn import cluster, decomposition, manifold
 
+from deepmol.loggers.logger import Logger
+
 
 # TODO: plot legends and labels are made for sweet vs non sweet --> change it to be general
 class UnsupervisedLearn(ABC):
@@ -27,11 +29,10 @@ class UnsupervisedLearn(ABC):
         """
         Initialize the UnsupervisedLearn object.
         """
-        if self.__class__ == UnsupervisedLearn:
-            raise Exception('Abstract class UnsupervisedLearn should not be instantiated')
         self.features = None
+        self.logger = Logger()
 
-    def runUnsupervised(self, dataset: Dataset, plot: bool = True):
+    def run_unsupervised(self, dataset: Dataset, plot: bool = True):
         """
         Run unsupervised learning.
 
@@ -49,11 +50,11 @@ class UnsupervisedLearn(ABC):
         """
         self.dataset = dataset
         self.features = dataset.X
-        x = self._runUnsupervised(plot=plot)
+        x = self._run_unsupervised(plot=plot)
         return x
 
     @abstractmethod
-    def _runUnsupervised(self, plot: bool = True):
+    def _run_unsupervised(self, plot: bool = True):
         """
         Run unsupervised learning.
 
@@ -138,7 +139,7 @@ class PCA(UnsupervisedLearn):
         self.iterated_power = iterated_power
         self.random_state = random_state
 
-    def _runUnsupervised(self, plot=True):
+    def _run_unsupervised(self, plot=True):
         """
         Fit the model with X and apply the dimensionality reduction on X.
 
@@ -168,7 +169,7 @@ class PCA(UnsupervisedLearn):
         """
         Plot the results of unsupervised learning (PCA).
         """
-        print('2 Components PCA: ')
+        self.logger.info('2 Components PCA: ')
         pca2comps = decomposition.PCA(n_components=2,
                                       copy=self.copy,
                                       whiten=self.whiten,
@@ -190,8 +191,7 @@ class PCA(UnsupervisedLearn):
                          labels={'0': 'PC 1', '1': 'PC 2'})
         fig.show()
 
-        print('\n \n')
-        print('3 Components PCA: ')
+        self.logger.info('3 Components PCA: ')
         pca3comps = decomposition.PCA(n_components=3,
                                       copy=self.copy,
                                       whiten=self.whiten,
@@ -210,13 +210,11 @@ class PCA(UnsupervisedLearn):
                             )
         fig.show()
 
-        print('\n \n')
-
         if self.n_components is None:
             self.n_components = self.dataset.X.shape[1]
-            print('%i Components PCA: ' % self.n_components)
+            self.logger.info('%i Components PCA: ' % self.n_components)
         else:
-            print('%i Components PCA: ' % self.n_components)
+            self.logger.info('%i Components PCA: ' % self.n_components)
 
         pca_all = decomposition.PCA(n_components=self.n_components,
                                     copy=self.copy,
@@ -240,8 +238,7 @@ class PCA(UnsupervisedLearn):
         fig.update_traces(diagonal_visible=False)
         fig.show()
 
-        print('\n \n')
-        print('Explained Variance: ')
+        self.logger.info('Explained Variance: ')
         pca_comp = decomposition.PCA()
         pca_comp.fit(self.features)
         exp_var_cumul = np.cumsum(pca_comp.explained_variance_ratio_)
@@ -370,7 +367,7 @@ class TSNE(UnsupervisedLearn):
         self.angle = angle
         self.n_jobs = n_jobs
 
-    def _runUnsupervised(self, plot=True):
+    def _run_unsupervised(self, plot=True):
         """Fit X into an embedded space and return that transformed output."""
         X_embedded = manifold.TSNE(n_components=self.n_components,
                                    perplexity=self.perplexity,
@@ -403,7 +400,7 @@ class TSNE(UnsupervisedLearn):
         for elem in self.dataset.y:
             colors_map.append(dic[elem])
 
-        print('2 Components t-SNE: ')
+        self.logger.info('2 Components t-SNE: ')
         tsne2comp = manifold.TSNE(n_components=2,
                                   perplexity=self.perplexity,
                                   early_exaggeration=self.early_exaggeration,
@@ -426,8 +423,7 @@ class TSNE(UnsupervisedLearn):
                          )
         fig.show()
 
-        print('\n \n')
-        print('3 Components t-SNE: ')
+        self.logger.info('3 Components t-SNE: ')
         tsne3comp = manifold.TSNE(n_components=3,
                                   perplexity=self.perplexity,
                                   early_exaggeration=self.early_exaggeration,
@@ -523,7 +519,7 @@ class KMeans(UnsupervisedLearn):
         self.copy_x = copy_x
         self.algorithm = algorithm
 
-    def _runUnsupervised(self, plot=True):
+    def _run_unsupervised(self, plot=True):
         """
         Compute cluster centers and predict cluster index for each sample.
 
@@ -592,7 +588,7 @@ class KMeans(UnsupervisedLearn):
                             curve='convex',
                             direction='decreasing')
 
-        print('Creating a K-means cluster with ' + str(elbow.knee) + ' clusters...')
+        self.logger.info('Creating a K-means cluster with ' + str(elbow.knee) + ' clusters...')
         return elbow.knee
 
     def _plot(self):
@@ -601,7 +597,7 @@ class KMeans(UnsupervisedLearn):
         """
         # TODO: check the best approach to this problem
         if self.features.shape[1] > 11:
-            print('Reduce the number of features to less than ten to get plot interpretability!')
+            self.logger.warning('Reduce the number of features to less than ten to get plot interpretability!')
         else:
             kmeans = cluster.KMeans(n_clusters=self.n_clusters,
                                     init=self.init,

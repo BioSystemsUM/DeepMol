@@ -12,6 +12,7 @@ from rdkit.ML.Descriptors import MoleculeDescriptors
 
 from deepmol.compound_featurization import MolecularFeaturizer
 from deepmol.datasets import Dataset
+from deepmol.loggers.logger import Logger
 from deepmol.utils.errors import PreConditionViolationException
 
 
@@ -26,15 +27,17 @@ def _no_conformers_message(e):
     """
     exc = traceback.format_exc()
 
+    logger = Logger()
+
     if isinstance(e, RuntimeError) and "molecule has no conformers" in exc \
             or isinstance(e, ValueError) and "Bad Conformer Id" in exc:
-        print("You have to generate molecular conformers for each molecule. \n"
-              "You can execute the following method: \n"
-              "rdkit3DDescriptors.generate_conformers_to_sdf_file(dataset: Dataset, file_path: str,"
-              " n_conformations: int,max_iterations: int, threads: int, timeout_per_molecule: int) \n"
-              "The result will be stored in a SDF format file which can be loaded with the "
-              "method: loaders.Loaders.SDFLoader()\n\n"
-              "Or set the generate_conformers parameter to True")
+        logger.error("You have to generate molecular conformers for each molecule. \n"
+                     "You can execute the following method: \n"
+                     "rdkit3DDescriptors.generate_conformers_to_sdf_file(dataset: Dataset, file_path: str,"
+                     " n_conformations: int,max_iterations: int, threads: int, timeout_per_molecule: int) \n"
+                     "The result will be stored in a SDF format file which can be loaded with the "
+                     "method: loaders.Loaders.SDFLoader()\n\n"
+                     "Or set the generate_conformers parameter to True")
 
         exit(1)
 
@@ -111,6 +114,8 @@ class ThreeDimensionalMoleculeGenerator:
         self.threads = threads
         self.timeout_per_molecule = timeout_per_molecule
 
+        self.logger = Logger()
+
     @staticmethod
     def check_if_mol_has_explicit_hydrogens(new_mol: Mol):
         """
@@ -167,7 +172,9 @@ class ThreeDimensionalMoleculeGenerator:
                                        params=AllChem.ETKDGv3(), **kwargs)
 
         else:
-            print("Choose ETKDG's valid version (1,2 or 3)")
+            message = "Choose ETKDG's valid version (1,2 or 3)"
+            self.logger.info(message)
+            warnings.warn(message)
             return None
 
         return new_mol
@@ -223,6 +230,8 @@ def get_all_3D_descriptors(mol):
     size = 639
     current_module = sys.modules[__name__]
 
+    logger = Logger()
+
     all_descriptors = np.empty(0, dtype=float)
     for name, featurizer_function in inspect.getmembers(current_module, inspect.isclass):
         try:
@@ -239,7 +248,7 @@ def get_all_3D_descriptors(mol):
                     raise Exception
 
         except Exception:
-            print('error in molecule: ' + str(mol))
+            logger.error('error in molecule: ' + str(mol))
             all_descriptors = np.empty(size, dtype=float)
             all_descriptors[:] = np.NaN
             break
@@ -367,11 +376,11 @@ class TwoDimensionDescriptors(MolecularFeaturizer):
     It generates all descriptors from the RDKit library.
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         """
         Initialize the class.
         """
-        super().__init__()
+        super().__init__(**kwargs)
 
     def _featurize(self, mol: Mol):
         """
@@ -395,14 +404,14 @@ class TwoDimensionDescriptors(MolecularFeaturizer):
             if np.isnan(np.sum(descriptors)):
                 raise Exception
         except Exception as e:
-
-            print('error in smile: ' + str(mol))
+            self.logger = Logger()
+            self.logger.error('error in smile: ' + str(mol))
             _no_conformers_message(e)
 
-            descriptors = np.empty(208, dtype=np.float64)
+            descriptors = np.empty(208, dtype=np.float32)
             descriptors[:] = np.NaN
 
-        descriptors = np.array(descriptors, dtype=np.float64)
+        descriptors = np.array(descriptors, dtype=np.float32)
         return descriptors
 
 
@@ -472,7 +481,7 @@ class ThreeDimensionDescriptor(MolecularFeaturizer):
                 raise PreConditionViolationException("molecule has no conformers")
 
             fp = self.descriptor_function(mol)
-            if any([isinstance(fp, fp_type) for fp_type in [str, int, np.float64, float, np.int64]]):
+            if any([isinstance(fp, fp_type) for fp_type in [str, int, np.float32, float, np.int64]]):
                 fp = [fp]
 
         except PreConditionViolationException as e:
@@ -480,13 +489,13 @@ class ThreeDimensionDescriptor(MolecularFeaturizer):
             raise e
 
         except Exception as e:
-            print('error in smile: ' + str(mol))
+            self.logger.error('error in smile: ' + str(mol))
             _no_conformers_message(e)
 
-            fp = np.empty(80, dtype=float)
+            fp = np.empty(80, dtype=np.float32)
             fp[:] = np.NaN
 
-        fp = np.asarray(fp, dtype=float)
+        fp = np.asarray(fp, dtype=np.float32)
         return fp
 
     def _featurize(self, mol: Mol):
@@ -545,11 +554,11 @@ class All3DDescriptors(MolecularFeaturizer):
             raise e
 
         except Exception as e:
-            print('error in smile: ' + str(mol))
-            fp = np.empty(size, dtype=float)
+            self.logger.error('error in smile: ' + str(mol))
+            fp = np.empty(size, dtype=np.float32)
             fp[:] = np.NaN
 
-        fp = np.asarray(fp, dtype=float)
+        fp = np.asarray(fp, dtype=np.float32)
         return fp
 
 
@@ -975,10 +984,10 @@ class PrincipalMomentsOfInertia(ThreeDimensionDescriptor):
             print('error in smile: ' + str(mol))
 
             _no_conformers_message(e)
-            pmi = np.empty(3, dtype=float)
+            pmi = np.empty(3, dtype=np.float32)
             pmi[:] = np.NaN
 
-        pmi = np.asarray(pmi, dtype=float)
+        pmi = np.asarray(pmi, dtype=np.float32)
         return pmi
 
 
@@ -1036,8 +1045,8 @@ class NormalizedPrincipalMomentsRatios(ThreeDimensionDescriptor):
         except Exception as e:
             print('error in smile: ' + str(mol))
             _no_conformers_message(e)
-            npr = np.empty(2, dtype=float)
+            npr = np.empty(2, dtype=np.float32)
             npr[:] = np.NaN
 
-        npr = np.asarray(npr, dtype=float)
+        npr = np.asarray(npr, dtype=np.float32)
         return npr

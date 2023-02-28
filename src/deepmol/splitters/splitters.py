@@ -2,7 +2,7 @@ from abc import abstractmethod, ABC
 
 import numpy as np
 
-from typing import Tuple, List, Optional, Type
+from typing import Tuple, List
 
 from rdkit import Chem, DataStructs
 from rdkit.Chem import AllChem, Mol, MolFromSmiles
@@ -12,6 +12,8 @@ from rdkit.ML.Cluster import Butina
 from deepmol.datasets import Dataset, NumpyDataset
 
 from sklearn.model_selection import KFold, StratifiedKFold
+
+from deepmol.loggers.logger import Logger
 
 
 def get_train_valid_test_indexes(scaffold_sets: List[List[int]],
@@ -197,6 +199,9 @@ class Splitter(ABC):
     Or to k-fold split a dataset for cross-validation.
     """
 
+    def __init__(self):
+        self.logger = Logger()
+
     # TODO: Possible upgrade: add directories input to save splits to file (update code)
     def k_fold_split(self,
                      dataset: Dataset,
@@ -222,7 +227,7 @@ class Splitter(ABC):
         List[Tuple[Dataset, Dataset]]
           List of length k tuples of (train, test) where `train` and `test` are both `Dataset`.
         """
-        print("Computing K-fold split")
+        self.logger.info("Computing K-fold split")
 
         if isinstance(dataset, NumpyDataset):
             ds = dataset
@@ -454,7 +459,7 @@ class SingletaskStratifiedSplitter(Splitter):
         fold_datasets: List[Tuple[NumpyDataset, NumpyDataset]]:
             A list of length k of tuples of train and test datasets as NumpyDataset objects.
         """
-        print("Computing Stratified K-fold split")
+        self.logger.info("Computing Stratified K-fold split")
         if isinstance(dataset, NumpyDataset):
             ds = dataset
         else:
@@ -801,8 +806,7 @@ class ScaffoldSplitter(Splitter):
 
         return train_inds, valid_inds, test_inds
 
-    @staticmethod
-    def generate_scaffolds(mols: List[Mol],
+    def generate_scaffolds(self, mols: List[Mol],
                            indexes: List[int],
                            log_every_n: int = 1000) -> List[List[int]]:
         """
@@ -826,7 +830,7 @@ class ScaffoldSplitter(Splitter):
         data_len = len(mols)
         for ind, mol in enumerate(mols):
             if ind % log_every_n == 0:
-                print("Generating scaffold %d/%d" % (ind, data_len))
+                self.logger.info("Generating scaffold %d/%d" % (ind, data_len))
 
             if isinstance(mol, str):
                 try:

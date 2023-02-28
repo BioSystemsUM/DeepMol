@@ -23,6 +23,8 @@ from PIL import Image
 
 from IPython.display import display
 
+from deepmol.loggers.logger import Logger
+
 
 def canonicalize_mol_object(mol_object: Mol) -> Mol:
     """
@@ -35,7 +37,7 @@ def canonicalize_mol_object(mol_object: Mol) -> Mol:
 
     Returns
     -------
-    Tuple[Mol]
+    Mol
         Canonicalized molecule object.
     """
     try:
@@ -434,14 +436,17 @@ def draw_MACCS_Pattern(smiles: str, smarts_patt_index: int, path: str = None):
     im: PIL.Image.Image
         Image of the molecule with the MACCS key highlighted.
     """
+
+    logger = Logger()
+
     mol = Chem.MolFromSmiles(smiles)
     smart = MACCSsmartsPatts[smarts_patt_index][0]
     patt = Chem.MolFromSmarts(smart)
-    print('Mol: ', smiles)
-    print('Pattern: ', smart)
+    logger.info('Mol: ', smiles)
+    logger.info('Pattern: ', smart)
 
     if mol.HasSubstructMatch(patt):
-        print('Pattern found!')
+        logger.info('Pattern found!')
         hit_ats = mol.GetSubstructMatches(patt)
         bond_lists = []
         for i, hit_at in enumerate(hit_ats):
@@ -485,7 +490,7 @@ def draw_MACCS_Pattern(smiles: str, smarts_patt_index: int, path: str = None):
             im = Image.open(path)
             return im
     else:
-        print('Pattern does not match molecule!')
+        logger.info('Pattern does not match molecule!')
 
 
 ###############################
@@ -520,9 +525,11 @@ def draw_morgan_bits(molecule: str, bits: Union[int, str, List[int]], radius: in
 
     fp = rdMolDescriptors.GetMorganFingerprintAsBitVect(mol, radius=radius, nBits=nBits, bitInfo=bi)
 
+    logger = Logger()
+
     if isinstance(bits, int):
         if bits not in bi.keys():
-            print('Bits ON: ', bi.keys())
+            logger.info(f'Bits ON: {bi.keys()}')
             raise ValueError('Bit is off! Select a on bit')
         return Draw.DrawMorganBit(mol, bits, bi)
 
@@ -532,11 +539,11 @@ def draw_morgan_bits(molecule: str, bits: Union[int, str, List[int]], radius: in
             if b in bi.keys():
                 bits_on.append(b)
             else:
-                print('Bit %d is off!' % (b))
+                logger.info('Bit %d is off!' % (b))
         if len(bits_on) == 0:
             raise ValueError('All the selected bits are off! Select on bits!')
         elif len(bits_on) != len(bits):
-            print('Using only bits ON: ', bits_on)
+            logger.info('Using only bits ON: ', bits_on)
         tpls = [(mol, x, bi) for x in bits_on]
         return Draw.DrawMorganBits(tpls, molsPerRow=5, legends=['bit_' + str(x) for x in bits_on])
 
@@ -675,11 +682,13 @@ def draw_morgan_bit_on_molecule(mol_smiles: str,
     info = {}
     rdMolDescriptors.GetMorganFingerprintAsBitVect(mol, radius=radius, nBits=nBits, bitInfo=info, useChirality=chiral)
 
+    logger = Logger()
+
     if bit not in info.keys():
-        print('Bits ON: ', info.keys())
+        logger.info('Bits ON: ', info.keys())
         raise ValueError('Bit is off! Select a on bit')
 
-    print('Bit %d with %d hits!' % (bit, len(info[bit])))
+    logger.info('Bit %d with %d hits!' % (bit, len(info[bit])))
 
     aid, rad = info[bit][0]
     return getSubstructDepiction(mol, aid, rad, molSize=molSize)
@@ -715,10 +724,11 @@ def draw_rdk_bits(smiles: str, bits: int, minPath: int = 2, maxPath: int = 7, fp
 
     rdkbit = {}
     fp = RDKFingerprint(mol, minPath=minPath, maxPath=maxPath, fpSize=fpSize, bitInfo=rdkbit)
+    logger = Logger()
 
     if isinstance(bits, int):
         if bits not in rdkbit.keys():
-            print('Bits ON: ', rdkbit.keys())
+            logger.info(f'Bits ON: {rdkbit.keys()}')
             raise ValueError('Bit is off! Select a on bit')
         return Draw.DrawRDKitBit(mol, bits, rdkbit)
 
@@ -728,11 +738,11 @@ def draw_rdk_bits(smiles: str, bits: int, minPath: int = 2, maxPath: int = 7, fp
             if b in rdkbit.keys():
                 bits_on.append(b)
             else:
-                print('Bit %d is off!' % (b))
+                logger.info('Bit %d is off!' % (b))
         if len(bits_on) == 0:
             raise ValueError('All the selected bits are off! Select on bits!')
         elif len(bits_on) != len(bits):
-            print('Using only bits ON: ', bits_on)
+            logger.info(f'Bits ON: {bits_on}')
         tpls = [(mol, x, rdkbit) for x in bits_on]
         return Draw.DrawRDKitBits(tpls, molsPerRow=5, legends=['bit_' + str(x) for x in bits_on])
 
@@ -781,14 +791,16 @@ def draw_rdk_bit_on_molecule(mol_smiles: str,
     except Exception as e:
         raise ValueError('Invalid SMILES.')
 
+    logger = Logger()
+
     info = {}
     RDKFingerprint(mol, minPath=minPath, maxPath=maxPath, fpSize=fpSize, bitInfo=info)
 
     if bit not in info.keys():
-        print('Bits ON: ', info.keys())
+        logger.info(f'Bits ON: {info.keys()}')
         raise ValueError('Bit is off! Select a on bit')
 
-    print('Bit %d with %d hits!' % (bit, len(info[bit])))
+    logger.info('Bit %d with %d hits!' % (bit, len(info[bit])))
 
     images = []
     for i in range(len(info[bit])):

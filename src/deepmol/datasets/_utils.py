@@ -2,6 +2,8 @@ from typing import Union
 
 import numpy as np
 
+from deepmol.loggers.logger import Logger
+
 
 def merge_arrays(array1: np.ndarray, size1: int, array2: np.ndarray, size2: int) -> np.ndarray:
     """
@@ -50,11 +52,12 @@ def merge_arrays_of_arrays(array1: np.ndarray, array2: np.ndarray) -> Union[np.n
     merged: np.ndarray
         The merged array of arrays.
     """
+    logger = Logger()
     if len(array1.shape) != len(array2.shape):
-        print('Features are not the same length/type... Recalculate features for all inputs!')
+        logger.error('Features are not the same length/type... Recalculate features for all inputs!')
         return None
     if array1.shape[1] != array2.shape[1]:
-        print('Features are not the same length/type... Recalculate features for all inputs!')
+        logger.error('Features are not the same length/type... Recalculate features for all inputs!')
         return None
     merged = np.concatenate([array1, array2], axis=0)
     return merged

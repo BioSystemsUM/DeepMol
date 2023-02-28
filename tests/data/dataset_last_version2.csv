@@ -4,7 +4,7 @@ PubChem CID;ChEMBL ID;IUPAC Name;Alternative Name;Molecular Formula;InchiKey;Smi
 0;-;-;-;-;-;C=C1C[C@]23CC[C@@H]4[C@@](C)(CCC[C@@]4(C)C(=O)O)[C@@H]2CC[C@@]1(O[C@H]1OC(CO)C(O)C(O)C1O[C@@H]1OC(CO)C(O)C(O)C1O)C3;1;
 0;-;-;-;-;-;N[C@@H](C[C@@](O)(CC1=NCc2ccccc21)C(=O)O)C(=O)O;1;
 0;-;-;-;-;-;COc1ccc(cc1O)CCc1ccccc1CO;1;
-0;-;-;-;-;-;COc1ccc(CCc2ccccc2CO)cc1O;1;
+0;-;-;-;-;-;COc1ccc(CCc2ccccc2CO)cc1O09y78;1;
 0;-;-;-;-;-;CCOc1ccc(CCC(=O)c2ccccc2O)cc1O;1;
 0;-;-;-;-;-;COc1ccc(COC(=O)c2ccccc2O)cc1O;1;
 0;-;-;-;-;-;COc1ccc(CC(=O)c2ccccc2O)cc1O;1;

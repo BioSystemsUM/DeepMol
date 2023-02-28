@@ -103,8 +103,8 @@ class KerasModel(Model):
         try:
             return self.model.predict_proba(dataset.X)
         except AttributeError:
-            print(self.model)
-            print(type(self.model))
+            self.logger.info(str(self.model))
+            self.logger.info(str(type(self.model)))
             return self.model.predict(dataset.X)
 
     def predict_on_batch(self, X: Dataset) -> np.ndarray:

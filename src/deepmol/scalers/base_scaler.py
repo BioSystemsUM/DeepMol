@@ -47,7 +47,7 @@ class BaseScaler(ABC):
         joblib.dump(self.scaler_object, file_path)
 
     @abstractmethod
-    def load_scaler(self, file_path: str):
+    def load(self, file_path: str):
         """
         Loads the scaler object from a file.
 

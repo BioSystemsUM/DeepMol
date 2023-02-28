@@ -5,6 +5,7 @@ from typing import Union, List, Tuple
 import numpy as np
 import pandas as pd
 
+from deepmol.loggers.logger import Logger
 from deepmol.datasets._utils import merge_arrays, merge_arrays_of_arrays, check_values
 
 
@@ -13,6 +14,9 @@ class Dataset(ABC):
     Abstract base class for datasets
     Subclasses need to implement their own methods based on this class.
     """
+
+    def __init__(self):
+        self.logger = Logger()
 
     @abstractmethod
     def __len__(self) -> int:
@@ -513,19 +517,19 @@ class NumpyDataset(Dataset):
         y_shape: Union[Tuple, None]
             The shape of the y array.
         """
-        print(f'Mols_shape: {self.mols.shape}')
+        self.logger.info(f'Mols_shape: {self.mols.shape}')
         if self.X is not None:
             x_shape = self.X.shape
-            print(f'Features_shape: {x_shape}')
+            self.logger.info(f'Features_shape: {x_shape}')
         else:
             x_shape = None
-            print(f'Features_shape: {None}')
+            self.logger.info(f'Features_shape: {None}')
         if self.y is not None:
             y_shape = self.y.shape
-            print(f'Labels_shape: {y_shape}')
+            self.logger.info(f'Labels_shape: {y_shape}')
         else:
             y_shape = None
-            print(f'Labels_shape: {None}')
+            self.logger.info(f'Labels_shape: {None}')
         return self.mols.shape, x_shape, y_shape
 
     def remove_duplicates(self) -> None:
@@ -582,7 +586,7 @@ class NumpyDataset(Dataset):
                     indexes.append(self.ids[j])
                 j += 1
             if len(indexes) > 0:
-                print('Elements with IDs: ', indexes, ' were removed due to the presence of NAs!')
+                self.logger.warning(f'Elements with IDs: {indexes} were removed due to the presence of NAs!')
                 self.remove_elements(indexes)
 
         elif axis == 1:
@@ -685,7 +689,7 @@ class NumpyDataset(Dataset):
                 raise ValueError(f'IDs must be unique! IDs are {ids}')
             y = merge_arrays(y, len(mols), ds.y, len(ds.mols))
             if X is None or ds.X is None:
-                print('Features are not the same length/type... Recalculate features for all inputs!')
+                self.logger.error('Features are not the same length/type... Recalculate features for all inputs!')
                 X = None
             elif len(X.shape) == 1 and len(ds.X.shape) == 1:
                 X = merge_arrays(X, len(mols), ds.X, len(ds.mols))

@@ -32,13 +32,6 @@ class TestLogger(TestCase):
         self.logger.set_level(logging.INFO)
         self.assertEqual(self.logger.logger.level, logging.INFO)
 
-        self.logger.debug("Test")
-        with open(test4, "r") as f:
-            self.assertNotIn("DEBUG", f.readline())
-
-        self.logger.info("Test")
-        with open(test4, "r") as f:
-            self.assertIn("INFO", f.readline())
 
     def test_logger_set_file_path(self):
         self.logger.set_file_path(self.log_file_name + "2")

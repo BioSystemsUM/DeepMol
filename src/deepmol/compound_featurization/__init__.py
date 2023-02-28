@@ -15,7 +15,7 @@ try:
 except ImportError:
     warnings.warn("Mol2Vec not available. Please install it to use it.")
 
-from .deepchem_featurizers import WeaveFeat, CoulombFeat, CoulombEigFeat, RawFeat, ConvMolFeat, MolGraphConvFeat, \
-    CoulombEigFeat, SmileImageFeat, SmilesSeqFeat
+from .deepchem_featurizers import WeaveFeat, CoulombFeat, CoulombEigFeat, ConvMolFeat, MolGraphConvFeat, \
+    SmileImageFeat, SmilesSeqFeat
 
 from .mixed_descriptors import MixedFeaturizer

@@ -45,17 +45,17 @@ class TestSklearnModel(ModelsTestCase, TestCase):
         rf = RandomForestClassifier()
         model = SklearnModel(model=rf)
 
-        MorganFingerprint().featurize(self.larger_dataset_to_test)
+        MorganFingerprint().featurize(self.train_dataset)
 
-        model.fit(self.larger_dataset_to_test)
+        model.fit(self.train_dataset)
         metrics = [Metric(roc_auc_score)]
 
         # evaluate the model
         print('Training Dataset: ')
-        train_score = model.evaluate(self.larger_dataset_to_test, metrics)
+        train_score = model.evaluate(self.train_dataset, metrics)
 
-        y_pred = model.model.predict_proba(self.larger_dataset_to_test.X)
+        y_pred = model.model.predict_proba(self.train_dataset.X)
         y_pred = y_pred[:, 1]
-        roc_auc_score_value = roc_auc_score(self.larger_dataset_to_test.y, y_pred)
+        roc_auc_score_value = roc_auc_score(self.train_dataset.y, y_pred)
         self.assertEqual(roc_auc_score_value, train_score[0]["roc_auc_score"])
 

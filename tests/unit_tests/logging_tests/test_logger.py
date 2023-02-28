@@ -24,16 +24,20 @@ class TestLogger(TestCase):
             self.assertIn("Test", f.readline())
 
     def test_logger_set_level(self):
-        open(self.log_file_name, "w").close()
+
+        self.logger = Logger()
+        test4 = os.path.join(TEST_DIR, "test4.log")
+        self.logger.set_file_path(test4)
+
         self.logger.set_level(logging.INFO)
         self.assertEqual(self.logger.logger.level, logging.INFO)
 
         self.logger.debug("Test")
-        with open(self.log_file_name, "r") as f:
+        with open(test4, "r") as f:
             self.assertNotIn("DEBUG", f.readline())
 
         self.logger.info("Test")
-        with open(self.log_file_name, "r") as f:
+        with open(test4, "r") as f:
             self.assertIn("INFO", f.readline())
 
     def test_logger_set_file_path(self):

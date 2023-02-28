@@ -89,8 +89,6 @@ class MolecularFeaturizer(ABC):
                 feat = self._featurize(mol)
                 return feat, remove_mol
             else:
-                if isinstance(mol, Mol):
-                    smiles = MolToSmiles(mol)
                 self.logger = Logger()
                 self.logger.error(f"Failed to featurize {smiles}. Appending empty array")
                 return np.array([]), remove_mol
@@ -100,6 +98,7 @@ class MolecularFeaturizer(ABC):
 
         except Exception as e:
             self.logger = Logger()
+            self.logger.error(f"Failed to featurize {smiles}. Appending empty array")
             self.logger.error("Exception message: {}".format(e))
             remove_mol = True
             return np.array([]), remove_mol
@@ -131,7 +130,6 @@ class MolecularFeaturizer(ABC):
           The input Dataset containing a featurized representation of the molecules in Dataset.X.
         """
         molecules = dataset.mols
-        # dataset_ids = dataset.ids
 
         multiprocessing_cls = JoblibMultiprocessing(process=self._featurize_mol, n_jobs=self.n_jobs)
         features = multiprocessing_cls.run(molecules)
@@ -143,7 +141,6 @@ class MolecularFeaturizer(ABC):
 
         features = np.array(features, dtype=object)
         features = features[~remove_mols_list]
-        # features = np.concatenate(features, axis=0)
 
         if isinstance(features[0], np.ndarray):
             features = np.vstack(features)

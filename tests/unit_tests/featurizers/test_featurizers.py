@@ -6,6 +6,7 @@ from deepmol.loaders.loaders import CSVLoader
 
 from tests import TEST_DIR
 
+
 class FeaturizerTestCase(ABC):
 
     def setUp(self) -> None:
@@ -26,7 +27,7 @@ class FeaturizerTestCase(ABC):
         self.dataset_invalid_smiles = loader.create_dataset()
 
         self.mol2vec_model = os.path.join(os.path.abspath(os.curdir), "compound_featurization", "mol2vec_models",
-                                        "model_300dim.pkl")
+                                          "model_300dim.pkl")
 
     @abstractmethod
     def test_featurize(self):

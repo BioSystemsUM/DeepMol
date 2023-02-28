@@ -408,10 +408,10 @@ class TwoDimensionDescriptors(MolecularFeaturizer):
             self.logger.error('error in smile: ' + str(mol))
             _no_conformers_message(e)
 
-            descriptors = np.empty(208, dtype=np.float64)
+            descriptors = np.empty(208, dtype=np.float32)
             descriptors[:] = np.NaN
 
-        descriptors = np.array(descriptors, dtype=np.float64)
+        descriptors = np.array(descriptors, dtype=np.float32)
         return descriptors
 
 
@@ -481,7 +481,7 @@ class ThreeDimensionDescriptor(MolecularFeaturizer):
                 raise PreConditionViolationException("molecule has no conformers")
 
             fp = self.descriptor_function(mol)
-            if any([isinstance(fp, fp_type) for fp_type in [str, int, np.float64, float, np.int64]]):
+            if any([isinstance(fp, fp_type) for fp_type in [str, int, np.float32, float, np.int64]]):
                 fp = [fp]
 
         except PreConditionViolationException as e:
@@ -492,10 +492,10 @@ class ThreeDimensionDescriptor(MolecularFeaturizer):
             self.logger.error('error in smile: ' + str(mol))
             _no_conformers_message(e)
 
-            fp = np.empty(80, dtype=float)
+            fp = np.empty(80, dtype=np.float32)
             fp[:] = np.NaN
 
-        fp = np.asarray(fp, dtype=float)
+        fp = np.asarray(fp, dtype=np.float32)
         return fp
 
     def _featurize(self, mol: Mol):
@@ -555,10 +555,10 @@ class All3DDescriptors(MolecularFeaturizer):
 
         except Exception as e:
             self.logger.error('error in smile: ' + str(mol))
-            fp = np.empty(size, dtype=float)
+            fp = np.empty(size, dtype=np.float32)
             fp[:] = np.NaN
 
-        fp = np.asarray(fp, dtype=float)
+        fp = np.asarray(fp, dtype=np.float32)
         return fp
 
 
@@ -984,10 +984,10 @@ class PrincipalMomentsOfInertia(ThreeDimensionDescriptor):
             print('error in smile: ' + str(mol))
 
             _no_conformers_message(e)
-            pmi = np.empty(3, dtype=float)
+            pmi = np.empty(3, dtype=np.float32)
             pmi[:] = np.NaN
 
-        pmi = np.asarray(pmi, dtype=float)
+        pmi = np.asarray(pmi, dtype=np.float32)
         return pmi
 
 
@@ -1045,8 +1045,8 @@ class NormalizedPrincipalMomentsRatios(ThreeDimensionDescriptor):
         except Exception as e:
             print('error in smile: ' + str(mol))
             _no_conformers_message(e)
-            npr = np.empty(2, dtype=float)
+            npr = np.empty(2, dtype=np.float32)
             npr[:] = np.NaN
 
-        npr = np.asarray(npr, dtype=float)
+        npr = np.asarray(npr, dtype=np.float32)
         return npr

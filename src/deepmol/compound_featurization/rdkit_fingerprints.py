@@ -1,5 +1,3 @@
-import logging
-
 import numpy as np
 from rdkit.Chem import Mol, rdMolDescriptors, MACCSkeys, rdmolops
 from rdkit.Chem.rdMolDescriptors import GetAtomPairAtomCode
@@ -65,9 +63,9 @@ class MorganFingerprint(MolecularFeaturizer):
         except Exception as e:
             self.logger = Logger()
             self.logger.error('error in smile: ' + str(mol))
-            fp = np.empty(self.size, dtype=float)
+            fp = np.empty(self.size, dtype=np.float32)
             fp[:] = np.NaN
-        fp = np.asarray(fp, dtype=np.float64)
+        fp = np.asarray(fp, dtype=np.float32)
         return fp
 
 
@@ -102,9 +100,9 @@ class MACCSkeysFingerprint(MolecularFeaturizer):
         except Exception as e:
             self.logger = Logger()
             self.logger.error('error in smile: ' + str(mol))
-            fp = np.empty(167, dtype=float)
+            fp = np.empty(167, dtype=np.float32)
             fp[:] = np.NaN
-        fp = np.asarray(fp, dtype=np.float)
+        fp = np.asarray(fp, dtype=np.float32)
         return fp
 
 
@@ -182,9 +180,9 @@ class LayeredFingerprint(MolecularFeaturizer):
         except Exception as e:
             self.logger = Logger()
             self.logger.error('error in smile: ' + str(mol))
-            fp = np.empty(self.fpSize, dtype=float)
+            fp = np.empty(self.fpSize, dtype=np.float32)
             fp[:] = np.NaN
-        fp = np.asarray(fp, dtype=np.float)
+        fp = np.asarray(fp, dtype=np.float32)
         return fp
 
 
@@ -276,9 +274,9 @@ class RDKFingerprint(MolecularFeaturizer):
         except Exception as e:
             self.logger = Logger()
             self.logger.error('error in smile: ' + str(mol))
-            fp = np.empty(self.fpSize, dtype=float)
+            fp = np.empty(self.fpSize, dtype=np.float32)
             fp[:] = np.NaN
-        fp = np.asarray(fp, dtype=np.float)
+        fp = np.asarray(fp, dtype=np.float32)
         return fp
 
 
@@ -352,9 +350,9 @@ class AtomPairFingerprint(MolecularFeaturizer):
         except Exception as e:
             self.logger = Logger()
             self.logger.error('error in smile: ' + str(mol))
-            fp = np.empty(self.nBits, dtype=float)
+            fp = np.empty(self.nBits, dtype=np.float32)
             fp[:] = np.NaN
-        fp = np.asarray(fp, dtype=np.float)
+        fp = np.asarray(fp, dtype=np.float32)
         return fp
 
 
@@ -447,8 +445,8 @@ class AtomPairFingerprintCallbackHash(MolecularFeaturizer):
         except Exception as e:
             self.logger = Logger()
             self.logger.error('error in smile: ' + str(mol))
-            fp = np.empty(self.nBits, dtype=float)
+            fp = np.empty(self.nBits, dtype=np.float32)
             fp[:] = np.NaN
-        fp = np.asarray(fp, dtype=np.float)
+        fp = np.asarray(fp, dtype=np.float32)
 
         return fp

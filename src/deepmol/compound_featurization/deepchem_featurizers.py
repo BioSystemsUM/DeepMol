@@ -25,15 +25,11 @@ def find_maximum_number_atoms(molecules: List[Mol]):
     best: int
         Maximum number of atoms in a molecule in the list.
     """
-    logger = Logger()
     best = 0
     for i, mol in enumerate(molecules):
-        try:
-            atoms = mol.GetNumAtoms()
-            if atoms > best:
-                best = atoms
-        except Exception as e:
-            logger.error(f'Molecule with index {i} was not converted from SMILES into rdkit object')
+        atoms = mol.GetNumAtoms()
+        if atoms > best:
+            best = atoms
     return best
 
 
@@ -53,16 +49,12 @@ def get_conformers(molecules: List[Mol], generator: ConformerGenerator):
     new_conformations: List[Mol]
         List of rdkit mol objects with conformers.
     """
-    logger = Logger()
-
     new_conformations = []
     for i, mol in enumerate(molecules):
         try:
             conf = generator.generate_conformers(mol)
             new_conformations.append(conf)
         except Exception as e:
-            logger.error(f'Molecule with index {i} was not converted from SMILES into rdkit object')
-            logger.warning('Appending empty list')
             new_conformations.append([])
     return new_conformations
 

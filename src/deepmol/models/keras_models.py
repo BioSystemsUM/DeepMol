@@ -1,4 +1,3 @@
-from deepmol.loggers.logger import Logger
 from deepmol.models.models import Model
 from deepmol.models.sklearn_models import SklearnModel
 from deepmol.metrics.metrics import Metric
@@ -63,8 +62,6 @@ class KerasModel(Model):
         self.epochs = epochs
         self.model_builder = model_builder
         self.verbose = verbose
-
-        self.logger = Logger()
 
         if mode == 'classification':
             self.model = KerasClassifier(build_fn=model_builder, epochs=epochs, batch_size=batch_size,

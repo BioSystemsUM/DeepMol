@@ -27,6 +27,14 @@ class TestLogger(TestCase):
         self.logger.set_level(logging.INFO)
         self.assertEqual(self.logger.logger.level, logging.INFO)
 
+        self.logger.debug("Test")
+        with open(self.log_file_name, "r") as f:
+            self.assertNotIn("DEBUG", f.readline())
+
+        self.logger.info("Test")
+        with open(self.log_file_name, "r") as f:
+            self.assertIn("INFO", f.readline())
+
     def test_logger_set_file_path(self):
         self.logger.set_file_path(self.log_file_name + "2")
         self.assertEqual(self.logger.logger.name, self.log_file_name + "2")
@@ -74,5 +82,3 @@ class TestLogger(TestCase):
         log_file_name = os.path.join(TEST_DIR, "test3.log")
         if os.path.exists(log_file_name):
             os.remove(log_file_name)
-
-

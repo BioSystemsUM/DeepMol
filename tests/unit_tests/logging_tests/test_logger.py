@@ -32,7 +32,6 @@ class TestLogger(TestCase):
         self.logger.set_level(logging.INFO)
         self.assertEqual(self.logger.logger.level, logging.INFO)
 
-
     def test_logger_set_file_path(self):
         self.logger.set_file_path(self.log_file_name + "2")
         self.assertEqual(self.logger.logger.name, self.log_file_name + "2")

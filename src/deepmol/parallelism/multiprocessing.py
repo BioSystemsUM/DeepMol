@@ -1,4 +1,3 @@
-import re
 from abc import ABC, abstractmethod
 from typing import Iterable
 
@@ -37,7 +36,7 @@ class MultiprocessingClass(ABC):
 
     def run_iteratively(self, items: list):
         """
-        Does not run multiprocessing due to an error pickleling the process function or other.
+        Does not run multiprocessing due to an error pickling the process function or other.
         """
         if isinstance(items[0], tuple):
 
@@ -62,7 +61,6 @@ class MultiprocessingClass(ABC):
         results: Iterable
             The results of the multiprocessing.
         """
-        pass
 
 
 class JoblibMultiprocessing(MultiprocessingClass):
@@ -99,9 +97,10 @@ class JoblibMultiprocessing(MultiprocessingClass):
                 results = Parallel(n_jobs=self.n_jobs, backend="multiprocessing")(delayed(self.process)(item)
                                                                                   for item in items)
 
-        except TypeError as e:
-            if re.match("cannot pickle '.*' object", str(e)):
-                self.logger.warning("Failed to pickle process function. Processing the input iteratively instead.")
+        except Exception as e:
+            if "pickle" in str(e):
+                self.logger.warning(f"Failed to pickle process {self.process.__name__} function. Processing the input "
+                                    f"iteratively instead.")
                 results = self.run_iteratively(items)
             else:
                 raise e

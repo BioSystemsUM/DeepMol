@@ -61,3 +61,33 @@ def merge_arrays_of_arrays(array1: np.ndarray, array2: np.ndarray) -> Union[np.n
         return None
     merged = np.concatenate([array1, array2], axis=0)
     return merged
+
+
+def check_values(values: Union[np.ndarray, float, int]) -> bool:
+    """
+    Checks if the array is empty or if contains any np.nan values.
+
+    Parameters
+    ----------
+    values: Union[np.ndarray, float, int]
+        The values to check.
+
+    Returns
+    -------
+    bool
+        True if the array is empty or contains np.nan values, False otherwise.
+    """
+    if values is None:
+        return True
+    if isinstance(values, np.ndarray):
+        if values.size == 0:
+            return True
+        if isinstance(values[0], float) or isinstance(values[0], int):
+            if np.isnan(np.dot(values, values)):
+                return True
+            return False
+    if isinstance(values, float) or isinstance(values, int):
+        if np.isnan(values):
+            return True
+        return False
+    return False

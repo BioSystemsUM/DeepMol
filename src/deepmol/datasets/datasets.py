@@ -5,8 +5,8 @@ from typing import Union, List, Tuple
 import numpy as np
 import pandas as pd
 
-from deepmol.datasets._utils import merge_arrays, merge_arrays_of_arrays
 from deepmol.loggers.logger import Logger
+from deepmol.datasets._utils import merge_arrays, merge_arrays_of_arrays, check_values
 
 
 class Dataset(ABC):
@@ -580,15 +580,10 @@ class NumpyDataset(Dataset):
         indexes = []
 
         if axis == 0:
-            shape = self.X.shape
             X = self.X
             for i in X:
-                if len(shape) == 2:
-                    if np.isnan(np.dot(i, i)):
-                        indexes.append(self.ids[j])
-                elif isinstance(i, float) or isinstance(i, int):
-                    if i is None or np.isnan(i):
-                        indexes.append(self.ids[j])
+                if check_values(i):
+                    indexes.append(self.ids[j])
                 j += 1
             if len(indexes) > 0:
                 self.logger.warning(f'Elements with IDs: {indexes} were removed due to the presence of NAs!')

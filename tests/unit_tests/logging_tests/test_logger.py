@@ -24,11 +24,9 @@ class TestLogger(TestCase):
             self.assertIn("Test", f.readline())
 
     def test_logger_set_level(self):
+        open(self.log_file_name, "w").close()
         self.logger.set_level(logging.INFO)
         self.assertEqual(self.logger.logger.level, logging.INFO)
-
-        f = open(self.log_file_name, "w")
-        f.close()
 
         self.logger.debug("Test")
         with open(self.log_file_name, "r") as f:

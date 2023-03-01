@@ -619,7 +619,7 @@ class SmilesDataset(Dataset):
             if len(self._X.shape) == 1:
                 indexes = np.where(np.isnan(self._X))[0]
             else:
-                indexes = np.where(np.isnan(self._X).any(axis=1))[0]
+                indexes = np.where(pd.isna(self._X).any(axis=1))[0]
             # rows with at least one NaN
             self.remove_elements_by_index(indexes)
         elif axis == 1:

@@ -9,6 +9,7 @@ from rdkit.Chem import Mol
 
 from deepmol.loggers.logger import Logger
 from deepmol.datasets._utils import merge_arrays, merge_arrays_of_arrays
+from deepmol.utils.utils import smiles_to_mol
 
 
 class Dataset(ABC):

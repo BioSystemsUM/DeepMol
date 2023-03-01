@@ -21,6 +21,8 @@ class TestSmilesDataset(TestCase):
     def tearDown(self):
         if os.path.exists(self.output_dir):
             shutil.rmtree(self.output_dir)
+        if os.path.exists('deepmol.log'):
+            os.remove('deepmol.log')
 
     def test_smiles_dataset_args(self):
         for i, mol in enumerate(self.smiles):

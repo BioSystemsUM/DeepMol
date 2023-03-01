@@ -669,7 +669,7 @@ def menu():
         if opt == 1:
             if ds is None:
                 dataset = CSVLoader(dataset_path='tests/data/preprocessed_dataset_wfoodb.csv',
-                                    mols_field='Smiles',
+                                    smiles_field='Smiles',
                                     labels_fields='Class',
                                     id_field='ID')  # , shard_size=4000)
                 ds = dataset.create_dataset()

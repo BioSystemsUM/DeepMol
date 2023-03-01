@@ -143,7 +143,7 @@ from deepmol.loaders.loaders import CSVLoader
 # load a dataset from a CSV (define data path, field with the molecules,
 # field with the labels (optional), field with ids (optional), etc).
 dataset = CSVLoader(dataset_path='data_path.csv',
-                    mols_field='Smiles',
+                    smiles_field='Smiles',
                     labels_fields='Class',
                     id_field='ID')
 dataset = dataset.create_dataset()

@@ -13,7 +13,7 @@ class TestFeatureSelectors(TestCase):
     def setUp(self) -> None:
         dataset = os.path.join(TEST_DIR, "data", "test_to_convert_to_sdf.csv")
         loader = CSVLoader(dataset,
-                           mols_field='Standardized_Smiles',
+                           smiles_field='Standardized_Smiles',
                            labels_fields='Class')
 
         self.mini_dataset_to_test = loader.create_dataset()

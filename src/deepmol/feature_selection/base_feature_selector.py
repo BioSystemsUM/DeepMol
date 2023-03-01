@@ -49,7 +49,7 @@ class BaseFeatureSelector(ABC):
         self.features_fs = dataset.X
         self.y_fs = dataset.y
         features, self.features2keep = self._select_features()
-        dataset.select_features(self.features2keep)
+        dataset.select_features_by_index(self.features2keep)
         return dataset
 
     @abstractmethod

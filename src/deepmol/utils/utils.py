@@ -26,6 +26,26 @@ from IPython.display import display
 from deepmol.loggers.logger import Logger
 
 
+def smiles_to_mol(smiles: str, **kwargs) -> Union[Mol, None]:
+    """
+    Convert SMILES to RDKit molecule object.
+    Parameters
+    ----------
+    smiles: str
+        SMILES string to convert.
+   kwargs:
+           Keyword arguments for `rdkit.Chem.MolFromSmiles`.
+    Returns
+    -------
+    Mol
+        RDKit molecule object.
+    """
+    try:
+        return Chem.MolFromSmiles(smiles, **kwargs)
+    except TypeError:
+        return None
+
+
 def canonicalize_mol_object(mol_object: Mol) -> Mol:
     """
     Canonicalize a molecule object.

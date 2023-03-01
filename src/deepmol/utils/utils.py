@@ -42,6 +42,26 @@ def smiles_to_mol(smiles: str, **kwargs) -> Union[Mol, None]:
         return None
 
 
+def mol_to_smiles(mol: Mol, **kwargs) -> Union[str, None]:
+    """
+    Convert SMILES to RDKit molecule object.
+    Parameters
+    ----------
+    mol: Mol
+        RDKit molecule object to convert.
+   kwargs:
+           Keyword arguments for `rdkit.Chem.MolToSmiles`.
+    Returns
+    -------
+    smiles: str
+        SMILES string.
+    """
+    try:
+        return Chem.MolToSmiles(mol, **kwargs)
+    except TypeError:
+        return None
+
+
 def canonicalize_mol_object(mol_object: Mol) -> Mol:
     """
     Canonicalize a molecule object.

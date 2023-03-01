@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Union
+from typing import Union, Tuple
 
 import numpy as np
 from rdkit import Chem
@@ -8,7 +8,7 @@ from rdkit.Chem import Mol
 from deepmol.datasets import Dataset
 from deepmol.loggers.logger import Logger
 from deepmol.parallelism.multiprocessing import JoblibMultiprocessing
-from deepmol.utils.utils import canonicalize_mol_object
+from deepmol.utils.utils import canonicalize_mol_object, mol_to_smiles
 
 
 class MolecularStandardizer(ABC):
@@ -29,34 +29,30 @@ class MolecularStandardizer(ABC):
         self.logger = Logger()
         self.logger.info(f"Standardizer {self.__class__.__name__} initialized with {n_jobs} jobs.")
 
-    def _standardize_mol(self, mol: Union[Mol, str]) -> Mol:
+    def _standardize_mol(self, mol: Mol) -> Tuple[Mol, str]:
         """
         Standardizes a single molecule.
 
         Parameters
         ----------
-        mol: Union[Mol, str]
+        mol: Mol
             Molecule to standardize.
 
         Returns
         -------
-        mol: str
+        mol: Mol
+            Standardized Mol object.
+        smiles: str
             Standardized SMILES string.
         """
         try:
             mol_object = mol
-            if isinstance(mol, str):
-                # mol must be a RDKit Mol object, so parse a SMILES
-                mol_object = Chem.MolFromSmiles(mol_object)
-
             assert mol_object is not None
             mol_object = canonicalize_mol_object(mol_object)
-
-            return Chem.MolToSmiles(self._standardize(mol_object), canonical=True)
+            standardized_mol = self._standardize(mol_object)
+            return standardized_mol, mol_to_smiles(standardized_mol, canonical=True)
         except Exception:
-            if isinstance(mol, Chem.rdchem.Mol):
-                mol = Chem.MolToSmiles(mol, canonical=True)
-            return mol
+            return mol, mol_to_smiles(mol, canonical=True)
 
     def standardize(self, dataset: Dataset) -> Dataset:
         """
@@ -75,7 +71,8 @@ class MolecularStandardizer(ABC):
         molecules = dataset.mols
         multiprocessing_cls = JoblibMultiprocessing(n_jobs=self.n_jobs, process=self._standardize_mol)
         result = list(multiprocessing_cls.run(molecules))
-        dataset.mols = np.asarray(result)
+        dataset._smiles = np.asarray([x[1] for x in result])
+        dataset._mols = np.asarray([x[0] for x in result])
         return dataset
 
     @abstractmethod

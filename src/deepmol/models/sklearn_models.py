@@ -3,12 +3,13 @@ from typing import Sequence
 import numpy as np
 from sklearn.base import BaseEstimator
 
+from deepmol.models._utils import save_to_disk
 from deepmol.models.models import Model
 from deepmol.datasets import Dataset
 from deepmol.splitters.splitters import RandomSplitter, SingletaskStratifiedSplitter
 from deepmol.metrics.metrics import Metric
 
-from deepmol.utils.utils import load_from_disk, save_to_disk
+from deepmol.utils.utils import load_from_disk
 
 from sklearn.base import clone
 

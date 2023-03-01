@@ -10,8 +10,9 @@ from deepchem.models import Model as BaseDeepChemModel
 from deepchem.data import NumpyDataset
 import deepchem as dc
 
+from deepmol.models._utils import save_to_disk
 from deepmol.splitters.splitters import Splitter
-from deepmol.utils.utils import load_from_disk, save_to_disk
+from deepmol.utils.utils import load_from_disk
 
 
 def generate_sequences(epochs: int, train_smiles: List[Union[str, int]]):

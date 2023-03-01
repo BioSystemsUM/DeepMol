@@ -13,14 +13,14 @@ class ModelsTestCase(ABC):
         dataset = os.path.join(self.data_path, "balanced_mini_dataset.csv")
         loader = CSVLoader(dataset,
                            smiles_field='Smiles',
-                           labels_fields='Class')
+                           labels_fields=['Class'])
 
         self.mini_dataset_to_test = loader.create_dataset(sep=';')
 
         dataset = os.path.join(self.data_path, "train_dataset.csv")
         loader = CSVLoader(dataset,
                            smiles_field='mols',
-                           labels_fields='y')
+                           labels_fields=['y'])
 
         self.larger_dataset_to_test = loader.create_dataset(sep=',')
 

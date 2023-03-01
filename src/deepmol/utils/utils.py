@@ -8,10 +8,6 @@ import gzip
 import pickle
 import numpy as np
 
-from deepchem.trans import DAGTransformer, IRVTransformer
-from deepchem.data import NumpyDataset
-from deepmol.datasets import Dataset
-
 from rdkit.Chem import rdMolDescriptors, rdDepictor, Mol, RDKFingerprint, rdmolfiles, rdmolops
 from rdkit.Chem import Draw
 from IPython.display import SVG

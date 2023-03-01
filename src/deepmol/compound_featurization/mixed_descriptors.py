@@ -22,7 +22,7 @@ class MixedFeaturizer(MolecularFeaturizer):
         """
         super().__init__()
         self.featurizers = featurizers
-        self.feature_names = None
+        self.feature_names = [name for featurizer in featurizers for name in featurizer.feature_names]
 
     def _featurize(self, mol: Mol):
         """

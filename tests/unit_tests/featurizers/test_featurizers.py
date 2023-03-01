@@ -21,14 +21,14 @@ class FeaturizerTestCase(ABC):
         dataset = os.path.join(self.data_path, "test_to_convert_to_sdf.csv")
         loader = CSVLoader(dataset,
                            smiles_field='Standardized_Smiles',
-                           labels_fields='Class')
+                           labels_fields=['Class'])
 
         self.mini_dataset_to_test = loader.create_dataset()
 
         dataset = os.path.join(self.data_path, "invalid_smiles_dataset.csv")
         loader = CSVLoader(dataset,
                            smiles_field='Standardized_Smiles',
-                           labels_fields='Class')
+                           labels_fields=['Class'])
 
         self.dataset_invalid_smiles = loader.create_dataset()
 

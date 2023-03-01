@@ -9,7 +9,7 @@ from rdkit.Chem import Mol
 
 from deepmol.loggers.logger import Logger
 from deepmol.datasets._utils import merge_arrays, merge_arrays_of_arrays
-from deepmol.utils.utils import smiles_to_mol
+from deepmol.utils.utils import smiles_to_mol, mol_to_smiles
 
 
 class Dataset(ABC):
@@ -334,6 +334,37 @@ class SmilesDataset(Dataset):
         self.remove_elements([self._ids[i] for i, m in enumerate(self._mols) if m is None])
         self._feature_names = np.array(feature_names) if feature_names is not None else None
         self._validate_params()
+
+    @classmethod
+    def from_mols(cls,
+                  mols: Union[np.ndarray, List[Mol]],
+                  ids: Union[List, np.ndarray] = None,
+                  X: Union[List, np.ndarray] = None,
+                  feature_names: Union[List, np.ndarray] = None,
+                  y: Union[List, np.ndarray] = None) -> 'SmilesDataset':
+        """
+        Initialize a dataset from RDKit Mol objects.
+
+        Parameters
+        ----------
+        mols: Union[np.ndarray, List[Mol]]
+            RDKit Mol objects of the molecules.
+        ids: Union[List, np.ndarray]
+            IDs of the molecules.
+        X: Union[List, np.ndarray]
+            Features of the molecules.
+        feature_names: Union[List, np.ndarray]
+            Names of the features.
+        y: Union[List, np.ndarray]
+            Labels of the molecules.
+
+        Returns
+        -------
+        SmilesDataset
+            The dataset instance.
+        """
+        smiles = np.array([mol_to_smiles(m) for m in mols])
+        return cls(smiles, mols, ids, X, feature_names, y)
 
     def __len__(self) -> int:
         """

@@ -1,11 +1,9 @@
 import joblib
 import numpy as np
 
-from deepmol.models import Model
-
 
 # TODO: review this function
-def save_to_disk(model: Model, filename: str, compress: int = 3):
+def save_to_disk(model: 'Model', filename: str, compress: int = 3):
     """
     Save a model to a file.
 

@@ -38,6 +38,7 @@ class MorganFingerprint(MolecularFeaturizer):
         self.chiral = chiral
         self.bonds = bonds
         self.features = features
+        self.feature_names = [f'morgan_{i}' for i in range(self.size)]
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -80,6 +81,7 @@ class MACCSkeysFingerprint(MolecularFeaturizer):
         Initialize a MACCSkeysFingerprint object.
         """
         super().__init__(**kwargs)
+        self.feature_names = [f'maccs_{i}' for i in range(166)]
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -155,6 +157,7 @@ class LayeredFingerprint(MolecularFeaturizer):
         self.fpSize = fpSize
         self.atomCounts = atomCounts
         self.branchedPaths = branchedPaths
+        self.feature_names = [f'layered_{i}' for i in range(self.fpSize)]
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -245,6 +248,7 @@ class RDKFingerprint(MolecularFeaturizer):
         self.minSize = minSize
         self.branchedPaths = branchedPaths
         self.useBondOrder = useBondOrder
+        self.feature_names = [f'rdk_{i}' for i in range(self.fpSize)]
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -324,6 +328,7 @@ class AtomPairFingerprint(MolecularFeaturizer):
         self.includeChirality = includeChirality
         self.use2D = use2D
         self.confId = confId
+        self.feature_names = [f'atom_pair_{i}' for i in range(self.nBits)]
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -396,6 +401,7 @@ class AtomPairFingerprintCallbackHash(MolecularFeaturizer):
         self.includeChirality = includeChirality
         self.use2D = use2D
         self.confId = confId
+        self.feature_names = [f'atom_pair_hash_{i}' for i in range(self.nBits)]
 
     @staticmethod
     def hash_function(bit, value):

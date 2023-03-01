@@ -30,40 +30,8 @@ class MolecularFeaturizer(ABC):
             The number of jobs to run in parallel in the featurization.
         """
         self.n_jobs = n_jobs
-
+        self.feature_names = None
         self.logger = Logger()
-
-    @staticmethod
-    def _convert_smiles_to_mol(mol: str) -> Tuple[Mol, bool, bool]:
-        """
-        Convert a SMILES string to a RDKit molecule object.
-
-        Parameters
-        ----------
-        mol: str
-            The SMILES string to convert.
-
-        Returns
-        -------
-        mol: Mol
-            The RDKit molecule object.
-        is_mol_convertable: bool
-            Whether the SMILES string could be converted to a RDKit molecule object.
-        remove_mol: bool
-            Whether the molecule should be removed from the dataset.
-        """
-
-        is_mol_convertable = True
-        remove_mol = False
-
-        mol_object = MolFromSmiles(mol)
-        if mol_object is None:
-            remove_mol = True
-            is_mol_convertable = False
-
-        mol = canonicalize_mol_object(mol_object)
-
-        return mol, is_mol_convertable, remove_mol
 
     def _featurize_mol(self, mol: Mol) -> Tuple[np.ndarray, bool]:
         """
@@ -78,33 +46,19 @@ class MolecularFeaturizer(ABC):
         -------
         features: np.ndarray
             The features for the molecule.
+        remove_mol: bool
+            Whether the molecule should be removed from the dataset.
         """
-        is_mol_convertable = True
-        remove_mol = False
-        smiles = None
         try:
-            if isinstance(mol, str):
-                # mol must be a RDKit Mol object, so parse a SMILES
-                smiles = mol
-                mol, is_mol_convertable, remove_mol = self._convert_smiles_to_mol(mol)
-            elif isinstance(mol, Mol):
-                mol = canonicalize_mol_object(mol)
-            else:
-                is_mol_convertable = False
-                remove_mol = True
-
-            if is_mol_convertable:
-                feat = self._featurize(mol)
-                return feat, remove_mol
-            else:
-                self.logger = Logger()
-                self.logger.error(f"Failed to featurize {smiles}. Appending empty array")
-                return np.array([]), remove_mol
-
+            mol = canonicalize_mol_object(mol)
+            feat = self._featurize(mol)
+            remove_mol = False
+            return feat, remove_mol
         except PreConditionViolationException:
             exit(1)
 
         except Exception as e:
+            smiles = MolToSmiles(mol)
             self.logger = Logger()
             self.logger.error(f"Failed to featurize {smiles}. Appending empty array")
             self.logger.error("Exception message: {}".format(e))
@@ -155,7 +109,8 @@ class MolecularFeaturizer(ABC):
             pass
         else:
             features = np.vstack(features)
-        dataset.X = features
+        dataset._X = features
+        dataset.feature_names = self.feature_names
 
         dataset.remove_nan(remove_nans_axis)
 

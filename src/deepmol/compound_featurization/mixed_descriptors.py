@@ -22,6 +22,7 @@ class MixedFeaturizer(MolecularFeaturizer):
         """
         super().__init__()
         self.featurizers = featurizers
+        self.feature_names = None
 
     def _featurize(self, mol: Mol):
         """
@@ -40,9 +41,12 @@ class MixedFeaturizer(MolecularFeaturizer):
 
         try:
             final_features = np.array([])
+            final_feature_names = []
             for featurizer in self.featurizers:
                 current_features = featurizer._featurize(mol)
                 final_features = np.concatenate((final_features, current_features))
+                final_feature_names.extend(featurizer.feature_names)
+            self.feature_names = final_feature_names
 
         except Exception:
             self.logger = Logger()

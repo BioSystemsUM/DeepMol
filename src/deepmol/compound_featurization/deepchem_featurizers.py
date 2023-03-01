@@ -53,6 +53,7 @@ class ConvMolFeat(MolecularFeaturizer):
         self.use_chirality = use_chirality
         self.atom_properties = atom_properties
         self.per_atom_fragmentation = per_atom_fragmentation
+        self.feature_names = ['conv_mol_feat']
 
     def _featurize(self, mol: Mol) -> ConvMol:
         """
@@ -116,6 +117,7 @@ class WeaveFeat(MolecularFeaturizer):
         self.explicit_h = explicit_h
         self.use_chirality = use_chirality
         self.max_pair_distance = max_pair_distance
+        self.feature_names = ['weave_feat']
 
     def _featurize(self, mol: Mol) -> WeaveMol:
         """
@@ -179,6 +181,7 @@ class MolGanFeat(MolecularFeaturizer):
         self.kekulize = kekulize
         self.bond_labels = bond_labels
         self.atom_labels = atom_labels
+        self.feature_names = ['mol_gan_feat']
 
     def _featurize(self, mol: Mol) -> GraphMatrix:
         """
@@ -237,6 +240,7 @@ class MolGraphConvFeat(MolecularFeaturizer):
         self.use_edges = use_edges
         self.use_chirality = use_chirality
         self.use_partial_charge = use_partial_charge
+        self.feature_names = ['mol_graph_conv_feat']
 
     def _featurize(self, mol: Mol) -> GraphData:
         """
@@ -313,6 +317,7 @@ class CoulombFeat(MolecularFeaturizer):
         if seed is not None:
             seed = int(seed)
         self.seed = seed
+        self.feature_names = ['coulomb_feat']
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -393,6 +398,7 @@ class CoulombEigFeat(MolecularFeaturizer):
             seed = int(seed)
         self.seed = seed
         self.max_conformers = max_conformers
+        self.feature_names = ['coulomb_eig_feat']
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -469,6 +475,7 @@ class SmileImageFeat(MolecularFeaturizer):
         self.res = res
         self.img_spec = img_spec
         self.embed = int(img_size * res / 2)
+        self.feature_names = ['smile_image_feat']
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -526,7 +533,7 @@ class SmilesSeqFeat:
         self.char_to_idx = char_to_idx
         self.max_len = max_len
         self.pad_len = pad_len
-
+        self.feature_names = ['smiles_seq_feat']
         self.logger = Logger()
 
     def featurize(self, dataset: Dataset) -> Dataset:

@@ -233,6 +233,7 @@ def get_all_3D_descriptors(mol):
     logger = Logger()
 
     all_descriptors = np.empty(0, dtype=float)
+    feature_names = []
     for name, featurizer_function in inspect.getmembers(current_module, inspect.isclass):
         try:
             if issubclass(featurizer_function, ThreeDimensionDescriptor) and \
@@ -244,6 +245,7 @@ def get_all_3D_descriptors(mol):
 
                 if not np.any(np.isnan(descriptor_values)):
                     all_descriptors = np.concatenate((all_descriptors, descriptor_values))
+                    feature_names.extend(descriptor_function.feature_names)
                 else:
                     raise Exception
 
@@ -252,7 +254,7 @@ def get_all_3D_descriptors(mol):
             all_descriptors = np.empty(size, dtype=float)
             all_descriptors[:] = np.NaN
             break
-    return all_descriptors
+    return all_descriptors, feature_names
 
 
 def generate_conformers(generator: ThreeDimensionalMoleculeGenerator,
@@ -381,6 +383,7 @@ class TwoDimensionDescriptors(MolecularFeaturizer):
         Initialize the class.
         """
         super().__init__(**kwargs)
+        self.feature_names = None
 
     def _featurize(self, mol: Mol):
         """
@@ -397,7 +400,7 @@ class TwoDimensionDescriptors(MolecularFeaturizer):
             Array with all 2D descriptors from rdkit.
         """
         calc = MoleculeDescriptors.MolecularDescriptorCalculator([x[0] for x in Descriptors._descList])
-        # header = calc.GetDescriptorNames()
+        self.feature_names = calc.GetDescriptorNames()
 
         try:
             descriptors = calc.CalcDescriptors(mol)
@@ -521,6 +524,7 @@ class All3DDescriptors(MolecularFeaturizer):
             self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
 
         super().__init__(n_jobs=1)
+        self.feature_names = None
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -547,7 +551,8 @@ class All3DDescriptors(MolecularFeaturizer):
             elif not has_conformers:
                 raise PreConditionViolationException("molecule has no conformers")
 
-            fp = get_all_3D_descriptors(mol)
+            fp, feature_names = get_all_3D_descriptors(mol)
+            self.feature_names = feature_names
 
         except PreConditionViolationException as e:
             _no_conformers_message(e)
@@ -580,6 +585,7 @@ class AutoCorr3D(ThreeDimensionDescriptor):
         """
         super().__init__(mandatory_generation_of_conformers)
         self.descriptor_function = rdMolDescriptors.CalcAUTOCORR3D
+        self.feature_names = ['AUTOCORR3D_{}'.format(i) for i in range(80)]
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -617,6 +623,7 @@ class RadialDistributionFunction(ThreeDimensionDescriptor):
         """
         super().__init__(mandatory_generation_of_conformers)
         self.descriptor_function = rdMolDescriptors.CalcRDF
+        self.feature_names = ['RDF_{}'.format(i) for i in range(210)]
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -653,6 +660,7 @@ class PlaneOfBestFit(ThreeDimensionDescriptor):
         """
         super().__init__(mandatory_generation_of_conformers)
         self.descriptor_function = rdMolDescriptors.CalcPBF
+        self.feature_names = ['PBF_{}'.format(i) for i in range(80)]
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -690,6 +698,7 @@ class MORSE(ThreeDimensionDescriptor):
         """
         super().__init__(mandatory_generation_of_conformers)
         self.descriptor_function = rdMolDescriptors.CalcMORSE
+        self.feature_names = ['MORSE_{}'.format(i) for i in range(224)]
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -727,6 +736,7 @@ class WHIM(ThreeDimensionDescriptor):
         """
         super().__init__(mandatory_generation_of_conformers)
         self.descriptor_function = rdMolDescriptors.CalcWHIM
+        self.feature_names = ['WHIM_{}'.format(i) for i in range(114)]
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -764,6 +774,7 @@ class RadiusOfGyration(ThreeDimensionDescriptor):
         """
         super().__init__(mandatory_generation_of_conformers)
         self.descriptor_function = rdMolDescriptors.CalcRadiusOfGyration
+        self.feature_names = ['RadiusOfGyration']
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -801,6 +812,7 @@ class InertialShapeFactor(ThreeDimensionDescriptor):
         """
         super().__init__(mandatory_generation_of_conformers)
         self.descriptor_function = rdMolDescriptors.CalcInertialShapeFactor
+        self.feature_names = ['InertialShapeFactor']
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -838,6 +850,7 @@ class Eccentricity(ThreeDimensionDescriptor):
         """
         super().__init__(mandatory_generation_of_conformers)
         self.descriptor_function = rdMolDescriptors.CalcEccentricity
+        self.feature_names = ['Eccentricity']
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -875,6 +888,7 @@ class Asphericity(ThreeDimensionDescriptor):
         """
         super().__init__(mandatory_generation_of_conformers)
         self.descriptor_function = rdMolDescriptors.CalcAsphericity
+        self.feature_names = ['Asphericity']
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -912,6 +926,7 @@ class SpherocityIndex(ThreeDimensionDescriptor):
         """
         super().__init__(mandatory_generation_of_conformers)
         self.descriptor_function = rdMolDescriptors.CalcSpherocityIndex
+        self.feature_names = ['SpherocityIndex']
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -946,6 +961,7 @@ class PrincipalMomentsOfInertia(ThreeDimensionDescriptor):
             If True, the conformers are generated and optimized before the descriptors are calculated.
         """
         super().__init__(mandatory_generation_of_conformers)
+        self.feature_names = ['PMI1', 'PMI2', 'PMI3']
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -1007,6 +1023,7 @@ class NormalizedPrincipalMomentsRatios(ThreeDimensionDescriptor):
             If True, the conformers are generated and optimized before the descriptors are calculated.
         """
         super().__init__(mandatory_generation_of_conformers)
+        self.feature_names = ['NPR1', 'NPR2']
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """

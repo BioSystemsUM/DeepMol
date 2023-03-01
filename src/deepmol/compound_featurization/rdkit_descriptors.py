@@ -383,7 +383,7 @@ class TwoDimensionDescriptors(MolecularFeaturizer):
         Initialize the class.
         """
         super().__init__(**kwargs)
-        self.feature_names = None
+        self.feature_names = [x[0] for x in Descriptors._descList]
 
     def _featurize(self, mol: Mol):
         """
@@ -400,7 +400,7 @@ class TwoDimensionDescriptors(MolecularFeaturizer):
             Array with all 2D descriptors from rdkit.
         """
         calc = MoleculeDescriptors.MolecularDescriptorCalculator([x[0] for x in Descriptors._descList])
-        self.feature_names = calc.GetDescriptorNames()
+
 
         try:
             descriptors = calc.CalcDescriptors(mol)

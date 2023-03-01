@@ -106,12 +106,18 @@ class CSVLoader(object):
         mols = dataset[self.mols_field].to_numpy()
 
         if self.features_fields is not None:
-            X = dataset[self.features_fields].to_numpy()
+            if len(self.features_fields) == 1:
+                X = dataset[self.features_fields[0]].to_numpy()
+            else:
+                X = dataset[self.features_fields].to_numpy()
         else:
             X = None
 
         if self.labels_fields is not None:
-            y = dataset[self.labels_fields].to_numpy()
+            if len(self.labels_fields) == 1:
+                y = dataset[self.labels_fields[0]].to_numpy()
+            else:
+                y = dataset[self.labels_fields].to_numpy()
         else:
             y = None
 

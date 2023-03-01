@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Tuple
 
 import numpy as np
-from rdkit.Chem import MolFromSmiles, Mol, MolToSmiles
+from rdkit.Chem import Mol, MolToSmiles
 
 from deepmol.datasets import Dataset
 from deepmol.loggers.logger import Logger

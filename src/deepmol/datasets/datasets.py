@@ -474,8 +474,12 @@ class SmilesDataset(Dataset):
         """
         if self._X is None:
             raise ValueError('The features must be set before setting the feature names.')
-        if len(feature_names) != len(self._X[0]):
-            raise ValueError('The number of feature names must be equal to the number of features.')
+        if len(self._X.shape) == 1:
+            if len(feature_names) != 1:
+                raise ValueError('The number of feature names must be equal to the number of features.')
+        else:
+            if len(feature_names) != len(self._X[0]):
+                raise ValueError('The number of feature names must be equal to the number of features.')
         if len(feature_names) != len(set(feature_names)):
             raise ValueError('The feature names must be unique.')
         self._feature_names = np.array([str(fn) for fn in feature_names])
@@ -648,7 +652,7 @@ class SmilesDataset(Dataset):
             return
         if axis == 0:
             if len(self._X.shape) == 1:
-                indexes = np.where(np.isnan(self._X))[0]
+                indexes = np.where(pd.isna(self._X))[0]
             else:
                 indexes = np.where(pd.isna(self._X).any(axis=1))[0]
             # rows with at least one NaN

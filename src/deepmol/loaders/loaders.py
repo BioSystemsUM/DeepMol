@@ -21,8 +21,8 @@ class CSVLoader(object):
                  dataset_path: str,
                  smiles_field: str,
                  id_field: str = None,
-                 labels_fields: Union[List[str], str] = None,
-                 features_fields: Union[List[str], str] = None,
+                 labels_fields: List[str] = None,
+                 features_fields: List[str] = None,
                  shard_size: int = None) -> None:
         """
         Initialize the CSVLoader.
@@ -35,9 +35,9 @@ class CSVLoader(object):
             field containing the molecules'
         id_field: str
             field containing the ids
-        labels_fields: Union[List[str], str]
+        labels_fields: List[str]
             field containing the labels
-        features_fields: Union[List[str], str]
+        features_fields: List[str]
             field containing the features
         shard_size: int
             size of the shard to load
@@ -54,19 +54,10 @@ class CSVLoader(object):
             fields2keep.append(id_field)
 
         if labels_fields is not None:
-            self.n_tasks = len(labels_fields)
-            if isinstance(labels_fields, list):
-                [fields2keep.append(x) for x in labels_fields]
-            else:
-                fields2keep.append(labels_fields)
-        else:
-            self.n_tasks = 0
+            fields2keep.extend(labels_fields)
 
         if features_fields is not None:
-            if isinstance(features_fields, list):
-                [fields2keep.append(x) for x in features_fields]
-            else:
-                fields2keep.append(features_fields)
+            fields2keep.extend(features_fields)
 
         self.fields2keep = fields2keep
 
@@ -144,8 +135,8 @@ class SDFLoader(object):
     def __init__(self,
                  dataset_path: str,
                  id_field: str = None,
-                 labels_fields: Union[List[str], str] = None,
-                 features_fields: Union[List[str], str] = None,
+                 labels_fields: List[str] = None,
+                 features_fields: List[str] = None,
                  shard_size: Optional[int] = None) -> None:
         """
         Initialize the SDFLoader.
@@ -156,9 +147,9 @@ class SDFLoader(object):
             path to the dataset file
         id_field: str
             field containing the ids
-        labels_fields: Union[List[str], str]
+        labels_fields: List[str]
             field containing the labels
-        features_fields: Union[List[str], str]
+        features_fields: List[str]
             field containing the features
         shard_size: int
             size of the shard to load
@@ -175,19 +166,10 @@ class SDFLoader(object):
             fields2keep.append(id_field)
 
         if labels_fields is not None:
-            self.n_tasks = len(labels_fields)
-            if isinstance(labels_fields, list):
-                [fields2keep.append(x) for x in labels_fields]
-            else:
-                fields2keep.append(labels_fields)
-        else:
-            self.n_tasks = 0
+            fields2keep.extend(labels_fields)
 
         if features_fields is not None:
-            if isinstance(features_fields, list):
-                [fields2keep.append(x) for x in features_fields]
-            else:
-                fields2keep.append(features_fields)
+            fields2keep.extend(features_fields)
 
         self.fields2keep = fields2keep
 
@@ -226,28 +208,20 @@ class SDFLoader(object):
         for mol in molecules:
             mols.append(mol)
             mol_feature = []
+            mol_ys = []
             if self.features_fields is not None:
-                if isinstance(self.features_fields, list):
-                    for feature in self.features_fields:
-                        mol_feature.append(mol.GetProp(feature))
-                else:
-                    mol_feature.append(mol.GetProp(self.features_fields))
-
+                for feature in self.features_fields:
+                    mol_feature.append(mol.GetProp(feature))
+                if len(mol_feature) == 1:
+                    mol_feature = mol_feature[0]
                 X.append(mol_feature)
 
             if self.labels_fields is not None:
-
-                if isinstance(self.labels_fields, list):
-                    if len(self.labels_fields) == 1:
-                        y.append(float(mol.GetProp(self.labels_fields[0])))
-                    else:
-                        mol_ys = []
-                        for label in self.labels_fields:
-                            mol_ys.append(float(mol.GetProp(label)))
-
-                        y.append(mol_ys)
-                else:
-                    y.append(float(mol.GetProp(self.labels_fields)))
+                for label in self.labels_fields:
+                    mol_ys.append(float(mol.GetProp(label)))
+                if len(mol_ys) == 1:
+                    mol_ys = mol_ys[0]
+                y.append(mol_ys)
             else:
                 mol_y = None
                 y.append(mol_y)
@@ -259,13 +233,13 @@ class SDFLoader(object):
                 mol_id = None
                 ids.append(mol_id)
 
-        X = np.array(X)
-        y = np.array(y)
-        ids = np.array(ids)
+        X = np.array(X) if X is not None and len(X) != 0 else None
+        y = None if len(set(np.array(y).flatten())) == 1 and np.array(y).flatten()[0] is None else np.array(y)
+        ids = np.array(ids) if len(set(ids)) == len(ids) else None
         mols = np.array(mols)
-
-        return SmilesDataset(smiles=mols,
-                             X=X,
-                             y=y,
-                             ids=ids,
-                             feature_names=self.features_fields)
+        feature_names = self.features_fields
+        return SmilesDataset.from_mols(mols=mols,
+                                       X=X,
+                                       y=y,
+                                       ids=ids,
+                                       feature_names=feature_names)

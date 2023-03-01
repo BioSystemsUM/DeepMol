@@ -19,11 +19,10 @@ class CSVLoader(object):
 
     def __init__(self,
                  dataset_path: str,
-                 mols_field: str,
+                 smiles_field: str,
                  id_field: str = None,
                  labels_fields: Union[List[str], str] = None,
                  features_fields: Union[List[str], str] = None,
-                 features2keep: List[Union[str, int]] = None,
                  shard_size: int = None) -> None:
         """
         Initialize the CSVLoader.
@@ -32,7 +31,7 @@ class CSVLoader(object):
         ----------
         dataset_path: str
             path to the dataset file
-        mols_field: str
+        smiles_field: str
             field containing the molecules'
         id_field: str
             field containing the ids
@@ -40,21 +39,16 @@ class CSVLoader(object):
             field containing the labels
         features_fields: Union[List[str], str]
             field containing the features
-        features2keep: List[Union[str, int]]
-            features to keep
         shard_size: int
             size of the shard to load
         """
         self.dataset_path = dataset_path
-        self.mols_field = mols_field
+        self.mols_field = smiles_field
         self.id_field = id_field
         self.labels_fields = labels_fields
         self.features_fields = features_fields
-
-        self.features2keep = features2keep
         self.shard_size = shard_size
-
-        fields2keep = [mols_field]
+        fields2keep = [smiles_field]
 
         if id_field is not None:
             fields2keep.append(id_field)
@@ -135,12 +129,11 @@ class CSVLoader(object):
         else:
             ids = None
 
-        return SmilesDataset(mols=mols,
+        return SmilesDataset(smiles=mols,
                              X=X,
                              y=y,
                              ids=ids,
-                             features2keep=self.features2keep,
-                             n_tasks=self.n_tasks)
+                             feature_names=self.features_fields)
 
 
 class SDFLoader(object):
@@ -153,7 +146,6 @@ class SDFLoader(object):
                  id_field: str = None,
                  labels_fields: Union[List[str], str] = None,
                  features_fields: Union[List[str], str] = None,
-                 features2keep: List[Union[str, int]] = None,
                  shard_size: Optional[int] = None) -> None:
         """
         Initialize the SDFLoader.
@@ -168,8 +160,6 @@ class SDFLoader(object):
             field containing the labels
         features_fields: Union[List[str], str]
             field containing the features
-        features2keep: List[Union[str, int]]
-            features to keep
         shard_size: int
             size of the shard to load
         """
@@ -177,7 +167,6 @@ class SDFLoader(object):
         self.id_field = id_field
         self.labels_fields = labels_fields
         self.features_fields = features_fields
-        self.features2keep = features2keep
         self.shard_size = shard_size
 
         fields2keep = []
@@ -275,9 +264,8 @@ class SDFLoader(object):
         ids = np.array(ids)
         mols = np.array(mols)
 
-        return SmilesDataset(mols=mols,
+        return SmilesDataset(smiles=mols,
                              X=X,
                              y=y,
                              ids=ids,
-                             features2keep=self.features2keep,
-                             n_tasks=self.n_tasks)
+                             feature_names=self.features_fields)

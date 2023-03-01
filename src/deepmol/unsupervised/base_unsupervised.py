@@ -1,7 +1,7 @@
 from abc import abstractmethod, ABC
 from typing import Union
 
-from deepmol.datasets import Dataset, NumpyDataset
+from deepmol.datasets import Dataset, SmilesDataset
 
 import pandas as pd
 import numpy as np
@@ -45,7 +45,7 @@ class UnsupervisedLearn(ABC):
 
         Returns
         -------
-        x: NumpyDataset
+        x: SmilesDataset
             The dataset with the unsupervised features in dataset.X.
         """
         self.dataset = dataset
@@ -65,7 +65,7 @@ class UnsupervisedLearn(ABC):
 
         Returns
         -------
-        x: NumpyDataset
+        x: SmilesDataset
             The dataset with the unsupervised features in dataset.X.
         """
         raise NotImplementedError
@@ -158,12 +158,12 @@ class PCA(UnsupervisedLearn):
         if plot:
             self._plot()
 
-        return NumpyDataset(mols=self.dataset.mols,
-                            X=pca.fit_transform(self.features),
-                            y=self.dataset.y,
-                            ids=self.dataset.ids,
-                            features2keep=self.dataset.features2keep,
-                            n_tasks=self.dataset.n_tasks)
+        return SmilesDataset(mols=self.dataset.mols,
+                             X=pca.fit_transform(self.features),
+                             y=self.dataset.y,
+                             ids=self.dataset.ids,
+                             features2keep=self.dataset.features2keep,
+                             n_tasks=self.dataset.n_tasks)
 
     def _plot(self):
         """
@@ -387,12 +387,12 @@ class TSNE(UnsupervisedLearn):
         if plot:
             self._plot()
 
-        return NumpyDataset(mols=self.dataset.mols,
-                            X=X_embedded.fit_transform(self.features),
-                            y=self.dataset.y,
-                            ids=self.dataset.ids,
-                            features2keep=self.dataset.features2keep,
-                            n_tasks=self.dataset.n_tasks)
+        return SmilesDataset(mols=self.dataset.mols,
+                             X=X_embedded.fit_transform(self.features),
+                             y=self.dataset.y,
+                             ids=self.dataset.ids,
+                             features2keep=self.dataset.features2keep,
+                             n_tasks=self.dataset.n_tasks)
 
     def _plot(self):
         dic = {0: "Not Active (0)", 1: "Active (1)"}

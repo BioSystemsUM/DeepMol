@@ -4,7 +4,7 @@ Classes for processing input data into a format suitable for machine learning.
 
 from typing import Optional, Union, List
 
-from deepmol.datasets import NumpyDataset
+from deepmol.datasets import SmilesDataset
 import numpy as np
 import pandas as pd
 
@@ -102,7 +102,7 @@ class CSVLoader(object):
         """
         return load_csv_file(dataset_path, fields, chunk_size, **kwargs)
 
-    def create_dataset(self, **kwargs) -> NumpyDataset:
+    def create_dataset(self, **kwargs) -> SmilesDataset:
         """
         Creates a dataset from the CSV file.
 
@@ -113,7 +113,7 @@ class CSVLoader(object):
 
         Returns
         -------
-        NumpyDataset
+        SmilesDataset
             Dataset with the data.
         """
         dataset = self._get_dataset(self.dataset_path, fields=self.fields2keep, chunk_size=self.shard_size, **kwargs)
@@ -135,12 +135,12 @@ class CSVLoader(object):
         else:
             ids = None
 
-        return NumpyDataset(mols=mols,
-                            X=X,
-                            y=y,
-                            ids=ids,
-                            features2keep=self.features2keep,
-                            n_tasks=self.n_tasks)
+        return SmilesDataset(mols=mols,
+                             X=X,
+                             y=y,
+                             ids=ids,
+                             features2keep=self.features2keep,
+                             n_tasks=self.n_tasks)
 
 
 class SDFLoader(object):
@@ -220,13 +220,13 @@ class SDFLoader(object):
         """
         return load_sdf_file(dataset_path, chunk_size)
 
-    def create_dataset(self) -> NumpyDataset:
+    def create_dataset(self) -> SmilesDataset:
         """
         Creates a dataset from the SDF file.
 
         Returns
         -------
-        NumpyDataset
+        SmilesDataset
             Dataset with the data.
         """
         molecules = self._get_dataset(self.dataset_path, self.shard_size)
@@ -275,9 +275,9 @@ class SDFLoader(object):
         ids = np.array(ids)
         mols = np.array(mols)
 
-        return NumpyDataset(mols=mols,
-                            X=X,
-                            y=y,
-                            ids=ids,
-                            features2keep=self.features2keep,
-                            n_tasks=self.n_tasks)
+        return SmilesDataset(mols=mols,
+                             X=X,
+                             y=y,
+                             ids=ids,
+                             features2keep=self.features2keep,
+                             n_tasks=self.n_tasks)

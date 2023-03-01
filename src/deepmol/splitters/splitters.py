@@ -9,7 +9,7 @@ from rdkit.Chem import AllChem, Mol, MolFromSmiles
 from rdkit.Chem.Scaffolds.MurckoScaffold import MurckoScaffoldSmiles
 from rdkit.ML.Cluster import Butina
 
-from deepmol.datasets import Dataset, NumpyDataset
+from deepmol.datasets import Dataset, SmilesDataset
 
 from sklearn.model_selection import KFold, StratifiedKFold
 
@@ -229,11 +229,11 @@ class Splitter(ABC):
         """
         self.logger.info("Computing K-fold split")
 
-        if isinstance(dataset, NumpyDataset):
+        if isinstance(dataset, SmilesDataset):
             ds = dataset
         else:
 
-            ds = NumpyDataset(dataset.mols, dataset.X, dataset.y, dataset.ids, dataset.features2keep, dataset.n_tasks)
+            ds = SmilesDataset(dataset.mols, dataset.X, dataset.y, dataset.ids, dataset.features2keep, dataset.n_tasks)
 
         # kf = KFold(n_splits=k)
         kf = KFold(n_splits=k, shuffle=True, random_state=seed)
@@ -437,7 +437,7 @@ class SingletaskStratifiedSplitter(Splitter):
                      k: int,
                      seed: int = None,
                      log_every_n: int = None,
-                     **kwargs) -> List[Tuple[NumpyDataset, NumpyDataset]]:
+                     **kwargs) -> List[Tuple[SmilesDataset, SmilesDataset]]:
         """
         Splits compounds into k-folds using stratified sampling.
 
@@ -460,10 +460,10 @@ class SingletaskStratifiedSplitter(Splitter):
             A list of length k of tuples of train and test datasets as NumpyDataset objects.
         """
         self.logger.info("Computing Stratified K-fold split")
-        if isinstance(dataset, NumpyDataset):
+        if isinstance(dataset, SmilesDataset):
             ds = dataset
         else:
-            ds = NumpyDataset(dataset.mols, dataset.X, dataset.y, dataset.ids, dataset.features2keep, dataset.n_tasks)
+            ds = SmilesDataset(dataset.mols, dataset.X, dataset.y, dataset.ids, dataset.features2keep, dataset.n_tasks)
 
         skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=seed)  # changed so that users can define the seed
 

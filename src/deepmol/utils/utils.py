@@ -23,7 +23,7 @@ from PIL import Image
 
 from IPython.display import display
 
-from deepmol.loggers.logger import Logger
+from deepmol.loggers import Logger
 
 
 def smiles_to_mol(smiles: str, **kwargs) -> Union[Mol, None]:
@@ -92,35 +92,14 @@ def load_pickle_file(input_file: str) -> Any:
             return pickle.load(opened_file)
 
 
-def save_to_disk(dataset: Union[np.ndarray, Dataset], filename: str, compress: int = 3):
-    """
-    Save a dataset to file.
-
-    Parameters
-    ----------
-    dataset: Union[np.ndarray, Dataset]
-        A dataset you want to save.
-    filename: str
-        Path to save data.
-    compress: int, default 3
-        The compress option when dumping joblib file.
-  """
-    if filename.endswith('.joblib'):
-        joblib.dump(dataset, filename, compress=compress)
-    elif filename.endswith('.npy'):
-        np.save(filename, dataset)
-    else:
-        raise ValueError("Filename with unsupported extension: %s" % filename)
-
-
 def load_from_disk(filename: str) -> Any:
     """
-    Load a dataset from file.
+    Load object from file.
 
     Parameters
     ----------
     filename: str
-        A filename you want to load data.
+        A filename you want to load.
 
     Returns
     -------
@@ -173,74 +152,6 @@ def normalize_labels_shape(y_pred: Union[List, np.ndarray]):
             print(i)
             labels.append(int(round(i[0])))
     return np.array(labels)
-
-
-def dag_transformation(dataset: Dataset, max_atoms: int = 10):
-    """
-    Function to transform ConvMol adjacency lists to DAG calculation orders.
-    Adapted from deepchem
-
-    Parameters
-    ----------
-    dataset: Dataset
-        Dataset to transform.
-    max_atoms: int
-        Maximum number of atoms to allow.
-
-    Returns
-    -------
-    dataset: Dataset
-        Transformed dataset.
-    """
-    new_dataset = NumpyDataset(
-        X=dataset.X,
-        y=dataset.y,
-        ids=dataset.mols)
-
-    transformer = DAGTransformer(max_atoms=max_atoms)
-    res = transformer.transform(new_dataset)
-    dataset.mols = res.ids
-    dataset.X = res.X
-    dataset.y = res.y
-
-    return dataset
-
-
-def irv_transformation(dataset: Dataset, K: int = 10, n_tasks: int = 1):
-    """
-    Function to transfrom ECFP to IRV features, used by MultitaskIRVClassifier as preprocessing step
-    Adapted from deepchem
-
-    Parameters
-    ----------
-    dataset: Dataset
-        Dataset to transform.
-    K: int
-        Number of IRV features to generate.
-    n_tasks: int
-        Number of tasks.
-
-    Returns
-    -------
-    dataset: Dataset
-        Transformed dataset.
-    """
-    try:
-        dummy_y = dataset.y[:, n_tasks]
-    except IndexError:
-        dataset.y = np.reshape(dataset.y, (np.shape(dataset.y)[0], n_tasks))
-    new_dataset = NumpyDataset(
-        X=dataset.X,
-        y=dataset.y,
-        ids=dataset.mols)
-
-    transformer = IRVTransformer(K, n_tasks, new_dataset)
-    res = transformer.transform(new_dataset)
-    dataset.mols = res.ids
-    dataset.X = res.X
-    dataset.y = np.reshape(res.y, (np.shape(res.y)[0],))
-
-    return dataset
 
 
 # DRAWING

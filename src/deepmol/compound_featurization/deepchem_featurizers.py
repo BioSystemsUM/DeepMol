@@ -6,12 +6,13 @@ from deepchem.feat import ConvMolFeaturizer, WeaveFeaturizer, MolGraphConvFeatur
 from deepchem.feat.graph_data import GraphData
 from deepchem.feat.mol_graphs import ConvMol, WeaveMol
 from deepchem.utils import ConformerGenerator
-from rdkit.Chem import Mol, MolFromSmiles, MolToSmiles
+from rdkit.Chem import Mol
 
 from deepmol.compound_featurization import MolecularFeaturizer
 from deepmol.compound_featurization._utils import get_conformers, get_dictionary_from_smiles
 from deepmol.datasets import Dataset
 from deepmol.loggers.logger import Logger
+from deepmol.utils.utils import mol_to_smiles
 
 
 class ConvMolFeat(MolecularFeaturizer):
@@ -553,7 +554,7 @@ class SmilesSeqFeat:
         # Getting the dictionary if it is None
         if self.char_to_idx is None:
             if isinstance(dataset.mols[0], Mol):
-                smiles = [MolToSmiles(mol) for mol in dataset.mols]
+                smiles = [mol_to_smiles(mol) for mol in dataset.mols if mol is not None]
             elif isinstance(dataset.mols[0], str):
                 smiles = dataset.mols
             else:
@@ -565,7 +566,7 @@ class SmilesSeqFeat:
 
         # obtain new SMILE's strings
         if isinstance(dataset.mols[0], str):
-            rdkit_mols = [MolFromSmiles(mol) for mol in dataset.mols]
+            rdkit_mols = [mol_to_smiles(mol) for mol in dataset.mols]
         elif isinstance(dataset.mols[0], Mol):
             rdkit_mols = dataset.mols
         else:

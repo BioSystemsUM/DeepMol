@@ -12,36 +12,39 @@ import numpy as np
 from tests import TEST_DIR
 
 
-@skip("Not completely implemented yet")
 class TestSplitters(TestCase):
 
     def setUp(self) -> None:
         dataset = os.path.join(TEST_DIR, "data", "test_to_convert_to_sdf.csv")
         loader = CSVLoader(dataset,
                            smiles_field='Standardized_Smiles',
-                           labels_fields='Class')
+                           labels_fields=['Class'])
 
         self.mini_dataset_to_test = loader.create_dataset()
 
         dataset = os.path.join(TEST_DIR, "data", "PC-3.csv")
         loader = CSVLoader(dataset,
                            smiles_field='smiles',
-                           labels_fields='pIC50')
+                           labels_fields=['pIC50'])
 
         self.dataset_to_test = loader.create_dataset()
 
         dataset = os.path.join(TEST_DIR, "data", "invalid_smiles_dataset.csv")
         loader = CSVLoader(dataset,
                            smiles_field='Standardized_Smiles',
-                           labels_fields='Class')
+                           labels_fields=['Class'])
 
         self.invalid_smiles_dataset = loader.create_dataset()
 
         dataset = os.path.join(TEST_DIR, "data", "dataset_sweet_3d_balanced.sdf")
         loader = SDFLoader(dataset,
-                           labels_fields='_SWEET')
+                           labels_fields=['_SWEET'])
 
         self.binary_dataset = loader.create_dataset()
+
+    def tearDown(self) -> None:
+        if os.path.exists('deepmol.log'):
+            os.remove('deepmol.log')
 
     def test_similarity_splitter(self):
         similarity_splitter = SimilaritySplitter()

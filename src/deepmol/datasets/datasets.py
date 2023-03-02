@@ -280,13 +280,13 @@ class Dataset(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def select_to_split(self, indexes: List[int]) -> None:
+    def select_to_split(self, indexes: Union[np.ndarray, List[int]]) -> 'Dataset':
         """
         Select the elements from the dataset to split.
 
         Parameters
         ----------
-        indexes: List[int]
+        indexes: Union[np.ndarray, List[int]]
             The indexes of the elements to select.
         """
         raise NotImplementedError
@@ -674,12 +674,12 @@ class SmilesDataset(Dataset):
         else:
             raise ValueError('The axis must be 0 or 1.')
 
-    def select_to_split(self, indexes: List[int]) -> 'SmilesDataset':
+    def select_to_split(self, indexes: Union[np.ndarray, List[int]]) -> 'SmilesDataset':
         """
         Select elements with specific indexes to split the dataset
         Parameters
         ----------
-        indexes: List[int]
+        indexes: Union[np.ndarray, List[int]]
             The indexes of the elements to split the dataset.
         Returns
         -------

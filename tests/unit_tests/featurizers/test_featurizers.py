@@ -20,17 +20,21 @@ class FeaturizerTestCase(ABC):
         self.original_smiles = pd.read_csv(data_path, sep=',').Smiles.values
         mols = [self._smiles_to_mol(s) for s in self.original_smiles]
         self.mock_dataset = MagicMock(spec=SmilesDataset,
-                                      smiles=self.original_smiles,
-                                      mols=mols,
+                                      smiles=np.array(self.original_smiles),
+                                      mols=np.array(mols),
                                       ids=np.arange(len(self.original_smiles)))
         self.original_smiles_with_invalid = np.append(self.original_smiles, ['CC(=O)[O-].NC', 'C1=CC=CC=C1('])
         mols = [self._smiles_to_mol(s) for s in self.original_smiles_with_invalid]
         self.mock_dataset_with_invalid = MagicMock(spec=SmilesDataset,
-                                                   smiles=self.original_smiles_with_invalid,
-                                                   mols=mols,
+                                                   smiles=np.array(self.original_smiles_with_invalid),
+                                                   mols=np.array(mols),
                                                    ids=np.arange(len(self.original_smiles_with_invalid)))
 
         self.mock_scaler = MagicMock(spec=StandardScaler)
+
+    def tearDown(self) -> None:
+        if os.path.exists('deepmol.log'):
+            os.remove('deepmol.log')
 
     @staticmethod
     def _smiles_to_mol(smiles):

@@ -18,6 +18,10 @@ class TestFeatureSelectors(TestCase):
 
         self.mini_dataset_to_test = loader.create_dataset()
 
+    def tearDown(self) -> None:
+        if os.path.exists('deepmol.log'):
+            os.remove('deepmol.log')
+
     def test_boruta_algorithm_larger_dataset(self):
         # TODO: verify boruta is working as expected
         import pandas as pd

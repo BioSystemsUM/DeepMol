@@ -1,3 +1,4 @@
+import os
 from unittest import TestCase
 
 from deepmol.parallelism.multiprocessing import JoblibMultiprocessing
@@ -8,6 +9,10 @@ def divide(a, b):
 
 
 class TestMultiProcessing(TestCase):
+
+    def tearDown(self) -> None:
+        if os.path.exists('deepmol.log'):
+            os.remove('deepmol.log')
 
     def test_multiprocessing_to_fail(self):
         def f(x):

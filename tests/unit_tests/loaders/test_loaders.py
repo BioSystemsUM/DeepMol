@@ -7,6 +7,10 @@ from tests import TEST_DIR
 
 class TestLoaders(TestCase):
 
+    def tearDown(self) -> None:
+        if os.path.exists('deepmol.log'):
+            os.remove('deepmol.log')
+
     def test_sdf_loader(self) -> None:
         self.data_path = os.path.join(TEST_DIR, 'data')
         dataset = os.path.join(self.data_path, "results_test.sdf")

@@ -14,7 +14,7 @@ class TestMultiprocessing(TestCase):
         dataset = os.path.join(self.data_path, "balanced_mini_dataset.csv")
         loader = CSVLoader(dataset,
                            smiles_field='Smiles',
-                           labels_fields='Class')
+                           labels_fields=['Class'])
 
         self.small_dataset_to_test = loader.create_dataset(sep=";")
 
@@ -23,6 +23,10 @@ class TestMultiprocessing(TestCase):
         dataset = os.path.join(self.data_path, "dataset_last_version2.csv")
         loader = CSVLoader(dataset,
                            smiles_field='Smiles',
-                           labels_fields='Class')
+                           labels_fields=['Class'])
         self.big_dataset_to_test = loader.create_dataset(sep=";")
         self.big_pandas_dataset = pd.read_csv(dataset, sep=";")
+
+    def tearDown(self) -> None:
+        if os.path.exists('deepmol.log'):
+            os.remove('deepmol.log')

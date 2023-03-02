@@ -24,6 +24,10 @@ class ModelsTestCase(ABC):
 
         self.larger_dataset_to_test = loader.create_dataset(sep=',')
 
+    def tearDown(self) -> None:
+        if os.path.exists('deepmol.log'):
+            os.remove('deepmol.log')
+
     @abstractmethod
     def test_fit_predict_evaluate(self):
         raise NotImplementedError

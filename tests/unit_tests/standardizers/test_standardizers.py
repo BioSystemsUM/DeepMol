@@ -20,6 +20,10 @@ class StandardizerBaseTestCase(ABC):
         self.original_mols = [Chem.MolFromSmiles(x) for x in self.original_smiles]
         self.mock_dataset = MagicMock(spec=SmilesDataset, smiles=self.original_smiles, mols=self.original_mols)
 
+    def tearDown(self) -> None:
+        if os.path.exists('deepmol.log'):
+            os.remove('deepmol.log')
+
     @abstractmethod
     def test_standardize(self):
         raise NotImplementedError

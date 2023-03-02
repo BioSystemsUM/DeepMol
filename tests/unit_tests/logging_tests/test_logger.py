@@ -13,9 +13,11 @@ class TestLogger(TestCase):
         self.logger = Logger(file_path=self.log_file_name, level=logging.DEBUG)
         self.logger.set_file_path(self.log_file_name)
 
-    def delete_file(self) -> None:
-        if os.path.exists(self.log_file_name):
-            os.remove(self.log_file_name)
+    def tearDown(self) -> None:
+        # remove all files in TEST_DIR that have .log extension
+        for file in os.listdir(TEST_DIR):
+            if file.endswith(".log"):
+                os.remove(os.path.join(TEST_DIR, file))
 
     def test_logger(self):
         Logger(file_path=self.log_file_name).info("Test")

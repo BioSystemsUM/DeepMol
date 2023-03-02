@@ -13,7 +13,7 @@ class TestScaffoldSplitter(TestSplitters, TestCase):
     def test_split(self):
         similarity_splitter = ScaffoldSplitter()
 
-        train_dataset, test_dataset = similarity_splitter.train_test_split(self.mini_dataset_to_test)
+        train_dataset, test_dataset = similarity_splitter.train_test_split(self.mini_dataset_to_test, seed=123)
 
         self.assertGreater(len(train_dataset.smiles), len(test_dataset.smiles))
         self.assertEqual(len(train_dataset.smiles), 4)

@@ -2,7 +2,7 @@ import inspect
 import sys
 import traceback
 import warnings
-from typing import Union
+from typing import Union, List
 
 import numpy as np
 from rdkit import Chem
@@ -233,7 +233,6 @@ def get_all_3D_descriptors(mol):
     logger = Logger()
 
     all_descriptors = np.empty(0, dtype=float)
-    feature_names = []
     for name, featurizer_function in inspect.getmembers(current_module, inspect.isclass):
         try:
             if issubclass(featurizer_function, ThreeDimensionDescriptor) and \
@@ -245,7 +244,6 @@ def get_all_3D_descriptors(mol):
 
                 if not np.any(np.isnan(descriptor_values)):
                     all_descriptors = np.concatenate((all_descriptors, descriptor_values))
-                    feature_names.extend(descriptor_function.feature_names)
                 else:
                     raise Exception
 
@@ -254,7 +252,28 @@ def get_all_3D_descriptors(mol):
             all_descriptors = np.empty(size, dtype=float)
             all_descriptors[:] = np.NaN
             break
-    return all_descriptors, feature_names
+    return all_descriptors
+
+
+def get_all_3D_descriptors_feature_names() -> List[str]:
+    """
+    Method that lists all 3D featurizers feature names.
+
+    Returns
+    -------
+    feature_names: List[str]
+        List with all the 3D descriptors feature names.
+    """
+    current_module = sys.modules[__name__]
+    feature_names = []
+    for name, featurizer_function in inspect.getmembers(current_module, inspect.isclass):
+        if issubclass(featurizer_function, ThreeDimensionDescriptor) and \
+                issubclass(featurizer_function, MolecularFeaturizer) and \
+                name not in [All3DDescriptors.__name__, ThreeDimensionDescriptor.__name__]:
+
+            descriptor_function = featurizer_function(False)
+            feature_names.extend(descriptor_function.feature_names)
+    return feature_names
 
 
 def generate_conformers(generator: ThreeDimensionalMoleculeGenerator,
@@ -401,7 +420,6 @@ class TwoDimensionDescriptors(MolecularFeaturizer):
         """
         calc = MoleculeDescriptors.MolecularDescriptorCalculator([x[0] for x in Descriptors._descList])
 
-
         try:
             descriptors = calc.CalcDescriptors(mol)
             if np.isnan(np.sum(descriptors)):
@@ -524,7 +542,7 @@ class All3DDescriptors(MolecularFeaturizer):
             self.three_dimensional_generator = ThreeDimensionalMoleculeGenerator()
 
         super().__init__(n_jobs=1)
-        self.feature_names = None
+        self.feature_names = get_all_3D_descriptors_feature_names()
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -551,8 +569,7 @@ class All3DDescriptors(MolecularFeaturizer):
             elif not has_conformers:
                 raise PreConditionViolationException("molecule has no conformers")
 
-            fp, feature_names = get_all_3D_descriptors(mol)
-            self.feature_names = feature_names
+            fp = get_all_3D_descriptors(mol)
 
         except PreConditionViolationException as e:
             _no_conformers_message(e)
@@ -660,7 +677,7 @@ class PlaneOfBestFit(ThreeDimensionDescriptor):
         """
         super().__init__(mandatory_generation_of_conformers)
         self.descriptor_function = rdMolDescriptors.CalcPBF
-        self.feature_names = ['PBF_{}'.format(i) for i in range(80)]
+        self.feature_names = ['PBF']
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """

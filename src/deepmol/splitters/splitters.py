@@ -5,7 +5,7 @@ import numpy as np
 from typing import Tuple, List
 
 from rdkit import DataStructs
-from rdkit.Chem import Mol, MolFromSmiles
+from rdkit.Chem import Mol
 from rdkit.Chem.Scaffolds.MurckoScaffold import MurckoScaffoldSmiles
 from rdkit.ML.Cluster import Butina
 
@@ -597,8 +597,6 @@ class ScaffoldSplitter(Splitter):
         """
         np.testing.assert_almost_equal(frac_train + frac_valid + frac_test, 1.)
 
-        mols_classes_map, indices_classes_map = get_mols_for_each_class(dataset)
-
         is_regression = any([not isinstance(i.item(), int) and not i.item().is_integer() for i in dataset.y])
 
         train_cutoff = int(frac_train * len(dataset))
@@ -610,6 +608,7 @@ class ScaffoldSplitter(Splitter):
         test_inds: List[int] = []
 
         if not is_regression:
+            mols_classes_map, indices_classes_map = get_mols_for_each_class(dataset)
             for class_ in mols_classes_map:
                 mols = mols_classes_map[class_]
                 indexes = indices_classes_map[class_]
@@ -628,9 +627,14 @@ class ScaffoldSplitter(Splitter):
                 valid_inds.extend(valid_inds_class_)
 
         else:
-            scaffold_sets = self.generate_scaffolds(dataset.mols, [i for i in range(len(dataset.mols))])
-            train_inds, valid_inds, test_inds = get_train_valid_test_indexes(scaffold_sets, train_cutoff, test_cutoff,
-                                                                             valid_cutoff, frac_train, frac_test,
+            idsx = [i for i in range(len(dataset.mols))]
+            scaffold_sets = self.generate_scaffolds(dataset.mols, idsx)
+            train_inds, valid_inds, test_inds = get_train_valid_test_indexes(scaffold_sets,
+                                                                             train_cutoff,
+                                                                             test_cutoff,
+                                                                             valid_cutoff,
+                                                                             frac_train,
+                                                                             frac_test,
                                                                              homogenous_datasets)
 
         return train_inds, valid_inds, test_inds
@@ -662,34 +666,19 @@ class ScaffoldSplitter(Splitter):
             if ind % log_every_n == 0:
                 self.logger.info("Generating scaffold %d/%d" % (ind, data_len))
 
-            if isinstance(mol, str):
-                try:
-                    mol_object = MolFromSmiles(mol)
-                    scaffold = ScaffoldSplitter._generate_scaffold(mol_object)
-                except:
-                    scaffold = None
+            scaffold = ScaffoldSplitter._generate_scaffold(mol)
 
-            elif isinstance(mol, Mol):
-                scaffold = ScaffoldSplitter._generate_scaffold(mol)
-
+            if scaffold not in scaffolds:
+                scaffolds[scaffold] = [indexes[ind]]
             else:
-                scaffold = False
-
-            if scaffold is not None:
-                if scaffold not in scaffolds:
-                    scaffolds[scaffold] = [indexes[ind]]
-                else:
-                    scaffolds[scaffold].append(indexes[ind])
+                scaffolds[scaffold].append(indexes[ind])
 
         # Sort from largest to smallest scaffold sets
         scaffolds = {key: sorted(value) for key, value in scaffolds.items()}
 
-        scaffold_sets = []
-
         scaffold_scaffold_set = sorted(scaffolds.items(), key=lambda x: (len(x[1]), x[1][0]), reverse=True)
 
-        for scaffold, scaffold_set in scaffold_scaffold_set:
-            scaffold_sets.append(scaffold_set)
+        scaffold_sets = [scaffold_set for _, scaffold_set in scaffold_scaffold_set]
 
         return scaffold_sets
 

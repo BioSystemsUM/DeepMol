@@ -270,7 +270,6 @@ def get_all_3D_descriptors_feature_names() -> List[str]:
         if issubclass(featurizer_function, ThreeDimensionDescriptor) and \
                 issubclass(featurizer_function, MolecularFeaturizer) and \
                 name not in [All3DDescriptors.__name__, ThreeDimensionDescriptor.__name__]:
-
             descriptor_function = featurizer_function(False)
             feature_names.extend(descriptor_function.feature_names)
     return feature_names
@@ -420,18 +419,8 @@ class TwoDimensionDescriptors(MolecularFeaturizer):
         """
         calc = MoleculeDescriptors.MolecularDescriptorCalculator([x[0] for x in Descriptors._descList])
 
-        try:
-            descriptors = calc.CalcDescriptors(mol)
-            if np.isnan(np.sum(descriptors)):
-                raise Exception
-        except Exception as e:
-            self.logger = Logger()
-            self.logger.error('error in smile: ' + str(mol))
-            _no_conformers_message(e)
-
-            descriptors = np.empty(208, dtype=np.float32)
-            descriptors[:] = np.NaN
-
+        descriptors = calc.CalcDescriptors(mol)
+        assert not np.isnan(np.sum(descriptors))
         descriptors = np.array(descriptors, dtype=np.float32)
         return descriptors
 
@@ -492,29 +481,17 @@ class ThreeDimensionDescriptor(MolecularFeaturizer):
         descriptors: np.ndarray
             Array with the descriptors.
         """
-        try:
-            has_conformers = check_atoms_coordinates(mol)
+        has_conformers = check_atoms_coordinates(mol)
 
-            if not has_conformers and self.mandatory_generation_of_conformers:
-                mol = self.three_dimensional_generator.generate_conformers(mol)
-                mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
-            elif not has_conformers:
-                raise PreConditionViolationException("molecule has no conformers")
+        if not has_conformers and self.mandatory_generation_of_conformers:
+            mol = self.three_dimensional_generator.generate_conformers(mol)
+            mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
+        elif not has_conformers:
+            raise PreConditionViolationException("molecule has no conformers")
 
-            fp = self.descriptor_function(mol)
-            if any([isinstance(fp, fp_type) for fp_type in [str, int, np.float32, float, np.int64]]):
-                fp = [fp]
-
-        except PreConditionViolationException as e:
-            _no_conformers_message(e)
-            raise e
-
-        except Exception as e:
-            self.logger.error('error in smile: ' + str(mol))
-            _no_conformers_message(e)
-
-            fp = np.empty(80, dtype=np.float32)
-            fp[:] = np.NaN
+        fp = self.descriptor_function(mol)
+        if any([isinstance(fp, fp_type) for fp_type in [str, int, np.float32, float, np.int64]]):
+            fp = [fp]
 
         fp = np.asarray(fp, dtype=np.float32)
         return fp
@@ -558,28 +535,15 @@ class All3DDescriptors(MolecularFeaturizer):
         fp: np.ndarray
           A numpy array of all 3D descriptors from rdkit.
         """
+        has_conformers = check_atoms_coordinates(mol)
 
-        size = 639
-        try:
-            has_conformers = check_atoms_coordinates(mol)
+        if not has_conformers and self.generate_conformers:
+            mol = self.three_dimensional_generator.generate_conformers(mol)
+            mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
+        elif not has_conformers:
+            raise PreConditionViolationException("molecule has no conformers")
 
-            if not has_conformers and self.generate_conformers:
-                mol = self.three_dimensional_generator.generate_conformers(mol)
-                mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
-            elif not has_conformers:
-                raise PreConditionViolationException("molecule has no conformers")
-
-            fp = get_all_3D_descriptors(mol)
-
-        except PreConditionViolationException as e:
-            _no_conformers_message(e)
-            raise e
-
-        except Exception as e:
-            self.logger.error('error in smile: ' + str(mol))
-            fp = np.empty(size, dtype=np.float32)
-            fp[:] = np.NaN
-
+        fp = get_all_3D_descriptors(mol)
         fp = np.asarray(fp, dtype=np.float32)
         return fp
 
@@ -994,31 +958,18 @@ class PrincipalMomentsOfInertia(ThreeDimensionDescriptor):
         pmi: np.ndarray
           A numpy array of the Principal Moments of Inertia
         """
+        has_conformers = check_atoms_coordinates(mol)
+        if not has_conformers and self.mandatory_generation_of_conformers:
+            mol = self.three_dimensional_generator.generate_conformers(mol)
+            mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
+        elif not has_conformers:
+            raise PreConditionViolationException("molecule has no conformers")
 
-        try:
-            has_conformers = check_atoms_coordinates(mol)
-            if not has_conformers and self.mandatory_generation_of_conformers:
-                mol = self.three_dimensional_generator.generate_conformers(mol)
-                mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
-            elif not has_conformers:
-                raise PreConditionViolationException("molecule has no conformers")
+        pmi1 = [rdMolDescriptors.CalcPMI1(mol)]
+        pmi2 = [rdMolDescriptors.CalcPMI2(mol)]
+        pmi3 = [rdMolDescriptors.CalcPMI3(mol)]
 
-            pmi1 = [rdMolDescriptors.CalcPMI1(mol)]
-            pmi2 = [rdMolDescriptors.CalcPMI2(mol)]
-            pmi3 = [rdMolDescriptors.CalcPMI3(mol)]
-
-            pmi = pmi1 + pmi2 + pmi3
-
-        except PreConditionViolationException as e:
-            _no_conformers_message(e)
-            raise e
-
-        except Exception as e:
-            print('error in smile: ' + str(mol))
-
-            _no_conformers_message(e)
-            pmi = np.empty(3, dtype=np.float32)
-            pmi[:] = np.NaN
+        pmi = pmi1 + pmi2 + pmi3
 
         pmi = np.asarray(pmi, dtype=np.float32)
         return pmi
@@ -1056,31 +1007,19 @@ class NormalizedPrincipalMomentsRatios(ThreeDimensionDescriptor):
         npr: np.ndarray
           A numpy array of the Normalized Principal Moments Ratios.
         """
+        has_conformers = check_atoms_coordinates(mol)
 
-        try:
-            has_conformers = check_atoms_coordinates(mol)
+        if not has_conformers and self.mandatory_generation_of_conformers:
+            mol = self.three_dimensional_generator.generate_conformers(mol)
+            mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
 
-            if not has_conformers and self.mandatory_generation_of_conformers:
-                mol = self.three_dimensional_generator.generate_conformers(mol)
-                mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
+        elif not has_conformers:
+            raise PreConditionViolationException("molecule has no conformers")
 
-            elif not has_conformers:
-                raise PreConditionViolationException("molecule has no conformers")
+        npr1 = [rdMolDescriptors.CalcNPR1(mol)]
+        npr2 = [rdMolDescriptors.CalcNPR2(mol)]
 
-            npr1 = [rdMolDescriptors.CalcNPR1(mol)]
-            npr2 = [rdMolDescriptors.CalcNPR2(mol)]
-
-            npr = npr1 + npr2
-
-        except PreConditionViolationException as e:
-            _no_conformers_message(e)
-            raise e
-
-        except Exception as e:
-            print('error in smile: ' + str(mol))
-            _no_conformers_message(e)
-            npr = np.empty(2, dtype=np.float32)
-            npr[:] = np.NaN
+        npr = npr1 + npr2
 
         npr = np.asarray(npr, dtype=np.float32)
         return npr

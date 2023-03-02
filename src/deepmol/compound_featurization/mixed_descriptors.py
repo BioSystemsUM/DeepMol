@@ -4,7 +4,6 @@ import numpy as np
 from rdkit.Chem import Mol
 
 from deepmol.compound_featurization import MolecularFeaturizer
-from deepmol.loggers.logger import Logger
 
 
 class MixedFeaturizer(MolecularFeaturizer):
@@ -13,14 +12,14 @@ class MixedFeaturizer(MolecularFeaturizer):
     Features from different featurizers are concatenated.
     """
 
-    def __init__(self, featurizers: Iterable[MolecularFeaturizer]):
+    def __init__(self, featurizers: Iterable[MolecularFeaturizer], **kwargs) -> None:
         """
         Parameters
         ----------
         featurizers: Iterable[MolecularFeaturizer]
             Iterable of featurizer to use to create features.
         """
-        super().__init__()
+        super().__init__(**kwargs)
         self.featurizers = featurizers
         self.feature_names = [name for featurizer in featurizers for name in featurizer.feature_names]
 
@@ -38,22 +37,10 @@ class MixedFeaturizer(MolecularFeaturizer):
         np.ndarray
           A numpy array of concatenared features.
         """
-
-        try:
-            final_features = np.array([])
-            final_feature_names = []
-            for featurizer in self.featurizers:
-                current_features = featurizer._featurize(mol)
-                final_features = np.concatenate((final_features, current_features))
-                final_feature_names.extend(featurizer.feature_names)
-            self.feature_names = final_feature_names
-
-        except Exception:
-            self.logger = Logger()
-            self.logger.error('error in smile: ' + str(mol))
-            final_features = np.empty(self.feature_names, dtype=np.float32)
-            final_features[:] = np.NaN
+        final_features = np.array([])
+        for featurizer in self.featurizers:
+            current_features = featurizer._featurize(mol)
+            final_features = np.concatenate((final_features, current_features))
 
         final_features = np.asarray(final_features, dtype=np.float32)
-
         return final_features

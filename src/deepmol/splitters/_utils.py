@@ -1,3 +1,4 @@
+import math
 from typing import List
 
 import numpy as np
@@ -62,12 +63,18 @@ def get_train_valid_test_indexes(scaffold_sets: List[List[int]],
 
         else:
             np.random.shuffle(scaffold_set)
-            train_index = int(np.round(len(scaffold_set) * frac_train))
-            test_index = int(np.round(len(scaffold_set) * frac_test)) + train_index
-            train_inds = np.hstack([train_inds, scaffold_set[:train_index]])
-            test_inds = np.hstack([test_inds, scaffold_set[train_index:test_index]])
-            valid_inds = np.hstack([valid_inds, scaffold_set[test_index:]])
-
+            if len(train_inds) >= train_cutoff:
+                if len(test_inds) >= test_cutoff:
+                    valid_inds = np.hstack([valid_inds, scaffold_set])
+                else:
+                    test_inds = np.hstack([test_inds, scaffold_set])
+            else:
+                # to avoid leaks to valid_inds when valid_frac=0
+                train_index = math.floor(len(scaffold_set) * frac_train + 0.5)
+                test_index = int(np.round(len(scaffold_set) * frac_test)) + train_index
+                train_inds = np.hstack([train_inds, scaffold_set[:train_index]])
+                test_inds = np.hstack([test_inds, scaffold_set[train_index:test_index]])
+                valid_inds = np.hstack([valid_inds, scaffold_set[test_index:]])
     return list(map(int, train_inds)), list(map(int, valid_inds)), list(map(int, test_inds))
 
 

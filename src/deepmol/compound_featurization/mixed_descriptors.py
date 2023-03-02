@@ -51,7 +51,7 @@ class MixedFeaturizer(MolecularFeaturizer):
         except Exception:
             self.logger = Logger()
             self.logger.error('error in smile: ' + str(mol))
-            final_features = np.empty(80, dtype=np.float32)
+            final_features = np.empty(self.feature_names, dtype=np.float32)
             final_features[:] = np.NaN
 
         final_features = np.asarray(final_features, dtype=np.float32)

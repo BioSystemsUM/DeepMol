@@ -10,7 +10,7 @@ from deepmol.compound_featurization.rdkit_descriptors import ThreeDimensionalMol
     AutoCorr3D, \
     RadialDistributionFunction, PlaneOfBestFit, MORSE, WHIM, RadiusOfGyration, InertialShapeFactor, Eccentricity, \
     Asphericity, SpherocityIndex, PrincipalMomentsOfInertia, NormalizedPrincipalMomentsRatios, \
-    generate_conformers_to_sdf_file, TwoDimensionDescriptors
+    generate_conformers_to_sdf_file, TwoDimensionDescriptors, get_all_3D_descriptors
 from tests.unit_tests.featurizers.test_featurizers import FeaturizerTestCase
 
 import numpy as np
@@ -87,6 +87,15 @@ class Test3DDescriptors(FeaturizerTestCase, TestCase):
         dataset_rows_number = len(self.mini_dataset_to_test.mols)
         All3DDescriptors(mandatory_generation_of_conformers=True).featurize(self.mini_dataset_to_test)
         self.assertEqual(dataset_rows_number, self.mini_dataset_to_test.X.shape[0])
+        # assert that all 3d descriptors are always computed in the same order
+        mol = ThreeDimensionalMoleculeGenerator().generate_conformers(self.mini_dataset_to_test.mols[0])
+        t1 = get_all_3D_descriptors(mol)
+        t2 = get_all_3D_descriptors(mol)
+        t3 = get_all_3D_descriptors(mol)
+        for i in range(len(t1)):
+            self.assertEqual(t1[i], t2[i])
+            self.assertEqual(t1[i], t3[i])
+
 
     def test_featurize_with_nan(self):
         dataset_rows_number = len(self.mini_dataset_to_test.mols)

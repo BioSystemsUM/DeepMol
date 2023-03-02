@@ -114,10 +114,10 @@ class Splitter(ABC):
                             "not defined!")
 
         elif frac_test is None:
-            frac_test = 1 - frac_train + frac_valid
+            frac_test = 1 - (frac_train + frac_valid)
 
         elif frac_valid is None:
-            frac_valid = 1 - frac_train + frac_test
+            frac_valid = 1 - (frac_train + frac_test)
 
         train_inds, valid_inds, test_inds = self.split(dataset,
                                                        frac_train=frac_train,

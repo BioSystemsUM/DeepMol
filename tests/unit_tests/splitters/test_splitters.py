@@ -1,6 +1,5 @@
 import os
-from abc import abstractmethod
-from unittest import TestCase
+from abc import abstractmethod, ABC
 from unittest.mock import MagicMock
 
 import pandas as pd
@@ -13,7 +12,7 @@ import numpy as np
 from tests import TEST_DIR
 
 
-class TestSplitters(TestCase):
+class TestSplitters(ABC):
 
     def setUp(self) -> None:
         data_path = os.path.join(TEST_DIR, 'data/test_to_convert_to_sdf.csv')
@@ -73,7 +72,7 @@ class TestSplitters(TestCase):
                                   mols=self.invalid_smiles_dataset.mols[arg],
                                   y=self.invalid_smiles_dataset.y[arg])
 
-        dataset = os.path.join(TEST_DIR, "data", "preprocessed_dataset_wfoodb.csv")
+        dataset = os.path.join(TEST_DIR, "data", "preprocessed_dataset.csv")
         pdwf = pd.read_csv(dataset, sep=',')
         smiles = pdwf.Standardized_Smiles.values
         y = pdwf.Class.values

@@ -15,7 +15,7 @@ from sklearn.model_selection import KFold, StratifiedKFold
 
 from deepmol.loggers.logger import Logger
 from deepmol.splitters._utils import get_train_valid_test_indexes, get_fingerprints_for_each_class, \
-    get_mols_for_each_class
+    get_mols_for_each_class, is_regression_dataset
 
 
 class Splitter(ABC):
@@ -80,7 +80,6 @@ class Splitter(ABC):
                                frac_valid: float = None,
                                frac_test: float = None,
                                seed: int = None,
-                               log_every_n: int = 1000,
                                **kwargs) -> Tuple[Dataset, Dataset, Dataset]:
         """
         Splits a Dataset into train/validation/test sets.
@@ -124,7 +123,6 @@ class Splitter(ABC):
                                                        frac_test=frac_test,
                                                        frac_valid=frac_valid,
                                                        seed=seed,
-                                                       log_every_n=log_every_n,
                                                        **kwargs)
 
         train_dataset = dataset.select_to_split(train_inds)
@@ -175,7 +173,6 @@ class Splitter(ABC):
               frac_valid: float = 0.1,
               frac_test: float = 0.1,
               seed: int = None,
-              log_every_n: int = None,
               **kwargs) -> Tuple[List[int], List[int], List[int]]:
         """
         Return indices for specified splits.
@@ -192,8 +189,6 @@ class Splitter(ABC):
             The fraction of data to be used for the test split.
         seed: int
             Random seed to use.
-        log_every_n: int
-            Controls the logger by dictating how often logger outputs will be produced.
         **kwargs: Dict[str, Any]
             Other arguments.
 
@@ -216,7 +211,6 @@ class RandomSplitter(Splitter):
               frac_valid: float = 0.1,
               frac_test: float = 0.1,
               seed: int = None,
-              log_every_n: int = None,
               **kwargs) -> Tuple[List[int], List[int], List[int]]:
         """
         Splits randomly into train/validation/test.
@@ -233,8 +227,6 @@ class RandomSplitter(Splitter):
             The fraction of data to be used for the test split.
         seed: int
             Random seed to use.
-        log_every_n: int
-            Log every n examples (not currently used).
         **kwargs: Dict[str, Any]
             Other arguments.
 
@@ -262,7 +254,6 @@ class SingletaskStratifiedSplitter(Splitter):
                      dataset: Dataset,
                      k: int,
                      seed: int = None,
-                     log_every_n: int = None,
                      **kwargs) -> List[Tuple[SmilesDataset, SmilesDataset]]:
         """
         Splits compounds into k-folds using stratified sampling.
@@ -275,8 +266,6 @@ class SingletaskStratifiedSplitter(Splitter):
             Number of folds to split `dataset` into.
         seed: int
             Random seed to use.
-        log_every_n: int
-            Log every n examples (not currently used).
         **kwargs: Dict[str, Any]
             Other arguments.
 
@@ -392,7 +381,7 @@ class SimilaritySplitter(Splitter):
               frac_valid: float = 0.1,
               frac_test: float = 0.1,
               seed: int = None,
-              log_every_n: int = None,
+              force_label_type: str = 'auto',
               homogenous_threshold: float = 0.7) -> Tuple[List[int], List[int], List[int]]:
 
         """
@@ -411,8 +400,9 @@ class SimilaritySplitter(Splitter):
             Fraction of dataset put into test data.
         seed: int
             Random seed to use.
-        log_every_n: int
-            Log every n examples (not currently used).
+        force_label_type: str
+            If 'auto', will try to infer the label type from the dataset. If 'classification', will force the split
+            to be a classification split. If 'regression', will force the split to be a regression split.
         homogenous_threshold: float
             Threshold for similarity, all the compounds with a similarity lower than this threshold will be separated
             in the training set and test set. The higher the threshold is, the more heterogeneous the split will be.
@@ -431,7 +421,14 @@ class SimilaritySplitter(Splitter):
         train_inds = []
         test_valid_inds = []
 
-        is_regression = any([not isinstance(i.item(), int) and not i.item().is_integer() for i in dataset.y])
+        if force_label_type == 'auto':
+            is_regression = is_regression_dataset(dataset, self.logger)
+        elif force_label_type == 'classification':
+            is_regression = False
+        elif force_label_type == 'regression':
+            is_regression = True
+        else:
+            raise ValueError("force_label_type must be 'auto', 'classification', or 'regression'.")
 
         if not is_regression:
             for class_ in fps_classes_map:
@@ -580,7 +577,7 @@ class ScaffoldSplitter(Splitter):
               frac_valid: float = 0.1,
               frac_test: float = 0.1,
               seed: int = None,
-              log_every_n: int = 1000,
+              force_label_type: str = 'auto',
               homogenous_datasets: bool = True) -> Tuple[List[int], List[int], List[int]]:
         """
         Splits internal compounds into train/validation/test by scaffold.
@@ -597,8 +594,9 @@ class ScaffoldSplitter(Splitter):
             The fraction of data to be used for the test split.
         seed: int
             Random seed to use.
-        log_every_n: int
-            Controls the logger by dictating how often logger outputs will be produced.
+        force_label_type: str
+            If 'auto', will try to infer the label type from the dataset. If 'classification', will force the split
+            to be a classification split. If 'regression', will force the split to be a regression split.
         homogenous_datasets: bool
             Whether the datasets will be homogenous or not.
 
@@ -609,7 +607,14 @@ class ScaffoldSplitter(Splitter):
         """
         np.testing.assert_almost_equal(frac_train + frac_valid + frac_test, 1.)
 
-        is_regression = any([not isinstance(i.item(), int) and not i.item().is_integer() for i in dataset.y])
+        if force_label_type == 'auto':
+            is_regression = is_regression_dataset(dataset, self.logger)
+        elif force_label_type == 'classification':
+            is_regression = False
+        elif force_label_type == 'regression':
+            is_regression = True
+        else:
+            raise ValueError("force_label_type must be 'auto', 'classification', or 'regression'.")
 
         train_cutoff = int(frac_train * len(dataset))
         valid_cutoff = int(frac_valid * len(dataset))
@@ -653,8 +658,7 @@ class ScaffoldSplitter(Splitter):
 
     def generate_scaffolds(self,
                            mols: np.ndarray,
-                           indexes: List[int],
-                           log_every_n: int = 1000) -> List[List[int]]:
+                           indexes: List[int]) -> List[List[int]]:
         """
         Returns all scaffolds from the dataset.
 
@@ -664,8 +668,6 @@ class ScaffoldSplitter(Splitter):
             List of rdkit Mol objects for scaffold generation
         indexes: List[int]
             Molecules' indexes.
-        log_every_n: int
-            Controls the logger by dictating how often logger outputs will be produced.
 
         Returns
         -------
@@ -675,9 +677,6 @@ class ScaffoldSplitter(Splitter):
         scaffolds = {}
         data_len = len(mols)
         for ind, mol in enumerate(mols):
-            if ind % log_every_n == 0:
-                self.logger.info("Generating scaffold %d/%d" % (ind, data_len))
-
             scaffold = ScaffoldSplitter._generate_scaffold(mol)
 
             if scaffold not in scaffolds:
@@ -741,7 +740,7 @@ class ButinaSplitter(Splitter):
               frac_valid: float = 0.1,
               frac_test: float = 0.1,
               seed: int = None,
-              log_every_n: int = None,
+              force_label_type: str = 'auto',
               homogenous_datasets: bool = True) -> Tuple[List[int], List[int], List[int]]:
         """
         Splits internal compounds into train and validation based on the butina clustering algorithm. The dataset is
@@ -762,8 +761,9 @@ class ButinaSplitter(Splitter):
             The fraction of data to be used for the test split.
         seed: int
             Random seed to use.
-        log_every_n: int
-            Log every n examples (not currently used).
+        force_label_type: str
+            If 'auto', will try to infer the label type from the dataset. If 'classification', will force the split
+            to be a classification split. If 'regression', will force the split to be a regression split.
         homogenous_datasets: bool
             Whether the datasets will be homogenous or not.
 
@@ -774,7 +774,14 @@ class ButinaSplitter(Splitter):
         """
         fps_classes_map, indices_classes_map, all_fps = get_fingerprints_for_each_class(dataset)
 
-        is_regression = any([not isinstance(i.item(), int) and not i.item().is_integer() for i in dataset.y])
+        if force_label_type == 'auto':
+            is_regression = is_regression_dataset(dataset, self.logger)
+        elif force_label_type == 'classification':
+            is_regression = False
+        elif force_label_type == 'regression':
+            is_regression = True
+        else:
+            raise ValueError("force_label_type must be 'auto', 'classification', or 'regression'.")
 
         train_cutoff = int(frac_train * len(dataset))
         valid_cutoff = int(frac_valid * len(dataset))

@@ -50,6 +50,18 @@ class TestSimilaritySplitter(TestSplitters, TestCase):
             mean_sim = DataStructs.BulkTanimotoSimilarity(fp_test, fps_train)
             self.assertLessEqual(np.mean(mean_sim), 0.5)
 
+        with self.assertRaises(Exception):
+            similarity_splitter.train_valid_test_split(self.dataset_to_test)
+
+        train_dataset, valid_dataset, test_dataset = similarity_splitter.train_valid_test_split(self.dataset_to_test,
+                                                                                                frac_train=0.8,
+                                                                                                frac_valid=0.1)
+
+        self.assertGreater(len(train_dataset.smiles), len(valid_dataset.smiles) + len(test_dataset.smiles))
+        self.assertEqual(len(train_dataset.smiles), 3435)
+        self.assertEqual(len(valid_dataset.smiles), 429)
+        self.assertEqual(len(test_dataset.smiles), 430)
+
     def test_similarity_splitter_larger_dataset_binary_classification(self):
         similarity_splitter = SimilaritySplitter()
 

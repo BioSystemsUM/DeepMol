@@ -232,6 +232,31 @@ class Dataset(ABC):
         """
         raise NotImplementedError
 
+    @property
+    @abstractmethod
+    def mode(self) -> str:
+        """
+        Get the mode of the dataset.
+
+        Returns
+        -------
+        mode: str
+            The mode of the dataset.
+        """
+        raise NotImplementedError
+
+    @mode.setter
+    def mode(self, value: str) -> None:
+        """
+        Set the mode of the dataset.
+
+        Parameters
+        ----------
+        value: str
+            The mode of the dataset.
+        """
+        raise NotImplementedError
+
     @abstractmethod
     def get_shape(self) -> tuple:
         """
@@ -331,7 +356,8 @@ class SmilesDataset(Dataset):
                  X: Union[List, np.ndarray] = None,
                  feature_names: Union[List, np.ndarray] = None,
                  y: Union[List, np.ndarray] = None,
-                 label_names: Union[List, np.ndarray] = None) -> None:
+                 label_names: Union[List, np.ndarray] = None,
+                 mode: str = 'auto') -> None:
         """
         Initialize a dataset from SMILES strings.
         Parameters
@@ -350,6 +376,10 @@ class SmilesDataset(Dataset):
             Labels of the molecules.
         label_names: Union[List, np.ndarray]
             Names of the labels.
+        mode: str
+            The mode of the dataset.
+            If 'auto', the mode is inferred from the labels. If 'classification', the dataset is treated as a
+            classification dataset. If 'regression', the dataset is treated as a regression dataset.
         """
         super().__init__()
         self._smiles = np.array(smiles)
@@ -363,6 +393,8 @@ class SmilesDataset(Dataset):
         self._label_names = np.array(label_names) if label_names is not None else None
         self._validate_params()
         self._n_tasks = len(self._label_names) if self._label_names is not None else 0
+        self._mode = mode if mode != 'auto' else self._infer_mode()
+        self.logger = Logger()
 
     @classmethod
     def from_mols(cls,
@@ -371,7 +403,8 @@ class SmilesDataset(Dataset):
                   X: Union[List, np.ndarray] = None,
                   feature_names: Union[List, np.ndarray] = None,
                   y: Union[List, np.ndarray] = None,
-                  label_names: Union[List, np.ndarray] = None) -> 'SmilesDataset':
+                  label_names: Union[List, np.ndarray] = None,
+                  mode: str = 'auto') -> 'SmilesDataset':
         """
         Initialize a dataset from RDKit Mol objects.
 
@@ -389,6 +422,10 @@ class SmilesDataset(Dataset):
             Labels of the molecules.
         label_names: Union[List, np.ndarray]
             Names of the labels.
+        mode: str
+            The mode of the dataset.
+            If 'auto', the mode is inferred from the labels. If 'classification', the dataset is treated as a
+            classification dataset. If 'regression', the dataset is treated as a regression dataset.
 
         Returns
         -------
@@ -396,7 +433,7 @@ class SmilesDataset(Dataset):
             The dataset instance.
         """
         smiles = np.array([mol_to_smiles(m) for m in mols])
-        return cls(smiles, mols, ids, X, feature_names, y, label_names)
+        return cls(smiles, mols, ids, X, feature_names, y, label_names, mode)
 
     def __len__(self) -> int:
         """
@@ -462,6 +499,27 @@ class SmilesDataset(Dataset):
         self.remove_elements([self._ids[i] for i, m in enumerate(self._mols) if m is None])
         self._feature_names = None
         self._label_names = None
+
+    def _infer_mode(self) -> Union[str, None]:
+        """
+        Infers the mode of the dataset.
+
+        Returns
+        -------
+        str
+            The inferred mode.
+        """
+        if self._y is None:
+            return None
+        classes = np.unique(self.y)
+        if len(classes) > 10:
+            self.logger.warning("Assuming regression since there are more than 10 unique y values. If otherwise, "
+                                "explicitly set the mode to 'classification'!")
+            return 'regression'
+        else:
+            self.logger.info("Assuming classification since there are less than 10 unique y values. If otherwise, "
+                             "explicitly set the mode to 'regression'!")
+            return 'classification'
 
     @property
     def smiles(self) -> np.ndarray:
@@ -620,6 +678,30 @@ class SmilesDataset(Dataset):
             The number of tasks in the dataset.
         """
         return self._n_tasks
+
+    @property
+    def mode(self) -> str:
+        """
+        Get the mode of the dataset.
+        Returns
+        -------
+        str
+            The mode of the dataset.
+        """
+        return self._mode
+
+    @mode.setter
+    def mode(self, mode: str) -> None:
+        """
+        Set the mode of the dataset.
+        Parameters
+        ----------
+        mode: str
+            The mode of the dataset.
+        """
+        if mode not in ['classification', 'regression']:
+            raise ValueError('The mode must be either "classification" or "regression".')
+        self._mode = mode
 
     def get_shape(self) -> Tuple[Tuple, Union[Tuple, None], Union[Tuple, None]]:
         """

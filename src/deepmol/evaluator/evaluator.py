@@ -95,12 +95,12 @@ class Evaluator(object):
         """
 
         data_ids = self.dataset.ids
-        n_tasks = len(self.dataset.get_task_names())
+        n_tasks = self.dataset.n_tasks
         y_preds = np.reshape(y_preds, (len(y_preds), n_tasks))
         assert len(y_preds) == len(data_ids)
         with open(csv_out, "w") as csvfile:
             csvwriter = csv.writer(csvfile)
-            csvwriter.writerow(["ID"] + self.dataset.get_task_names())
+            csvwriter.writerow(["ID"] + self.dataset.label_names)
             for mol_id, y_pred in zip(data_ids, y_preds):
                 csvwriter.writerow([mol_id] + list(y_pred))
 

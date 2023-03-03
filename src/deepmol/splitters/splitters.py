@@ -1,3 +1,4 @@
+import copy
 from abc import abstractmethod, ABC
 
 import numpy as np
@@ -27,52 +28,6 @@ class Splitter(ABC):
 
     def __init__(self):
         self.logger = Logger()
-
-    # TODO: Possible upgrade: add directories input to save splits to file (update code)
-    def k_fold_split(self,
-                     dataset: Dataset,
-                     k: int,
-                     seed: int = None,
-                     **kwargs) -> List[Tuple[Dataset, Dataset]]:
-        """
-        Split a dataset into k folds for cross-validation.
-
-        Parameters
-        ----------
-        dataset: Dataset
-            Dataset to do a k-fold split
-        k: int
-            Number of folds to split `dataset` into.
-        seed: int, optional
-            Random seed to use for reproducibility.
-        **kwargs: Dict[str, Any]
-            Other arguments.
-
-        Returns
-        -------
-        List[Tuple[Dataset, Dataset]]
-          List of length k tuples of (train, test) where `train` and `test` are both `Dataset`.
-        """
-        self.logger.info("Computing K-fold split")
-
-        if isinstance(dataset, SmilesDataset):
-            ds = dataset
-        else:
-            ds = SmilesDataset(dataset.smiles,
-                               dataset.mols, dataset.ids,
-                               dataset.X,
-                               dataset.feature_names,
-                               dataset.y)
-
-        kf = KFold(n_splits=k, shuffle=True, random_state=seed)
-
-        train_datasets = []
-        test_datasets = []
-        for train_index, test_index in kf.split(ds.X):
-            train_datasets.append(ds.select_to_split(train_index))
-            test_datasets.append(ds.select_to_split(test_index))
-
-        return list(zip(train_datasets, test_datasets))
 
     def train_valid_test_split(self,
                                dataset: Dataset,
@@ -199,6 +154,30 @@ class Splitter(ABC):
         """
         raise NotImplementedError
 
+    @abstractmethod
+    def k_fold_split(self,
+                     dataset: Dataset,
+                     k: int,
+                     seed: int = None) -> List[Tuple[Dataset, Dataset]]:
+        """
+        Split a dataset into k folds for cross-validation.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to do a k-fold split
+        k: int
+            Number of folds to split `dataset` into.
+        seed: int, optional
+            Random seed to use for reproducibility.
+
+        Returns
+        -------
+        List[Tuple[Dataset, Dataset]]
+          List of length k tuples of (train, test) where `train` and `test` are both `Dataset`.
+        """
+        raise NotImplementedError
+
 
 class RandomSplitter(Splitter):
     """
@@ -244,6 +223,40 @@ class RandomSplitter(Splitter):
         shuffled = np.random.permutation(range(num_datapoints))
         return list(shuffled[:train_cutoff]), list(shuffled[train_cutoff:valid_cutoff]), list(shuffled[valid_cutoff:])
 
+    def k_fold_split(self,
+                     dataset: Dataset,
+                     k: int,
+                     seed: int = None) -> List[Tuple[Dataset, Dataset]]:
+        """
+        Split a dataset into k folds for cross-validation.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to do a k-fold split
+        k: int
+            Number of folds to split `dataset` into.
+        seed: int, optional
+            Random seed to use for reproducibility.
+
+        Returns
+        -------
+        List[Tuple[Dataset, Dataset]]
+          List of length k tuples of (train, test) where `train` and `test` are both `Dataset`.
+        """
+        self.logger.info("Computing K-fold split")
+        ds = copy.deepcopy(dataset)
+
+        kf = KFold(n_splits=k, shuffle=True, random_state=seed)
+
+        train_datasets = []
+        test_datasets = []
+        for train_index, test_index in kf.split(ds.X):
+            train_datasets.append(ds.select_to_split(train_index))
+            test_datasets.append(ds.select_to_split(test_index))
+
+        return list(zip(train_datasets, test_datasets))
+
 
 class SingletaskStratifiedSplitter(Splitter):
     """
@@ -253,8 +266,7 @@ class SingletaskStratifiedSplitter(Splitter):
     def k_fold_split(self,
                      dataset: Dataset,
                      k: int,
-                     seed: int = None,
-                     **kwargs) -> List[Tuple[SmilesDataset, SmilesDataset]]:
+                     seed: int = None) -> List[Tuple[Dataset, Dataset]]:
         """
         Splits compounds into k-folds using stratified sampling.
 
@@ -266,8 +278,6 @@ class SingletaskStratifiedSplitter(Splitter):
             Number of folds to split `dataset` into.
         seed: int
             Random seed to use.
-        **kwargs: Dict[str, Any]
-            Other arguments.
 
         Returns
         -------
@@ -275,14 +285,7 @@ class SingletaskStratifiedSplitter(Splitter):
             A list of length k of tuples of train and test datasets as NumpyDataset objects.
         """
         self.logger.info("Computing Stratified K-fold split")
-        if isinstance(dataset, SmilesDataset):
-            ds = dataset
-        else:
-            ds = SmilesDataset(dataset.smiles,
-                               dataset.mols, dataset.ids,
-                               dataset.X,
-                               dataset.feature_names,
-                               dataset.y)
+        ds = copy.deepcopy(dataset)
 
         skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=seed)
 
@@ -493,6 +496,29 @@ class SimilaritySplitter(Splitter):
 
         return train_inds, valid_inds, test_inds
 
+    def k_fold_split(self,
+                     dataset: Dataset,
+                     k: int,
+                     seed: int = None) -> List[Tuple[Dataset, Dataset]]:
+        """
+        Splits the dataset into k folds based on similarity.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to be split.
+        k: int
+            Number of folds.
+        seed: int
+            Random seed.
+
+        Returns
+        -------
+        List[Tuple[Dataset, Dataset]]
+            List of train/test pairs of size k.
+        """
+        raise NotImplementedError('This method is still to be implemented.')
+
     @staticmethod
     def _split_fingerprints(fps: List, size1: int, size2: int, indexes: List[int], homogenous_threshold: float):
         """
@@ -656,8 +682,31 @@ class ScaffoldSplitter(Splitter):
 
         return train_inds, valid_inds, test_inds
 
-    def generate_scaffolds(self,
-                           mols: np.ndarray,
+    def k_fold_split(self,
+                     dataset: Dataset,
+                     k: int,
+                     seed: int = None) -> List[Tuple[Dataset, Dataset]]:
+        """
+        Splits the dataset into k folds based on scaffolds.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to be split.
+        k: int
+            Number of folds.
+        seed: int
+            Random seed.
+
+        Returns
+        -------
+        List[Tuple[Dataset, Dataset]]
+            List of train/test pairs of size k.
+        """
+        raise NotImplementedError('This method is still to be implemented.')
+
+    @staticmethod
+    def generate_scaffolds(mols: np.ndarray,
                            indexes: List[int]) -> List[List[int]]:
         """
         Returns all scaffolds from the dataset.
@@ -675,7 +724,6 @@ class ScaffoldSplitter(Splitter):
             List of indices of each scaffold in the dataset.
         """
         scaffolds = {}
-        data_len = len(mols)
         for ind, mol in enumerate(mols):
             scaffold = ScaffoldSplitter._generate_scaffold(mol)
 
@@ -841,3 +889,26 @@ class ButinaSplitter(Splitter):
                                                                              frac_train, frac_test, homogenous_datasets)
 
         return train_inds, valid_inds, test_inds
+
+    def k_fold_split(self,
+                     dataset: Dataset,
+                     k: int,
+                     seed: int = None) -> List[Tuple[Dataset, Dataset]]:
+        """
+        Splits the dataset into k folds based on Butina splitter.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to be split.
+        k: int
+            Number of folds.
+        seed: int
+            Random seed.
+
+        Returns
+        -------
+        List[Tuple[Dataset, Dataset]]
+            List of train/test pairs of size k.
+        """
+        raise NotImplementedError('This method is still to be implemented.')

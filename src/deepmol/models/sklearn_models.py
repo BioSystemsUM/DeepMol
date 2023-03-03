@@ -72,9 +72,9 @@ class SklearnModel(Model):
         BaseEstimator
             The trained scikit-learn model.
         """
-        if self.mode != dataset.mode:
+        if self.mode is not None and self.mode != dataset.mode:
             raise ValueError(f'The mode of the dataset must match the mode of the model. '
-                             'Got {dataset.mode} for dataset and {self.mode} for model.')
+                             f'Got {dataset.mode} for dataset and {self.mode} for model.')
         features = dataset.X
         y = np.squeeze(dataset.y)
         return self.model.fit(features, y)

@@ -27,13 +27,15 @@ class TestSplitters(ABC):
                                               smiles=original_smiles[valid],
                                               mols=mols[valid],
                                               ids=np.arange(len(original_smiles[valid])),
-                                              y=original_y[valid])
+                                              y=original_y[valid],
+                                              mode='classification')
         self.mini_dataset_to_test.__len__.return_value = len(self.mini_dataset_to_test.smiles)
         self.mini_dataset_to_test.select_to_split.side_effect = \
             lambda arg: MagicMock(spec=SmilesDataset,
                                   smiles=self.mini_dataset_to_test.smiles[arg],
                                   mols=self.mini_dataset_to_test.mols[arg],
-                                  y=self.mini_dataset_to_test.y[arg])
+                                  y=self.mini_dataset_to_test.y[arg],
+                                  mode='classification')
 
         dataset = os.path.join(TEST_DIR, "data", "PC-3.csv")
         pc3 = pd.read_csv(dataset, sep=',')
@@ -46,13 +48,15 @@ class TestSplitters(ABC):
                                          smiles=smiles[valid],
                                          mols=mols[valid],
                                          ids=np.arange(len(smiles[valid])),
-                                         y=y[valid])
+                                         y=y[valid],
+                                         mode='regression')
         self.dataset_to_test.__len__.return_value = len(self.dataset_to_test.smiles)
         self.dataset_to_test.select_to_split.side_effect = \
             lambda arg: MagicMock(spec=SmilesDataset,
                                   smiles=self.dataset_to_test.smiles[arg],
                                   mols=self.dataset_to_test.mols[arg],
-                                  y=self.dataset_to_test.y[arg])
+                                  y=self.dataset_to_test.y[arg],
+                                  mode='regression')
 
         dataset = os.path.join(TEST_DIR, "data", "invalid_smiles_dataset.csv")
         isd = pd.read_csv(dataset, sep=',')
@@ -65,13 +69,15 @@ class TestSplitters(ABC):
                                                 smiles=smiles[valid],
                                                 mols=mols[valid],
                                                 ids=np.arange(len(smiles[valid])),
-                                                y=y[valid])
+                                                y=y[valid],
+                                                mode='classification')
         self.invalid_smiles_dataset.__len__.return_value = len(self.invalid_smiles_dataset.smiles)
         self.invalid_smiles_dataset.select_to_split.side_effect = \
             lambda arg: MagicMock(spec=SmilesDataset,
                                   smiles=self.invalid_smiles_dataset.smiles[arg],
                                   mols=self.invalid_smiles_dataset.mols[arg],
-                                  y=self.invalid_smiles_dataset.y[arg])
+                                  y=self.invalid_smiles_dataset.y[arg],
+                                  mode='classification')
 
         dataset = os.path.join(TEST_DIR, "data", "preprocessed_dataset.csv")
         pdwf = pd.read_csv(dataset, sep=',')
@@ -84,12 +90,14 @@ class TestSplitters(ABC):
                                         smiles=smiles[valid],
                                         mols=mols[valid],
                                         ids=np.arange(len(smiles[valid])),
-                                        y=y[valid])
+                                        y=y[valid],
+                                        mode='classification')
         self.binary_dataset.__len__.return_value = len(self.binary_dataset.smiles)
         self.binary_dataset.select_to_split.side_effect = lambda arg: MagicMock(spec=SmilesDataset,
                                                                                 smiles=self.binary_dataset.smiles[arg],
                                                                                 mols=self.binary_dataset.mols[arg],
-                                                                                y=self.binary_dataset.y[arg])
+                                                                                y=self.binary_dataset.y[arg],
+                                                                                mode='classification')
 
         dataset = os.path.join(TEST_DIR, "data", "train_dataset.csv")
         td = pd.read_csv(dataset, sep=',')
@@ -99,13 +107,15 @@ class TestSplitters(ABC):
         self.dataset_for_k_split = MagicMock(spec=SmilesDataset,
                                              X=x,
                                              y=y,
-                                             feature_names=feature_names)
+                                             feature_names=feature_names,
+                                             mode='classification')
         self.dataset_for_k_split.X = x
         self.dataset_for_k_split.y = y
         self.dataset_for_k_split.__len__.return_value = len(self.dataset_for_k_split.smiles)
         self.dataset_for_k_split.select_to_split.side_effect = lambda arg: MagicMock(spec=SmilesDataset,
                                                                                      x=self.dataset_for_k_split.X[arg],
-                                                                                     y=self.dataset_for_k_split.y[arg])
+                                                                                     y=self.dataset_for_k_split.y[arg],
+                                                                                     mode='classification')
 
     def tearDown(self) -> None:
         if os.path.exists('deepmol.log'):

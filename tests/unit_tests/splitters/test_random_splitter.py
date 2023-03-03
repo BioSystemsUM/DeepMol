@@ -18,6 +18,14 @@ class TestRandomSplitter(TestSplitters, TestCase):
         self.assertEqual(len(train_dataset.smiles), 4)
         self.assertEqual(len(test_dataset.smiles), 1)
 
+    def test_k_fold_split(self):
+        random_splitter = RandomSplitter()
+
+        folds = random_splitter.k_fold_split(self.dataset_for_k_split, k=3, seed=123)
+
+        for train_df, valid_df in folds:
+            self.assertEqual(len(train_df.y) + len(valid_df.y), len(self.dataset_for_k_split.y))
+
     def test_random_splitter_larger_dataset(self):
         random_splitter = RandomSplitter()
 

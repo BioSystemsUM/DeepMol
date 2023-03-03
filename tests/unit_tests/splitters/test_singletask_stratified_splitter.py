@@ -18,6 +18,23 @@ class TestSingleTaskStratifiedSplitter(TestSplitters, TestCase):
         self.assertEqual(len(train_dataset.smiles), 4)
         self.assertEqual(len(test_dataset.smiles), 1)
 
+    def test_k_fold_split(self):
+        stss_splitter = SingletaskStratifiedSplitter()
+
+        folds = stss_splitter.k_fold_split(self.dataset_for_k_split, k=3, seed=123)
+
+        for train_df, valid_df in folds:
+            self.assertEqual(len(train_df.y) + len(valid_df.y), len(self.dataset_for_k_split.y))
+
+            self.assertAlmostEqual(
+                len(train_df.y[train_df.y == 1]) / len(train_df.y),
+                len(self.dataset_for_k_split.y[self.dataset_for_k_split.y == 1]) / len(self.dataset_for_k_split.y),
+                delta=0.01)
+            self.assertAlmostEqual(
+                len(valid_df.y[valid_df.y == 1]) / len(valid_df.y),
+                len(self.dataset_for_k_split.y[self.dataset_for_k_split.y == 1]) / len(self.dataset_for_k_split.y),
+                delta=0.01)
+
     def test_similarity_splitter_larger_dataset(self):
         stss_splitter = SingletaskStratifiedSplitter()
 

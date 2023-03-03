@@ -1,4 +1,4 @@
-from unittest import TestCase
+from unittest import TestCase, skip
 
 import numpy as np
 from rdkit import DataStructs
@@ -33,6 +33,15 @@ class TestSimilaritySplitter(TestSplitters, TestCase):
                 counter += 1
 
         self.assertGreater(counter, len(train_dataset.smiles) / 2)
+
+    @skip("Not implemented yet!")
+    def test_k_fold_split(self):
+        similarity_splitter = SimilaritySplitter()
+
+        folds = similarity_splitter.k_fold_split(self.dataset_for_k_split, k=3, seed=123)
+
+        for train_df, valid_df in folds:
+            self.assertEqual(len(train_df.y) + len(valid_df.y), len(self.dataset_for_k_split.y))
 
     def test_similarity_splitter_larger_dataset(self):
         similarity_splitter = SimilaritySplitter()

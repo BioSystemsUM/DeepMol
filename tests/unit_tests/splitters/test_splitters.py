@@ -90,6 +90,22 @@ class TestSplitters(ABC):
                                                                                 mols=self.binary_dataset.mols[arg],
                                                                                 y=self.binary_dataset.y[arg])
 
+        dataset = os.path.join(TEST_DIR, "data", "train_dataset.csv")
+        td = pd.read_csv(dataset, sep=',')
+        y = td.y.values
+        feature_names = td.columns.values[3:]
+        x = td.loc[:, feature_names].values
+        self.dataset_for_k_split = MagicMock(spec=SmilesDataset,
+                                             X=x,
+                                             y=y,
+                                             feature_names=feature_names)
+        self.dataset_for_k_split.X = x
+        self.dataset_for_k_split.y = y
+        self.binary_dataset.__len__.return_value = len(self.binary_dataset.smiles)
+        self.dataset_for_k_split.select_to_split.side_effect = lambda arg: MagicMock(spec=SmilesDataset,
+                                                                                     x=self.dataset_for_k_split.X[arg],
+                                                                                     y=self.dataset_for_k_split.y[arg])
+
     def tearDown(self) -> None:
         if os.path.exists('deepmol.log'):
             os.remove('deepmol.log')
@@ -103,4 +119,8 @@ class TestSplitters(ABC):
 
     @abstractmethod
     def test_split(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def test_k_fold_split(self):
         raise NotImplementedError

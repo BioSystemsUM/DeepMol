@@ -1,4 +1,4 @@
-from unittest import TestCase
+from unittest import TestCase, skip
 
 import numpy as np
 from rdkit import DataStructs
@@ -11,9 +11,9 @@ from unit_tests.splitters.test_splitters import TestSplitters
 class TestScaffoldSplitter(TestSplitters, TestCase):
     
     def test_split(self):
-        similarity_splitter = ScaffoldSplitter()
+        scaffold_splitter = ScaffoldSplitter()
 
-        train_dataset, test_dataset = similarity_splitter.train_test_split(self.mini_dataset_to_test, seed=123)
+        train_dataset, test_dataset = scaffold_splitter.train_test_split(self.mini_dataset_to_test, seed=123)
 
         self.assertGreater(len(train_dataset.smiles), len(test_dataset.smiles))
         self.assertEqual(len(train_dataset.smiles), 4)
@@ -33,10 +33,19 @@ class TestScaffoldSplitter(TestSplitters, TestCase):
 
         self.assertGreater(counter, len(train_dataset.smiles) / 2)
 
-    def test_scaffold_splitter_larger_dataset(self):
-        similarity_splitter = ScaffoldSplitter()
+    @skip("Not implemented yet!")
+    def test_k_fold_split(self):
+        scaffold_splitter = ScaffoldSplitter()
 
-        train_dataset, test_dataset = similarity_splitter.train_test_split(self.dataset_to_test)
+        folds = scaffold_splitter.k_fold_split(self.dataset_for_k_split, k=3, seed=123)
+
+        for train_df, valid_df in folds:
+            self.assertEqual(len(train_df.y) + len(valid_df.y), len(self.dataset_for_k_split.y))
+
+    def test_scaffold_splitter_larger_dataset(self):
+        scaffold_splitter = ScaffoldSplitter()
+
+        train_dataset, test_dataset = scaffold_splitter.train_test_split(self.dataset_to_test)
         self.assertGreater(len(train_dataset.smiles), len(test_dataset.smiles))
 
         fps1 = [AllChem.GetMorganFingerprintAsBitVect(x, 2, 1024) for x in train_dataset.mols]
@@ -57,9 +66,9 @@ class TestScaffoldSplitter(TestSplitters, TestCase):
         self.assertEqual(len(test_dataset.smiles), 859)
 
     def test_scaffold_splitter_larger_dataset_binary_classification(self):
-        similarity_splitter = ScaffoldSplitter()
+        scaffold_splitter = ScaffoldSplitter()
 
-        train_dataset, test_dataset = similarity_splitter.train_test_split(self.binary_dataset, frac_train=0.5)
+        train_dataset, test_dataset = scaffold_splitter.train_test_split(self.binary_dataset, frac_train=0.5)
 
         self.assertEqual(len(train_dataset.smiles), len(test_dataset.smiles))
         self.assertAlmostEqual(
@@ -85,7 +94,7 @@ class TestScaffoldSplitter(TestSplitters, TestCase):
 
         self.assertGreater(counter, len(train_dataset.smiles) / 2)
 
-        train_dataset, valid_dataset, test_dataset = similarity_splitter.train_valid_test_split(self.binary_dataset,
+        train_dataset, valid_dataset, test_dataset = scaffold_splitter.train_valid_test_split(self.binary_dataset,
                                                                                                 frac_train=0.5,
                                                                                                 frac_test=0.3,
                                                                                                 frac_valid=0.2)
@@ -104,9 +113,9 @@ class TestScaffoldSplitter(TestSplitters, TestCase):
             delta=0.01)
 
     def test_scaffold_splitter_invalid_smiles(self):
-        similarity_splitter = ScaffoldSplitter()
+        scaffold_splitter = ScaffoldSplitter()
 
-        train_dataset, test_dataset = similarity_splitter.train_test_split(self.invalid_smiles_dataset)
+        train_dataset, test_dataset = scaffold_splitter.train_test_split(self.invalid_smiles_dataset)
         self.assertEqual(len(train_dataset.smiles), 2)
         self.assertEqual(len(test_dataset.smiles), 1)
 
@@ -115,8 +124,8 @@ class TestScaffoldSplitter(TestSplitters, TestCase):
         self.mini_dataset_to_test.mols = np.concatenate((self.mini_dataset_to_test.mols, to_add))
         self.mini_dataset_to_test.y = np.concatenate((self.mini_dataset_to_test.y, to_add))
 
-        similarity_splitter = ScaffoldSplitter()
+        scaffold_splitter = ScaffoldSplitter()
 
-        train_dataset, test_dataset = similarity_splitter.train_test_split(self.invalid_smiles_dataset)
+        train_dataset, test_dataset = scaffold_splitter.train_test_split(self.invalid_smiles_dataset)
         self.assertEqual(len(train_dataset.smiles), 2)
         self.assertEqual(len(test_dataset.smiles), 1)

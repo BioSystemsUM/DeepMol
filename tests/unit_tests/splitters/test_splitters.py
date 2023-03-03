@@ -102,7 +102,7 @@ class TestSplitters(ABC):
                                              feature_names=feature_names)
         self.dataset_for_k_split.X = x
         self.dataset_for_k_split.y = y
-        self.binary_dataset.__len__.return_value = len(self.binary_dataset.smiles)
+        self.dataset_for_k_split.__len__.return_value = len(self.dataset_for_k_split.smiles)
         self.dataset_for_k_split.select_to_split.side_effect = lambda arg: MagicMock(spec=SmilesDataset,
                                                                                      x=self.dataset_for_k_split.X[arg],
                                                                                      y=self.dataset_for_k_split.y[arg])

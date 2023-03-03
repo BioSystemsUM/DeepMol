@@ -14,14 +14,14 @@ class TestLoggerFeaturizer(TestLogger):
         MorganFingerprint().featurize(self.big_dataset_to_test)
         with open(os.path.join(TEST_DIR, "test.log"), 'r') as f:
             lines = f.readlines()
-            self.assertIn("COc1ccc(CCc2ccccc2CO)cc1O09y78", lines[1])
+            self.assertIn("COc1ccc(CCc2ccccc2CO)cc1O09y78", lines[2])
 
     def test_featurizers_one_job(self):
         self.logger.set_file_path(os.path.join(TEST_DIR, "test.log"))
         MorganFingerprint(n_jobs=1).featurize(self.big_dataset_to_test)
         with open(os.path.join(TEST_DIR, "test.log"), 'r') as f:
             lines = f.readlines()
-            self.assertIn("COc1ccc(CCc2ccccc2CO)cc1O09y78", lines[1])
+            self.assertIn("COc1ccc(CCc2ccccc2CO)cc1O09y78", lines[2])
 
     def test_featurizers_disable_enable_logging(self):
         Logger.disable()

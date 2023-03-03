@@ -15,7 +15,7 @@ from sklearn.model_selection import KFold, StratifiedKFold
 
 from deepmol.loggers.logger import Logger
 from deepmol.splitters._utils import get_train_valid_test_indexes, get_fingerprints_for_each_class, \
-    get_mols_for_each_class, is_regression_dataset
+    get_mols_for_each_class
 
 
 class Splitter(ABC):
@@ -383,7 +383,6 @@ class SimilaritySplitter(Splitter):
               frac_valid: float = 0.1,
               frac_test: float = 0.1,
               seed: int = None,
-              force_label_type: str = 'auto',
               homogenous_threshold: float = 0.7) -> Tuple[List[int], List[int], List[int]]:
 
         """
@@ -402,9 +401,6 @@ class SimilaritySplitter(Splitter):
             Fraction of dataset put into test data.
         seed: int
             Random seed to use.
-        force_label_type: str
-            If 'auto', will try to infer the label type from the dataset. If 'classification', will force the split
-            to be a classification split. If 'regression', will force the split to be a regression split.
         homogenous_threshold: float
             Threshold for similarity, all the compounds with a similarity lower than this threshold will be separated
             in the training set and test set. The higher the threshold is, the more heterogeneous the split will be.
@@ -423,14 +419,7 @@ class SimilaritySplitter(Splitter):
         train_inds = []
         test_valid_inds = []
 
-        if force_label_type == 'auto':
-            is_regression = is_regression_dataset(dataset, self.logger)
-        elif force_label_type == 'classification':
-            is_regression = False
-        elif force_label_type == 'regression':
-            is_regression = True
-        else:
-            raise ValueError("force_label_type must be 'auto', 'classification', or 'regression'.")
+        is_regression = dataset.mode == 'regression'
 
         if not is_regression:
             for class_ in fps_classes_map:
@@ -603,7 +592,6 @@ class ScaffoldSplitter(Splitter):
               frac_valid: float = 0.1,
               frac_test: float = 0.1,
               seed: int = None,
-              force_label_type: str = 'auto',
               homogenous_datasets: bool = True) -> Tuple[List[int], List[int], List[int]]:
         """
         Splits internal compounds into train/validation/test by scaffold.
@@ -620,9 +608,6 @@ class ScaffoldSplitter(Splitter):
             The fraction of data to be used for the test split.
         seed: int
             Random seed to use.
-        force_label_type: str
-            If 'auto', will try to infer the label type from the dataset. If 'classification', will force the split
-            to be a classification split. If 'regression', will force the split to be a regression split.
         homogenous_datasets: bool
             Whether the datasets will be homogenous or not.
 
@@ -633,14 +618,7 @@ class ScaffoldSplitter(Splitter):
         """
         np.testing.assert_almost_equal(frac_train + frac_valid + frac_test, 1.)
 
-        if force_label_type == 'auto':
-            is_regression = is_regression_dataset(dataset, self.logger)
-        elif force_label_type == 'classification':
-            is_regression = False
-        elif force_label_type == 'regression':
-            is_regression = True
-        else:
-            raise ValueError("force_label_type must be 'auto', 'classification', or 'regression'.")
+        is_regression = dataset.mode == 'regression'
 
         train_cutoff = int(frac_train * len(dataset))
         valid_cutoff = int(frac_valid * len(dataset))
@@ -788,7 +766,6 @@ class ButinaSplitter(Splitter):
               frac_valid: float = 0.1,
               frac_test: float = 0.1,
               seed: int = None,
-              force_label_type: str = 'auto',
               homogenous_datasets: bool = True) -> Tuple[List[int], List[int], List[int]]:
         """
         Splits internal compounds into train and validation based on the butina clustering algorithm. The dataset is
@@ -809,9 +786,6 @@ class ButinaSplitter(Splitter):
             The fraction of data to be used for the test split.
         seed: int
             Random seed to use.
-        force_label_type: str
-            If 'auto', will try to infer the label type from the dataset. If 'classification', will force the split
-            to be a classification split. If 'regression', will force the split to be a regression split.
         homogenous_datasets: bool
             Whether the datasets will be homogenous or not.
 
@@ -822,14 +796,7 @@ class ButinaSplitter(Splitter):
         """
         fps_classes_map, indices_classes_map, all_fps = get_fingerprints_for_each_class(dataset)
 
-        if force_label_type == 'auto':
-            is_regression = is_regression_dataset(dataset, self.logger)
-        elif force_label_type == 'classification':
-            is_regression = False
-        elif force_label_type == 'regression':
-            is_regression = True
-        else:
-            raise ValueError("force_label_type must be 'auto', 'classification', or 'regression'.")
+        is_regression = dataset.mode == 'regression'
 
         train_cutoff = int(frac_train * len(dataset))
         valid_cutoff = int(frac_valid * len(dataset))

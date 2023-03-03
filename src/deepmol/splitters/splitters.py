@@ -10,8 +10,7 @@ from rdkit.Chem import Mol
 from rdkit.Chem.Scaffolds.MurckoScaffold import MurckoScaffoldSmiles
 from rdkit.ML.Cluster import Butina
 
-from deepmol.datasets import Dataset, SmilesDataset
-
+from deepmol.datasets import Dataset
 from sklearn.model_selection import KFold, StratifiedKFold
 
 from deepmol.loggers.logger import Logger

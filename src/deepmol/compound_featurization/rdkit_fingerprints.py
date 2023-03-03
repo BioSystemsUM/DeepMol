@@ -3,7 +3,6 @@ from rdkit.Chem import Mol, rdMolDescriptors, MACCSkeys, rdmolops
 from rdkit.Chem.rdMolDescriptors import GetAtomPairAtomCode
 
 from deepmol.compound_featurization import MolecularFeaturizer
-from deepmol.loggers.logger import Logger
 
 
 class MorganFingerprint(MolecularFeaturizer):

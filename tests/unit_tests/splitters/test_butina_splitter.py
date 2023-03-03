@@ -76,7 +76,7 @@ class TestButinaSplitter(TestSplitters, TestCase):
 
         butina_splitter = ButinaSplitter()
 
-        train_dataset, test_dataset = butina_splitter.train_test_split(self.binary_dataset, frac_train=0.7)
+        train_dataset, test_dataset = butina_splitter.train_test_split(self.binary_dataset, frac_train=0.7, seed=123)
 
         self.assertGreater(len(train_dataset.smiles), len(test_dataset.smiles))
         self.assertAlmostEqual(

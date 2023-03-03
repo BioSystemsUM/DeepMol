@@ -23,7 +23,8 @@ class CSVLoader(object):
                  id_field: str = None,
                  labels_fields: List[str] = None,
                  features_fields: List[str] = None,
-                 shard_size: int = None) -> None:
+                 shard_size: int = None,
+                 mode: str = 'auto') -> None:
         """
         Initialize the CSVLoader.
 
@@ -41,6 +42,10 @@ class CSVLoader(object):
             field containing the features
         shard_size: int
             size of the shard to load
+        mode: str
+            The mode of the dataset.
+            If 'auto', the mode is inferred from the labels. If 'classification', the dataset is treated as a
+            classification dataset. If 'regression', the dataset is treated as a regression dataset.
         """
         self.dataset_path = dataset_path
         self.mols_field = smiles_field
@@ -60,6 +65,7 @@ class CSVLoader(object):
             fields2keep.extend(features_fields)
 
         self.fields2keep = fields2keep
+        self.mode = mode
 
     @staticmethod
     def _get_dataset(dataset_path: str,
@@ -131,7 +137,8 @@ class CSVLoader(object):
                              y=y,
                              ids=ids,
                              feature_names=self.features_fields,
-                             label_names=self.labels_fields)
+                             label_names=self.labels_fields,
+                             mode=self.mode)
 
 
 class SDFLoader(object):
@@ -144,7 +151,8 @@ class SDFLoader(object):
                  id_field: str = None,
                  labels_fields: List[str] = None,
                  features_fields: List[str] = None,
-                 shard_size: Optional[int] = None) -> None:
+                 shard_size: Optional[int] = None,
+                 mode: str = 'auto') -> None:
         """
         Initialize the SDFLoader.
 
@@ -160,6 +168,10 @@ class SDFLoader(object):
             field containing the features
         shard_size: int
             size of the shard to load
+        mode: str
+            The mode of the dataset.
+            If 'auto', the mode is inferred from the labels. If 'classification', the dataset is treated as a
+            classification dataset. If 'regression', the dataset is treated as a regression dataset.
         """
         self.dataset_path = dataset_path
         self.id_field = id_field
@@ -179,6 +191,7 @@ class SDFLoader(object):
             fields2keep.extend(features_fields)
 
         self.fields2keep = fields2keep
+        self.mode = mode
 
     @staticmethod
     def _get_dataset(dataset_path: str, chunk_size: int = None) -> np.ndarray:
@@ -250,4 +263,5 @@ class SDFLoader(object):
                                        y=y,
                                        ids=ids,
                                        feature_names=feature_names,
-                                       label_names=self.labels_fields)
+                                       label_names=self.labels_fields,
+                                       mode=self.mode)

@@ -130,7 +130,8 @@ class CSVLoader(object):
                              X=X,
                              y=y,
                              ids=ids,
-                             feature_names=self.features_fields)
+                             feature_names=self.features_fields,
+                             label_names=self.labels_fields)
 
 
 class SDFLoader(object):
@@ -248,4 +249,5 @@ class SDFLoader(object):
                                        X=X,
                                        y=y,
                                        ids=ids,
-                                       feature_names=feature_names)
+                                       feature_names=feature_names,
+                                       label_names=self.labels_fields)

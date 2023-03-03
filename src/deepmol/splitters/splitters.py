@@ -486,7 +486,8 @@ class SimilaritySplitter(Splitter):
                     valid_inds.extend(valid_inds_class_)
 
             else:
-                test_valid_fps = [i for i in range(len(all_fps)) if i in test_valid_inds]
+                test_valid_idx = [i for i in range(len(all_fps)) if i in test_valid_inds]
+                test_valid_fps = [all_fps[i] for i in test_valid_idx]
                 test_inds, valid_inds = self._split_fingerprints(test_valid_fps,
                                                                  test_size,
                                                                  valid_size,

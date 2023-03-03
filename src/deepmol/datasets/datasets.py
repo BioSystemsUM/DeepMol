@@ -173,10 +173,35 @@ class Dataset(ABC):
     def feature_names(self, value: Union[List, np.ndarray]) -> None:
         """
         Set the feature labels of the molecules in the dataset.
+
         Parameters
         ----------
         value: Union[List, np.ndarray]
             Feature names of the molecules.
+        """
+        raise NotImplementedError
+
+    @property
+    def label_names(self) -> np.ndarray:
+        """
+        Get the labels names of the molecules in the dataset.
+
+        Returns
+        -------
+        label_names: np.ndarray
+            Label names of the molecules.
+        """
+        raise NotImplementedError
+
+    @label_names.setter
+    def label_names(self, value: Union[List, np.ndarray]) -> None:
+        """
+        Set the labels names of the molecules in the dataset.
+
+        Parameters
+        ----------
+        value: Union[List, np.ndarray]
+            Label names of the molecules.
         """
         raise NotImplementedError
 
@@ -305,7 +330,8 @@ class SmilesDataset(Dataset):
                  ids: Union[List, np.ndarray] = None,
                  X: Union[List, np.ndarray] = None,
                  feature_names: Union[List, np.ndarray] = None,
-                 y: Union[List, np.ndarray] = None) -> None:
+                 y: Union[List, np.ndarray] = None,
+                 label_names: Union[List, np.ndarray] = None) -> None:
         """
         Initialize a dataset from SMILES strings.
         Parameters
@@ -322,6 +348,8 @@ class SmilesDataset(Dataset):
             Names of the features.
         y: Union[List, np.ndarray]
             Labels of the molecules.
+        label_names: Union[List, np.ndarray]
+            Names of the labels.
         """
         super().__init__()
         self._smiles = np.array(smiles)
@@ -329,11 +357,12 @@ class SmilesDataset(Dataset):
             else np.array([str(uuid.uuid4().hex) for _ in range(len(smiles))])
         self._X = np.array(X) if X is not None else None
         self._y = np.array(y) if y is not None else None
-        self._n_tasks = self._get_n_tasks()
         self._mols = np.array(mols) if mols is not None else np.array([smiles_to_mol(s) for s in self._smiles])
         self.remove_elements([self._ids[i] for i, m in enumerate(self._mols) if m is None])
         self._feature_names = np.array(feature_names) if feature_names is not None else None
+        self._label_names = np.array(label_names) if label_names is not None else None
         self._validate_params()
+        self._n_tasks = len(self._label_names) if self._label_names is not None else 0
 
     @classmethod
     def from_mols(cls,
@@ -341,7 +370,8 @@ class SmilesDataset(Dataset):
                   ids: Union[List, np.ndarray] = None,
                   X: Union[List, np.ndarray] = None,
                   feature_names: Union[List, np.ndarray] = None,
-                  y: Union[List, np.ndarray] = None) -> 'SmilesDataset':
+                  y: Union[List, np.ndarray] = None,
+                  label_names: Union[List, np.ndarray] = None) -> 'SmilesDataset':
         """
         Initialize a dataset from RDKit Mol objects.
 
@@ -357,6 +387,8 @@ class SmilesDataset(Dataset):
             Names of the features.
         y: Union[List, np.ndarray]
             Labels of the molecules.
+        label_names: Union[List, np.ndarray]
+            Names of the labels.
 
         Returns
         -------
@@ -364,7 +396,7 @@ class SmilesDataset(Dataset):
             The dataset instance.
         """
         smiles = np.array([mol_to_smiles(m) for m in mols])
-        return cls(smiles, mols, ids, X, feature_names, y)
+        return cls(smiles, mols, ids, X, feature_names, y, label_names)
 
     def __len__(self) -> int:
         """
@@ -398,6 +430,18 @@ class SmilesDataset(Dataset):
                 self._feature_names = np.array(['feature_0'])
             elif len(self._X.shape) == 2:
                 self._feature_names = np.array([f'feature_{i}' for i in range(self._X.shape[1])])
+        if self._label_names is not None and self._y is not None:
+            if len(self._y.shape) == 1:
+                if len(self._label_names) != 1:
+                    raise ValueError('Length of label_names and y must be the same.')
+            elif len(self._y.shape) == 2:
+                if len(self._label_names) != self._y.shape[1]:
+                    raise ValueError('Length of label_names and y must be the same.')
+        if self._label_names is None and self._y is not None:
+            if len(self._y.shape) == 1:
+                self._label_names = np.array(['y'])
+            elif len(self._y.shape) == 2:
+                self._label_names = np.array([f'y_{i}' for i in range(self._y.shape[1])])
 
     def _reset(self, smiles: Union[np.ndarray, List[str]]) -> None:
         """
@@ -417,6 +461,7 @@ class SmilesDataset(Dataset):
         self._mols = np.array([smiles_to_mol(s) for s in self._smiles])
         self.remove_elements([self._ids[i] for i, m in enumerate(self._mols) if m is None])
         self._feature_names = None
+        self._label_names = None
 
     @property
     def smiles(self) -> np.ndarray:
@@ -483,6 +528,38 @@ class SmilesDataset(Dataset):
         if len(feature_names) != len(set(feature_names)):
             raise ValueError('The feature names must be unique.')
         self._feature_names = np.array([str(fn) for fn in feature_names])
+
+    @property
+    def label_names(self) -> np.ndarray:
+        """
+        Get the label names of the molecules in the dataset.
+        Returns
+        -------
+        np.ndarray
+            Label names of the molecules in the dataset.
+        """
+        return self._label_names
+
+    @label_names.setter
+    def label_names(self, label_names: Union[List, np.ndarray]) -> None:
+        """
+        Set the label names of the molecules in the dataset.
+        Parameters
+        ----------
+        label_names: Union[List, np.ndarray]
+            Label names of the molecules.
+        """
+        if self._y is None:
+            raise ValueError('The labels must be set before setting the label names.')
+        if len(self._y.shape) == 1:
+            if len(label_names) != 1:
+                raise ValueError('The number of label names must be equal to the number of labels.')
+        else:
+            if len(label_names) != len(self._y[0]):
+                raise ValueError('The number of label names must be equal to the number of labels.')
+        if len(label_names) != len(set(label_names)):
+            raise ValueError('The label names must be unique.')
+        self._label_names = np.array([str(ln) for ln in label_names])
 
     @property
     def X(self) -> np.ndarray:
@@ -564,20 +641,6 @@ class SmilesDataset(Dataset):
         y_shape = self._y.shape if self._y else None
         self.logger.info(f'Labels_shape: {y_shape}')
         return smiles_shape, x_shape, y_shape
-
-    def _get_n_tasks(self) -> int:
-        """
-        Get the number of tasks in the dataset based on the shape of the labels (y).
-        Returns
-        -------
-        int
-            Number of tasks in the dataset.
-        """
-        if self._y is None:
-            return 0
-        if len(self._y.shape) == 1:
-            return 1
-        return self._y.shape[1]
 
     def remove_duplicates(self) -> None:
         """
@@ -750,6 +813,7 @@ class SmilesDataset(Dataset):
         mols = self._mols
         smiles = self._smiles
         feature_names = self._feature_names
+        label_names = self._label_names
 
         for ds in datasets:
             ids = merge_arrays(ids, len(mols), ds.ids, len(ds.mols))
@@ -765,7 +829,7 @@ class SmilesDataset(Dataset):
                 X = merge_arrays_of_arrays(X, ds.X)
             mols = np.append(mols, ds.mols, axis=0)
             smiles = np.append(smiles, ds.smiles, axis=0)
-        return SmilesDataset(smiles, mols, ids, X, feature_names, y)
+        return SmilesDataset(smiles, mols, ids, X, feature_names, y, label_names)
 
     def to_csv(self, path: str) -> None:
         """
@@ -779,7 +843,9 @@ class SmilesDataset(Dataset):
         df['ids'] = pd.Series(self._ids)
         df['smiles'] = pd.Series(self._smiles)
         if self._y is not None:
-            df['y'] = pd.Series(self.y)
+            label_names = self._label_names
+            df_y = pd.DataFrame(self._y, columns=label_names)
+            df = pd.concat([df, df_y], axis=1)
         if self._X is not None:
             columns_names = self._feature_names
             df_x = pd.DataFrame(self._X, columns=columns_names)

@@ -295,7 +295,7 @@ class SingletaskStratifiedSplitter(Splitter):
                                dataset.feature_names,
                                dataset.y)
 
-        skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=seed)  # changed so that users can define the seed
+        skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=seed)
 
         train_datasets = []
         test_datasets = []
@@ -311,7 +311,7 @@ class SingletaskStratifiedSplitter(Splitter):
               frac_valid: float = 0.1,
               frac_test: float = 0.1,
               seed: int = None,
-              log_every_n: int = None,
+              force_split: bool = False,
               **kwargs) -> Tuple[List[int], List[int], List[int]]:
         """
         Splits compounds into train/validation/test using stratified sampling.
@@ -328,8 +328,8 @@ class SingletaskStratifiedSplitter(Splitter):
             Fraction of dataset put into test data.
         seed: int
             Random seed to use.
-        log_every_n: int
-            Log every n examples (not currently used).
+        force_split: bool
+            If True, will force the split without checking if it is a regression or classification label.
 
         Returns
         -------
@@ -342,26 +342,38 @@ class SingletaskStratifiedSplitter(Splitter):
         if seed is not None:
             np.random.seed(seed)
 
-        sortidx = np.argsort(dataset.y)
-
-        split_cd = 10
-        train_cutoff = int(np.round(frac_train * split_cd))
-        valid_cutoff = int(np.round(frac_valid * split_cd)) + train_cutoff
-
         train_idx = np.array([])
         valid_idx = np.array([])
         test_idx = np.array([])
 
-        while sortidx.shape[0] >= split_cd:
-            sortidx_split, sortidx = np.split(sortidx, [split_cd])
-            shuffled = np.random.permutation(range(split_cd))
-            train_idx = np.hstack([train_idx, sortidx_split[shuffled[:train_cutoff]]])
-            valid_idx = np.hstack([valid_idx, sortidx_split[shuffled[train_cutoff:valid_cutoff]]])
-            test_idx = np.hstack([test_idx, sortidx_split[shuffled[valid_cutoff:]]])
+        # divide idx by y value
+        classes = np.unique(dataset.y)
+        if not force_split:
+            # check if regression or classification (assume regression if there are more than 10 unique y values)
+            if len(classes) > 10:
+                raise ValueError("Cannot stratify by regression labels. Use other splitter instead. "
+                                 "If you want to force the split, set force_split=True.")
+        remaining_idx = []
+        idx_by_class = {}
+        for c in classes:
+            idx_by_class[c] = np.where(dataset.y == c)[0]
+            np.random.shuffle(idx_by_class[c])
+            train_stop = int(frac_train * len(idx_by_class[c]))
+            valid_stop = int(train_stop + (frac_valid * len(idx_by_class[c])))
+            test_stop = int(valid_stop + (frac_test * len(idx_by_class[c])))
+            train_idx = np.hstack([train_idx, idx_by_class[c][:train_stop]])
+            valid_idx = np.hstack([valid_idx, idx_by_class[c][train_stop:valid_stop]])
+            test_idx = np.hstack([test_idx, idx_by_class[c][valid_stop:test_stop]])
+            remaining_idx.extend(idx_by_class[c][test_stop:])
 
-        # Append remaining examples to train
-        if sortidx.shape[0] > 0:
-            np.hstack([train_idx, sortidx])
+        # divide remaining idx randomly by test, valid and test (according to frac_test, frac_valid, frac_test)
+        if len(remaining_idx) > 0:
+            np.random.shuffle(remaining_idx)
+            train_remaining = int(frac_train * len(dataset.y)) - len(train_idx)
+            train_idx = np.hstack([train_idx, remaining_idx[:train_remaining]])
+            valid_remaining = int(frac_valid * len(dataset.y)) - len(valid_idx)
+            valid_idx = np.hstack([valid_idx, remaining_idx[train_remaining:train_remaining + valid_remaining]])
+            test_idx = np.hstack([test_idx, remaining_idx[train_remaining + valid_remaining:]])
 
         train_indexes = list(map(int, train_idx))
         valid_indexes = list(map(int, valid_idx))

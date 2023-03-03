@@ -3,6 +3,7 @@ from abc import abstractmethod, ABC
 from unittest.mock import MagicMock
 
 import pandas as pd
+from rdkit import DataStructs
 from rdkit.Chem import MolFromSmiles
 
 from deepmol.datasets import SmilesDataset
@@ -116,6 +117,16 @@ class TestSplitters(ABC):
             return MolFromSmiles(smiles)
         except:
             return None
+
+    @staticmethod
+    def _calculate_mean_fingerprints_smilarity(fps):
+        # Calculate pairwise Tanimoto similarity
+        similarity_matrix = np.zeros((len(fps), len(fps)))
+        for i in range(len(fps)):
+            for j in range(i + 1, len(fps)):
+                similarity_matrix[i, j] = DataStructs.TanimotoSimilarity(fps[i], fps[j])
+                similarity_matrix[j, i] = similarity_matrix[i, j]  # matrix is symmetric
+        return np.mean(similarity_matrix)
 
     @abstractmethod
     def test_split(self):

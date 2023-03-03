@@ -20,20 +20,6 @@ class TestSimilaritySplitter(TestSplitters, TestCase):
         self.assertEqual(len(train_dataset.smiles), 4)
         self.assertEqual(len(test_dataset.smiles), 1)
 
-        fps1 = [AllChem.GetMorganFingerprintAsBitVect(x, 2, 1024) for x in train_dataset.mols]
-
-        mol2 = test_dataset.mols[0]
-        fp2 = AllChem.GetMorganFingerprintAsBitVect(mol2, 2, 1024)
-
-        sim_to_compare = DataStructs.TanimotoSimilarity(fps1[0], fps1[1])
-        counter = 0
-        for fp in fps1:
-            sim = DataStructs.TanimotoSimilarity(fp, fp2)
-            if sim_to_compare > sim:
-                counter += 1
-
-        self.assertGreater(counter, len(train_dataset.smiles) / 2)
-
     @skip("Not implemented yet!")
     def test_k_fold_split(self):
         similarity_splitter = SimilaritySplitter()
@@ -46,25 +32,23 @@ class TestSimilaritySplitter(TestSplitters, TestCase):
     def test_similarity_splitter_larger_dataset(self):
         similarity_splitter = SimilaritySplitter()
 
-        train_dataset, test_dataset = similarity_splitter.train_test_split(self.dataset_to_test)
+        train_dataset, test_dataset = similarity_splitter.train_test_split(self.dataset_to_test,
+                                                                           homogenous_threshold=0.5)
 
         self.assertGreater(len(train_dataset.smiles), len(test_dataset.smiles))
         self.assertEqual(len(train_dataset.smiles), 3435)
         self.assertEqual(len(test_dataset.smiles), 859)
 
-        fps1 = [AllChem.GetMorganFingerprintAsBitVect(x, 2, 1024) for x in train_dataset.mols]
+        fps_train = [AllChem.GetMorganFingerprintAsBitVect(AllChem.MolFromSmiles(s), 2) for s in train_dataset.smiles]
+        fps_test = [AllChem.GetMorganFingerprintAsBitVect(AllChem.MolFromSmiles(s), 2) for s in test_dataset.smiles]
 
-        mol2 = test_dataset.mols[0]
-        fp2 = AllChem.GetMorganFingerprintAsBitVect(mol2, 2, 1024)
+        for i, fp_train in enumerate(fps_train):
+            mean_sim = DataStructs.BulkTanimotoSimilarity(fps_train[i], fps_train[:i] + fps_train[i + 1:])
+            self.assertLessEqual(np.mean(mean_sim), 0.5)
 
-        sim_to_compare = DataStructs.TanimotoSimilarity(fps1[0], fps1[1])
-        counter = 0
-        for fp in fps1:
-            sim = DataStructs.TanimotoSimilarity(fp, fp2)
-            if sim_to_compare > sim:
-                counter += 1
-
-        self.assertGreater(counter, len(train_dataset.smiles) / 2)
+        for i, fp_test in enumerate(fps_test):
+            mean_sim = DataStructs.BulkTanimotoSimilarity(fp_test, fps_train)
+            self.assertLessEqual(np.mean(mean_sim), 0.5)
 
     def test_similarity_splitter_larger_dataset_binary_classification(self):
         similarity_splitter = SimilaritySplitter()
@@ -80,20 +64,6 @@ class TestSimilaritySplitter(TestSplitters, TestCase):
             len(test_dataset.y[test_dataset.y == 1]) / len(test_dataset.y),
             len(self.binary_dataset.y[self.binary_dataset.y == 1]) / len(self.binary_dataset.y),
             delta=0.01)
-
-        fps1 = [AllChem.GetMorganFingerprintAsBitVect(x, 2, 1024) for x in train_dataset.mols]
-
-        mol2 = test_dataset.mols[0]
-        fp2 = AllChem.GetMorganFingerprintAsBitVect(mol2, 2, 1024)
-
-        sim_to_compare = DataStructs.TanimotoSimilarity(fps1[0], fps1[1])
-        counter = 0
-        for fp in fps1:
-            sim = DataStructs.TanimotoSimilarity(fp, fp2)
-            if sim_to_compare > sim:
-                counter += 1
-
-        self.assertGreater(counter, len(train_dataset.smiles) / 2)
 
         train_dataset, valid_dataset, test_dataset = similarity_splitter.train_valid_test_split(self.binary_dataset,
                                                                                                 frac_train=0.8,

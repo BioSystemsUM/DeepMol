@@ -31,23 +31,22 @@ class TestButinaSplitter(TestSplitters, TestCase):
     def test_butina_splitter_larger_dataset(self):
         butina_splitter = ButinaSplitter()
 
-        train_dataset, test_dataset = butina_splitter.train_test_split(self.dataset_to_test,
-                                                                           homogenous_datasets=True)
+        train_dataset, test_dataset = butina_splitter.train_test_split(self.dataset_to_test)
         self.assertGreater(len(train_dataset.smiles), len(test_dataset.smiles))
 
-        fps1 = [AllChem.GetMorganFingerprintAsBitVect(x, 2, 1024) for x in train_dataset.mols]
+        fps_train = [AllChem.GetMorganFingerprintAsBitVect(x, 2, 1024) for x in train_dataset.mols]
+        fps_test = [AllChem.GetMorganFingerprintAsBitVect(x, 2, 1024) for x in test_dataset.mols]
 
-        mol2 = test_dataset.mols[0]
-        fp2 = AllChem.GetMorganFingerprintAsBitVect(mol2, 2, 1024)
+        sim_train = self._calculate_mean_fingerprints_smilarity(fps_train)
 
-        sim_to_compare = DataStructs.TanimotoSimilarity(fps1[0], fps1[1])
         counter = 0
-        for fp in fps1:
-            sim = DataStructs.TanimotoSimilarity(fp, fp2)
-            if sim_to_compare > sim:
+        for fp in fps_test:
+            sim = np.mean(DataStructs.BulkTanimotoSimilarity(fp, fps_train))
+            if sim > sim_train:
                 counter += 1
 
-        self.assertGreater(counter, len(train_dataset.smiles) / 2)
+        self.assertGreater(counter, len(test_dataset.smiles) / 2)
+        self.assertEqual(len(train_dataset.smiles) + len(test_dataset.smiles), len(self.dataset_to_test.smiles))
         self.assertEqual(len(train_dataset.smiles), 3435)
         self.assertEqual(len(test_dataset.smiles), 859)
 
@@ -89,27 +88,77 @@ class TestButinaSplitter(TestSplitters, TestCase):
             len(self.binary_dataset.y[self.binary_dataset.y == 1]) / len(self.binary_dataset.y),
             delta=0.01)
 
-        fps1 = [AllChem.GetMorganFingerprintAsBitVect(x, 2, 1024) for x in train_dataset.mols]
+        fps_train = [AllChem.GetMorganFingerprintAsBitVect(x, 2, 1024) for x in train_dataset.mols]
+        fps_test = [AllChem.GetMorganFingerprintAsBitVect(x, 2, 1024) for x in test_dataset.mols]
 
-        mol2 = test_dataset.mols[0]
-        fp2 = AllChem.GetMorganFingerprintAsBitVect(mol2, 2, 1024)
+        sim_train = self._calculate_mean_fingerprints_smilarity(fps_train)
 
-        sim_to_compare = DataStructs.TanimotoSimilarity(fps1[0], fps1[1])
         counter = 0
-        for fp in fps1:
-            sim = DataStructs.TanimotoSimilarity(fp, fp2)
-            if sim_to_compare > sim:
+        for fp in fps_test:
+            sim = np.mean(DataStructs.BulkTanimotoSimilarity(fp, fps_train))
+            if sim > sim_train:
                 counter += 1
 
-        self.assertGreater(counter, len(train_dataset.smiles) / 2)
+        self.assertGreater(counter, len(test_dataset.smiles) / 2)
 
         train_dataset, valid_dataset, test_dataset = butina_splitter.train_valid_test_split(self.binary_dataset,
-                                                                                                frac_train=0.5,
-                                                                                                frac_test=0.3,
-                                                                                                frac_valid=0.2)
+                                                                                            frac_train=0.5,
+                                                                                            frac_test=0.3,
+                                                                                            frac_valid=0.2)
 
         self.assertGreater(len(train_dataset.smiles), len(test_dataset.smiles))
         self.assertGreater(len(train_dataset.smiles), len(valid_dataset.smiles))
+
+        self.assertAlmostEqual(
+            len(train_dataset.y[train_dataset.y == 1]) / len(train_dataset.y),
+            len(self.binary_dataset.y[self.binary_dataset.y == 1]) / len(self.binary_dataset.y),
+            delta=0.01)
+        self.assertAlmostEqual(
+            len(test_dataset.y[test_dataset.y == 1]) / len(test_dataset.y),
+            len(self.binary_dataset.y[self.binary_dataset.y == 1]) / len(self.binary_dataset.y),
+            delta=0.01)
+        self.assertAlmostEqual(
+            len(valid_dataset.y[valid_dataset.y == 1]) / len(valid_dataset.y),
+            len(self.binary_dataset.y[self.binary_dataset.y == 1]) / len(self.binary_dataset.y),
+            delta=0.01)
+
+    def test_scaffold_spliter_non_homogenous_dataset(self):
+        butina_splitter = ButinaSplitter()
+
+        train_dataset, test_dataset = butina_splitter.train_test_split(self.binary_dataset,
+                                                                       frac_train=0.5,
+                                                                       seed=123,
+                                                                       homogenous_datasets=False)
+
+        self.assertEqual(len(train_dataset.smiles), len(test_dataset.smiles))
+        self.assertAlmostEqual(
+            len(train_dataset.y[train_dataset.y == 1]) / len(train_dataset.y),
+            len(self.binary_dataset.y[self.binary_dataset.y == 1]) / len(self.binary_dataset.y),
+            delta=0.01)
+        self.assertAlmostEqual(
+            len(test_dataset.y[test_dataset.y == 1]) / len(test_dataset.y),
+            len(self.binary_dataset.y[self.binary_dataset.y == 1]) / len(self.binary_dataset.y),
+            delta=0.01)
+
+        fps_train = [AllChem.GetMorganFingerprintAsBitVect(x, 2, 1024) for x in train_dataset.mols]
+        fps_test = [AllChem.GetMorganFingerprintAsBitVect(x, 2, 1024) for x in test_dataset.mols]
+
+        sim_train = self._calculate_mean_fingerprints_smilarity(fps_train)
+
+        counter = 0
+        for fp in fps_test:
+            sim = np.mean(DataStructs.BulkTanimotoSimilarity(fp, fps_train))
+            if sim > sim_train:
+                counter += 1
+
+        self.assertLess(counter, len(test_dataset.smiles) / 2)
+        self.assertEqual(len(train_dataset.smiles) + len(test_dataset.smiles), len(self.binary_dataset.smiles))
+
+        train_dataset, valid_dataset, test_dataset = butina_splitter.train_valid_test_split(self.binary_dataset,
+                                                                                            frac_train=0.5,
+                                                                                            frac_test=0.3,
+                                                                                            frac_valid=0.2,
+                                                                                            homogenous_datasets=False)
 
         self.assertAlmostEqual(
             len(train_dataset.y[train_dataset.y == 1]) / len(train_dataset.y),

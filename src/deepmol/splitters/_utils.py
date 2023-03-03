@@ -5,7 +5,6 @@ import numpy as np
 from rdkit.Chem import AllChem
 
 from deepmol.datasets import Dataset
-from deepmol.loggers import Logger
 
 
 def get_train_valid_test_indexes(scaffold_sets: List[List[int]],
@@ -138,29 +137,3 @@ def get_fingerprints_for_each_class(dataset: Dataset):
             indices_classes_map[dataset.y[i]].append(i)
 
     return fps_classes_map, indices_classes_map, all_fps
-
-
-def is_regression_dataset(dataset: Dataset, logger: Logger) -> bool:
-    """
-    Get the label type.
-
-    Parameters
-    ----------
-    dataset: Dataset
-        The dataset.
-    logger: Logger
-        The logger.
-
-    Returns
-    -------
-    bool:
-        True if the dataset is a regression dataset, False otherwise.
-    """
-    classes = np.unique(dataset.y)
-    if len(classes) > 10:
-        logger.warning("Assuming regression since there are more than 10 unique y values.")
-        return True
-    else:
-        logger.info("Assuming classification since there are less than 10 unique y values. If this is "
-                    "incorrect, set force_regression=True.")
-        return False

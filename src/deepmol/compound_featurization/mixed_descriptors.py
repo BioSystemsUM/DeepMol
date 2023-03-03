@@ -35,7 +35,7 @@ class MixedFeaturizer(MolecularFeaturizer):
         Returns
         -------
         np.ndarray
-          A numpy array of concatenared features.
+          A numpy array of concatenated features.
         """
         final_features = np.array([])
         for featurizer in self.featurizers:

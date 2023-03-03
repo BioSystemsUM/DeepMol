@@ -83,10 +83,13 @@ class DeepchemBaseSearchCV(object):
         dataset: Dataset
             The dataset to use for the hyperparameter search.
         """
+        if self.mode != dataset.mode:
+            raise ValueError(f'The mode of the model and the dataset must be the same. Got {self.mode} and '
+                             f'{dataset.mode} respectively.')
         results_dict = defaultdict(list)
 
         # split dataset into folds
-        if self.mode == 'classification':
+        if dataset.mode == 'classification':
             splitter = SingletaskStratifiedSplitter()
         else:
             splitter = RandomSplitter()

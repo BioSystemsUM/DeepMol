@@ -81,6 +81,8 @@ class KerasModel(Model):
         dataset: Dataset
             The `Dataset` to train this model on.
         """
+        if self.mode  != dataset.mode:
+            raise ValueError('Dataset mode does not match model mode.')
         features = dataset.X
         y = np.squeeze(dataset.y)
         self.model.fit(features, y)
@@ -178,9 +180,9 @@ class KerasModel(Model):
         """
         # TODO: add option to choose between splitters
         splitter = None
-        if self.mode == 'classification':
+        if dataset.mode == 'classification':
             splitter = SingletaskStratifiedSplitter()
-        if self.mode == 'regression':
+        if dataset.mode == 'regression':
             splitter = RandomSplitter()
 
         assert splitter is not None

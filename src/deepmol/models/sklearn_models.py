@@ -72,6 +72,9 @@ class SklearnModel(Model):
         BaseEstimator
             The trained scikit-learn model.
         """
+        if self.mode != dataset.mode:
+            raise ValueError(f'The mode of the dataset must match the mode of the model. '
+                             'Got {dataset.mode} for dataset and {self.mode} for model.')
         features = dataset.X
         y = np.squeeze(dataset.y)
         return self.model.fit(features, y)
@@ -148,10 +151,10 @@ class SklearnModel(Model):
             of all folds and the sixth is the average test score of all folds.
         """
         # TODO: add option to choose between splitters
-        if self.mode == 'classification':
+        if dataset.mode == 'classification':
             splitter = SingletaskStratifiedSplitter()
             datasets = splitter.k_fold_split(dataset, folds)
-        elif self.mode == 'regression':
+        elif dataset.mode == 'regression':
             splitter = RandomSplitter()
             datasets = splitter.k_fold_split(dataset, folds)
         else:

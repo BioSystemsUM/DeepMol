@@ -837,7 +837,9 @@ class SmilesDataset(Dataset):
         y = self._y[indexes] if self._y is not None else None
         ids = self._ids[indexes]
         feature_names = self._feature_names
-        return SmilesDataset(smiles, mols, ids, X, feature_names, y)
+        label_names = self._label_names
+        mode = self._mode
+        return SmilesDataset(smiles, mols, ids, X, feature_names, y, label_names, mode)
 
     def select(self, indexes: Union[List[str], List[int]], axis: int = 0) -> None:
         """
@@ -896,6 +898,7 @@ class SmilesDataset(Dataset):
         smiles = self._smiles
         feature_names = self._feature_names
         label_names = self._label_names
+        mode = self._mode
 
         for ds in datasets:
             ids = merge_arrays(ids, len(mols), ds.ids, len(ds.mols))
@@ -911,7 +914,7 @@ class SmilesDataset(Dataset):
                 X = merge_arrays_of_arrays(X, ds.X)
             mols = np.append(mols, ds.mols, axis=0)
             smiles = np.append(smiles, ds.smiles, axis=0)
-        return SmilesDataset(smiles, mols, ids, X, feature_names, y, label_names)
+        return SmilesDataset(smiles, mols, ids, X, feature_names, y, label_names, mode)
 
     def to_csv(self, path: str) -> None:
         """

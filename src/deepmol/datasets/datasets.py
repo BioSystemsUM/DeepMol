@@ -705,7 +705,7 @@ class SmilesDataset(Dataset):
         mode: str
             The mode of the dataset.
         """
-        if mode not in ['classification', 'regression']:
+        if mode not in ['classification', 'regression', None]:
             raise ValueError('The mode must be either "classification" or "regression".')
         self._mode = mode
 

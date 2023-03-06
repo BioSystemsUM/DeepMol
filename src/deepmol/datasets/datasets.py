@@ -724,9 +724,9 @@ class SmilesDataset(Dataset):
         """
         smiles_shape = self._smiles.shape
         self.logger.info(f'Mols_shape: {smiles_shape}')
-        x_shape = self._X.shape if self._X else None
+        x_shape = self._X.shape if self._X is not None else None
         self.logger.info(f'Features_shape: {x_shape}')
-        y_shape = self._y.shape if self._y else None
+        y_shape = self._y.shape if self._y is not None else None
         self.logger.info(f'Labels_shape: {y_shape}')
         return smiles_shape, x_shape, y_shape
 

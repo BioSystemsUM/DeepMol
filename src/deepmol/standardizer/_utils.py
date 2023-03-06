@@ -263,8 +263,6 @@ def remove_hydrogens(mol: Mol) -> Mol:
     ----------
     mol: Mol
         RDKit Mol object
-    addCoords: bool
-        Add coordinate to added Hs
 
     Returns
     ----------

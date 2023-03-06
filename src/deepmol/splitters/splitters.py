@@ -51,8 +51,6 @@ class Splitter(ABC):
             The fraction of data to be used for the test split.
         seed: int
             Random seed to use.
-        log_every_n: int
-            Controls the logger by dictating how often logger outputs will be produced.
         **kwargs: Dict[str, Any]
             Other arguments.
 

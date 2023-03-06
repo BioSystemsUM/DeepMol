@@ -5,10 +5,10 @@ from rdkit import DataStructs
 from rdkit.Chem import AllChem
 
 from deepmol.splitters import ScaffoldSplitter
-from unit_tests.splitters.test_splitters import TestSplitters
+from unit_tests.splitters.test_splitters import SplittersTestCase
 
 
-class TestScaffoldSplitter(TestSplitters, TestCase):
+class ScaffoldSplitterTestCase(SplittersTestCase, TestCase):
 
     def test_split(self):
         scaffold_splitter = ScaffoldSplitter()

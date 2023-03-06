@@ -1,14 +1,12 @@
 import copy
 from unittest import TestCase, skip
 
-import numpy as np
-
 from deepmol.scalers import StandardScaler, MinMaxScaler, MaxAbsScaler, RobustScaler, PolynomialFeatures, Normalizer, \
     Binarizer, KernelCenterer, QuantileTransformer, PowerTransformer
-from unit_tests.scalers.test_scalers import TestScalers
+from unit_tests.scalers.test_scalers import ScalersTestCase
 
 
-class TestSklearnScalers(TestScalers, TestCase):
+class SklearnScalersTestCase(ScalersTestCase, TestCase):
 
     @staticmethod
     def get_scalers():

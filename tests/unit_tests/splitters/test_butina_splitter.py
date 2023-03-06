@@ -5,10 +5,10 @@ from rdkit import DataStructs
 from rdkit.Chem import AllChem
 
 from deepmol.splitters import ButinaSplitter
-from unit_tests.splitters.test_splitters import TestSplitters
+from unit_tests.splitters.test_splitters import SplittersTestCase
 
 
-class TestButinaSplitter(TestSplitters, TestCase):
+class ButinaSplitterTestCase(SplittersTestCase, TestCase):
 
     def test_split(self):
         butina_splitter = ButinaSplitter()

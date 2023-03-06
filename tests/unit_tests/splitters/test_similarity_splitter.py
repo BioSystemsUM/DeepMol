@@ -5,10 +5,10 @@ from rdkit import DataStructs
 from rdkit.Chem import AllChem
 
 from deepmol.splitters import SimilaritySplitter
-from unit_tests.splitters.test_splitters import TestSplitters
+from unit_tests.splitters.test_splitters import SplittersTestCase
 
 
-class TestSimilaritySplitter(TestSplitters, TestCase):
+class SimilaritySplitterTestCase(SplittersTestCase, TestCase):
 
     def test_split(self):
         similarity_splitter = SimilaritySplitter()

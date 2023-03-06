@@ -9,7 +9,7 @@ from deepmol.datasets import SmilesDataset
 from tests import TEST_DIR
 
 
-class TestScalers(ABC):
+class ScalersTestCase(ABC):
 
     def setUp(self) -> None:
         dataset = os.path.join(TEST_DIR, "data", "train_dataset.csv")

@@ -3,10 +3,10 @@ from unittest import TestCase
 import numpy as np
 
 from deepmol.splitters import RandomSplitter
-from unit_tests.splitters.test_splitters import TestSplitters
+from unit_tests.splitters.test_splitters import SplittersTestCase
 
 
-class TestRandomSplitter(TestSplitters, TestCase):
+class RandomSplitterTestCase(SplittersTestCase, TestCase):
 
     def test_split(self):
         random_splitter = RandomSplitter()

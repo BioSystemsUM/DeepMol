@@ -3,10 +3,10 @@ from unittest import TestCase
 import numpy as np
 
 from deepmol.splitters import SingletaskStratifiedSplitter
-from unit_tests.splitters.test_splitters import TestSplitters
+from unit_tests.splitters.test_splitters import SplittersTestCase
 
 
-class TestSingleTaskStratifiedSplitter(TestSplitters, TestCase):
+class SingleTaskStratifiedSplitterTestCase(SplittersTestCase, TestCase):
 
     def test_split(self):
         stss_splitter = SingletaskStratifiedSplitter()

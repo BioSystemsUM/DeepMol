@@ -13,7 +13,7 @@ import numpy as np
 from tests import TEST_DIR
 
 
-class TestSplitters(ABC):
+class SplittersTestCase(ABC):
 
     def setUp(self) -> None:
         data_path = os.path.join(TEST_DIR, 'data/test_to_convert_to_sdf.csv')

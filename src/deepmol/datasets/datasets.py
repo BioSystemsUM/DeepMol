@@ -158,6 +158,7 @@ class Dataset(ABC):
         raise NotImplementedError
 
     @property
+    @abstractmethod
     def feature_names(self) -> np.ndarray:
         """
         Get the feature labels of the molecules in the dataset.
@@ -170,6 +171,7 @@ class Dataset(ABC):
         raise NotImplementedError
 
     @feature_names.setter
+    @abstractmethod
     def feature_names(self, value: Union[List, np.ndarray]) -> None:
         """
         Set the feature labels of the molecules in the dataset.
@@ -182,6 +184,7 @@ class Dataset(ABC):
         raise NotImplementedError
 
     @property
+    @abstractmethod
     def label_names(self) -> np.ndarray:
         """
         Get the labels names of the molecules in the dataset.
@@ -194,6 +197,7 @@ class Dataset(ABC):
         raise NotImplementedError
 
     @label_names.setter
+    @abstractmethod
     def label_names(self, value: Union[List, np.ndarray]) -> None:
         """
         Set the labels names of the molecules in the dataset.
@@ -360,6 +364,7 @@ class SmilesDataset(Dataset):
                  mode: str = 'auto') -> None:
         """
         Initialize a dataset from SMILES strings.
+
         Parameters
         ----------
         smiles: Union[np.ndarray, List[str]]
@@ -499,6 +504,7 @@ class SmilesDataset(Dataset):
         self.remove_elements([self._ids[i] for i, m in enumerate(self._mols) if m is None])
         self._feature_names = None
         self._label_names = None
+        self.mode = None
 
     def _infer_mode(self) -> Union[str, None]:
         """

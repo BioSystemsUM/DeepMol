@@ -40,4 +40,4 @@ class TestScalers(ABC):
 
     @abstractmethod
     def test_scaler(self):
-        pass
+        raise NotImplementedError

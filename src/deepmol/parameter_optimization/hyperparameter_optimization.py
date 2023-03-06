@@ -214,8 +214,6 @@ class HyperparameterOptimizerValidation(HyperparameterOptimizer):
 
         hyperparams = params_dict.keys()
         hyperparam_vals = params_dict.values()
-        for hyperparam_list in params_dict.values():
-            assert isinstance(hyperparam_list, collections.Iterable)
 
         number_combinations = reduce(mul, [len(vals) for vals in hyperparam_vals])
 
@@ -258,10 +256,14 @@ class HyperparameterOptimizerValidation(HyperparameterOptimizer):
                     model_dir = tempfile.mkdtemp()
 
                 try:
-                    model = SklearnModel(self.model_builder(**model_params), model_dir)
+                    model = SklearnModel(model=self.model_builder(**model_params),
+                                         mode=self.mode,
+                                         model_dir=model_dir)
 
                 except Exception as e:
-                    model = KerasModel(self.model_builder(**model_params), model_dir)
+                    model = KerasModel(model_builder=self.model_builder(**model_params),
+                                       mode=self.mode,
+                                       model_dir=model_dir)
 
                 model.fit(train_dataset)
 

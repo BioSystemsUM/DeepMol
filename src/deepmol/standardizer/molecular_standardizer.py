@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Union, Tuple
+from typing import Tuple
 
 import numpy as np
-from rdkit import Chem
 from rdkit.Chem import Mol
 
 from deepmol.datasets import Dataset

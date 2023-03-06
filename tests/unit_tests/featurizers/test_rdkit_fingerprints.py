@@ -5,7 +5,6 @@ from deepmol.compound_featurization import MorganFingerprint, \
     MACCSkeysFingerprint, \
     LayeredFingerprint, RDKFingerprint, AtomPairFingerprint
 from tests.unit_tests.featurizers.test_featurizers import FeaturizerTestCase
-import numpy as np
 
 
 class TestRDKitFingerprints(FeaturizerTestCase, TestCase):

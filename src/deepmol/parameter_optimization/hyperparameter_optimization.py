@@ -1,4 +1,3 @@
-import collections
 import itertools
 import os
 import random

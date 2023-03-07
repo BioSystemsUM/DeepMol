@@ -17,12 +17,12 @@ class ModelsTestCase(ABC):
 
         self.mini_dataset_to_test = loader.create_dataset(sep=';')
 
-        dataset = os.path.join(self.data_path, "train_dataset.csv")
+        dataset = os.path.join(self.data_path, "small_train_dataset.csv")
         loader = CSVLoader(dataset,
                            smiles_field='mols',
                            labels_fields=['y'])
 
-        self.larger_dataset_to_test = loader.create_dataset(sep=',')
+        self.train_dataset = loader.create_dataset(sep=',')
 
     def tearDown(self) -> None:
         if os.path.exists('deepmol.log'):

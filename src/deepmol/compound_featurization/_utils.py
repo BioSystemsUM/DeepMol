@@ -3,6 +3,8 @@ from typing import List, Dict
 from deepchem.utils import ConformerGenerator
 from rdkit.Chem import Mol
 
+from deepmol.loggers import Logger
+
 
 def find_maximum_number_atoms(molecules: List[Mol]) -> int:
     """
@@ -20,12 +22,9 @@ def find_maximum_number_atoms(molecules: List[Mol]) -> int:
     """
     best = 0
     for i, mol in enumerate(molecules):
-        try:
-            atoms = mol.GetNumAtoms()
-            if atoms > best:
-                best = atoms
-        except Exception as e:
-            print('Molecule with index', i, 'was not converted from SMILES into RDKIT object')
+        atoms = mol.GetNumAtoms()
+        if atoms > best:
+            best = atoms
     return best
 
 
@@ -51,8 +50,8 @@ def get_conformers(molecules: List[Mol], generator: ConformerGenerator) -> List[
             conf = generator.generate_conformers(mol)
             new_conformations.append(conf)
         except Exception as e:
-            print('Molecules with index', i, 'was not able to achieve a correct conformation')
-            print('Appending empty list')
+            logger = Logger()
+            logger.error(f"Could not generate conformers for molecule {i} with error {e}")
             new_conformations.append([])
     return new_conformations
 

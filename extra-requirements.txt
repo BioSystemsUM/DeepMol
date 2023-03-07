@@ -7,6 +7,7 @@ h5py==3.7.0: preprocessing, deep_learning, machine_learning, test
 shap==0.41.0: deep_learning, machine_learning
 gensim==4.2.0: preprocessing
 imblearn: preprocessing
+umap-learn==0.5.1: machine_learning
 chembl_structure_pipeline==1.1.0: preprocessing
 torch==1.12.1: deep_learning
 torchvision==0.13.1: deep_learning

@@ -85,6 +85,7 @@ class Mol2Vec(MolecularFeaturizer):
                                                "mol2vec_models",
                                                "model_300dim.pkl")
         self.model = word2vec.Word2Vec.load(pretrain_model_path)
+        self.feature_names = [f"mol2vec_{i}" for i in range(self.model.vector_size)]
 
     def _featurize(self, mol: Mol):
         """

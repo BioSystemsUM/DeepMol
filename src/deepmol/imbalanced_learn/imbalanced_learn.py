@@ -44,7 +44,6 @@ class ImbalancedLearn(object):
         """
         Perform over/under sampling.
         """
-        raise NotImplementedError
 
 
 #########################################

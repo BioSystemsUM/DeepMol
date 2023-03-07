@@ -42,7 +42,7 @@ class ShapValues:
         kwargs: dict
             Additional arguments for the plot function
         """
-        columns_names = ['feat_' + str(i + 1) for i in range(self.dataset.X.shape[1])]
+        columns_names = self.dataset.feature_names
         X = pd.DataFrame(self.dataset.X, columns=columns_names)
 
         model = self.model.model
@@ -86,7 +86,7 @@ class ShapValues:
         kwargs: dict
             Additional arguments for the plot function
         """
-        columns_names = ['feat_' + str(i + 1) for i in range(self.dataset.X.shape[1])]
+        columns_names = self.dataset.feature_names
         X = pd.DataFrame(self.dataset.X, columns=columns_names)
 
         model = self.model.model

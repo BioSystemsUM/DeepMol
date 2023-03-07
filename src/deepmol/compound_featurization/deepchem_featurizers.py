@@ -6,12 +6,13 @@ from deepchem.feat import ConvMolFeaturizer, WeaveFeaturizer, MolGraphConvFeatur
 from deepchem.feat.graph_data import GraphData
 from deepchem.feat.mol_graphs import ConvMol, WeaveMol
 from deepchem.utils import ConformerGenerator
-from rdkit.Chem import Mol, MolFromSmiles, MolToSmiles
+from rdkit.Chem import Mol
 
 from deepmol.compound_featurization import MolecularFeaturizer
 from deepmol.compound_featurization._utils import get_conformers, get_dictionary_from_smiles
 from deepmol.datasets import Dataset
 from deepmol.loggers.logger import Logger
+from deepmol.utils.utils import mol_to_smiles
 
 
 class ConvMolFeat(MolecularFeaturizer):
@@ -53,6 +54,7 @@ class ConvMolFeat(MolecularFeaturizer):
         self.use_chirality = use_chirality
         self.atom_properties = atom_properties
         self.per_atom_fragmentation = per_atom_fragmentation
+        self.feature_names = ['conv_mol_feat']
 
     def _featurize(self, mol: Mol) -> ConvMol:
         """
@@ -116,6 +118,7 @@ class WeaveFeat(MolecularFeaturizer):
         self.explicit_h = explicit_h
         self.use_chirality = use_chirality
         self.max_pair_distance = max_pair_distance
+        self.feature_names = ['weave_feat']
 
     def _featurize(self, mol: Mol) -> WeaveMol:
         """
@@ -179,6 +182,7 @@ class MolGanFeat(MolecularFeaturizer):
         self.kekulize = kekulize
         self.bond_labels = bond_labels
         self.atom_labels = atom_labels
+        self.feature_names = ['mol_gan_feat']
 
     def _featurize(self, mol: Mol) -> GraphMatrix:
         """
@@ -237,6 +241,7 @@ class MolGraphConvFeat(MolecularFeaturizer):
         self.use_edges = use_edges
         self.use_chirality = use_chirality
         self.use_partial_charge = use_partial_charge
+        self.feature_names = ['mol_graph_conv_feat']
 
     def _featurize(self, mol: Mol) -> GraphData:
         """
@@ -313,6 +318,7 @@ class CoulombFeat(MolecularFeaturizer):
         if seed is not None:
             seed = int(seed)
         self.seed = seed
+        self.feature_names = ['coulomb_feat']
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -393,6 +399,7 @@ class CoulombEigFeat(MolecularFeaturizer):
             seed = int(seed)
         self.seed = seed
         self.max_conformers = max_conformers
+        self.feature_names = ['coulomb_eig_feat']
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -469,6 +476,7 @@ class SmileImageFeat(MolecularFeaturizer):
         self.res = res
         self.img_spec = img_spec
         self.embed = int(img_size * res / 2)
+        self.feature_names = ['smile_image_feat']
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -526,7 +534,7 @@ class SmilesSeqFeat:
         self.char_to_idx = char_to_idx
         self.max_len = max_len
         self.pad_len = pad_len
-
+        self.feature_names = ['smiles_seq_feat']
         self.logger = Logger()
 
     def featurize(self, dataset: Dataset) -> Dataset:
@@ -546,7 +554,7 @@ class SmilesSeqFeat:
         # Getting the dictionary if it is None
         if self.char_to_idx is None:
             if isinstance(dataset.mols[0], Mol):
-                smiles = [MolToSmiles(mol) for mol in dataset.mols]
+                smiles = [mol_to_smiles(mol) for mol in dataset.mols if mol is not None]
             elif isinstance(dataset.mols[0], str):
                 smiles = dataset.mols
             else:
@@ -558,7 +566,7 @@ class SmilesSeqFeat:
 
         # obtain new SMILE's strings
         if isinstance(dataset.mols[0], str):
-            rdkit_mols = [MolFromSmiles(mol) for mol in dataset.mols]
+            rdkit_mols = [mol_to_smiles(mol) for mol in dataset.mols]
         elif isinstance(dataset.mols[0], Mol):
             rdkit_mols = dataset.mols
         else:

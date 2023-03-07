@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Union, Iterable
+from typing import Union, Iterable, List
 
 import numpy as np
 from boruta import BorutaPy
@@ -22,14 +22,8 @@ class BaseFeatureSelector(ABC):
         """
         Initialize the feature selector.
         """
-        self.y_fs = None
-        self.features_fs = None
         if self.__class__ == BaseFeatureSelector:
             raise Exception('Abstract class BaseFeatureSelector should not be instantiated')
-
-        self.features2keep = None
-        self.features = None
-        self.y = None
 
     def select_features(self, dataset: Dataset):
         """
@@ -45,19 +39,25 @@ class BaseFeatureSelector(ABC):
         dataset: Dataset
           Dataset containing the selected features and indexes of the features kept as 'self.features2keep'.
         """
-
-        self.features_fs = dataset.X
-        self.y_fs = dataset.y
-        features, self.features2keep = self._select_features()
-        dataset.select_features(self.features2keep)
+        features_to_keep = self._select_features(dataset)
+        dataset.select_features_by_index(list(features_to_keep))
         return dataset
 
     @abstractmethod
-    def _select_features(self):
+    def _select_features(self, dataset: Dataset) -> np.ndarray:
         """
         Perform feature selection for the molecules present in the dataset.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to perform feature selection on
+
+        Returns
+        -------
+        features_to_keep: np.ndarray
+            Array containing the indexes of the features to keep.
         """
-        raise NotImplementedError
 
 
 class LowVarianceFS(BaseFeatureSelector):
@@ -78,14 +78,24 @@ class LowVarianceFS(BaseFeatureSelector):
         super().__init__()
         self.param = threshold
 
-    def _select_features(self):
+    def _select_features(self, dataset: Dataset) -> np.ndarray:
         """
         Returns features and indexes of features to keep.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to perform feature selection on
+
+        Returns
+        -------
+        features_to_keep: np.ndarray
+            Array containing the indexes of the features to keep.
         """
-        fs = np.stack(self.features_fs, axis=0)
+        fs = np.stack(dataset.X, axis=0)
         vt = VarianceThreshold(threshold=self.param)
-        tr = vt.fit_transform(fs)
-        return tr, vt.get_support(indices=True)
+        vt.fit_transform(fs)
+        return vt.get_support(indices=True)
 
 
 class KbestFS(BaseFeatureSelector):
@@ -111,14 +121,25 @@ class KbestFS(BaseFeatureSelector):
         self.k = k
         self.score_func = score_func
 
-    def _select_features(self):
+    def _select_features(self, dataset: Dataset) -> np.ndarray:
         """
         Returns features and indexes of features to keep.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to perform feature selection on
+
+        Returns
+        -------
+        features_to_keep: np.ndarray
+            Array containing the indexes of the features to keep.
         """
-        fs = np.stack(self.features_fs, axis=0)
+        fs = np.stack(dataset.X, axis=0)
+        y = dataset.y
         kb = SelectKBest(self.score_func, k=self.k)
-        X_new = kb.fit_transform(fs, self.y_fs)
-        return X_new, kb.get_support(indices=True)
+        kb.fit_transform(fs, y)
+        return kb.get_support(indices=True)
 
 
 class PercentilFS(BaseFeatureSelector):
@@ -144,14 +165,25 @@ class PercentilFS(BaseFeatureSelector):
         self.percentil = percentil
         self.score_func = score_func
 
-    def _select_features(self):
+    def _select_features(self, dataset: Dataset) -> np.ndarray:
         """
         Returns features and indexes of features to keep.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to perform feature selection on
+
+        Returns
+        -------
+        features_to_keep: np.ndarray
+            Array containing the indexes of the features to keep.
         """
-        fs = np.stack(self.features_fs, axis=0)
+        fs = np.stack(dataset.X, axis=0)
+        y = dataset.y
         sp = SelectPercentile(self.score_func, percentile=self.percentil)
-        X_new = sp.fit_transform(fs, self.y_fs)
-        return X_new, sp.get_support(indices=True)
+        sp.fit_transform(fs, y)
+        return sp.get_support(indices=True)
 
 
 # TODO: takes too long to run, check if its normal or a code problem
@@ -212,19 +244,30 @@ class RFECVFS(BaseFeatureSelector):
         self.scoring = scoring
         self.verbose = verbose
 
-    def _select_features(self):
+    def _select_features(self, dataset: Dataset) -> np.ndarray:
         """
         Returns features and indexes of features to keep.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to perform feature selection on
+
+        Returns
+        -------
+        features_to_keep: np.ndarray
+            Array containing the indexes of the features to keep.
         """
-        fs = np.stack(self.features_fs, axis=0)
+        fs = np.stack(dataset.X, axis=0)
+        y = dataset.y
         rfe = RFECV(self.estimator,
                     step=self.step,
                     cv=self.cv,
                     min_features_to_select=self.min_features_to_select,
                     scoring=self.scoring,
                     verbose=self.verbose)
-        X_new = rfe.fit_transform(fs, self.y_fs)
-        return X_new, rfe.get_support(indices=True)
+        rfe.fit_transform(fs, y)
+        return rfe.get_support(indices=True)
 
 
 class SelectFromModelFS(BaseFeatureSelector):
@@ -277,18 +320,29 @@ class SelectFromModelFS(BaseFeatureSelector):
         self.norm_order = norm_order
         self.max_features = max_features
 
-    def _select_features(self):
+    def _select_features(self, dataset: Dataset) -> np.ndarray:
         """
         Returns features and indexes of features to keep.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to perform feature selection on
+
+        Returns
+        -------
+        features_to_keep: np.ndarray
+            Array containing the indexes of the features to keep.
         """
-        fs = np.stack(self.features_fs, axis=0)
+        fs = np.stack(dataset.X, axis=0)
+        y = dataset.y
         sfm = SelectFromModel(self.estimator,
                               threshold=self.threshold,
                               prefit=self.prefit,
                               norm_order=self.norm_order,
                               max_features=self.max_features)
-        X_new = sfm.fit_transform(fs, self.y_fs)
-        return X_new, sfm.get_support(indices=True)
+        sfm.fit_transform(fs, y)
+        return sfm.get_support(indices=True)
 
 
 class BorutaAlgorithm(BaseFeatureSelector):
@@ -376,17 +430,28 @@ class BorutaAlgorithm(BaseFeatureSelector):
             verbose
         )
 
-    def _select_features(self, **kwargs):
+    def _select_features(self, dataset: Dataset) -> np.ndarray:
         """
         Returns features and indexes of features to keep.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to perform feature selection on
+
+        Returns
+        -------
+        features_to_keep: np.ndarray
+            Array containing the indexes of the features to keep.
         """
-        fs = np.stack(self.features_fs, axis=0)
-        self.boruta.fit(fs, self.y_fs)
-        X_new = self.boruta.transform(fs, weak=self.support_weak)
+        fs = np.stack(dataset.X, axis=0)
+        y = dataset.y
+        self.boruta.fit(fs, y)
+        self.boruta.transform(fs, weak=self.support_weak)
         support = [i for i, boolean in enumerate(self.boruta.support_) if boolean]
         if self.support_weak:
             weak_support = [i for i, boolean in enumerate(self.boruta.support_weak_) if boolean]
             features_to_keep = list(set.union(set(support), set(weak_support)))
         else:
             features_to_keep = support
-        return X_new, features_to_keep
+        return np.array(features_to_keep)

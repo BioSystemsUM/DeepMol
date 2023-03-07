@@ -10,8 +10,9 @@ from deepchem.models import Model as BaseDeepChemModel
 from deepchem.data import NumpyDataset
 import deepchem as dc
 
+from deepmol.models._utils import save_to_disk
 from deepmol.splitters.splitters import Splitter
-from deepmol.utils.utils import load_from_disk, save_to_disk
+from deepmol.utils.utils import load_from_disk
 
 
 def generate_sequences(epochs: int, train_smiles: List[Union[str, int]]):
@@ -83,13 +84,39 @@ class DeepChemModel(BaseDeepChemModel):
             self.epochs = 30
 
     def fit_on_batch(self, X: Sequence, y: Sequence, w: Sequence):
-        raise NotImplementedError
+        """
+        Fits the model on a batch of data.
+
+        Parameters
+        ----------
+        X: Sequence
+            The input data.
+        y: Sequence
+            The output data.
+        w: Sequence
+            The weights for the data.
+        """
+
 
     def get_task_type(self) -> str:
-        raise NotImplementedError
+        """
+        Returns the task type of the model.
+
+        Returns
+        -------
+        str
+            The task type of the model.
+        """
 
     def get_num_tasks(self) -> int:
-        raise NotImplementedError
+        """
+        Returns the number of tasks of the model.
+
+        Returns
+        -------
+        int
+            The number of tasks of the model.
+        """
 
     def fit(self, dataset: Dataset) -> None:
         """Fits DeepChemModel to data.
@@ -98,6 +125,9 @@ class DeepChemModel(BaseDeepChemModel):
         dataset: Dataset
             The `Dataset` to train this model on.
         """
+        if self.model.model.mode != dataset.mode:
+            raise ValueError(f"The model mode and the dataset mode must be the same. "
+                             f"Got model mode: {self.model.model.mode} and dataset mode: {dataset.mode}")
         # Afraid of model.fit not recognizes the input dataset as a deepchem.data.datasets.Dataset
         if isinstance(self.model, TorchModel) and self.model.model.mode == 'regression':
             y = np.expand_dims(dataset.y, axis=-1)  # need to do this so that the loss is calculated correctly

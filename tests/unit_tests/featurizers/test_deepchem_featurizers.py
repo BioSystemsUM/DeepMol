@@ -12,8 +12,7 @@ class TestDeepChemFeaturizers(FeaturizerTestCase, TestCase):
 
     def validate_featurizer(self, featurizer, df, n_valid, **kwargs):
         featurizer(**kwargs).featurize(df)
-        features = df.X
-        self.assertEqual(len(features), n_valid)
+        self.assertEqual(len(df._X), n_valid)
 
     def test_featurize(self):
         df = copy(self.mock_dataset)
@@ -38,4 +37,4 @@ class TestDeepChemFeaturizers(FeaturizerTestCase, TestCase):
         self.validate_featurizer(CoulombFeat, df, valid, max_atoms=100, seed=123, n_jobs=3)
         self.validate_featurizer(CoulombEigFeat, df, valid, max_atoms=100, seed=123, n_jobs=2)
         self.validate_featurizer(SmileImageFeat, df, valid, n_jobs=1)
-        self.validate_featurizer(SmilesSeqFeat, df, valid+1)
+        self.validate_featurizer(SmilesSeqFeat, df, valid)

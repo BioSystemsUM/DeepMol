@@ -2,9 +2,9 @@
 Classes for processing input data into a format suitable for machine learning.
 """
 
-from typing import Optional, Union, List
+from typing import Optional, List
 
-from deepmol.datasets import NumpyDataset
+from deepmol.datasets import SmilesDataset
 import numpy as np
 import pandas as pd
 
@@ -19,12 +19,12 @@ class CSVLoader(object):
 
     def __init__(self,
                  dataset_path: str,
-                 mols_field: str,
+                 smiles_field: str,
                  id_field: str = None,
-                 labels_fields: Union[List[str], str] = None,
-                 features_fields: Union[List[str], str] = None,
-                 features2keep: List[Union[str, int]] = None,
-                 shard_size: int = None) -> None:
+                 labels_fields: List[str] = None,
+                 features_fields: List[str] = None,
+                 shard_size: int = None,
+                 mode: str = 'auto') -> None:
         """
         Initialize the CSVLoader.
 
@@ -32,49 +32,40 @@ class CSVLoader(object):
         ----------
         dataset_path: str
             path to the dataset file
-        mols_field: str
+        smiles_field: str
             field containing the molecules'
         id_field: str
             field containing the ids
-        labels_fields: Union[List[str], str]
+        labels_fields: List[str]
             field containing the labels
-        features_fields: Union[List[str], str]
+        features_fields: List[str]
             field containing the features
-        features2keep: List[Union[str, int]]
-            features to keep
         shard_size: int
             size of the shard to load
+        mode: str
+            The mode of the dataset.
+            If 'auto', the mode is inferred from the labels. If 'classification', the dataset is treated as a
+            classification dataset. If 'regression', the dataset is treated as a regression dataset.
         """
         self.dataset_path = dataset_path
-        self.mols_field = mols_field
+        self.mols_field = smiles_field
         self.id_field = id_field
         self.labels_fields = labels_fields
         self.features_fields = features_fields
-
-        self.features2keep = features2keep
         self.shard_size = shard_size
-
-        fields2keep = [mols_field]
+        fields2keep = [smiles_field]
 
         if id_field is not None:
             fields2keep.append(id_field)
 
         if labels_fields is not None:
-            self.n_tasks = len(labels_fields)
-            if isinstance(labels_fields, list):
-                [fields2keep.append(x) for x in labels_fields]
-            else:
-                fields2keep.append(labels_fields)
-        else:
-            self.n_tasks = 0
+            fields2keep.extend(labels_fields)
 
         if features_fields is not None:
-            if isinstance(features_fields, list):
-                [fields2keep.append(x) for x in features_fields]
-            else:
-                fields2keep.append(features_fields)
+            fields2keep.extend(features_fields)
 
         self.fields2keep = fields2keep
+        self.mode = mode
 
     @staticmethod
     def _get_dataset(dataset_path: str,
@@ -102,7 +93,7 @@ class CSVLoader(object):
         """
         return load_csv_file(dataset_path, fields, chunk_size, **kwargs)
 
-    def create_dataset(self, **kwargs) -> NumpyDataset:
+    def create_dataset(self, **kwargs) -> SmilesDataset:
         """
         Creates a dataset from the CSV file.
 
@@ -113,7 +104,7 @@ class CSVLoader(object):
 
         Returns
         -------
-        NumpyDataset
+        SmilesDataset
             Dataset with the data.
         """
         dataset = self._get_dataset(self.dataset_path, fields=self.fields2keep, chunk_size=self.shard_size, **kwargs)
@@ -121,12 +112,18 @@ class CSVLoader(object):
         mols = dataset[self.mols_field].to_numpy()
 
         if self.features_fields is not None:
-            X = dataset[self.features_fields].to_numpy()
+            if len(self.features_fields) == 1:
+                X = dataset[self.features_fields[0]].to_numpy()
+            else:
+                X = dataset[self.features_fields].to_numpy()
         else:
             X = None
 
         if self.labels_fields is not None:
-            y = dataset[self.labels_fields].to_numpy()
+            if len(self.labels_fields) == 1:
+                y = dataset[self.labels_fields[0]].to_numpy()
+            else:
+                y = dataset[self.labels_fields].to_numpy()
         else:
             y = None
 
@@ -135,12 +132,13 @@ class CSVLoader(object):
         else:
             ids = None
 
-        return NumpyDataset(mols=mols,
-                            X=X,
-                            y=y,
-                            ids=ids,
-                            features2keep=self.features2keep,
-                            n_tasks=self.n_tasks)
+        return SmilesDataset(smiles=mols,
+                             X=X,
+                             y=y,
+                             ids=ids,
+                             feature_names=self.features_fields,
+                             label_names=self.labels_fields,
+                             mode=self.mode)
 
 
 class SDFLoader(object):
@@ -151,10 +149,10 @@ class SDFLoader(object):
     def __init__(self,
                  dataset_path: str,
                  id_field: str = None,
-                 labels_fields: Union[List[str], str] = None,
-                 features_fields: Union[List[str], str] = None,
-                 features2keep: List[Union[str, int]] = None,
-                 shard_size: Optional[int] = None) -> None:
+                 labels_fields: List[str] = None,
+                 features_fields: List[str] = None,
+                 shard_size: Optional[int] = None,
+                 mode: str = 'auto') -> None:
         """
         Initialize the SDFLoader.
 
@@ -164,20 +162,21 @@ class SDFLoader(object):
             path to the dataset file
         id_field: str
             field containing the ids
-        labels_fields: Union[List[str], str]
+        labels_fields: List[str]
             field containing the labels
-        features_fields: Union[List[str], str]
+        features_fields: List[str]
             field containing the features
-        features2keep: List[Union[str, int]]
-            features to keep
         shard_size: int
             size of the shard to load
+        mode: str
+            The mode of the dataset.
+            If 'auto', the mode is inferred from the labels. If 'classification', the dataset is treated as a
+            classification dataset. If 'regression', the dataset is treated as a regression dataset.
         """
         self.dataset_path = dataset_path
         self.id_field = id_field
         self.labels_fields = labels_fields
         self.features_fields = features_fields
-        self.features2keep = features2keep
         self.shard_size = shard_size
 
         fields2keep = []
@@ -186,21 +185,13 @@ class SDFLoader(object):
             fields2keep.append(id_field)
 
         if labels_fields is not None:
-            self.n_tasks = len(labels_fields)
-            if isinstance(labels_fields, list):
-                [fields2keep.append(x) for x in labels_fields]
-            else:
-                fields2keep.append(labels_fields)
-        else:
-            self.n_tasks = 0
+            fields2keep.extend(labels_fields)
 
         if features_fields is not None:
-            if isinstance(features_fields, list):
-                [fields2keep.append(x) for x in features_fields]
-            else:
-                fields2keep.append(features_fields)
+            fields2keep.extend(features_fields)
 
         self.fields2keep = fields2keep
+        self.mode = mode
 
     @staticmethod
     def _get_dataset(dataset_path: str, chunk_size: int = None) -> np.ndarray:
@@ -220,13 +211,13 @@ class SDFLoader(object):
         """
         return load_sdf_file(dataset_path, chunk_size)
 
-    def create_dataset(self) -> NumpyDataset:
+    def create_dataset(self) -> SmilesDataset:
         """
         Creates a dataset from the SDF file.
 
         Returns
         -------
-        NumpyDataset
+        SmilesDataset
             Dataset with the data.
         """
         molecules = self._get_dataset(self.dataset_path, self.shard_size)
@@ -237,28 +228,20 @@ class SDFLoader(object):
         for mol in molecules:
             mols.append(mol)
             mol_feature = []
+            mol_ys = []
             if self.features_fields is not None:
-                if isinstance(self.features_fields, list):
-                    for feature in self.features_fields:
-                        mol_feature.append(mol.GetProp(feature))
-                else:
-                    mol_feature.append(mol.GetProp(self.features_fields))
-
+                for feature in self.features_fields:
+                    mol_feature.append(mol.GetProp(feature))
+                if len(mol_feature) == 1:
+                    mol_feature = mol_feature[0]
                 X.append(mol_feature)
 
             if self.labels_fields is not None:
-
-                if isinstance(self.labels_fields, list):
-                    if len(self.labels_fields) == 1:
-                        y.append(float(mol.GetProp(self.labels_fields[0])))
-                    else:
-                        mol_ys = []
-                        for label in self.labels_fields:
-                            mol_ys.append(float(mol.GetProp(label)))
-
-                        y.append(mol_ys)
-                else:
-                    y.append(float(mol.GetProp(self.labels_fields)))
+                for label in self.labels_fields:
+                    mol_ys.append(float(mol.GetProp(label)))
+                if len(mol_ys) == 1:
+                    mol_ys = mol_ys[0]
+                y.append(mol_ys)
             else:
                 mol_y = None
                 y.append(mol_y)
@@ -270,14 +253,15 @@ class SDFLoader(object):
                 mol_id = None
                 ids.append(mol_id)
 
-        X = np.array(X)
-        y = np.array(y)
-        ids = np.array(ids)
+        X = np.array(X) if X is not None and len(X) != 0 else None
+        y = None if len(set(np.array(y).flatten())) == 1 and np.array(y).flatten()[0] is None else np.array(y)
+        ids = np.array(ids) if len(set(ids)) == len(ids) else None
         mols = np.array(mols)
-
-        return NumpyDataset(mols=mols,
-                            X=X,
-                            y=y,
-                            ids=ids,
-                            features2keep=self.features2keep,
-                            n_tasks=self.n_tasks)
+        feature_names = self.features_fields
+        return SmilesDataset.from_mols(mols=mols,
+                                       X=X,
+                                       y=y,
+                                       ids=ids,
+                                       feature_names=feature_names,
+                                       label_names=self.labels_fields,
+                                       mode=self.mode)

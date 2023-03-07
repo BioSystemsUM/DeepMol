@@ -12,17 +12,21 @@ class ModelsTestCase(ABC):
 
         dataset = os.path.join(self.data_path, "balanced_mini_dataset.csv")
         loader = CSVLoader(dataset,
-                           mols_field='Smiles',
-                           labels_fields='Class')
+                           smiles_field='Smiles',
+                           labels_fields=['Class'])
 
         self.mini_dataset_to_test = loader.create_dataset(sep=';')
 
         dataset = os.path.join(self.data_path, "small_train_dataset.csv")
         loader = CSVLoader(dataset,
-                           mols_field='mols',
-                           labels_fields='y')
+                           smiles_field='mols',
+                           labels_fields=['y'])
 
         self.train_dataset = loader.create_dataset(sep=',')
+
+    def tearDown(self) -> None:
+        if os.path.exists('deepmol.log'):
+            os.remove('deepmol.log')
 
     @abstractmethod
     def test_fit_predict_evaluate(self):

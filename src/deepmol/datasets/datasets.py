@@ -1,12 +1,15 @@
 import uuid
+import warnings
 from abc import ABC, abstractmethod
 from typing import Union, List, Tuple
 
 import numpy as np
 import pandas as pd
+from rdkit.Chem import Mol
 
 from deepmol.loggers.logger import Logger
-from deepmol.datasets._utils import merge_arrays, merge_arrays_of_arrays, check_values
+from deepmol.datasets._utils import merge_arrays, merge_arrays_of_arrays
+from deepmol.utils.utils import smiles_to_mol, mol_to_smiles
 
 
 class Dataset(ABC):
@@ -24,7 +27,28 @@ class Dataset(ABC):
         Get the length of the dataset.
         It returns the number of molecules in the dataset.
         """
-        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def smiles(self) -> np.ndarray:
+        """
+        Get the smiles in the dataset.
+        Returns
+        -------
+        mols : np.ndarray
+            Molecule smiles in the dataset.
+        """
+
+    @smiles.setter
+    @abstractmethod
+    def smiles(self, value: Union[List[str], np.ndarray]) -> None:
+        """
+        Set the molecules in the dataset.
+        Parameters
+        ----------
+        value: Union[List[str], np.ndarray]
+            The molecules to set in the dataset.
+        """
 
     @property
     @abstractmethod
@@ -37,7 +61,6 @@ class Dataset(ABC):
         mols : np.ndarray
             Molecules in the dataset.
         """
-        raise NotImplementedError
 
     @mols.setter
     @abstractmethod
@@ -50,7 +73,6 @@ class Dataset(ABC):
         value: Union[List[str], np.ndarray]
             The molecules to set in the dataset.
         """
-        raise NotImplementedError
 
     @property
     @abstractmethod
@@ -63,7 +85,6 @@ class Dataset(ABC):
         X: np.ndarray
             The features in the dataset.
         """
-        raise NotImplementedError
 
     @X.setter
     @abstractmethod
@@ -76,7 +97,6 @@ class Dataset(ABC):
         value: Union[List, np.ndarray]
             The features to set in the dataset.
         """
-        raise NotImplementedError
 
     @property
     @abstractmethod
@@ -89,7 +109,6 @@ class Dataset(ABC):
         y: np.ndarray
             The labels in the dataset.
         """
-        raise NotImplementedError
 
     @y.setter
     @abstractmethod
@@ -102,7 +121,6 @@ class Dataset(ABC):
         value: Union[List, np.ndarray]
             The labels to set in the dataset.
         """
-        raise NotImplementedError
 
     @property
     @abstractmethod
@@ -115,7 +133,6 @@ class Dataset(ABC):
         ids: np.ndarray
             The ids in the dataset.
         """
-        raise NotImplementedError
 
     @ids.setter
     @abstractmethod
@@ -128,31 +145,54 @@ class Dataset(ABC):
         value: Union[List[str], np.ndarray]
             The ids to set in the dataset.
         """
-        raise NotImplementedError
 
     @property
-    def features2keep(self) -> np.ndarray:
+    @abstractmethod
+    def feature_names(self) -> np.ndarray:
         """
-        Get the features to keep in the dataset.
+        Get the feature labels of the molecules in the dataset.
 
         Returns
         -------
-        features2keep: np.ndarray
-            The features to keep in the dataset.
+        feature_names: np.ndarray
+            Feature names of the molecules.
         """
-        raise NotImplementedError
 
-    @features2keep.setter
-    def features2keep(self, value: Union[List, np.ndarray]) -> None:
+    @feature_names.setter
+    @abstractmethod
+    def feature_names(self, value: Union[List, np.ndarray]) -> None:
         """
-        Set the features to keep in the dataset.
+        Set the feature labels of the molecules in the dataset.
 
         Parameters
         ----------
         value: Union[List, np.ndarray]
-            The features to keep in the dataset.
+            Feature names of the molecules.
         """
-        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def label_names(self) -> np.ndarray:
+        """
+        Get the labels names of the molecules in the dataset.
+
+        Returns
+        -------
+        label_names: np.ndarray
+            Label names of the molecules.
+        """
+
+    @label_names.setter
+    @abstractmethod
+    def label_names(self, value: Union[List, np.ndarray]) -> None:
+        """
+        Set the labels names of the molecules in the dataset.
+
+        Parameters
+        ----------
+        value: Union[List, np.ndarray]
+            Label names of the molecules.
+        """
 
     @property
     @abstractmethod
@@ -165,7 +205,6 @@ class Dataset(ABC):
         n_tasks: int
             The number of tasks in the dataset.
         """
-        raise NotImplementedError
 
     @n_tasks.setter
     @abstractmethod
@@ -179,7 +218,29 @@ class Dataset(ABC):
             The number of tasks in the dataset.
 
         """
-        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def mode(self) -> str:
+        """
+        Get the mode of the dataset.
+
+        Returns
+        -------
+        mode: str
+            The mode of the dataset.
+        """
+
+    @mode.setter
+    def mode(self, value: str) -> None:
+        """
+        Set the mode of the dataset.
+
+        Parameters
+        ----------
+        value: str
+            The mode of the dataset.
+        """
 
     @abstractmethod
     def get_shape(self) -> tuple:
@@ -191,7 +252,6 @@ class Dataset(ABC):
         shape: tuple
             The shape of molecules, features and labels.
         """
-        raise NotImplementedError
 
     @abstractmethod
     def remove_nan(self, axis: int = 0) -> None:
@@ -203,7 +263,6 @@ class Dataset(ABC):
         axis: int
             The axis to remove the nan values.
         """
-        raise NotImplementedError
 
     @abstractmethod
     def remove_elements(self, indexes: List) -> None:
@@ -215,19 +274,26 @@ class Dataset(ABC):
         indexes: List[int]
             The indexes of the elements to remove.
         """
-        raise NotImplementedError
 
     @abstractmethod
-    def select_features(self, indexes: List[int]) -> None:
+    def select_features_by_index(self, indexes: List[int]) -> None:
         """
         Select the features from the dataset.
-
         Parameters
         ----------
         indexes: List[int]
             The indexes of the features to select.
         """
-        raise NotImplementedError
+
+    @abstractmethod
+    def select_features_by_name(self, names: List[str]) -> None:
+        """
+        Select features with specific names from the dataset
+        Parameters
+        ----------
+        names: List[str]
+            The names of the features to select from the dataset.
+        """
 
     @abstractmethod
     def select(self, indexes: List[int], axis: int = 0) -> None:
@@ -241,436 +307,563 @@ class Dataset(ABC):
         axis: int
             The axis to select the elements.
         """
-        raise NotImplementedError
 
     @abstractmethod
-    def select_to_split(self, indexes: List[int]) -> None:
+    def select_to_split(self, indexes: Union[np.ndarray, List[int]]) -> 'Dataset':
         """
         Select the elements from the dataset to split.
 
         Parameters
         ----------
-        indexes: List[int]
+        indexes: Union[np.ndarray, List[int]]
             The indexes of the elements to select.
         """
-        raise NotImplementedError
 
 
-class NumpyDataset(Dataset):
+class SmilesDataset(Dataset):
     """
     A Dataset defined by in-memory numpy arrays.
-    This subclass of 'Dataset' stores arrays mols, X, y, ids in memory as numpy arrays.
+    This subclass of 'Dataset' stores arrays for smiles strings, Mol objects, features X, labels y, and molecule ids in
+    memory as numpy arrays.
     """
 
     def __init__(self,
-                 mols: Union[np.ndarray, List[str]],
-                 X: Union[List, np.ndarray] = None,
-                 y: Union[List, np.ndarray] = None,
+                 smiles: Union[np.ndarray, List[str]],
+                 mols: Union[np.ndarray, List[Mol]] = None,
                  ids: Union[List, np.ndarray] = None,
-                 features2keep: Union[List, np.ndarray] = None,
-                 n_tasks: int = 1) -> None:
+                 X: Union[List, np.ndarray] = None,
+                 feature_names: Union[List, np.ndarray] = None,
+                 y: Union[List, np.ndarray] = None,
+                 label_names: Union[List, np.ndarray] = None,
+                 mode: str = 'auto') -> None:
         """
-        Initialize a NumpyDataset object.
+        Initialize a dataset from SMILES strings.
 
         Parameters
         ----------
-        mols: Union[np.ndarray, List[str]]
-            The molecules in the dataset.
+        smiles: Union[np.ndarray, List[str]]
+            SMILES strings of the molecules.
+        mols: Union[np.ndarray, List[Mol]]
+            RDKit Mol objects of the molecules.
+        ids: Union[List, np.ndarray]
+            IDs of the molecules.
         X: Union[List, np.ndarray]
-            The features in the dataset.
+            Features of the molecules.
+        feature_names: Union[List, np.ndarray]
+            Names of the features.
         y: Union[List, np.ndarray]
-            The labels in the dataset.
-        ids: Union[List[int], np.ndarray]
-            The ids in the dataset. ids will be treated as strings.
-        features2keep: Union[List, np.ndarray]
-            The features to keep in the dataset.
-        n_tasks: int
-            The number of tasks in the dataset.
+            Labels of the molecules.
+        label_names: Union[List, np.ndarray]
+            Names of the labels.
+        mode: str
+            The mode of the dataset.
+            If 'auto', the mode is inferred from the labels. If 'classification', the dataset is treated as a
+            classification dataset. If 'regression', the dataset is treated as a regression dataset.
         """
         super().__init__()
-        if not isinstance(mols, np.ndarray):
-            mols = np.array(mols)
-        if not isinstance(X, np.ndarray) and X is not None:
-            X = np.array(X)
-        if not isinstance(y, np.ndarray) and y is not None:
-            y = np.array(y)
-        if not isinstance(ids, np.ndarray) and ids is not None:
-            ids = np.array([str(i) for i in ids])
-        if not isinstance(features2keep, np.ndarray) and features2keep is not None:
-            features2keep = np.array(features2keep)
+        self._smiles = np.array(smiles)
+        self._ids = np.array([str(i) for i in ids]) if ids is not None \
+            else np.array([str(uuid.uuid4().hex) for _ in range(len(smiles))])
+        self._X = np.array(X) if X is not None else None
+        self._y = np.array(y) if y is not None else None
+        self._mols = np.array(mols) if mols is not None else np.array([smiles_to_mol(s) for s in self._smiles])
+        self.remove_elements([self._ids[i] for i, m in enumerate(self._mols) if m is None])
+        self._feature_names = np.array(feature_names) if feature_names is not None else None
+        self._label_names = np.array(label_names) if label_names is not None else None
+        self._validate_params()
+        self._n_tasks = len(self._label_names) if self._label_names is not None else 0
+        self._mode = mode if mode != 'auto' else self._infer_mode()
+        self.logger = Logger()
 
-        self._mols = mols
-
-        if features2keep is not None:
-            self._features2keep = features2keep
-        elif X is not None:
-            if len(X.shape) == 1:
-                self._features2keep = np.arange(X.shape[0])
-            else:
-                self._features2keep = np.arange(X.shape[1])
-        else:
-            self._features2keep = None
-
-        self._X = X
-        self._y = y
-        if ids is None:
-            ids = np.array([str(uuid.uuid4().hex) for _ in range(len(mols))])
-        self._ids = ids
-        self._n_tasks = n_tasks
-
-    def __len__(self) -> int:
+    @classmethod
+    def from_mols(cls,
+                  mols: Union[np.ndarray, List[Mol]],
+                  ids: Union[List, np.ndarray] = None,
+                  X: Union[List, np.ndarray] = None,
+                  feature_names: Union[List, np.ndarray] = None,
+                  y: Union[List, np.ndarray] = None,
+                  label_names: Union[List, np.ndarray] = None,
+                  mode: str = 'auto') -> 'SmilesDataset':
         """
-        Get the length of the dataset.
-        It returns the number of molecules in the dataset.
+        Initialize a dataset from RDKit Mol objects.
+
+        Parameters
+        ----------
+        mols: Union[np.ndarray, List[Mol]]
+            RDKit Mol objects of the molecules.
+        ids: Union[List, np.ndarray]
+            IDs of the molecules.
+        X: Union[List, np.ndarray]
+            Features of the molecules.
+        feature_names: Union[List, np.ndarray]
+            Names of the features.
+        y: Union[List, np.ndarray]
+            Labels of the molecules.
+        label_names: Union[List, np.ndarray]
+            Names of the labels.
+        mode: str
+            The mode of the dataset.
+            If 'auto', the mode is inferred from the labels. If 'classification', the dataset is treated as a
+            classification dataset. If 'regression', the dataset is treated as a regression dataset.
 
         Returns
         -------
-        length: int
-            The number of molecules in the dataset.
+        SmilesDataset
+            The dataset instance.
         """
-        return len(self._mols)
+        smiles = np.array([mol_to_smiles(m) for m in mols])
+        return cls(smiles, mols, ids, X, feature_names, y, label_names, mode)
+
+    def __len__(self) -> int:
+        """
+        Get the number of molecules in the dataset.
+        Returns
+        -------
+        int
+            Number of molecules in the dataset.
+        """
+        return len(self._smiles)
+
+    def _validate_params(self) -> None:
+        """
+        Validates the parameters of the dataset.
+        """
+        if len(self._smiles) != len(self._ids):
+            raise ValueError('Length of smiles and ids must be the same.')
+        if self._X is not None and len(self._smiles) != len(self._X):
+            raise ValueError('Length of smiles and X must be the same.')
+        if self._y is not None and len(self._smiles) != len(self._y):
+            raise ValueError('Length of smiles and y must be the same.')
+        if self._feature_names is not None and self._X is not None:
+            if len(self._X.shape) == 1:
+                if len(self._feature_names) != 1:
+                    raise ValueError('Length of feature_names and X must be the same.')
+            elif len(self._X.shape) == 2:
+                if len(self._feature_names) != self._X.shape[1]:
+                    raise ValueError('Length of feature_names and X must be the same.')
+        if self._feature_names is None and self._X is not None:
+            if len(self._X.shape) == 1:
+                self._feature_names = np.array(['feature_0'])
+            elif len(self._X.shape) == 2:
+                self._feature_names = np.array([f'feature_{i}' for i in range(self._X.shape[1])])
+        if self._label_names is not None and self._y is not None:
+            if len(self._y.shape) == 1:
+                if len(self._label_names) != 1:
+                    raise ValueError('Length of label_names and y must be the same.')
+            elif len(self._y.shape) == 2:
+                if len(self._label_names) != self._y.shape[1]:
+                    raise ValueError('Length of label_names and y must be the same.')
+        if self._label_names is None and self._y is not None:
+            if len(self._y.shape) == 1:
+                self._label_names = np.array(['y'])
+            elif len(self._y.shape) == 2:
+                self._label_names = np.array([f'y_{i}' for i in range(self._y.shape[1])])
+
+    def _reset(self, smiles: Union[np.ndarray, List[str]]) -> None:
+        """
+        Resets the dataset.
+        Changes the smiles and updates the mols, ids, X and y.
+        Parameters
+        ----------
+        smiles: Union[np.ndarray, List[str]]
+            SMILES strings of the new molecules.
+        """
+        super().__init__()
+        self._smiles = np.array(smiles)
+        self._ids = np.array([str(uuid.uuid4().hex) for _ in range(len(smiles))])
+        self._X = None
+        self._y = None
+        self._n_tasks = None
+        self._mols = np.array([smiles_to_mol(s) for s in self._smiles])
+        self.remove_elements([self._ids[i] for i, m in enumerate(self._mols) if m is None])
+        self._feature_names = None
+        self._label_names = None
+        self.mode = None
+
+    def _infer_mode(self) -> Union[str, None]:
+        """
+        Infers the mode of the dataset.
+
+        Returns
+        -------
+        str
+            The inferred mode.
+        """
+        if self._y is None:
+            return None
+        classes = np.unique(self.y)
+        if len(classes) > 10:
+            self.logger.warning("Assuming regression since there are more than 10 unique y values. If otherwise, "
+                                "explicitly set the mode to 'classification'!")
+            return 'regression'
+        else:
+            self.logger.info("Assuming classification since there are less than 10 unique y values. If otherwise, "
+                             "explicitly set the mode to 'regression'!")
+            return 'classification'
+
+    @property
+    def smiles(self) -> np.ndarray:
+        """
+        Get the SMILES strings of the molecules in the dataset.
+        Returns
+        -------
+        np.ndarray
+            SMILES strings of the molecules in the dataset.
+        """
+        return self._smiles
+
+    @smiles.setter
+    def smiles(self, smiles: Union[np.ndarray, List[str]]) -> None:
+        """
+        Set the SMILES strings of the molecules in the dataset.
+        Parameters
+        ----------
+        smiles: Union[np.ndarray, List[str]]
+            SMILES strings of the molecules.
+        """
+        warnings.warn('The RDKit Mol objects of the dataset will be updated, IDs updated and X and y deleted.')
+        self._reset(smiles)
 
     @property
     def mols(self) -> np.ndarray:
         """
-        Get the molecules (e.g. SMILES format) vector for this dataset.
-
+        Get the RDKit Mol objects of the molecules in the dataset.
         Returns
         -------
-        mols: np.ndarray
-            The molecules array of the dataset.
+        np.ndarray
+            RDKit molecules of the molecules in the dataset.
         """
         return self._mols
 
-    @mols.setter
-    def mols(self, value: Union[np.ndarray, List[str]]) -> None:
+    @property
+    def feature_names(self) -> np.ndarray:
         """
-        Set the molecules (e.g. SMILES format) vector for this dataset.
+        Get the feature labels of the molecules in the dataset.
+        Returns
+        -------
+        np.ndarray
+            Feature names of the molecules in the dataset.
+        """
+        return self._feature_names
 
+    @feature_names.setter
+    def feature_names(self, feature_names: Union[List, np.ndarray]) -> None:
+        """
+        Set the feature labels of the molecules in the dataset.
         Parameters
         ----------
-        value: Union[np.ndarray, List[str]]
-            The molecules (SMILES format) vector for this dataset.
+        feature_names: Union[List, np.ndarray]
+            Feature names of the molecules.
         """
-        self._mols = np.array(value)
+        if self._X is None:
+            raise ValueError('The features must be set before setting the feature names.')
+        if len(self._X.shape) == 1:
+            if len(feature_names) != 1:
+                raise ValueError('The number of feature names must be equal to the number of features.')
+        else:
+            if len(feature_names) != len(self._X[0]):
+                raise ValueError('The number of feature names must be equal to the number of features.')
+        if len(feature_names) != len(set(feature_names)):
+            raise ValueError('The feature names must be unique.')
+        self._feature_names = np.array([str(fn) for fn in feature_names])
 
     @property
-    def n_tasks(self) -> Union[int, None]:
+    def label_names(self) -> np.ndarray:
+        """
+        Get the label names of the molecules in the dataset.
+        Returns
+        -------
+        np.ndarray
+            Label names of the molecules in the dataset.
+        """
+        return self._label_names
+
+    @label_names.setter
+    def label_names(self, label_names: Union[List, np.ndarray]) -> None:
+        """
+        Set the label names of the molecules in the dataset.
+        Parameters
+        ----------
+        label_names: Union[List, np.ndarray]
+            Label names of the molecules.
+        """
+        if self._y is None:
+            raise ValueError('The labels must be set before setting the label names.')
+        if len(self._y.shape) == 1:
+            if len(label_names) != 1:
+                raise ValueError('The number of label names must be equal to the number of labels.')
+        else:
+            if len(label_names) != len(self._y[0]):
+                raise ValueError('The number of label names must be equal to the number of labels.')
+        if len(label_names) != len(set(label_names)):
+            raise ValueError('The label names must be unique.')
+        self._label_names = np.array([str(ln) for ln in label_names])
+
+    @property
+    def X(self) -> np.ndarray:
+        """
+        Get the features of the molecules in the dataset.
+        Returns
+        -------
+        np.ndarray
+            Features of the molecules in the dataset.
+        """
+        return self._X
+
+    @property
+    def y(self) -> np.ndarray:
+        """
+        Get the labels of the molecules in the dataset.
+        Returns
+        -------
+        np.ndarray
+            Labels of the molecules in the dataset.
+        """
+        return self._y
+
+    @property
+    def ids(self) -> np.ndarray:
+        """
+        Get the IDs of the molecules in the dataset.
+        Returns
+        -------
+        np.ndarray
+            IDs of the molecules in the dataset.
+        """
+        return self._ids
+
+    @ids.setter
+    def ids(self, ids: Union[List, np.ndarray]) -> None:
+        """
+        Set the IDs of the molecules in the dataset.
+        Parameters
+        ----------
+        ids: Union[List, np.ndarray]
+            IDs of the molecules.
+        """
+        if len(ids) != len(self._smiles):
+            raise ValueError('The number of IDs must be equal to the number of molecules.')
+        if len(ids) != len(np.unique(ids)):
+            raise ValueError('The IDs must be unique.')
+        self._ids = np.array([str(idx) for idx in ids])
+
+    @property
+    def n_tasks(self) -> int:
         """
         Get the number of tasks in the dataset.
 
         Returns
         -------
-        n_tasks: Union[int, None]
+        n_tasks: int
             The number of tasks in the dataset.
         """
         return self._n_tasks
 
-    @n_tasks.setter
-    def n_tasks(self, value: int) -> None:
-        """
-        Set the number of tasks in the dataset.
-
-        Parameters
-        ----------
-        value: int
-            The number of tasks in the dataset.
-        """
-        self._n_tasks = value
-
     @property
-    def X(self) -> Union[np.ndarray, None]:
+    def mode(self) -> str:
         """
-        Get the features array for this dataset.
-
+        Get the mode of the dataset.
         Returns
         -------
-        X: Union[np.ndarray, None]
-            The features array for this dataset.
+        str
+            The mode of the dataset.
         """
-        if self._X is not None:
-            if self.features2keep.size == 0:
-                return np.empty((0, 0))
-            elif len(self._X.shape) == 2:
-                return self._X[:, self.features2keep]
-            else:
-                return self._X
-        else:
-            return None
+        return self._mode
 
-    @X.setter
-    def X(self, value: Union[np.ndarray, List]) -> None:
+    @mode.setter
+    def mode(self, mode: str) -> None:
         """
-        Set the features array for this dataset.
-
+        Set the mode of the dataset.
         Parameters
         ----------
-        value: Union[np.ndarray, List]
-            The features for this dataset.
+        mode: str
+            The mode of the dataset.
         """
-        if isinstance(value, list):
-            value = np.array(value)
-        if value is not None and value.size > 0:
-            if len(value.shape) == 2:
-                self.features2keep = np.array([i for i in range(value.shape[1])])
-            else:
-                self.features2keep = np.array([i for i in range(len(value))])
-            self._X = value
-        else:
-            self._X = None
-
-    @property
-    def y(self) -> Union[np.ndarray, None]:
-        """
-        Get the y (tasks) vector for this dataset.
-
-        Returns
-        -------
-        y: Union[np.ndarray, None]
-            The y (labels) vector for this dataset.
-        """
-        return self._y
-
-    @y.setter
-    def y(self, value: Union[np.ndarray, List]) -> None:
-        """
-        Set the y (tasks) vector for this dataset.
-
-        Parameters
-        ----------
-        value: Union[np.ndarray, List]
-            The y (tasks) vector for this dataset.
-        """
-        if len(value) != len(self.mols):
-            raise ValueError("Length of y vector must be equal to length of mols vector")
-        if isinstance(value, list):
-            value = np.array(value)
-        self._y = value
-
-    @property
-    def ids(self) -> np.ndarray:
-        """
-        Get the ids vector for this dataset.
-
-        Returns
-        -------
-        ids: np.ndarray
-            The ids vector for this dataset.
-        """
-        return self._ids
-
-    @ids.setter
-    def ids(self, value: Union[np.ndarray, List]) -> None:
-        """
-        Set the ids vector for this dataset. ids will be treated as strings.
-
-        Parameters
-        ----------
-        value: Union[np.ndarray, List]
-            The ids vector for this dataset.
-        """
-        if value is None:
-            self._ids = [str(uuid.uuid4().hex) for _ in range(self.mols.shape[0])]
-        elif len(set(value)) != len(value):
-            raise ValueError(f"Ids must be unique! Got {value}.")
-        elif len(value) != len(self.mols):
-            raise ValueError(f"Length of ids vector must be equal to length of mols vector. "
-                             f"Got {len(value)} values and {len(self.mols)} molecules.")
-        else:
-            self._ids = np.array([str(i) for i in value])
-
-    @property
-    def features2keep(self) -> np.ndarray:
-        """
-        Get the features to keep in the dataset.
-
-        Returns
-        -------
-        features2keep: np.ndarray
-            The features to keep in the dataset.
-        """
-        return self._features2keep
-
-    @features2keep.setter
-    def features2keep(self, value: Union[np.ndarray, List]):
-        """
-        Set the features to keep in the dataset.
-
-        Parameters
-        ----------
-        value: Union[np.ndarray, List]
-            The features to keep in the dataset.
-        """
-        self._features2keep = np.array(value)
+        if mode not in ['classification', 'regression', None]:
+            raise ValueError('The mode must be either "classification" or "regression".')
+        self._mode = mode
 
     def get_shape(self) -> Tuple[Tuple, Union[Tuple, None], Union[Tuple, None]]:
         """
         Get the shape of the dataset.
-        Returns three tuples, giving the shape of the mols, X and y arrays.
-
+        Returns three tuples, giving the shape of the smiles, X and y arrays.
         Returns
         -------
-        mols_shape: Tuple
+        smiles_shape: Tuple
             The shape of the mols array.
         X_shape: Union[Tuple, None]
             The shape of the X array.
         y_shape: Union[Tuple, None]
             The shape of the y array.
         """
-        self.logger.info(f'Mols_shape: {self.mols.shape}')
-        if self.X is not None:
-            x_shape = self.X.shape
-            self.logger.info(f'Features_shape: {x_shape}')
-        else:
-            x_shape = None
-            self.logger.info(f'Features_shape: {None}')
-        if self.y is not None:
-            y_shape = self.y.shape
-            self.logger.info(f'Labels_shape: {y_shape}')
-        else:
-            y_shape = None
-            self.logger.info(f'Labels_shape: {None}')
-        return self.mols.shape, x_shape, y_shape
+        smiles_shape = self._smiles.shape
+        self.logger.info(f'Mols_shape: {smiles_shape}')
+        x_shape = self._X.shape if self._X is not None else None
+        self.logger.info(f'Features_shape: {x_shape}')
+        y_shape = self._y.shape if self._y is not None else None
+        self.logger.info(f'Labels_shape: {y_shape}')
+        return smiles_shape, x_shape, y_shape
 
     def remove_duplicates(self) -> None:
         """
-        Remove duplicated features from the dataset.
+        Remove molecules with duplicated features from the dataset.
         """
-        unique, index = np.unique(self.X, return_index=True, axis=0)
-        ids = self.ids[index]
-        self.select(ids, axis=0)
+        if self._X is not None:
+            if np.isnan(np.stack(self._X)).any():
+                warnings.warn('The dataset contains NaNs. Molecules with NaNs will be ignored.')
+            unique, index = np.unique(self.X, return_index=True, axis=0)
+            ids = self.ids[index]
+            self.select(ids, axis=0)
 
-    def remove_elements(self, indexes: Union[List[str], List[int]]) -> None:
+    def remove_elements(self, ids: List[str]) -> None:
         """
         Remove elements with specific IDs from the dataset.
-
         Parameters
         ----------
-        indexes: Union[List[str], List[int]]
-            The IDs of the elements to remove from the dataset.
-            IDs can be either strings or integers (not both).
+        ids: List[str]
+            IDs of the elements to remove.
         """
-        indexes = [str(i) for i in indexes]
-        all_indexes = self.ids
-        indexes_to_keep = list(set(all_indexes) - set(indexes))
-        self.select(indexes_to_keep)
+        if len(ids) != 0:
+            all_indexes = self.ids
+            indexes_to_keep = list(set(all_indexes) - set(ids))
+            self.select(indexes_to_keep)
 
-    def select_features(self, indexes: List[int]) -> None:
+    def remove_elements_by_index(self, indexes: List[int]) -> None:
+        """
+        Remove elements with specific indexes from the dataset.
+        Parameters
+        ----------
+        indexes: List[int]
+            Indexes of the elements to remove.
+        """
+        if len(indexes) > 0:
+            indexes = self._ids[indexes]
+            self.remove_elements(indexes)
+
+    def select_features_by_index(self, indexes: List[int]) -> None:
         """
         Select features with specific indexes from the dataset
-
         Parameters
         ----------
         indexes: List[int]
             The indexes of the features to select from the dataset.
         """
-        self.select(indexes, axis=1)
+        if len(indexes) != 0:
+            self.select(indexes, axis=1)
+
+    def select_features_by_name(self, names: List[str]) -> None:
+        """
+        Select features with specific names from the dataset
+        Parameters
+        ----------
+        names: List[str]
+            The names of the features to select from the dataset.
+        """
+        if len(names) != 0:
+            # Get the indexes of the features to select
+            indexes = [i for i, name in enumerate(self._feature_names) if name in names]
+            self.select(indexes, axis=1)
 
     def remove_nan(self, axis: int = 0) -> None:
         """
-        Remove only samples with at least one NaN in the features (when axis = 0)
+        Remove samples with at least one NaN in the features (when axis = 0)
         Or remove samples with all features with NaNs and the features with at least one NaN (axis = 1)
-
         Parameters
         ----------
         axis: int
             The axis to remove the NaNs from.
         """
-        j = 0
-        indexes = []
-
+        if self._X is None or len(self._X.shape) == 0:
+            return
         if axis == 0:
-            X = self.X
-            for i in X:
-                if check_values(i):
-                    indexes.append(self.ids[j])
-                j += 1
-            if len(indexes) > 0:
-                self.logger.warning(f'Elements with IDs: {indexes} were removed due to the presence of NAs!')
-                self.remove_elements(indexes)
-
+            if len(self._X.shape) == 1:
+                indexes = np.where(pd.isna(self._X))[0]
+            else:
+                indexes = np.where(pd.isna(self._X).any(axis=1))[0]
+            # rows with at least one NaN
+            self.remove_elements_by_index(indexes)
         elif axis == 1:
-            self.X = self.X[~np.isnan(self.X).all(axis=1)]
-            nans_column_indexes = [nans_indexes[1] for nans_indexes in np.argwhere(np.isnan(self.X))]
+            if len(self._X.shape) == 1:
+                indexes = np.where(np.isnan(self._X))[0]
+                self.remove_elements_by_index(indexes)
+            else:
+                # rows with all NaNs
+                indexes = np.where(np.isnan(self._X).all(axis=1))[0]
+                self.remove_elements_by_index(indexes)
+                # columns with at least one NaN
+                columns = list(set(np.where(np.isnan(self._X).any(axis=0))[0]))
+                self._X = np.delete(self._X, columns, axis=1)
+                if len(self._X.shape) <= 2:  # feature names in datasets with more than two dimensions not supported
+                    feature_names_to_delete = [self._feature_names[i] for i in columns]
+                    self._feature_names = [name for name in self._feature_names if name not in feature_names_to_delete]
+        else:
+            raise ValueError('The axis must be 0 or 1.')
 
-            column_sets = list(set(nans_column_indexes))
-            self.X = np.delete(self.X, column_sets, axis=1)
-
-    def select_to_split(self, indexes: List[int]) -> 'NumpyDataset':
+    def select_to_split(self, indexes: Union[np.ndarray, List[int]]) -> 'SmilesDataset':
         """
         Select elements with specific indexes to split the dataset
-
         Parameters
         ----------
-        indexes: List[int]
+        indexes: Union[np.ndarray, List[int]]
             The indexes of the elements to split the dataset.
+        Returns
+        -------
+        SmilesDataset
+            The dataset with the selected elements.
         """
-        y = None
-        X = None
-        ids = None
+        smiles = self._smiles[indexes]
+        mols = self._mols[indexes]
+        X = self._X[indexes] if self._X is not None else None
+        y = self._y[indexes] if self._y is not None else None
+        ids = self._ids[indexes]
+        feature_names = self._feature_names
+        label_names = self._label_names
+        mode = self._mode
+        return SmilesDataset(smiles, mols, ids, X, feature_names, y, label_names, mode)
 
-        mols = [self.mols[i] for i in indexes]
-
-        if self.y is not None:
-            y = self.y[indexes]
-
-        if self.X is not None:
-            if len(self.X.shape) == 2:
-                X = self.X[indexes, :]
-            else:
-                X = self.X[indexes]
-
-        if self.ids is not None:
-            ids = self.ids[indexes]
-        return NumpyDataset(mols, X, y, ids, self.features2keep)
-
-    def select(self, indexes: Union[List[str], List[int]], axis: int = 0) -> None:
+    def select(self, ids: Union[List[str], List[int]], axis: int = 0) -> None:
         """
         Creates a new sub dataset of self from a selection of indexes.
-
         Parameters
         ----------
-        indexes: Union[List[str], List[int]]
+        ids: Union[List[str], List[int]]
           List of ids/indexes to select.
-          IDs in case axis = 0, indexes in case axis = 1.
+          IDs of the compounds in case axis = 0, indexes of the columns in case axis = 1.
         axis: int
             Axis to select along. 0 selects along the first axis, 1 selects along the second axis.
         """
-
         if axis == 0:
-            all_indexes = self.ids
-            indexes_to_delete = sorted(list(set(all_indexes) - set(indexes)))
-            raw_indexes = []
-            for index in indexes_to_delete:
-                for i, mol_index in enumerate(all_indexes):
-                    if index == mol_index:
-                        raw_indexes.append(i)
+            ids_to_delete = sorted(list(set(self._ids) - set(ids)))
+            raw_indexes = [i for i, mol_index in enumerate(self._ids) if mol_index in ids_to_delete]
+            for idx in raw_indexes:
+                self.logger.error(f"Molecule with smiles: {self._smiles[idx]} removed from dataset.")
+            self._smiles = np.delete(self._smiles, raw_indexes, axis)
+            self._mols = np.delete(self._mols, raw_indexes, axis)
+            self._y = np.delete(self._y, raw_indexes, axis) if self._y is not None else self._y
+            self._X = np.delete(self._X, raw_indexes, axis) if self._X is not None else self._X
+            self._ids = np.delete(self._ids, raw_indexes, axis)
 
-            self.mols = np.delete(self.mols, raw_indexes, axis)
+        elif axis == 1:
+            if self._X is None or len(self._X.shape) == 0:
+                raise ValueError('Dataset has no features.')
+            if len(self._X.shape) == 1:
+                pass
+            else:
+                indexes_to_delete = list(set(np.arange(self._X.shape[1])) - set(ids))
+                self._X = np.delete(self.X, indexes_to_delete, axis=1)
+                if len(self._X.shape) <= 2:  # feature names in datasets with more than two dimensions not supported
+                    feature_names_to_delete = [self._feature_names[i] for i in indexes_to_delete]
+                    self._feature_names = [name for name in self._feature_names if name not in feature_names_to_delete]
+        else:
+            raise ValueError('The axis must be 0 or 1.')
 
-            if self.y is not None:
-                self.y = np.delete(self.y, raw_indexes, axis)
-
-            if self.X is not None:
-                self.X = np.delete(self.X, raw_indexes, axis)
-
-            if self.ids is not None:
-                self.ids = np.delete(self.ids, raw_indexes, axis)
-
-        if axis == 1:
-            indexes_to_delete = list(set(self.features2keep) - set(indexes))
-            self.features2keep = np.array(list(set(self.features2keep) - set(indexes_to_delete)))
-            self.features2keep = np.sort(self.features2keep)
-
-    def merge(self, datasets: List[Dataset]) -> 'NumpyDataset':
+    def merge(self, datasets: List[Dataset]) -> 'SmilesDataset':
         """
         Merges provided datasets with the self dataset.
-
         Parameters
         ----------
         datasets: List[Dataset]
             List of datasets to merge.
-
         Returns
         -------
         NumpyDataset
@@ -678,10 +871,14 @@ class NumpyDataset(Dataset):
         """
         datasets = list(datasets)
 
-        X = self.X
-        y = self.y
-        ids = self.ids
-        mols = self.mols
+        X = self._X
+        y = self._y
+        ids = self._ids
+        mols = self._mols
+        smiles = self._smiles
+        feature_names = self._feature_names
+        label_names = self._label_names
+        mode = self._mode
 
         for ds in datasets:
             ids = merge_arrays(ids, len(mols), ds.ids, len(ds.mols))
@@ -696,26 +893,27 @@ class NumpyDataset(Dataset):
             else:
                 X = merge_arrays_of_arrays(X, ds.X)
             mols = np.append(mols, ds.mols, axis=0)
-        return NumpyDataset(mols, X, y, ids, self.features2keep)
+            smiles = np.append(smiles, ds.smiles, axis=0)
+        return SmilesDataset(smiles, mols, ids, X, feature_names, y, label_names, mode)
 
     def to_csv(self, path: str) -> None:
         """
         Save the dataset to a csv file.
-
         Parameters
         ----------
         path: str
             Path to save the csv file.
         """
         df = pd.DataFrame()
-        if self.ids is not None:
-            df['ids'] = pd.Series(self.ids)
-        df['mols'] = pd.Series(self.mols)
-        if self.y is not None:
-            df['y'] = pd.Series(self.y)
-        if self.X is not None:
-            columns_names = ['feat_' + str(i + 1) for i in range(self.X.shape[1])]
-            df_x = pd.DataFrame(self.X, columns=columns_names)
+        df['ids'] = pd.Series(self._ids)
+        df['smiles'] = pd.Series(self._smiles)
+        if self._y is not None:
+            label_names = self._label_names
+            df_y = pd.DataFrame(self._y, columns=label_names)
+            df = pd.concat([df, df_y], axis=1)
+        if self._X is not None:
+            columns_names = self._feature_names
+            df_x = pd.DataFrame(self._X, columns=columns_names)
             df = pd.concat([df, df_x], axis=1)
 
         df.to_csv(path, index=False)
@@ -723,7 +921,6 @@ class NumpyDataset(Dataset):
     def load_features(self, path: str, **kwargs) -> None:
         """
         Load features from a csv file.
-
         Parameters
         ----------
         path: str
@@ -732,20 +929,19 @@ class NumpyDataset(Dataset):
             Keyword arguments to pass to pandas.read_csv.
         """
         df = pd.read_csv(path, **kwargs)
-        self.X = df.to_numpy()
+        self._X = df.to_numpy()
 
     def save_features(self, path: str = 'features.csv') -> None:
         """
         Save the features to a csv file.
-
         Parameters
         ----------
         path: str
             Path to save the csv file.
         """
         if self.X is not None:
-            columns_names = ['feat_' + str(i + 1) for i in range(self.X.shape[1])]
-            df = pd.DataFrame(self.X, columns=columns_names)
+            columns_names = self._feature_names
+            df = pd.DataFrame(self._X, columns=columns_names)
             df.to_csv(path, index=False)
         else:
             raise ValueError('Features array is empty!')

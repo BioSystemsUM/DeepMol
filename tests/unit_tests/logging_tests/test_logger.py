@@ -79,3 +79,6 @@ class TestLogger(TestCase):
         log_file_name = os.path.join(TEST_DIR, "test3.log")
         if os.path.exists(log_file_name):
             os.remove(log_file_name)
+        test_log_file_4 = os.path.join(TEST_DIR, "test4.log")
+        if os.path.exists(test_log_file_4):
+            os.remove(test_log_file_4)

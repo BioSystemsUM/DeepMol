@@ -1,4 +1,3 @@
-import collections
 import itertools
 import os
 import random
@@ -140,25 +139,15 @@ class HyperparameterOptimizerValidation(HyperparameterOptimizer):
             A tuple containing the best model, the best hyperparameters, and all scores.
         """
         if self.mode is None:
-            # TODO: better way of doint this
-            if len(set(train_dataset.y)) > 2:
-                model = KerasRegressor(build_fn=self.model_builder, **kwargs)
-                self.mode = 'regression'
-            else:
-                model = KerasClassifier(build_fn=self.model_builder, **kwargs)
-                self.mode = 'classification'
-        elif self.mode == 'classification':
-            model = KerasClassifier(build_fn=self.model_builder, **kwargs)
-        elif self.mode == 'regression':
-            model = KerasRegressor(build_fn=self.model_builder, **kwargs)
+            self.mode = train_dataset.mode
         else:
-            raise ValueError('Model operation mode can only be classification or regression!')
+            if self.mode != train_dataset.mode:
+                raise ValueError(f'Train dataset mode does not match model operation mode! Got {train_dataset.mode} '
+                                 f'but expected {self.mode}')
 
         self.logger.info(f'MODE: {self.mode}')
         hyperparams = params_dict.keys()
         hyperparameter_values = params_dict.values()
-        for hyperparameter_list in params_dict.values():
-            assert isinstance(hyperparameter_list, collections.Iterable)
 
         number_combinations = reduce(mul, [len(vals) for vals in hyperparameter_values])
 
@@ -201,10 +190,14 @@ class HyperparameterOptimizerValidation(HyperparameterOptimizer):
                     model_dir = tempfile.mkdtemp()
 
                 try:
-                    model = SklearnModel(self.model_builder(**model_params), model_dir)
+                    model = SklearnModel(model=self.model_builder(**model_params),
+                                         mode=self.mode,
+                                         model_dir=model_dir)
 
-                except Exception:
-                    model = KerasModel(self.model_builder(**model_params), model_dir)
+                except Exception as e:
+                    model = KerasModel(model_builder=self.model_builder(**model_params),
+                                       mode=self.mode,
+                                       model_dir=model_dir)
 
                 model.fit(train_dataset)
 
@@ -305,12 +298,12 @@ class HyperparameterOptimizerCV(HyperparameterOptimizer):
         Tuple[Model, Dict[str, Any], Dict[str, float]]:
             A tuple containing the best model, the best hyperparameters, and all scores.
         """
-        # TODO: better way of doing this
         if self.mode is None:
-            if len(set(train_dataset.y)) > 2:
-                self.mode = 'regression'
-            else:
-                self.mode = 'classification'
+            self.mode = train_dataset.mode
+        else:
+            if self.mode != train_dataset.mode:
+                raise ValueError(f'Train dataset mode does not match model operation mode! Got {train_dataset.mode} '
+                                 f'but expected {self.mode}')
 
         if model_type != 'deepchem':
             if self.mode == 'classification':

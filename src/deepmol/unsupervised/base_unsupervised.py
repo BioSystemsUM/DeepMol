@@ -15,7 +15,6 @@ from sklearn import cluster, decomposition, manifold
 from deepmol.loggers.logger import Logger
 
 
-# TODO: plot legends and labels are made for sweet vs non sweet --> change it to be general
 class UnsupervisedLearn(ABC):
     """
     Class for unsupervised learning.
@@ -29,10 +28,9 @@ class UnsupervisedLearn(ABC):
         """
         Initialize the UnsupervisedLearn object.
         """
-        self.features = None
         self.logger = Logger()
 
-    def run_unsupervised(self, dataset: Dataset, plot: bool = True):
+    def run_unsupervised(self, dataset: Dataset, plot: bool = True) -> SmilesDataset:
         """
         Run unsupervised learning.
 
@@ -45,30 +43,42 @@ class UnsupervisedLearn(ABC):
 
         Returns
         -------
-        x: SmilesDataset
+        df: SmilesDataset
             The dataset with the unsupervised features in dataset.X.
         """
-        self.dataset = dataset
-        self.features = dataset.X
-        x = self._run_unsupervised(plot=plot)
-        return x
+        df = self._run_unsupervised(dataset=dataset)
+        return df
 
     @abstractmethod
-    def _run_unsupervised(self, plot: bool = True):
+    def _run_unsupervised(self, dataset: Dataset) -> SmilesDataset:
         """
         Run unsupervised learning.
 
         Parameters
         ----------
-        plot: bool
-            If True, plot the results of unsupervised learning.
+        dataset: Dataset
+            The dataset to perform unsupervised learning.
 
         Returns
         -------
         x: SmilesDataset
             The dataset with the unsupervised features in dataset.X.
         """
-        raise NotImplementedError
+
+    @abstractmethod
+    def plot(self, x_new: np.ndarray, path: str = None, **kwargs) -> None:
+        """
+        Plot the results of unsupervised learning.
+
+        Parameters
+        ----------
+        x_new: np.ndarray
+            Transformed values.
+        path: str
+            The path to save the plot.
+        **kwargs:
+            Additional arguments to pass to the plot function.
+        """
 
 
 class PCA(UnsupervisedLearn):
@@ -83,13 +93,15 @@ class PCA(UnsupervisedLearn):
     """
 
     def __init__(self,
-                 n_components: Union[int, float, str] = None,
+                 n_components: Union[int, float, str] = 2,
                  copy: bool = True,
                  whiten: bool = False,
                  svd_solver: str = 'auto',
                  tol: float = 0.0,
                  iterated_power: Union[int, str] = 'auto',
-                 random_state: int = None):
+                 random_state: int = None,
+                 n_oversamples=10,
+                 power_iteration_normalizer="auto") -> None:
         """
         Parameters
         ----------
@@ -129,128 +141,112 @@ class PCA(UnsupervisedLearn):
         random_state: int
             Used when svd_solver == ‘arpack’ or ‘randomized’. Pass an int for reproducible results across multiple
             function calls.
+        n_oversamples: int
+            Additional number of random vectors to sample the range of M so as to ensure proper conditioning.
+            Only used by randomized SVD solver when svd_solver == 'randomized'.
+        power_iteration_normalizer: str
+            Power iteration normalizer for randomized SVD solver. Available options are ‘auto’, ‘QR’, ‘LU’, ‘none’.
         """
         super().__init__()
         self.n_components = n_components
-        self.copy = copy
-        self.whiten = whiten
-        self.svd_solver = svd_solver
-        self.tol = tol
-        self.iterated_power = iterated_power
-        self.random_state = random_state
+        self.pca = decomposition.PCA(n_components=self.n_components,
+                                     copy=copy,
+                                     whiten=whiten,
+                                     svd_solver=svd_solver,
+                                     tol=tol,
+                                     iterated_power=iterated_power,
+                                     random_state=random_state,
+                                     n_oversamples=n_oversamples,
+                                     power_iteration_normalizer=power_iteration_normalizer)
 
-    def _run_unsupervised(self, plot=True):
+    def _run_unsupervised(self, dataset: Dataset) -> SmilesDataset:
         """
         Fit the model with X and apply the dimensionality reduction on X.
 
         Parameters
         ----------
-        plot: bool
-            If True, plot the results of unsupervised learning.
+        dataset: Dataset
+            The dataset to perform unsupervised learning.
+
+        Returns
+        -------
+        df: SmilesDataset
+            The dataset with the unsupervised features in dataset.X.
         """
-        pca = decomposition.PCA(n_components=self.n_components,
-                                copy=self.copy,
-                                whiten=self.whiten,
-                                svd_solver=self.svd_solver,
-                                tol=self.tol,
-                                iterated_power=self.iterated_power,
-                                random_state=self.random_state)
-        if plot:
-            self._plot()
+        self.dataset = dataset
+        x_new = self.pca.fit_transform(dataset.X)
+        feature_names = [f'PCA_{i}' for i in range(x_new.shape[1])]
+        return SmilesDataset(smiles=dataset.smiles,
+                             mols=dataset.mols,
+                             X=x_new,
+                             y=dataset.y,
+                             ids=dataset.ids,
+                             feature_names=feature_names,
+                             label_names=dataset.label_names,
+                             mode=dataset.mode)
 
-        return SmilesDataset(smiles=self.dataset.smiles,
-                             mols=self.dataset.mols,
-                             X=pca.fit_transform(self.features),
-                             y=self.dataset.y,
-                             ids=self.dataset.ids,
-                             feature_names=self.dataset.feature_names,
-                             label_names=self.dataset.label_names,
-                             mode=self.dataset.mode)
-
-    def _plot(self):
+    def plot(self, x_new: np.ndarray, path: str = None, **kwargs) -> None:
         """
         Plot the results of unsupervised learning (PCA).
+
+        X_new : ndarray of shape (n_samples, n_components)
+            Transformed values.
+        path: str
+            Path to save the plot.
+        **kwargs:
+            Additional arguments to pass to the plot method.
         """
-        self.logger.info('2 Components PCA: ')
-        pca2comps = decomposition.PCA(n_components=2,
-                                      copy=self.copy,
-                                      whiten=self.whiten,
-                                      svd_solver=self.svd_solver,
-                                      tol=self.tol,
-                                      iterated_power=self.iterated_power,
-                                      random_state=self.random_state)
-        components = pca2comps.fit_transform(self.features)
+        self.logger.info(f'{self.n_components} Components PCA: ')
 
-        dic = {0: "Not Sweet", 1: "Sweet"}
-        colors_map = []
-        for elem in self.dataset.y:
-            colors_map.append(dic[elem])
+        total_var = self.pca.explained_variance_ratio_.sum() * 100
 
-        total_var = pca2comps.explained_variance_ratio_.sum() * 100
-
-        fig = px.scatter(components, x=0, y=1, color=colors_map,
-                         title=f'Total Explained Variance: {total_var:.2f}%',
-                         labels={'0': 'PC 1', '1': 'PC 2'})
-        fig.show()
-
-        self.logger.info('3 Components PCA: ')
-        pca3comps = decomposition.PCA(n_components=3,
-                                      copy=self.copy,
-                                      whiten=self.whiten,
-                                      svd_solver=self.svd_solver,
-                                      tol=self.tol,
-                                      iterated_power=self.iterated_power,
-                                      random_state=self.random_state)
-        components = pca3comps.fit_transform(self.features)
-
-        total_var = pca3comps.explained_variance_ratio_.sum() * 100
-
-        fig = px.scatter_3d(components,
-                            x=0, y=1, z=2, color=colors_map,
-                            title=f'Total Explained Variance: {total_var:.2f}%',
-                            labels={'0': 'PC 1', '1': 'PC 2', '2': 'PC 3'}
-                            )
-        fig.show()
-
-        if self.n_components is None:
-            self.n_components = self.dataset.X.shape[1]
-            self.logger.info('%i Components PCA: ' % self.n_components)
+        if self.dataset.mode == 'classification':
+            y = [str(i) for i in self.dataset.y]
         else:
-            self.logger.info('%i Components PCA: ' % self.n_components)
+            y = self.dataset.y
 
-        pca_all = decomposition.PCA(n_components=self.n_components,
-                                    copy=self.copy,
-                                    whiten=self.whiten,
-                                    svd_solver=self.svd_solver,
-                                    tol=self.tol,
-                                    iterated_power=self.iterated_power,
-                                    random_state=self.random_state)
-        components_all = pca_all.fit_transform(self.features)
-
-        total_var = pca_all.explained_variance_ratio_.sum() * 100
-
-        labels = {str(i): f"PC {i + 1}" for i in range(self.n_components)}
-
-        fig = px.scatter_matrix(components_all,
-                                color=colors_map,
-                                dimensions=range(self.n_components),
-                                labels=labels,
+        if self.n_components == 2:
+            fig = px.scatter(x_new, x=0, y=1, color=y,
+                             title=f'Total Explained Variance: {total_var:.2f}%',
+                             labels={'0': 'PC 1', '1': 'PC 2', 'color': self.dataset.label_names[0]}, **kwargs)
+        elif self.n_components == 3:
+            fig = px.scatter_3d(x_new, x=0, y=1, z=2, color=y,
                                 title=f'Total Explained Variance: {total_var:.2f}%',
-                                )
-        fig.update_traces(diagonal_visible=False)
+                                labels={'0': 'PC 1', '1': 'PC 2', '2': 'PC 3', 'color': self.dataset.label_names[0]})
+        else:
+            labels = {str(i): f"PC {i + 1}" for i in range(self.n_components)}
+            labels['color'] = self.dataset.label_names[0]
+            fig = px.scatter_matrix(x_new,
+                                    color=y,
+                                    dimensions=range(self.n_components),
+                                    labels=labels,
+                                    title=f'Total Explained Variance: {total_var:.2f}%',
+                                    **kwargs)
+            fig.update_traces(diagonal_visible=False)
         fig.show()
+        if path is not None:
+            fig.write_image(path)
 
+    def plot_explained_variance(self, path: str = None, **kwargs) -> None:
+        """
+        Plot the explained variance.
+
+        Parameters
+        ----------
+        path: str
+            Path to save the plot.
+        **kwargs:
+            Additional arguments to pass to the plot method.
+        """
         self.logger.info('Explained Variance: ')
-        pca_comp = decomposition.PCA()
-        pca_comp.fit(self.features)
-        exp_var_cumul = np.cumsum(pca_comp.explained_variance_ratio_)
-
+        exp_var_cumul = np.cumsum(self.pca.explained_variance_ratio_)
         fig = px.area(x=range(1, exp_var_cumul.shape[0] + 1),
                       y=exp_var_cumul,
-                      labels={"x": "# Components", "y": "Explained Variance"}
-                      )
-
+                      labels={"x": "# Components", "y": "Explained Variance"},
+                      **kwargs)
         fig.show()
+        if path is not None:
+            fig.write_image(path)
 
 
 class TSNE(UnsupervisedLearn):
@@ -265,20 +261,20 @@ class TSNE(UnsupervisedLearn):
     """
 
     def __init__(self,
-                 n_components=2,
-                 perplexity=30.0,
-                 early_exaggeration=12.0,
-                 learning_rate=200.0,
-                 n_iter=1000,
-                 n_iter_without_progress=300,
-                 min_grad_norm=1e-07,
-                 metric='euclidean',
-                 init='random',
-                 verbose=0,
-                 random_state=None,
-                 method='barnes_hut',
-                 angle=0.5,
-                 n_jobs=None):
+                 n_components: int = 2,
+                 perplexity: float = 30.0,
+                 early_exaggeration: float = 12.0,
+                 learning_rate: float = 200.0,
+                 n_iter: int = 1000,
+                 n_iter_without_progress: int = 300,
+                 min_grad_norm: float = 1e-07,
+                 metric: Union[str, callable] = 'euclidean',
+                 init: Union[str, np.ndarray] = 'random',
+                 verbose: int = 0,
+                 random_state: int = None,
+                 method: str = 'barnes_hut',
+                 angle: float = 0.5,
+                 n_jobs: int = None) -> None:
         """
         Parameters
         ----------
@@ -355,101 +351,67 @@ class TSNE(UnsupervisedLearn):
         """
         super().__init__()
         self.n_components = n_components
-        self.perplexity = perplexity
-        self.early_exaggeration = early_exaggeration
-        self.learning_rate = learning_rate
-        self.n_iter = n_iter
-        self.n_iter_without_progress = n_iter_without_progress
-        self.min_grad_norm = min_grad_norm
-        self.metric = metric
-        self.init = init
-        self.verbose = verbose
-        self.random_state = random_state
-        self.method = method
-        self.angle = angle
-        self.n_jobs = n_jobs
+        self.tsne = manifold.TSNE(n_components=self.n_components,
+                                  perplexity=perplexity,
+                                  early_exaggeration=early_exaggeration,
+                                  learning_rate=learning_rate,
+                                  n_iter=n_iter,
+                                  n_iter_without_progress=n_iter_without_progress,
+                                  min_grad_norm=min_grad_norm,
+                                  metric=metric,
+                                  init=init,
+                                  verbose=verbose,
+                                  random_state=random_state,
+                                  method=method,
+                                  angle=angle,
+                                  n_jobs=n_jobs)
 
-    def _run_unsupervised(self, plot=True):
-        """Fit X into an embedded space and return that transformed output."""
-        X_embedded = manifold.TSNE(n_components=self.n_components,
-                                   perplexity=self.perplexity,
-                                   early_exaggeration=self.early_exaggeration,
-                                   learning_rate=self.learning_rate,
-                                   n_iter=self.n_iter,
-                                   n_iter_without_progress=self.n_iter_without_progress,
-                                   min_grad_norm=self.min_grad_norm,
-                                   metric=self.metric,
-                                   init=self.init,
-                                   verbose=self.verbose,
-                                   random_state=self.random_state,
-                                   method=self.method,
-                                   angle=self.angle,
-                                   n_jobs=self.n_jobs)
+    def _run_unsupervised(self, dataset: Dataset) -> SmilesDataset:
+        """
+        Fit X into an embedded space and return that transformed output.
 
-        if plot:
-            self._plot()
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to be transformed.
 
-        return SmilesDataset(smiles=self.dataset.smiles,
-                             mols=self.dataset.mols,
-                             X=X_embedded.fit_transform(self.features),
-                             y=self.dataset.y,
-                             ids=self.dataset.ids,
-                             feature_names=self.dataset.feature_names,
-                             label_names=self.dataset.label_names,
-                             mode=self.dataset.mode)
+        Returns
+        -------
+        SmilesDataset
+            Transformed dataset.
+        """
+        self.dataset = dataset
+        x_new = self.tsne.fit_transform(dataset.X)
+        feature_names = [f"tsne_{i}" for i in range(self.n_components)]
+        return SmilesDataset(smiles=dataset.smiles,
+                             mols=dataset.mols,
+                             X=x_new,
+                             y=dataset.y,
+                             ids=dataset.ids,
+                             feature_names=feature_names,
+                             label_names=dataset.label_names,
+                             mode=dataset.mode)
 
-    def _plot(self):
-        dic = {0: "Not Active (0)", 1: "Active (1)"}
-        colors_map = []
-        for elem in self.dataset.y:
-            colors_map.append(dic[elem])
+    def plot(self, x_new: np.ndarray, path: str = None, **kwargs) -> None:
+        self.logger.info(f'{self.n_components} Components t-SNE: ')
 
-        self.logger.info('2 Components t-SNE: ')
-        tsne2comp = manifold.TSNE(n_components=2,
-                                  perplexity=self.perplexity,
-                                  early_exaggeration=self.early_exaggeration,
-                                  learning_rate=self.learning_rate,
-                                  n_iter=self.n_iter,
-                                  n_iter_without_progress=self.n_iter_without_progress,
-                                  min_grad_norm=self.min_grad_norm,
-                                  metric=self.metric,
-                                  init=self.init,
-                                  verbose=self.verbose,
-                                  random_state=self.random_state,
-                                  method=self.method,
-                                  angle=self.angle,
-                                  n_jobs=self.n_jobs)
+        if self.dataset.mode == 'classification':
+            y = [str(i) for i in self.dataset.y]
+        else:
+            y = self.dataset.y
 
-        projections2comp = tsne2comp.fit_transform(self.features)
+        if self.n_components == 2:
+            fig = px.scatter(x_new, x=0, y=1, color=y, labels={'color': self.dataset.label_names[0]}, **kwargs)
+        elif self.n_components == 3:
+            fig = px.scatter_3d(x_new, x=0, y=1, z=2, color=y, labels={'color': self.dataset.label_names[0]}, **kwargs)
+        else:
+            fig = px.scatter_matrix(x_new,
+                                    color=y,
+                                    dimensions=range(self.n_components),
+                                    labels={'color': self.dataset.label_names[0]},
+                                    **kwargs)
 
-        fig = px.scatter(projections2comp, x=0, y=1,
-                         color=colors_map, labels={'color': 'Class'}
-                         )
-        fig.show()
-
-        self.logger.info('3 Components t-SNE: ')
-        tsne3comp = manifold.TSNE(n_components=3,
-                                  perplexity=self.perplexity,
-                                  early_exaggeration=self.early_exaggeration,
-                                  learning_rate=self.learning_rate,
-                                  n_iter=self.n_iter,
-                                  n_iter_without_progress=self.n_iter_without_progress,
-                                  min_grad_norm=self.min_grad_norm,
-                                  metric=self.metric,
-                                  init=self.init,
-                                  verbose=self.verbose,
-                                  random_state=self.random_state,
-                                  method=self.method,
-                                  angle=self.angle,
-                                  n_jobs=self.n_jobs)
-
-        projections3comp = tsne3comp.fit_transform(self.features)
-
-        fig = px.scatter_3d(projections3comp, x=0, y=1, z=2,
-                            color=colors_map, labels={'color': 'species'}
-                            )
         fig.update_traces(marker_size=8)
-
         fig.show()
 
 
@@ -522,42 +484,49 @@ class KMeans(UnsupervisedLearn):
         self.random_state = random_state
         self.copy_x = copy_x
         self.algorithm = algorithm
+        self.k_means = cluster.KMeans(n_clusters=self.n_clusters,
+                                      init=self.init,
+                                      n_init=self.n_init,
+                                      max_iter=self.max_iter,
+                                      tol=self.tol,
+                                      verbose=self.verbose,
+                                      random_state=self.random_state,
+                                      copy_x=self.copy_x,
+                                      algorithm=self.algorithm)
 
-    def _run_unsupervised(self, plot=True):
+    def _run_unsupervised(self, dataset: Dataset) -> SmilesDataset:
         """
         Compute cluster centers and predict cluster index for each sample.
 
         Parameters
         ----------
-        plot: bool
-            Whether to plot the results or not.
+        dataset: Dataset
+            Dataset to cluster.
+
 
         Returns
         -------
-        k_means.labels_: ndarray
-            Index of the cluster each sample belongs to.
+        SmilesDataset
+            Transformed dataset.
         """
-
+        self.dataset = dataset
         if self.n_clusters == 'elbow':
-            self.n_clusters = self.elbow()
+            self.n_clusters = self._elbow()
 
-        k_means = cluster.KMeans(n_clusters=self.n_clusters,
-                                 init=self.init,
-                                 n_init=self.n_init,
-                                 max_iter=self.max_iter,
-                                 tol=self.tol,
-                                 verbose=self.verbose,
-                                 random_state=self.random_state,
-                                 copy_x=self.copy_x,
-                                 algorithm=self.algorithm)
+        #k_means.fit_predict(dataset.X)
+        x_new = self.k_means.fit_transform(dataset.X)
+        feature_names = [f"cluster_{i}" for i in range(self.n_clusters)]
+        # return k_means.labels_
+        return SmilesDataset(smiles=dataset.smiles,
+                             mols=dataset.mols,
+                             X=x_new,
+                             y=dataset.y,
+                             ids=dataset.ids,
+                             feature_names=feature_names,
+                             label_names=dataset.label_names,
+                             mode=dataset.mode)
 
-        if plot:
-            self._plot()
-
-        k_means.fit_predict(self.features)
-        return k_means.labels_
-
-    def elbow(self):
+    def _elbow(self):
         """
         Determine the optimal number of clusters using the elbow method.
 
@@ -577,7 +546,7 @@ class KMeans(UnsupervisedLearn):
                                           random_state=self.random_state,
                                           copy_x=self.copy_x,
                                           algorithm=self.algorithm)
-            kmeans_elbow.fit(self.features)
+            kmeans_elbow.fit(self.dataset.X)
             wcss.append(kmeans_elbow.inertia_)
         plt.plot(range(1, 11), wcss)
         plt.title('The Elbow Method Graph')
@@ -595,33 +564,24 @@ class KMeans(UnsupervisedLearn):
         self.logger.info('Creating a K-means cluster with ' + str(elbow.knee) + ' clusters...')
         return elbow.knee
 
-    def _plot(self):
+    def plot(self, x_new: np.ndarray, path: str = None, **kwargs) -> None:
         """
         Plot the results of the clustering.
+
+        Parameters
+        ----------
+        x_new: np.ndarray
+            Transformed dataset.
+        path: str
+            Path to save the plot.
+        **kwargs:
+            Additional arguments for the plot.
         """
-        # TODO: check the best approach to this problem
-        if self.features.shape[1] > 11:
-            self.logger.warning('Reduce the number of features to less than ten to get plot interpretability!')
-        else:
-            kmeans = cluster.KMeans(n_clusters=self.n_clusters,
-                                    init=self.init,
-                                    n_init=self.n_init,
-                                    max_iter=self.max_iter,
-                                    tol=self.tol,
-                                    verbose=self.verbose,
-                                    random_state=self.random_state,
-                                    copy_x=self.copy_x,
-                                    algorithm=self.algorithm)
-            kmeans.fit(self.features)
-            kmeans.predict(self.features)
-            labels = kmeans.labels_
+        #kmeans.predict(self.features)
+        labels = self.k_means.labels_
+        df = pd.DataFrame(self.dataset.X, columns=["x", "y"])
+        df["label"] = labels
 
-            labels = pd.DataFrame(labels)
-            labels = labels.rename({0: 'labels'}, axis=1)
-            ds = pd.concat((pd.DataFrame(self.features), labels), axis=1)
-            sns.pairplot(ds, hue='labels')
-
-            classes = pd.DataFrame(self.dataset.y)
-            classes = classes.rename({0: 'classes'}, axis=1)
-            ds = pd.concat((pd.DataFrame(self.features), classes), axis=1)
-            sns.pairplot(ds, hue='classes')
+        # Plot the data points colored by cluster
+        fig = px.scatter(df, x="x", y="y", color="label")
+        fig.show()

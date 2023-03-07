@@ -67,7 +67,6 @@ class Model(BaseEstimator):
         y: np.ndarray
             the labels for the batch
         """
-        raise NotImplementedError("Each class model must implement its own fit_on_batch method.")
 
     def predict_on_batch(self, X: Sequence):
         """
@@ -78,13 +77,11 @@ class Model(BaseEstimator):
         X: np.ndarray
             array of features
         """
-        raise NotImplementedError("Each class model must implement its own predict_on_batch method.")
 
     def reload(self) -> None:
         """
         Reload trained model from disk.
         """
-        raise NotImplementedError("Each class model must implement its own reload method.")
 
     @staticmethod
     def get_model_filename(model_dir: str) -> str:
@@ -125,7 +122,7 @@ class Model(BaseEstimator):
         Function for saving models.
         Each subclass is responsible for overriding this method.
         """
-        raise NotImplementedError("Each class model must implement its own save method.")
+        ("Each class model must implement its own save method.")
 
     def fit(self, dataset: Dataset):
         """
@@ -136,7 +133,6 @@ class Model(BaseEstimator):
         dataset: Dataset
             the Dataset to train on
         """
-        raise NotImplementedError("Each class model must implement its own fit method.")
 
     def predict(self, dataset: Dataset) -> np.ndarray:
         """
@@ -203,10 +199,8 @@ class Model(BaseEstimator):
         """
         Currently models can only be classifiers or regressors.
         """
-        raise NotImplementedError()
 
     def get_num_tasks(self) -> int:
         """
         Get number of tasks.
         """
-        raise NotImplementedError()

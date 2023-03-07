@@ -27,7 +27,6 @@ class Dataset(ABC):
         Get the length of the dataset.
         It returns the number of molecules in the dataset.
         """
-        raise NotImplementedError
 
     @property
     @abstractmethod
@@ -39,7 +38,6 @@ class Dataset(ABC):
         mols : np.ndarray
             Molecule smiles in the dataset.
         """
-        raise NotImplementedError
 
     @smiles.setter
     @abstractmethod
@@ -51,7 +49,6 @@ class Dataset(ABC):
         value: Union[List[str], np.ndarray]
             The molecules to set in the dataset.
         """
-        raise NotImplementedError
 
     @property
     @abstractmethod
@@ -64,7 +61,6 @@ class Dataset(ABC):
         mols : np.ndarray
             Molecules in the dataset.
         """
-        raise NotImplementedError
 
     @mols.setter
     @abstractmethod
@@ -77,7 +73,6 @@ class Dataset(ABC):
         value: Union[List[str], np.ndarray]
             The molecules to set in the dataset.
         """
-        raise NotImplementedError
 
     @property
     @abstractmethod
@@ -90,7 +85,6 @@ class Dataset(ABC):
         X: np.ndarray
             The features in the dataset.
         """
-        raise NotImplementedError
 
     @X.setter
     @abstractmethod
@@ -103,7 +97,6 @@ class Dataset(ABC):
         value: Union[List, np.ndarray]
             The features to set in the dataset.
         """
-        raise NotImplementedError
 
     @property
     @abstractmethod
@@ -116,7 +109,6 @@ class Dataset(ABC):
         y: np.ndarray
             The labels in the dataset.
         """
-        raise NotImplementedError
 
     @y.setter
     @abstractmethod
@@ -129,7 +121,6 @@ class Dataset(ABC):
         value: Union[List, np.ndarray]
             The labels to set in the dataset.
         """
-        raise NotImplementedError
 
     @property
     @abstractmethod
@@ -142,7 +133,6 @@ class Dataset(ABC):
         ids: np.ndarray
             The ids in the dataset.
         """
-        raise NotImplementedError
 
     @ids.setter
     @abstractmethod
@@ -155,7 +145,6 @@ class Dataset(ABC):
         value: Union[List[str], np.ndarray]
             The ids to set in the dataset.
         """
-        raise NotImplementedError
 
     @property
     @abstractmethod
@@ -168,7 +157,6 @@ class Dataset(ABC):
         feature_names: np.ndarray
             Feature names of the molecules.
         """
-        raise NotImplementedError
 
     @feature_names.setter
     @abstractmethod
@@ -181,7 +169,6 @@ class Dataset(ABC):
         value: Union[List, np.ndarray]
             Feature names of the molecules.
         """
-        raise NotImplementedError
 
     @property
     @abstractmethod
@@ -194,7 +181,6 @@ class Dataset(ABC):
         label_names: np.ndarray
             Label names of the molecules.
         """
-        raise NotImplementedError
 
     @label_names.setter
     @abstractmethod
@@ -207,7 +193,6 @@ class Dataset(ABC):
         value: Union[List, np.ndarray]
             Label names of the molecules.
         """
-        raise NotImplementedError
 
     @property
     @abstractmethod
@@ -220,7 +205,6 @@ class Dataset(ABC):
         n_tasks: int
             The number of tasks in the dataset.
         """
-        raise NotImplementedError
 
     @n_tasks.setter
     @abstractmethod
@@ -234,7 +218,6 @@ class Dataset(ABC):
             The number of tasks in the dataset.
 
         """
-        raise NotImplementedError
 
     @property
     @abstractmethod
@@ -247,7 +230,6 @@ class Dataset(ABC):
         mode: str
             The mode of the dataset.
         """
-        raise NotImplementedError
 
     @mode.setter
     def mode(self, value: str) -> None:
@@ -259,7 +241,6 @@ class Dataset(ABC):
         value: str
             The mode of the dataset.
         """
-        raise NotImplementedError
 
     @abstractmethod
     def get_shape(self) -> tuple:
@@ -271,7 +252,6 @@ class Dataset(ABC):
         shape: tuple
             The shape of molecules, features and labels.
         """
-        raise NotImplementedError
 
     @abstractmethod
     def remove_nan(self, axis: int = 0) -> None:
@@ -283,7 +263,6 @@ class Dataset(ABC):
         axis: int
             The axis to remove the nan values.
         """
-        raise NotImplementedError
 
     @abstractmethod
     def remove_elements(self, indexes: List) -> None:
@@ -295,7 +274,6 @@ class Dataset(ABC):
         indexes: List[int]
             The indexes of the elements to remove.
         """
-        raise NotImplementedError
 
     @abstractmethod
     def select_features_by_index(self, indexes: List[int]) -> None:
@@ -306,7 +284,6 @@ class Dataset(ABC):
         indexes: List[int]
             The indexes of the features to select.
         """
-        raise NotImplementedError
 
     @abstractmethod
     def select_features_by_name(self, names: List[str]) -> None:
@@ -317,7 +294,6 @@ class Dataset(ABC):
         names: List[str]
             The names of the features to select from the dataset.
         """
-        raise NotImplementedError
 
     @abstractmethod
     def select(self, indexes: List[int], axis: int = 0) -> None:
@@ -331,7 +307,6 @@ class Dataset(ABC):
         axis: int
             The axis to select the elements.
         """
-        raise NotImplementedError
 
     @abstractmethod
     def select_to_split(self, indexes: Union[np.ndarray, List[int]]) -> 'Dataset':
@@ -343,7 +318,6 @@ class Dataset(ABC):
         indexes: Union[np.ndarray, List[int]]
             The indexes of the elements to select.
         """
-        raise NotImplementedError
 
 
 class SmilesDataset(Dataset):
@@ -847,19 +821,19 @@ class SmilesDataset(Dataset):
         mode = self._mode
         return SmilesDataset(smiles, mols, ids, X, feature_names, y, label_names, mode)
 
-    def select(self, indexes: Union[List[str], List[int]], axis: int = 0) -> None:
+    def select(self, ids: Union[List[str], List[int]], axis: int = 0) -> None:
         """
         Creates a new sub dataset of self from a selection of indexes.
         Parameters
         ----------
-        indexes: Union[List[str], List[int]]
+        ids: Union[List[str], List[int]]
           List of ids/indexes to select.
           IDs of the compounds in case axis = 0, indexes of the columns in case axis = 1.
         axis: int
             Axis to select along. 0 selects along the first axis, 1 selects along the second axis.
         """
         if axis == 0:
-            ids_to_delete = sorted(list(set(self._ids) - set(indexes)))
+            ids_to_delete = sorted(list(set(self._ids) - set(ids)))
             raw_indexes = [i for i, mol_index in enumerate(self._ids) if mol_index in ids_to_delete]
             for idx in raw_indexes:
                 self.logger.error(f"Molecule with smiles: {self._smiles[idx]} removed from dataset.")
@@ -875,7 +849,7 @@ class SmilesDataset(Dataset):
             if len(self._X.shape) == 1:
                 pass
             else:
-                indexes_to_delete = list(set(np.arange(self._X.shape[1])) - set(indexes))
+                indexes_to_delete = list(set(np.arange(self._X.shape[1])) - set(ids))
                 self._X = np.delete(self.X, indexes_to_delete, axis=1)
                 if len(self._X.shape) <= 2:  # feature names in datasets with more than two dimensions not supported
                     feature_names_to_delete = [self._feature_names[i] for i in indexes_to_delete]
@@ -912,7 +886,7 @@ class SmilesDataset(Dataset):
                 raise ValueError(f'IDs must be unique! IDs are {ids}')
             y = merge_arrays(y, len(mols), ds.y, len(ds.mols))
             if X is None or ds.X is None:
-                print('Features are not the same length/type... Recalculate features for all inputs!')
+                self.logger.error('Features are not the same length/type... Recalculate features for all inputs!')
                 X = None
             elif len(X.shape) == 1 and len(ds.X.shape) == 1:
                 X = merge_arrays(X, len(mols), ds.X, len(ds.mols))

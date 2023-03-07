@@ -126,7 +126,6 @@ class StandardScaler(BaseScaler):
         dataset: Dataset
             The dataset to fit the scaler object.
         """
-        raise NotImplementedError
 
 
 class MinMaxScaler(BaseScaler):
@@ -246,7 +245,6 @@ class MinMaxScaler(BaseScaler):
         dataset: Dataset
             The dataset to fit the scaler object.
         """
-        raise NotImplementedError
 
 
 class MaxAbsScaler(BaseScaler):
@@ -359,7 +357,6 @@ class MaxAbsScaler(BaseScaler):
         dataset: Dataset
             The dataset to fit the scaler object.
         """
-        raise NotImplementedError
 
 
 class RobustScaler(BaseScaler):
@@ -493,7 +490,6 @@ class RobustScaler(BaseScaler):
         dataset: Dataset
             The dataset to fit the scaler object.
         """
-        raise NotImplementedError
 
 
 class PolynomialFeatures(BaseScaler):
@@ -619,7 +615,6 @@ class PolynomialFeatures(BaseScaler):
         dataset: Dataset
             The dataset to fit the scaler object.
         """
-        raise NotImplementedError
 
 
 class Normalizer(BaseScaler):
@@ -735,7 +730,6 @@ class Normalizer(BaseScaler):
         dataset: Dataset
             The dataset to fit the scaler object.
         """
-        raise NotImplementedError
 
 
 class Binarizer(BaseScaler):
@@ -851,7 +845,6 @@ class Binarizer(BaseScaler):
         dataset: Dataset
             The dataset to fit the scaler object.
         """
-        raise NotImplementedError
 
 
 class KernelCenterer(BaseScaler):
@@ -958,7 +951,6 @@ class KernelCenterer(BaseScaler):
         dataset: Dataset
             The dataset to fit the scaler object.
         """
-        raise NotImplementedError
 
 
 class QuantileTransformer(BaseScaler):
@@ -1098,7 +1090,6 @@ class QuantileTransformer(BaseScaler):
         dataset: Dataset
             The dataset to fit the scaler object.
         """
-        raise NotImplementedError
 
 
 class PowerTransformer(BaseScaler):
@@ -1219,4 +1210,3 @@ class PowerTransformer(BaseScaler):
         dataset: Dataset
             The dataset to fit the scaler object.
         """
-        raise NotImplementedError

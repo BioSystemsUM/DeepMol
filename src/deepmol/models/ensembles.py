@@ -37,7 +37,6 @@ class Ensemble(ABC):
         """
         Predicts the labels for the specified dataset.
         """
-        raise NotImplementedError()
 
     def evaluate(self,
                  dataset: Dataset,

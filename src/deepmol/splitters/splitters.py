@@ -149,7 +149,6 @@ class Splitter(ABC):
         Tuple[List[int], List[int], List[int]]
           A tuple `(train_inds, valid_inds, test_inds)` of the indices for the various splits.
         """
-        raise NotImplementedError
 
     @abstractmethod
     def k_fold_split(self,
@@ -173,7 +172,6 @@ class Splitter(ABC):
         List[Tuple[Dataset, Dataset]]
           List of length k tuples of (train, test) where `train` and `test` are both `Dataset`.
         """
-        raise NotImplementedError
 
 
 class RandomSplitter(Splitter):
@@ -504,7 +502,6 @@ class SimilaritySplitter(Splitter):
         List[Tuple[Dataset, Dataset]]
             List of train/test pairs of size k.
         """
-        raise NotImplementedError('This method is still to be implemented.')
 
     @staticmethod
     def _split_fingerprints(fps: List, size1: int, size2: int, indexes: List[int], homogenous_threshold: float):
@@ -679,7 +676,6 @@ class ScaffoldSplitter(Splitter):
         List[Tuple[Dataset, Dataset]]
             List of train/test pairs of size k.
         """
-        raise NotImplementedError('This method is still to be implemented.')
 
     @staticmethod
     def generate_scaffolds(mols: np.ndarray,
@@ -876,4 +872,3 @@ class ButinaSplitter(Splitter):
         List[Tuple[Dataset, Dataset]]
             List of train/test pairs of size k.
         """
-        raise NotImplementedError('This method is still to be implemented.')

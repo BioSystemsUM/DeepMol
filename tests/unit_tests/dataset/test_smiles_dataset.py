@@ -56,7 +56,7 @@ class TestSmilesDataset(TestCase):
         self.base_dataset.ids = [1, 2, 3, 4]
 
         with self.assertRaises(ValueError):
-            self.base_dataset.select(indexes=[1, 2, 3, 4, 5], axis=3)
+            self.base_dataset.select(ids=[1, 2, 3, 4, 5], axis=3)
 
         with self.assertRaises(ValueError):
             self.base_dataset.feature_names = ['feature1', 'feature2']

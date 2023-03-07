@@ -89,4 +89,3 @@ class MolecularStandardizer(ABC):
         mol: Mol
             Standardized mol.
         """
-        raise NotImplementedError

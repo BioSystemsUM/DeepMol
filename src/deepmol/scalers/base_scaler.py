@@ -29,7 +29,6 @@ class BaseScaler(ABC):
         object
             The scaler object.
         """
-        raise NotImplementedError
 
     @scaler_object.setter
     @abstractmethod
@@ -40,7 +39,6 @@ class BaseScaler(ABC):
         value: object
             The scaler object.
         """
-        raise NotImplementedError
 
     def save(self, file_path: str) -> None:
         """
@@ -64,7 +62,6 @@ class BaseScaler(ABC):
         object
             The scaler object.
         """
-        raise NotImplementedError
 
     def fit_transform(self, dataset: Dataset, columns: list = None) -> None:
         """
@@ -92,7 +89,6 @@ class BaseScaler(ABC):
         X: np.ndarray
             The dataset to be fitted and transformed.
         """
-        raise NotImplementedError
 
     def fit(self, dataset: Dataset, columns: list = None) -> None:
         """
@@ -119,7 +115,6 @@ class BaseScaler(ABC):
         X: np.ndarray
             The dataset to be fitted.
         """
-        raise NotImplementedError
 
     def transform(self, dataset: Dataset, columns: list = None) -> None:
         """
@@ -146,7 +141,6 @@ class BaseScaler(ABC):
         X: np.ndarray
             The dataset to be transformed.
         """
-        raise NotImplementedError
 
     # TODO: figure out the better way of wrapping this method, as it intends to fit the dataset in batches
     def partial_fit(self, dataset: Dataset) -> None:
@@ -156,4 +150,3 @@ class BaseScaler(ABC):
         dataset: Dataset
             The dataset to be partially fitted.
         """
-        raise NotImplementedError

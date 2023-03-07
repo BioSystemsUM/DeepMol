@@ -84,13 +84,39 @@ class DeepChemModel(BaseDeepChemModel):
             self.epochs = 30
 
     def fit_on_batch(self, X: Sequence, y: Sequence, w: Sequence):
-        raise NotImplementedError
+        """
+        Fits the model on a batch of data.
+
+        Parameters
+        ----------
+        X: Sequence
+            The input data.
+        y: Sequence
+            The output data.
+        w: Sequence
+            The weights for the data.
+        """
+
 
     def get_task_type(self) -> str:
-        raise NotImplementedError
+        """
+        Returns the task type of the model.
+
+        Returns
+        -------
+        str
+            The task type of the model.
+        """
 
     def get_num_tasks(self) -> int:
-        raise NotImplementedError
+        """
+        Returns the number of tasks of the model.
+
+        Returns
+        -------
+        int
+            The number of tasks of the model.
+        """
 
     def fit(self, dataset: Dataset) -> None:
         """Fits DeepChemModel to data.

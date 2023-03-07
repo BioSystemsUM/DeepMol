@@ -44,19 +44,16 @@ class SklearnModel(Model):
         """
         Fits model on batch of data.
         """
-        raise NotImplementedError
 
     def get_task_type(self) -> str:
         """
         Returns the task type of the model.
         """
-        raise NotImplementedError
 
     def get_num_tasks(self) -> int:
         """
         Returns the number of tasks.
         """
-        raise NotImplementedError
 
     def fit(self, dataset: Dataset) -> None:
         """

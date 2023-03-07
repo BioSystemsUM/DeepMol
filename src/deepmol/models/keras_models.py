@@ -81,7 +81,7 @@ class KerasModel(Model):
         dataset: Dataset
             The `Dataset` to train this model on.
         """
-        if self.mode  != dataset.mode:
+        if self.mode != dataset.mode:
             raise ValueError('Dataset mode does not match model mode.')
         features = dataset.X
         y = np.squeeze(dataset.y)
@@ -129,31 +129,26 @@ class KerasModel(Model):
         """
         Fits model on batch of data.
         """
-        raise NotImplementedError
 
     def reload(self) -> None:
         """
         Reloads the model from disk.
         """
-        raise NotImplementedError
 
     def save(self) -> None:
         """
         Saves the model to disk.
         """
-        raise NotImplementedError
 
     def get_task_type(self) -> str:
         """
         Returns the task type of the model.
         """
-        raise NotImplementedError
 
     def get_num_tasks(self) -> int:
         """
         Returns the number of tasks of the model.
         """
-        raise NotImplementedError
 
     def cross_validate(self,
                        dataset: Dataset,

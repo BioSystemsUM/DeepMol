@@ -58,7 +58,6 @@ class BaseFeatureSelector(ABC):
         features_to_keep: np.ndarray
             Array containing the indexes of the features to keep.
         """
-        raise NotImplementedError
 
 
 class LowVarianceFS(BaseFeatureSelector):

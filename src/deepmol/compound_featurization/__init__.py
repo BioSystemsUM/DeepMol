@@ -10,12 +10,16 @@ from .rdkit_descriptors import ThreeDimensionalMoleculeGenerator, All3DDescripto
 from .rdkit_fingerprints import MorganFingerprint, AtomPairFingerprint, LayeredFingerprint, RDKFingerprint, \
     MACCSkeysFingerprint
 
+from .mixed_descriptors import MixedFeaturizer
+
 try:
     from .mol2vec import Mol2Vec
 except ImportError:
     warnings.warn("Mol2Vec not available. Please install it to use it.")
 
-from .deepchem_featurizers import WeaveFeat, CoulombFeat, CoulombEigFeat, ConvMolFeat, MolGraphConvFeat, \
-    SmileImageFeat, SmilesSeqFeat
+try:
+    from .deepchem_featurizers import WeaveFeat, CoulombFeat, CoulombEigFeat, ConvMolFeat, MolGraphConvFeat, \
+        SmileImageFeat, SmilesSeqFeat, MolGanFeat
+except ImportError:
+    warnings.warn("DeepChem not available. Please install it to use it.")
 
-from .mixed_descriptors import MixedFeaturizer

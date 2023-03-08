@@ -358,7 +358,8 @@ class SmilesDataset(Dataset):
         mode: str
             The mode of the dataset.
             If 'auto', the mode is inferred from the labels. If 'classification', the dataset is treated as a
-            classification dataset. If 'regression', the dataset is treated as a regression dataset.
+            classification dataset. If 'regression', the dataset is treated as a regression dataset. If 'multitask',
+            the dataset is treated as a multitask dataset.
         """
         super().__init__()
         self._smiles = np.array(smiles)
@@ -404,7 +405,8 @@ class SmilesDataset(Dataset):
         mode: str
             The mode of the dataset.
             If 'auto', the mode is inferred from the labels. If 'classification', the dataset is treated as a
-            classification dataset. If 'regression', the dataset is treated as a regression dataset.
+            classification dataset. If 'regression', the dataset is treated as a regression dataset. If 'multitask',
+            the dataset is treated as a multitask dataset.
 
         Returns
         -------
@@ -491,10 +493,14 @@ class SmilesDataset(Dataset):
         """
         if self._y is None:
             return None
+        if len(self._y.shape) > 1:
+            self.logger.info("Assuming multitask since y has more than one dimension. If otherwise, explicitly set the "
+                             "mode to 'classification' or 'regression'!")
+            return 'multitask'
         classes = np.unique(self.y)
         if len(classes) > 10:
-            self.logger.warning("Assuming regression since there are more than 10 unique y values. If otherwise, "
-                                "explicitly set the mode to 'classification'!")
+            self.logger.info("Assuming regression since there are more than 10 unique y values. If otherwise, "
+                             "explicitly set the mode to 'classification'!")
             return 'regression'
         else:
             self.logger.info("Assuming classification since there are less than 10 unique y values. If otherwise, "

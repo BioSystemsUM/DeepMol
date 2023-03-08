@@ -126,9 +126,11 @@ class DeepChemModel(BaseDeepChemModel):
         dataset: Dataset
             The `Dataset` to train this model on.
         """
-        if self.model.model.mode != dataset.mode:
-            raise ValueError(f"The model mode and the dataset mode must be the same. "
-                             f"Got model mode: {self.model.model.mode} and dataset mode: {dataset.mode}")
+        # TODO: better way to validate model.mode and dataset.mode
+        if dataset.mode != 'multitask':
+            if self.model.model.mode != dataset.mode:
+                raise ValueError(f"The model mode and the dataset mode must be the same. "
+                                 f"Got model mode: {self.model.model.mode} and dataset mode: {dataset.mode}")
         # Afraid of model.fit not recognizes the input dataset as a deepchem.data.datasets.Dataset
         if isinstance(self.model, TorchModel) and self.model.model.mode == 'regression':
             y = np.expand_dims(dataset.y, axis=-1)  # need to do this so that the loss is calculated correctly

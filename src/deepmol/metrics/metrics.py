@@ -2,11 +2,13 @@ from typing import Tuple, Any, Union, List
 
 import numpy as np
 
+from deepmol.loggers import Logger
 from deepmol.utils.utils import normalize_labels_shape
 
 
 class Metric(object):
-    """Class for computing machine learning metrics.
+    """
+    Class for computing machine learning metrics.
 
     Metrics can be imported from scikit-learn or can be user defined functions.
     """
@@ -18,7 +20,7 @@ class Metric(object):
                  mode: str = None,
                  n_tasks: int = None,
                  classification_handling_mode: str = None,
-                 threshold_value: float = None):
+                 threshold_value: float = None) -> None:
         # TODO: review threshold values and change to deal with a variable threshold (i.e. different from 0.5)
         """
         Parameters
@@ -115,6 +117,7 @@ class Metric(object):
 
         self.classification_handling_mode = classification_handling_mode
         self.threshold_value = threshold_value
+        self.logger = Logger()
 
     def compute_metric(self,
                        y_true: np.ndarray,
@@ -146,7 +149,6 @@ class Metric(object):
         Tuple[Any, Union[float, List[float]]]
             Tuple with the task averager computed value and a numpy array containing metric values for each task.
         """
-
         if n_tasks is None:
             if self.n_tasks is None and isinstance(y_true, np.ndarray):
                 if len(y_true.shape) == 1:
@@ -156,42 +158,33 @@ class Metric(object):
             else:
                 n_tasks = self.n_tasks
 
-        # TODO: Needs to be specified to deal with multitasking
-        # y_true = normalize_labels_shape(y_true, mode=self.mode, n_tasks=n_tasks, n_classes=n_classes)
-        # y_pred = normalize_prediction_shape(y_pred, mode=self.mode, n_tasks=n_tasks, n_classes=n_classes)
-        # if self.mode == "classification":
-        #    y_true = handle_classification_mode(y_true, self.classification_handling_mode, self.threshold_value)
-        #    y_pred = handle_classification_mode(y_pred, self.classification_handling_mode, self.threshold_value)
-
-        # n_samples = y_true.shape[0]
-
-        computed_metrics = []
-
-        # assuming this is provided with values per column for each task
-        # TODO: check this out (needs to be changed to deal with multitasking)
-        # print(y_true)
-        # print(y_pred)
-        for task in range(n_tasks):
-            y_task = y_true  # [:, task]
-            y_pred_task = y_pred  # [:, task]
+        if n_tasks == 1:
+            y_task = y_true
+            y_pred_task = y_pred
 
             metric_value = self.compute_singletask_metric(y_task,
                                                           y_pred_task,
                                                           **kwargs)
-            computed_metrics.append(metric_value)
-        print(str(self.metric.__name__) + ': \n', computed_metrics[0])
-        if n_tasks == 1:
-            computed_metrics = computed_metrics[0]  # type: ignore
+            computed_metrics = metric_value
+        else:
+            computed_metrics = []
+            for task in range(n_tasks):
+                y_task = y_true[:, task]
+                y_pred_task = y_pred[task]
+
+                metric_value = self.compute_singletask_metric(y_task,
+                                                              y_pred_task,
+                                                              **kwargs)
+                computed_metrics.append(metric_value)
 
         if not per_task_metrics:
             try:
                 return self.task_averager(computed_metrics)
             except Exception as e:
-                print('WARNING: task averager ', e)
+                self.logger.warning(f"WARNING: task averager threw an exception: {e}")
         else:
             return self.task_averager(computed_metrics), computed_metrics
 
-    # TODO: implement to multitask
     def compute_singletask_metric(self,
                                   y_true: np.ndarray,
                                   y_pred: np.ndarray,

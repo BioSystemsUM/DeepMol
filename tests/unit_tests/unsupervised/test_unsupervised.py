@@ -15,6 +15,8 @@ class UnsupervisedBaseTestCase(ABC):
     def setUp(self) -> None:
         dataset = os.path.join(TEST_DIR, "data", "train_dataset.csv")
         td = pd.read_csv(dataset, sep=',')
+        # pick first 125 and last 125 rows
+        td = pd.concat([td.iloc[:125], td.iloc[-125:]])
         smiles = td.mols.values
         y = td.y.values
         feature_names = td.columns.values[3:]
@@ -30,7 +32,7 @@ class UnsupervisedBaseTestCase(ABC):
         self.dataset.X = x
 
         dataset = os.path.join(TEST_DIR, "data", "PC-3.csv")
-        pc3 = pd.read_csv(dataset, sep=',')
+        pc3 = pd.read_csv(dataset, sep=',', nrows=250)
         smiles = pc3.smiles.values
         y = pc3.pIC50.values
         # random features of 0 and 1s

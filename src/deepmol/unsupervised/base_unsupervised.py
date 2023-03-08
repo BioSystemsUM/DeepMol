@@ -8,7 +8,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import plotly.express as px
 from kneed import KneeLocator
-import seaborn as sns
 
 from sklearn import cluster, decomposition, manifold
 
@@ -30,7 +29,7 @@ class UnsupervisedLearn(ABC):
         """
         self.logger = Logger()
 
-    def run_unsupervised(self, dataset: Dataset, plot: bool = True) -> SmilesDataset:
+    def run_unsupervised(self, dataset: Dataset, **kwargs) -> SmilesDataset:
         """
         Run unsupervised learning.
 
@@ -38,19 +37,19 @@ class UnsupervisedLearn(ABC):
         ----------
         dataset: Dataset
             The dataset to perform unsupervised learning.
-        plot: bool
-            If True, plot the results of unsupervised learning.
+        kwargs:
+            Additional arguments to pass to the _run_unsupervised method.
 
         Returns
         -------
         df: SmilesDataset
             The dataset with the unsupervised features in dataset.X.
         """
-        df = self._run_unsupervised(dataset=dataset)
+        df = self._run_unsupervised(dataset=dataset, **kwargs)
         return df
 
     @abstractmethod
-    def _run_unsupervised(self, dataset: Dataset) -> SmilesDataset:
+    def _run_unsupervised(self, dataset: Dataset, **kwargs) -> SmilesDataset:
         """
         Run unsupervised learning.
 
@@ -58,6 +57,8 @@ class UnsupervisedLearn(ABC):
         ----------
         dataset: Dataset
             The dataset to perform unsupervised learning.
+        kwargs:
+            Additional arguments to pass to the _unsupervised method.
 
         Returns
         -------
@@ -142,7 +143,7 @@ class PCA(UnsupervisedLearn):
             Used when svd_solver == ‘arpack’ or ‘randomized’. Pass an int for reproducible results across multiple
             function calls.
         n_oversamples: int
-            Additional number of random vectors to sample the range of M so as to ensure proper conditioning.
+            Additional number of random vectors to sample the range of M to ensure proper conditioning.
             Only used by randomized SVD solver when svd_solver == 'randomized'.
         power_iteration_normalizer: str
             Power iteration normalizer for randomized SVD solver. Available options are ‘auto’, ‘QR’, ‘LU’, ‘none’.
@@ -159,7 +160,7 @@ class PCA(UnsupervisedLearn):
                                      n_oversamples=n_oversamples,
                                      power_iteration_normalizer=power_iteration_normalizer)
 
-    def _run_unsupervised(self, dataset: Dataset) -> SmilesDataset:
+    def _run_unsupervised(self, dataset: Dataset, **kwargs) -> SmilesDataset:
         """
         Fit the model with X and apply the dimensionality reduction on X.
 
@@ -366,7 +367,7 @@ class TSNE(UnsupervisedLearn):
                                   angle=angle,
                                   n_jobs=n_jobs)
 
-    def _run_unsupervised(self, dataset: Dataset) -> SmilesDataset:
+    def _run_unsupervised(self, dataset: Dataset, **kwargs) -> SmilesDataset:
         """
         Fit X into an embedded space and return that transformed output.
 
@@ -410,9 +411,10 @@ class TSNE(UnsupervisedLearn):
                                     dimensions=range(self.n_components),
                                     labels={'color': self.dataset.label_names[0]},
                                     **kwargs)
-
-        fig.update_traces(marker_size=8)
+            fig.update_traces(diagonal_visible=False)
         fig.show()
+        if path:
+            fig.write_image(path)
 
 
 class KMeans(UnsupervisedLearn):
@@ -424,7 +426,7 @@ class KMeans(UnsupervisedLearn):
     """
 
     def __init__(self,
-                 n_clusters='elbow',
+                 n_clusters: Union[str, int] = 'elbow',
                  init: str = 'k-means++',
                  n_init: int = 10,
                  max_iter: int = 300,
@@ -432,7 +434,7 @@ class KMeans(UnsupervisedLearn):
                  verbose: int = 0,
                  random_state: int = None,
                  copy_x: bool = True,
-                 algorithm: str = 'auto'):
+                 algorithm: str = 'lloyd') -> None:
         """
         Initialize KMeans object.
 
@@ -469,8 +471,8 @@ class KMeans(UnsupervisedLearn):
             adding the data mean. Note that if the original data is not C-contiguous, a copy will be made even if
             copy_x is False. If the original data is sparse, but not in CSR format, a copy will be made even if copy_x
             is False.
-        algorithm: str {“auto”, “full”, “elkan”}
-            K-means algorithm to use. The classical EM-style algorithm is “full”. The “elkan” variation is more
+        algorithm: str {"lloyd", "elkan", "auto", "full"}
+            K-means algorithm to use. The classical EM-style algorithm is `"lloyd"`. The “elkan” variation is more
             efficient on data with well-defined clusters, by using the triangle inequality. However, it’s more memory
             intensive due to the allocation of an extra array of shape (n_samples, n_clusters).
         """
@@ -484,6 +486,29 @@ class KMeans(UnsupervisedLearn):
         self.random_state = random_state
         self.copy_x = copy_x
         self.algorithm = algorithm
+
+    def _run_unsupervised(self, dataset: Dataset, **kwargs) -> SmilesDataset:
+        """
+        Compute cluster centers and predict cluster index for each sample.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to cluster.
+        **kwargs:
+            Additional keyword arguments to pass to the elbow method.
+
+        Returns
+        -------
+        SmilesDataset
+            Transformed dataset.
+        """
+        self.dataset = dataset
+
+        if self.n_clusters == 'elbow':
+            self.logger.info('Using elbow method to determine number of clusters.')
+            self.n_clusters = self._elbow(**kwargs)
+
         self.k_means = cluster.KMeans(n_clusters=self.n_clusters,
                                       init=self.init,
                                       n_init=self.n_init,
@@ -493,30 +518,8 @@ class KMeans(UnsupervisedLearn):
                                       random_state=self.random_state,
                                       copy_x=self.copy_x,
                                       algorithm=self.algorithm)
-
-    def _run_unsupervised(self, dataset: Dataset) -> SmilesDataset:
-        """
-        Compute cluster centers and predict cluster index for each sample.
-
-        Parameters
-        ----------
-        dataset: Dataset
-            Dataset to cluster.
-
-
-        Returns
-        -------
-        SmilesDataset
-            Transformed dataset.
-        """
-        self.dataset = dataset
-        if self.n_clusters == 'elbow':
-            self.n_clusters = self._elbow()
-
-        #k_means.fit_predict(dataset.X)
         x_new = self.k_means.fit_transform(dataset.X)
         feature_names = [f"cluster_{i}" for i in range(self.n_clusters)]
-        # return k_means.labels_
         return SmilesDataset(smiles=dataset.smiles,
                              mols=dataset.mols,
                              X=x_new,
@@ -526,9 +529,31 @@ class KMeans(UnsupervisedLearn):
                              label_names=dataset.label_names,
                              mode=dataset.mode)
 
-    def _elbow(self):
+    def _elbow(self, **kwargs):
         """
         Determine the optimal number of clusters using the elbow method.
+
+        Parameters
+        ----------
+        **kwargs:
+            Additional keyword arguments to pass to the elbow method.
+            kwargs include:
+                path: str
+                    Path to save the elbow method graph. By default, the graph is not saved.
+                S: float
+                    The sensitivity of the elbow method. By default, S = 0.1.
+                curve: str
+                    If 'concave', algorithm will detect knees. If 'convex', it will detect elbows.
+                    By default, curve = 'concave'.
+                direction: str
+                    One of {"increasing", "decreasing"}. By default, direction = 'increasing'.
+                interp_method: str
+                    One of {"interp1d", "polynomial"}. By default, interp_method = 'interp1d'.
+                online: bool
+                    kneed will correct old knee points if True, will return first knee if False. By default False.
+                polynomial_degree: int
+                    The degree of the fitting polynomial. Only used when interp_method="polynomial".
+                    This argument is passed to numpy polyfit `deg` parameter. By default 7.
 
         Returns
         -------
@@ -553,15 +578,16 @@ class KMeans(UnsupervisedLearn):
         plt.xlabel('Number of clusters')
         plt.ylabel('WCSS')
         plt.show()
+        if 'path' in kwargs:
+            plt.savefig(kwargs['path'])
+            kwargs.pop('path')
 
         clusters_df = pd.DataFrame({"cluster_errors": wcss, "num_clusters": range(1, 11)})
         elbow = KneeLocator(clusters_df.num_clusters.values,
                             clusters_df.cluster_errors.values,
-                            S=1.0,
-                            curve='convex',
-                            direction='decreasing')
+                            **kwargs)
 
-        self.logger.info('Creating a K-means cluster with ' + str(elbow.knee) + ' clusters...')
+        self.logger.info(f'The optimal number of clusters is {elbow.knee} as determined by the elbow method.')
         return elbow.knee
 
     def plot(self, x_new: np.ndarray, path: str = None, **kwargs) -> None:
@@ -577,11 +603,17 @@ class KMeans(UnsupervisedLearn):
         **kwargs:
             Additional arguments for the plot.
         """
-        #kmeans.predict(self.features)
-        labels = self.k_means.labels_
-        df = pd.DataFrame(self.dataset.X, columns=["x", "y"])
-        df["label"] = labels
-
-        # Plot the data points colored by cluster
-        fig = px.scatter(df, x="x", y="y", color="label")
+        self.logger.info('Plotting the results of the clustering.')
+        if x_new.shape[1] == 2:
+            fig = px.scatter(x_new, x=0, y=1, color=[str(kl) for kl in self.k_means.labels_],
+                             labels={'color': 'cluster'}, **kwargs)
+        elif x_new.shape[1] == 3:
+            fig = px.scatter_3d(x_new, x=0, y=1, z=2, color=[str(kl) for kl in self.k_means.labels_],
+                                labels={'color': 'cluster'}, **kwargs)
+        else:
+            fig = px.scatter_matrix(x_new, color=[str(kl) for kl in self.k_means.labels_],
+                                    dimensions=range(x_new.shape[1]), labels={'color': 'cluster'}, **kwargs)
+            fig.update_traces(diagonal_visible=False)
         fig.show()
+        if path:
+            fig.write_image(path)

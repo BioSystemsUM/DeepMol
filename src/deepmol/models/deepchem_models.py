@@ -97,7 +97,6 @@ class DeepChemModel(BaseDeepChemModel):
             The weights for the data.
         """
 
-
     def get_task_type(self) -> str:
         """
         Returns the task type of the model.
@@ -119,7 +118,9 @@ class DeepChemModel(BaseDeepChemModel):
         """
 
     def fit(self, dataset: Dataset) -> None:
-        """Fits DeepChemModel to data.
+        """
+        Fits DeepChemModel to data.
+
         Parameters
         ----------
         dataset: Dataset
@@ -266,13 +267,11 @@ class DeepChemModel(BaseDeepChemModel):
 
             dummy_model = DeepChemModel(self.model)
 
-            print('Train Score: ')
             # TODO: isto está testado ? estes transformers nao é um boleano
             train_score = dummy_model.evaluate(train_ds, [metric], transformers)
             train_scores.append(train_score[metric.name])
             avg_train_score += train_score[metric.name]
 
-            print('Test Score: ')
             test_score = dummy_model.evaluate(test_ds, [metric], transformers)
             test_scores.append(test_score[metric.name])
             avg_test_score += test_score[metric.name]

@@ -31,5 +31,3 @@ class TestUMAP(UnsupervisedBaseTestCase, TestCase):
         self.validate_umap_regression(6)
 
         self.validate_umap_classification(2, parametric=True)
-
-

@@ -165,7 +165,6 @@ def normalize_labels_shape(y_pred: Union[List, np.ndarray]):
             else:
                 labels.append(1)
         elif len(i) == 1:
-            print(i)
             labels.append(int(round(i[0])))
     return np.array(labels)
 

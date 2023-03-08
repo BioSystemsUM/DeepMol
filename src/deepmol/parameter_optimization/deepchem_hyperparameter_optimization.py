@@ -133,7 +133,6 @@ class DeepchemBaseSearchCV(object):
         self.best_estimator_ = self.build_fn(**self.best_params_)
 
         if self.refit:
-            print('Fitting best model!')
             self.best_estimator_.fit(dataset)
 
 

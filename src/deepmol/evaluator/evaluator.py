@@ -4,54 +4,17 @@ from typing import Dict, Union, List, Tuple
 import numpy as np
 
 from deepmol.datasets import Dataset
+from deepmol.evaluator._utils import _process_metric_input
 from deepmol.metrics import Metric
 
-Score = Dict[str, float]
 
-
-def _process_metric_input(metrics: Union[Metric, List[Metric]]) -> List[Metric]:
-    """
-    Method which processes metrics correctly.
-    Metrics can be input as `metrics.Metric` objects, lists of `metrics.Metric`. Metric functions are functions which
-    accept two arguments `y_true, y_pred` both of which must be `np.ndarray` objects and return a float value. This
-    functions normalizes these different types of inputs to type `list[metrics.Metric]` object for ease of later
-    processing.
-
-    Parameters
-    ----------
-    metrics: Union[metrics.Metric, List[metrics.Metric]]
-        The metrics to process.
-
-    Returns
-    -------
-    final_metrics: list[Metric]
-        Converts all input metrics and outputs a list of `Metric` objects.
-    """
-    # Make sure input is a list
-    if not isinstance(metrics, list):
-        metrics = [metrics]  # type: ignore
-
-    final_metrics = []
-    for i, metric in enumerate(metrics):
-
-        if isinstance(metric, Metric):
-            final_metrics.append(metric)
-        elif callable(metric):
-            wrap_metric = Metric(metric, name="metric-%d" % (i + 1))
-            final_metrics.append(wrap_metric)
-        else:
-            raise ValueError("Metrics must be Metric objects.")
-    return final_metrics
-
-
-class Evaluator(object):
+class Evaluator:
     """
     Class that evaluates a model on a given dataset.
     The evaluator class is used to evaluate a `Model` class on a given `Dataset` object.
     """
 
-    def __init__(self, model, dataset: Dataset):
-
+    def __init__(self, model: 'Model', dataset: Dataset) -> None:
         """
         Initialize this evaluator.
 
@@ -62,12 +25,11 @@ class Evaluator(object):
         dataset: Dataset
             Dataset object to evaluate `model` on.
         """
-
         self.model = model
         self.dataset = dataset
 
     @staticmethod
-    def output_statistics(scores: Score, stats_out: str):
+    def output_statistics(scores: Dict[str, float], stats_out: str) -> None:
         """
         Write computed stats to file.
 
@@ -81,7 +43,7 @@ class Evaluator(object):
         with open(stats_out, "w") as statsfile:
             statsfile.write(str(scores) + "\n")
 
-    def output_predictions(self, y_preds: np.ndarray, csv_out: str):
+    def output_predictions(self, y_preds: np.ndarray, csv_out: str) -> None:
         """
         Writes predictions to file.
         Writes predictions made on the dataset to a specified file.
@@ -104,9 +66,8 @@ class Evaluator(object):
             for mol_id, y_pred in zip(data_ids, y_preds):
                 csvwriter.writerow([mol_id] + list(y_pred))
 
-    # TODO: Works with singletask, check for multitask
     def compute_model_performance(self,
-                                  metrics: Union[Metric, List[Metric]],
+                                  metrics: Union[Metric, callable, List[Union[Metric, callable]]],
                                   per_task_metrics: bool = False,
                                   n_classes: int = 2) -> Tuple[Dict, Union[None, Dict]]:
         """
@@ -114,7 +75,7 @@ class Evaluator(object):
 
         Parameters
         ----------
-        metrics: Union[metrics.Metric, List[metrics.Metric]]
+        metrics: Union[Metric, callable, List[Union[Metric, callable]]]
             The set of metrics provided.
             If a single `Metric` object is provided or a list is provided, it will evaluate `Model` on those metrics.
         per_task_metrics: bool

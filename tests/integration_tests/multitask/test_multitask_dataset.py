@@ -29,7 +29,8 @@ class MultitaskBaseTestCase(ABC):
         self.multitask_dataset = loader.create_dataset(sep=",")
 
     def tearDown(self):
-        pass
+        if os.path.exists('deepmol.log'):
+            os.remove('deepmol.log')
 
 
 class TestMultitaskDataset(MultitaskBaseTestCase, TestCase):
@@ -82,6 +83,6 @@ class TestMultitaskDataset(MultitaskBaseTestCase, TestCase):
         self.assertIn('roc_auc_score', c.keys())
         self.assertIn('precision_score', c.keys())
         self.assertIn('accuracy_score', c.keys())
-        self.assertEqual(len(c['roc_auc_score']), 3)
-        self.assertEqual(len(c['precision_score']), 3)
-        self.assertEqual(len(c['accuracy_score']), 3)
+        self.assertEqual(len(d['roc_auc_score']), 3)
+        self.assertEqual(len(d['precision_score']), 3)
+        self.assertEqual(len(d['accuracy_score']), 3)

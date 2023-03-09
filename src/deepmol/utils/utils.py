@@ -194,6 +194,8 @@ def _normalize_singletask_labels_shape(y_pred: Union[List, np.ndarray]) -> np.nd
     # list of lists of probabilities in the format [[0.1, 0.9], [0.2, 0.8], ...]
     elif len(y_pred[0]) == 2:
         return np.array([i[1] for i in y_pred])
+    elif len(y_pred[0]) > 2:
+        return np.array([np.argmax(i) for i in y_pred])
     else:
         raise ValueError("Unknown format for y_pred!")
 

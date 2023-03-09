@@ -69,8 +69,7 @@ class Evaluator:
 
     def compute_model_performance(self,
                                   metrics: Union[Metric, callable, List[Union[Metric, callable]]],
-                                  per_task_metrics: bool = False,
-                                  n_classes: int = 2) -> Tuple[Dict, Union[None, Dict]]:
+                                  per_task_metrics: bool = False) -> Tuple[Dict, Union[None, Dict]]:
         """
         Computes statistics of model on test data and saves results to csv.
 
@@ -81,8 +80,8 @@ class Evaluator:
             If a single `Metric` object is provided or a list is provided, it will evaluate `Model` on those metrics.
         per_task_metrics: bool
             If True, return computed metric for each task on multitask dataset.
-        n_classes: int
-            If specified, will use `n_classes` as the number of unique classes in the `Dataset`.
+        kwargs:
+            Additional keyword arguments to pass to the Metric object.
 
         Returns
         -------
@@ -97,23 +96,20 @@ class Evaluator:
         n_tasks = self.dataset.n_tasks
         y = self.dataset.y
         y_pred = self.model.predict(self.dataset)
-        y_pred = normalize_labels_shape(y_pred, n_tasks)
+        if not y.shape == np.array(y_pred).shape:
+            y_pred = normalize_labels_shape(y_pred, n_tasks)
 
         multitask_scores = {}
         all_task_scores = {}
 
         # Compute multitask metrics
         for metric in metrics:
-            results = metric.compute_metric(y,
-                                            y_pred,
-                                            per_task_metrics=per_task_metrics,
-                                            n_tasks=n_tasks,
-                                            n_classes=n_classes)
+            results = metric.compute_metric(y, y_pred, per_task_metrics=per_task_metrics, n_tasks=n_tasks)
             if per_task_metrics:
                 multitask_scores[metric.name], computed_metrics = results
                 all_task_scores[metric.name] = computed_metrics
             else:
-                multitask_scores[metric.name] = results
+                multitask_scores[metric.name], _ = results
 
         if not per_task_metrics:
             return multitask_scores, None

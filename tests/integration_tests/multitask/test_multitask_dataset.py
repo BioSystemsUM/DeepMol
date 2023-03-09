@@ -52,7 +52,7 @@ class TestMultitaskDataset(MultitaskBaseTestCase, TestCase):
 
         metrics = [Metric(roc_auc_score)]
 
-        evaluate = model_graph.evaluate(md, metrics)
+        evaluate = model_graph.evaluate(test, metrics)
         self.assertEqual(len(evaluate[0]), len(metrics))
         self.assertEqual(evaluate[1], None)
         self.assertTrue('roc_auc_score' in evaluate[0].keys())

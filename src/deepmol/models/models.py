@@ -1,7 +1,7 @@
 import os
 import shutil
 import tempfile
-from typing import List, Sequence, Union
+from typing import List, Sequence, Union, Tuple, Dict
 import numpy as np
 from deepmol.datasets import Dataset
 from deepmol.evaluator.evaluator import Evaluator
@@ -166,8 +166,7 @@ class Model(BaseEstimator):
     def evaluate(self,
                  dataset: Dataset,
                  metrics: Union[List[Metric], Metric],
-                 per_task_metrics: bool = False,
-                 n_classes: int = 2):
+                 per_task_metrics: bool = False) -> Tuple[Dict, Union[None, Dict]]:
         """
         Evaluates the performance of this model on specified dataset.
 
@@ -179,8 +178,8 @@ class Model(BaseEstimator):
             The set of metrics provided.
         per_task_metrics: bool
             If true, return computed metric for each task on multitask dataset.
-        n_classes: int
-            If specified, will use `n_classes` as the number of unique classes.
+        kwargs:
+            Additional keyword arguments to pass to `Evaluator.compute_model_performance`.
 
         Returns
         -------
@@ -191,9 +190,7 @@ class Model(BaseEstimator):
             for each task separately.
         """
         evaluator = Evaluator(self, dataset)
-        return evaluator.compute_model_performance(metrics,
-                                                   per_task_metrics=per_task_metrics,
-                                                   n_classes=n_classes)
+        return evaluator.compute_model_performance(metrics, per_task_metrics=per_task_metrics)
 
     def get_task_type(self) -> str:
         """

@@ -20,7 +20,8 @@ class Metric(object):
                  mode: str = None,
                  n_tasks: int = None,
                  classification_handling_mode: str = None,
-                 threshold_value: float = None) -> None:
+                 threshold_value: float = None,
+                 **kwargs) -> None:
         # TODO: review threshold values and change to deal with a variable threshold (i.e. different from 0.5)
         """
         Parameters
@@ -48,6 +49,8 @@ class Metric(object):
         threshold_value: float
             If set, and `classification_handling_mode` is "threshold" or "threshold-one-hot" apply a thresholding
             operation to values with this threshold.
+        kwargs:
+            Additional arguments to pass to metric.
         """
         self.metric = metric
         if task_averager is None:
@@ -117,15 +120,14 @@ class Metric(object):
 
         self.classification_handling_mode = classification_handling_mode
         self.threshold_value = threshold_value
+        self.kwargs = kwargs
         self.logger = Logger()
 
     def compute_metric(self,
                        y_true: np.ndarray,
                        y_pred: np.ndarray,
                        n_tasks: int,
-                       n_classes: int = 2,
-                       per_task_metrics: bool = False,
-                       **kwargs) -> Tuple[Any, Union[float, List[float]]]:
+                       per_task_metrics: bool = False) -> Tuple[Any, List[Any]]:
         """
         Compute a performance metric for each task.
 
@@ -137,8 +139,6 @@ class Metric(object):
             An np.ndarray containing predicted values for each task.
         n_tasks: int
             The number of tasks this class is expected to handle.
-        n_classes: int
-            Number of classes in data for classification tasks.
         per_task_metrics: bool
             If true, return computed metric for each task on multitask dataset.
         kwargs: dict
@@ -146,35 +146,32 @@ class Metric(object):
 
         Returns
         -------
-        Tuple[Any, Union[float, List[float]]]
-            Tuple with the task averager computed value and a numpy array containing metric values for each task.
+        Tuple[Any, List[Any]]
+            Tuple with the task averager computed value and a list containing metric values for each task.
         """
-        if n_tasks == 1:
+        try:
             y_task = y_true
             y_pred_task = y_pred
 
             metric_value = self.compute_singletask_metric(y_task,
                                                           y_pred_task,
-                                                          **kwargs)
-            computed_metrics = metric_value
-        else:
+                                                          **self.kwargs)
+            cm = metric_value
+        except ValueError as e:
+            cm = None
+        if n_tasks > 1 and per_task_metrics:
             computed_metrics = []
             for task in range(n_tasks):
                 y_task = y_true[:, task]
                 y_pred_task = y_pred[:, task]
 
                 metric_value = self.compute_singletask_metric(y_task,
-                                                              y_pred_task,
-                                                              **kwargs)
+                                                              y_pred_task)
                 computed_metrics.append(metric_value)
-
-        if not per_task_metrics:
-            try:
-                return self.task_averager(computed_metrics)
-            except Exception as e:
-                self.logger.warning(f"WARNING: task averager threw an exception: {e}")
-        else:
-            return self.task_averager(computed_metrics), computed_metrics
+            if cm is None:
+                cm = self.task_averager(computed_metrics)
+            return cm, computed_metrics
+        return cm, []
 
     def compute_singletask_metric(self,
                                   y_true: np.ndarray,
@@ -197,17 +194,7 @@ class Metric(object):
         metric_value: float
             The computed value of the metric.
         """
-
-        if self.mode == "regression":
-            if len(y_true.shape) != 1 or len(y_pred.shape) != 1 or len(y_true) != len(y_pred):
-                raise ValueError("For regression metrics, y_true and y_pred must both be of shape (N,)")
-
-        elif self.mode == "classification":
-            pass
-
-        else:
-            raise ValueError("Only classification and regression are supported for metrics calculations.")
-
+        # deal with metrics that require 0 or 1 values not probabilities
         try:
             metric_value = self.metric(y_true, y_pred, **kwargs)
         except ValueError as e:

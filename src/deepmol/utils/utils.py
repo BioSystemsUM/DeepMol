@@ -141,7 +141,36 @@ def load_from_disk(filename: str) -> Any:
         raise ValueError("Unrecognized filetype for %s" % filename)
 
 
-def normalize_labels_shape(y_pred: Union[List, np.ndarray]):
+def normalize_labels_shape(y_pred: Union[List, np.ndarray], n_tasks: int) -> np.ndarray:
+    """
+    Function to transform output from predict_proba (prob(0) prob(1)) to predict format (0 or 1).
+
+    Parameters
+    ----------
+    y_pred: array
+        array with predictions
+    n_tasks: int
+        number of tasks
+
+    Returns
+    -------
+    labels
+        Array of predictions in the format [0, 1, 0, ...]/[[0, 1, 0, ...], [0, 1, 1, ...], ...]
+    """
+    if n_tasks == 1:
+        labels = _normalize_singletask_labels_shape(y_pred)
+    else:
+        if isinstance(y_pred, np.ndarray):
+            if len(y_pred.shape) == 3:
+                y_pred = np.array([np.array([j[1] for j in i]) for i in y_pred]).T
+        labels = []
+        for task in y_pred:
+            labels.append(_normalize_singletask_labels_shape(task))
+        labels = np.array(labels).T
+    return labels
+
+
+def _normalize_singletask_labels_shape(y_pred: Union[List, np.ndarray]) -> np.ndarray:
     """
     Function to transform output from predict_proba (prob(0) prob(1)) to predict format (0 or 1).
 
@@ -153,20 +182,20 @@ def normalize_labels_shape(y_pred: Union[List, np.ndarray]):
     Returns
     -------
     labels
-        Array of predictions in the predict format (0 or 1).
+        Array of predictions in the format [0, 1, 0, ...]/[[0, 1, 0, ...], [0, 1, 1, ...], ...]
     """
     labels = []
-    for i in y_pred:
-        if isinstance(i, (np.floating, float)):
-            labels.append(int(round(i)))
-        elif len(i) == 2:
-            if i[0] > i[1]:
-                labels.append(0)
-            else:
-                labels.append(1)
-        elif len(i) == 1:
-            labels.append(int(round(i[0])))
-    return np.array(labels)
+    # list of probabilities in the format [0.1, 0.9, 0.2, ...]
+    if isinstance(y_pred[0], (np.floating, float)):
+        return np.array(y_pred)
+    # list of lists of probabilities in the format [[0.1], [0.2], ...]
+    elif len(y_pred[0]) == 1:
+        return np.array([i[0] for i in y_pred])
+    # list of lists of probabilities in the format [[0.1, 0.9], [0.2, 0.8], ...]
+    elif len(y_pred[0]) == 2:
+        return np.array([i[1] for i in y_pred])
+    else:
+        raise ValueError("Unknown format for y_pred!")
 
 
 # DRAWING

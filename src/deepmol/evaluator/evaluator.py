@@ -6,6 +6,7 @@ import numpy as np
 from deepmol.datasets import Dataset
 from deepmol.evaluator._utils import _process_metric_input
 from deepmol.metrics import Metric
+from deepmol.utils.utils import normalize_labels_shape
 
 
 class Evaluator:
@@ -93,10 +94,10 @@ class Evaluator:
         # Process input metrics
         metrics = _process_metric_input(metrics)
 
-        y = self.dataset.y
-
-        y_pred = self.model.predict(self.dataset)
         n_tasks = self.dataset.n_tasks
+        y = self.dataset.y
+        y_pred = self.model.predict(self.dataset)
+        y_pred = normalize_labels_shape(y_pred, n_tasks)
 
         multitask_scores = {}
         all_task_scores = {}

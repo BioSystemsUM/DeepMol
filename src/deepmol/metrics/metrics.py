@@ -122,7 +122,7 @@ class Metric(object):
     def compute_metric(self,
                        y_true: np.ndarray,
                        y_pred: np.ndarray,
-                       n_tasks: int = None,
+                       n_tasks: int,
                        n_classes: int = 2,
                        per_task_metrics: bool = False,
                        **kwargs) -> Tuple[Any, Union[float, List[float]]]:
@@ -149,15 +149,6 @@ class Metric(object):
         Tuple[Any, Union[float, List[float]]]
             Tuple with the task averager computed value and a numpy array containing metric values for each task.
         """
-        if n_tasks is None:
-            if self.n_tasks is None and isinstance(y_true, np.ndarray):
-                if len(y_true.shape) == 1:
-                    n_tasks = 1
-                elif len(y_true.shape) >= 2:
-                    n_tasks = y_true.shape[1]
-            else:
-                n_tasks = self.n_tasks
-
         if n_tasks == 1:
             y_task = y_true
             y_pred_task = y_pred
@@ -170,7 +161,7 @@ class Metric(object):
             computed_metrics = []
             for task in range(n_tasks):
                 y_task = y_true[:, task]
-                y_pred_task = y_pred[task]
+                y_pred_task = y_pred[:, task]
 
                 metric_value = self.compute_singletask_metric(y_task,
                                                               y_pred_task,
@@ -218,19 +209,9 @@ class Metric(object):
             raise ValueError("Only classification and regression are supported for metrics calculations.")
 
         try:
-            if self.name in ["roc_auc_score", "prc_auc_score"]:
-                y_pred = y_pred[:, 1]
-
             metric_value = self.metric(y_true, y_pred, **kwargs)
-        except Exception as e:
-            # deal with different shapes of the output of predict and predict_proba
-            if len(y_pred.shape) == 3:  # output of the deepchem MultitaskClassifier model
-                y_pred_2 = []
-                for p in y_pred:
-                    y_pred_2.append(p[0])
-                y_pred_mod = normalize_labels_shape(y_pred_2)
-                metric_value = self.metric(y_true, y_pred_mod, **kwargs)
-            else:
-                y_pred_mod = normalize_labels_shape(y_pred)
-                metric_value = self.metric(y_true, y_pred_mod, **kwargs)
+        except ValueError as e:
+            # round values in y_ped to 0 or 1
+            y_pred_rounded = np.round(y_pred)
+            metric_value = self.metric(y_true, y_pred_rounded, **kwargs)
         return metric_value

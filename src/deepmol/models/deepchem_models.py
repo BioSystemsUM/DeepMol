@@ -56,9 +56,8 @@ class DeepChemModel(BaseDeepChemModel):
           The model instance which inherits a DeepChem `Model` Class.
         model_dir: str, optional (default None)
           If specified the model will be stored in this directory. Else, a temporary directory will be used.
-        kwargs: dict
-          kwargs['use_weights'] is a bool which determines if we pass weights into
-          self.model.fit().
+        kwargs:
+          additional arguments to be passed to the model.
         """
         if 'model_instance' in kwargs:
             self.model_instance = kwargs['model_instance']

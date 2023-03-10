@@ -1,5 +1,8 @@
 from copy import copy
 from unittest import TestCase
+from unittest.mock import patch
+
+from plotly.graph_objs import Figure
 
 from deepmol.unsupervised import PCA
 from unit_tests.unsupervised.test_unsupervised import UnsupervisedBaseTestCase
@@ -23,7 +26,8 @@ class TestPCA(UnsupervisedBaseTestCase, TestCase):
         pca.plot(components_df.X, path='test_components.png')
         pca.plot_explained_variance(path='test_explained_variance.png')
 
-    def test_run_unsupervised(self):
+    @patch.object(Figure, 'show')
+    def test_run_unsupervised(self, mock_show):
         self.validate_pca_classification(2)
         self.validate_pca_classification(3)
         self.validate_pca_classification(6)

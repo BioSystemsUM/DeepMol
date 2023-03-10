@@ -1,22 +1,32 @@
 from unittest import TestCase
+from unittest.mock import MagicMock
 
+from deepchem.feat import ConvMolFeaturizer
 from deepchem.models import GraphConvModel
+from rdkit.Chem import MolFromSmiles
 from sklearn.metrics import roc_auc_score, precision_score, accuracy_score, confusion_matrix, classification_report
 
-from deepmol.compound_featurization import ConvMolFeat
+from deepmol.datasets import SmilesDataset
 from deepmol.metrics import Metric
 from deepmol.models import DeepChemModel
 from deepmol.parameter_optimization import HyperparameterOptimizerCV
-from deepmol.splitters import SingletaskStratifiedSplitter
 from unit_tests.models.test_models import ModelsTestCase
 
 
 class TestDeepChemHyperparameterOptimization(ModelsTestCase, TestCase):
 
     def test_fit_predict_evaluate(self):
-        ds = ConvMolFeat().featurize(self.mini_dataset_to_test)
-        splitter = SingletaskStratifiedSplitter()
-        train_dataset, test_dataset = splitter.train_test_split(ds)
+        ds_train = self.binary_dataset
+        ds_train.X = ConvMolFeaturizer().featurize([MolFromSmiles('CCC')] * 100)
+        ds_train.select_to_split.side_effect = lambda arg: MagicMock(spec=SmilesDataset,
+                                                                     X=ds_train.X[arg],
+                                                                     y=ds_train.y[arg],
+                                                                     n_tasks=1,
+                                                                     label_names=['binary_label'],
+                                                                     mode='classification',
+                                                                     ids=ds_train.ids[arg])
+        ds_test = self.binary_dataset_test
+        ds_test.X = ConvMolFeaturizer().featurize([MolFromSmiles('CCC')] * 10)
 
         def graphconv_builder(graph_conv_layers, batch_size=256, epochs=5):
             graph = GraphConvModel(n_tasks=1, graph_conv_layers=graph_conv_layers, batch_size=batch_size,
@@ -25,21 +35,21 @@ class TestDeepChemHyperparameterOptimization(ModelsTestCase, TestCase):
 
         model_graph = HyperparameterOptimizerCV(model_builder=graphconv_builder)
 
-        best_model, _, _ = model_graph.hyperparameter_search(train_dataset=train_dataset, metric="roc_auc",
+        best_model, _, _ = model_graph.hyperparameter_search(train_dataset=ds_train, metric="roc_auc",
                                                              n_iter_search=2,
-                                                             cv=2, params_dict={'graph_conv_layers':
-                                                                                    [[64, 64], [32, 32]]},
+                                                             cv=2, params_dict={'graph_conv_layers': [[64, 64],
+                                                                                                      [32, 32]]},
                                                              model_type="deepchem")
 
-        test_preds = best_model.predict(test_dataset)
-        self.assertEqual(len(test_preds), len(test_dataset))
+        test_preds = best_model.predict(ds_test)
+        self.assertEqual(len(test_preds), len(ds_test))
         for pred in test_preds:
             self.assertAlmostEqual(sum(pred), 1, delta=0.0001)
 
         metrics = [Metric(roc_auc_score), Metric(precision_score), Metric(accuracy_score), Metric(confusion_matrix),
                    Metric(classification_report)]
 
-        evaluate = best_model.evaluate(ds, metrics)
+        evaluate = best_model.evaluate(ds_test, metrics)
         self.assertEqual(len(evaluate[0]), len(metrics))
         self.assertEqual(evaluate[1], None)
         self.assertTrue('roc_auc_score' in evaluate[0].keys())

@@ -93,72 +93,56 @@ class PCA(UnsupervisedLearn):
     space.
     """
 
-    def __init__(self,
-                 n_components: Union[int, float, str] = 2,
-                 copy: bool = True,
-                 whiten: bool = False,
-                 svd_solver: str = 'auto',
-                 tol: float = 0.0,
-                 iterated_power: Union[int, str] = 'auto',
-                 random_state: int = None,
-                 n_oversamples=10,
-                 power_iteration_normalizer="auto") -> None:
+    def __init__(self, **kwargs) -> None:
         """
         Parameters
         ----------
-        n_components: Union[int, float, str]
-            Number of components to keep. if n_components is not set all components are kept:
-            If n_components == 'mle' and svd_solver == 'full', Minka’s MLE is used to guess the dimension.
-            Use of n_components == 'mle' will interpret svd_solver == 'auto' as svd_solver == 'full'.
-            If 0 < n_components < 1 and svd_solver == 'full', select the number of components such that the amount
-            of variance that needs to be explained is greater than the percentage specified by n_components.
-            If svd_solver == 'arpack', the number of components must be strictly less than the minimum of n_features
-            and n_samples.
-        copy: bool
-            If False, data passed to fit are overwritten and running fit(X).transform(X) will not yield the expected
-            results, use fit_transform(X) instead.
-        whiten: bool
-            When True the components_ vectors are multiplied by the square root of n_samples and then divided by the
-            singular values to ensure uncorrelated outputs with unit component-wise variances.
-        svd_solver: str {‘auto’, ‘full’, ‘arpack’, ‘randomized’}
-            If auto :
-                The solver is selected by a default policy based on X.shape and n_components: if the input data is
-                larger than 500x500 and the number of components to extract is lower than 80% of the smallest dimension
-                of the data, then the more efficient ‘randomized’ method is enabled. Otherwise, the exact full SVD is
-                computed and optionally truncated afterwards.
-            If full :
-                run exact full SVD calling the standard LAPACK solver via scipy.linalg.svd and select the components
-                by postprocessing
-            If arpack :
-                run SVD truncated to n_components calling ARPACK solver via scipy.sparse.linalg.svds. It requires
-                strictly 0 < n_components < min(X.shape)
-            If randomized :
-                run randomized SVD by the method of Halko et al.
-        tol: float
-            Tolerance for singular values computed by svd_solver == ‘arpack’.
-        iterated_power: Union[int, str]
-            Number of iterations for the power method computed by svd_solver == ‘randomized’. 'auto' selects it
-            automatically.
-        random_state: int
-            Used when svd_solver == ‘arpack’ or ‘randomized’. Pass an int for reproducible results across multiple
-            function calls.
-        n_oversamples: int
-            Additional number of random vectors to sample the range of M to ensure proper conditioning.
-            Only used by randomized SVD solver when svd_solver == 'randomized'.
-        power_iteration_normalizer: str
-            Power iteration normalizer for randomized SVD solver. Available options are ‘auto’, ‘QR’, ‘LU’, ‘none’.
+        kwargs:
+            Additional arguments to pass to the sklearn.decomposition.PCA class including:
+            n_components: Union[int, float, str]
+                Number of components to keep. if n_components is not set all components are kept:
+                If n_components == 'mle' and svd_solver == 'full', Minka’s MLE is used to guess the dimension.
+                Use of n_components == 'mle' will interpret svd_solver == 'auto' as svd_solver == 'full'.
+                If 0 < n_components < 1 and svd_solver == 'full', select the number of components such that the amount
+                of variance that needs to be explained is greater than the percentage specified by n_components.
+                If svd_solver == 'arpack', the number of components must be strictly less than the minimum of n_features
+                and n_samples.
+            copy: bool
+                If False, data passed to fit are overwritten and running fit(X).transform(X) will not yield the expected
+                results, use fit_transform(X) instead.
+            whiten: bool
+                When True the components_ vectors are multiplied by the square root of n_samples and then divided by the
+                singular values to ensure uncorrelated outputs with unit component-wise variances.
+            svd_solver: str {‘auto’, ‘full’, ‘arpack’, ‘randomized’}
+                If auto :
+                    The solver is selected by a default policy based on X.shape and n_components: if the input data is
+                    larger than 500x500 and the number of components to extract is lower than 80% of the smallest dimension
+                    of the data, then the more efficient ‘randomized’ method is enabled. Otherwise, the exact full SVD is
+                    computed and optionally truncated afterwards.
+                If full :
+                    run exact full SVD calling the standard LAPACK solver via scipy.linalg.svd and select the components
+                    by postprocessing
+                If arpack :
+                    run SVD truncated to n_components calling ARPACK solver via scipy.sparse.linalg.svds. It requires
+                    strictly 0 < n_components < min(X.shape)
+                If randomized :
+                    run randomized SVD by the method of Halko et al.
+            tol: float
+                Tolerance for singular values computed by svd_solver == ‘arpack’.
+            iterated_power: Union[int, str]
+                Number of iterations for the power method computed by svd_solver == ‘randomized’. 'auto' selects it
+                automatically.
+            random_state: int
+                Used when svd_solver == ‘arpack’ or ‘randomized’. Pass an int for reproducible results across multiple
+                function calls.
+            n_oversamples: int
+                Additional number of random vectors to sample the range of M to ensure proper conditioning.
+                Only used by randomized SVD solver when svd_solver == 'randomized'.
+            power_iteration_normalizer: str
+                Power iteration normalizer for randomized SVD solver. Available options are ‘auto’, ‘QR’, ‘LU’, ‘none’.
         """
         super().__init__()
-        self.n_components = n_components
-        self.pca = decomposition.PCA(n_components=self.n_components,
-                                     copy=copy,
-                                     whiten=whiten,
-                                     svd_solver=svd_solver,
-                                     tol=tol,
-                                     iterated_power=iterated_power,
-                                     random_state=random_state,
-                                     n_oversamples=n_oversamples,
-                                     power_iteration_normalizer=power_iteration_normalizer)
+        self.pca = decomposition.PCA(**kwargs)
 
     def _run_unsupervised(self, dataset: Dataset, **kwargs) -> SmilesDataset:
         """
@@ -168,6 +152,8 @@ class PCA(UnsupervisedLearn):
         ----------
         dataset: Dataset
             The dataset to perform unsupervised learning.
+        kwargs:
+            Additional arguments to pass to the _unsupervised method.
 
         Returns
         -------
@@ -197,7 +183,7 @@ class PCA(UnsupervisedLearn):
         **kwargs:
             Additional arguments to pass to the plot method.
         """
-        self.logger.info(f'{self.n_components} Components PCA: ')
+        self.logger.info(f'{x_new.shape[1]} Components PCA: ')
 
         total_var = self.pca.explained_variance_ratio_.sum() * 100
 
@@ -206,20 +192,20 @@ class PCA(UnsupervisedLearn):
         else:
             y = self.dataset.y
 
-        if self.n_components == 2:
+        if x_new.shape[1] == 2:
             fig = px.scatter(x_new, x=0, y=1, color=y,
                              title=f'Total Explained Variance: {total_var:.2f}%',
                              labels={'0': 'PC 1', '1': 'PC 2', 'color': self.dataset.label_names[0]}, **kwargs)
-        elif self.n_components == 3:
+        elif x_new.shape[1] == 3:
             fig = px.scatter_3d(x_new, x=0, y=1, z=2, color=y,
                                 title=f'Total Explained Variance: {total_var:.2f}%',
                                 labels={'0': 'PC 1', '1': 'PC 2', '2': 'PC 3', 'color': self.dataset.label_names[0]})
         else:
-            labels = {str(i): f"PC {i + 1}" for i in range(self.n_components)}
+            labels = {str(i): f"PC {i + 1}" for i in range(x_new.shape[1])}
             labels['color'] = self.dataset.label_names[0]
             fig = px.scatter_matrix(x_new,
                                     color=y,
-                                    dimensions=range(self.n_components),
+                                    dimensions=range(x_new.shape[1]),
                                     labels=labels,
                                     title=f'Total Explained Variance: {total_var:.2f}%',
                                     **kwargs)
@@ -261,111 +247,85 @@ class TSNE(UnsupervisedLearn):
     divergence between the joint probabilities of the low-dimensional embedding and the high-dimensional data.
     """
 
-    def __init__(self,
-                 n_components: int = 2,
-                 perplexity: float = 30.0,
-                 early_exaggeration: float = 12.0,
-                 learning_rate: float = 200.0,
-                 n_iter: int = 1000,
-                 n_iter_without_progress: int = 300,
-                 min_grad_norm: float = 1e-07,
-                 metric: Union[str, callable] = 'euclidean',
-                 init: Union[str, np.ndarray] = 'random',
-                 verbose: int = 0,
-                 random_state: int = None,
-                 method: str = 'barnes_hut',
-                 angle: float = 0.5,
-                 n_jobs: int = None) -> None:
+    def __init__(self, **kwargs) -> None:
         """
         Parameters
         ----------
-        n_components: int, optional (default: 2)
-            Dimension of the embedded space.
+        kwargs:
+            Additional arguments to pass to the sklearn.manifold.TSNE class including:
+            n_components: int, optional (default: 2)
+                Dimension of the embedded space.
 
-        perplexity: float, optional (default: 30)
-            The perplexity is related to the number of nearest neighbors that is used in other manifold learning
-            algorithms. Larger datasets usually require a larger perplexity. Consider selecting a value between 5
-            and 50. Different values can result in significanlty different results.
+            perplexity: float, optional (default: 30)
+                The perplexity is related to the number of nearest neighbors that is used in other manifold learning
+                algorithms. Larger datasets usually require a larger perplexity. Consider selecting a value between 5
+                and 50. Different values can result in significanlty different results.
 
-        early_exaggeration: float, optional (default: 12.0)
-            Controls how tight natural clusters in the original space are in the embedded space and how much space
-            will be between them. For larger values, the space between natural clusters will be larger in the embedded
-            space. Again, the choice of this parameter is not very critical. If the cost function increases during
-            initial optimization, the early exaggeration factor or the learning rate might be too high.
+            early_exaggeration: float, optional (default: 12.0)
+                Controls how tight natural clusters in the original space are in the embedded space and how much space
+                will be between them. For larger values, the space between natural clusters will be larger in the embedded
+                space. Again, the choice of this parameter is not very critical. If the cost function increases during
+                initial optimization, the early exaggeration factor or the learning rate might be too high.
 
-        learning_rate: float, optional (default: 200.0)
-            The learning rate for t-SNE is usually in the range [10.0, 1000.0]. If the learning rate is too high, the
-            data may look like a ‘ball’ with any point approximately equidistant from its nearest neighbours. If the
-            learning rate is too low, most points may look compressed in a dense cloud with few outliers. If the cost
-            function gets stuck in a bad local minimum increasing the learning rate may help.
+            learning_rate: float, optional (default: 200.0)
+                The learning rate for t-SNE is usually in the range [10.0, 1000.0]. If the learning rate is too high, the
+                data may look like a ‘ball’ with any point approximately equidistant from its nearest neighbours. If the
+                learning rate is too low, most points may look compressed in a dense cloud with few outliers. If the cost
+                function gets stuck in a bad local minimum increasing the learning rate may help.
 
-        n_iter: int, optional (default: 1000)
-            Maximum number of iterations for the optimization. Should be at least 250.
+            n_iter: int, optional (default: 1000)
+                Maximum number of iterations for the optimization. Should be at least 250.
 
-        n_iter_without_progress: int, optional (default: 300)
-            Maximum number of iterations without progress before we abort the optimization, used after 250 initial
-            iterations with early exaggeration. Note that progress is only checked every 50 iterations so this value
-            is rounded to the next multiple of 50.
+            n_iter_without_progress: int, optional (default: 300)
+                Maximum number of iterations without progress before we abort the optimization, used after 250 initial
+                iterations with early exaggeration. Note that progress is only checked every 50 iterations so this value
+                is rounded to the next multiple of 50.
 
-        min_grad_norm: float, optional (default: 1e-7)
-            If the gradient norm is below this threshold, the optimization will be stopped.
+            min_grad_norm: float, optional (default: 1e-7)
+                If the gradient norm is below this threshold, the optimization will be stopped.
 
-        metric: string or callable, optional
-            The metric to use when calculating distance between instances in a feature array. If metric is a string,
-            it must be one of the options allowed by scipy.spatial.distance.pdist for its metric parameter, or a metric
-            listed in pairwise.PAIRWISE_DISTANCE_FUNCTIONS. If metric is “precomputed”, X is assumed to be a distance
-            matrix. Alternatively, if metric is a callable function, it is called on each pair of instances (rows) and
-            the resulting value recorded. The callable should take two arrays from X as input and return a value
-            indicating the distance between them. The default is “euclidean” which is interpreted as squared euclidean
-            distance.
+            metric: string or callable, optional
+                The metric to use when calculating distance between instances in a feature array. If metric is a string,
+                it must be one of the options allowed by scipy.spatial.distance.pdist for its metric parameter, or a metric
+                listed in pairwise.PAIRWISE_DISTANCE_FUNCTIONS. If metric is “precomputed”, X is assumed to be a distance
+                matrix. Alternatively, if metric is a callable function, it is called on each pair of instances (rows) and
+                the resulting value recorded. The callable should take two arrays from X as input and return a value
+                indicating the distance between them. The default is “euclidean” which is interpreted as squared euclidean
+                distance.
 
-        init: string or numpy array, optional (default: “random”)
-            Initialization of embedding. Possible options are ‘random’, ‘pca’, and a numpy array of shape
-            (n_samples, n_components). PCA initialization cannot be used with precomputed distances and is usually more
-            globally stable than random initialization.
+            init: string or numpy array, optional (default: “random”)
+                Initialization of embedding. Possible options are ‘random’, ‘pca’, and a numpy array of shape
+                (n_samples, n_components). PCA initialization cannot be used with precomputed distances and is usually more
+                globally stable than random initialization.
 
-        verbose: int, optional (default: 0)
-            Verbosity level.
+            verbose: int, optional (default: 0)
+                Verbosity level.
 
-        random_state: int, RandomState instance, default=None
-            Determines the random number generator. Pass an int for reproducible results across multiple function calls.
-            Note that different initializations might result in different local minima of the cost function.
+            random_state: int, RandomState instance, default=None
+                Determines the random number generator. Pass an int for reproducible results across multiple function calls.
+                Note that different initializations might result in different local minima of the cost function.
 
-        method: string (default: ‘barnes_hut’)
-            By default the gradient calculation algorithm uses Barnes-Hut approximation running in O(NlogN) time.
-            method=’exact’ will run on the slower, but exact, algorithm in O(N^2) time. The exact algorithm should be
-            used when nearest-neighbor errors need to be better than 3%. However, the exact method cannot scale to
-            millions of examples.
+            method: string (default: ‘barnes_hut’)
+                By default the gradient calculation algorithm uses Barnes-Hut approximation running in O(NlogN) time.
+                method=’exact’ will run on the slower, but exact, algorithm in O(N^2) time. The exact algorithm should be
+                used when nearest-neighbor errors need to be better than 3%. However, the exact method cannot scale to
+                millions of examples.
 
-        angle: float (default: 0.5)
-            Only used if method=’barnes_hut’ This is the trade-off between speed and accuracy for Barnes-Hut T-SNE.
-            ‘angle’ is the angular size (referred to as theta in [3]) of a distant node as measured from a point. If
-            this size is below ‘angle’ then it is used as a summary node of all points contained within it. This method
-            is not very sensitive to changes in this parameter in the range of 0.2 - 0.8. Angle less than 0.2 has
-            quickly increasing computation time and angle greater 0.8 has quickly increasing error.
+            angle: float (default: 0.5)
+                Only used if method=’barnes_hut’ This is the trade-off between speed and accuracy for Barnes-Hut T-SNE.
+                ‘angle’ is the angular size (referred to as theta in [3]) of a distant node as measured from a point. If
+                this size is below ‘angle’ then it is used as a summary node of all points contained within it. This method
+                is not very sensitive to changes in this parameter in the range of 0.2 - 0.8. Angle less than 0.2 has
+                quickly increasing computation time and angle greater 0.8 has quickly increasing error.
 
-        n_jobs: int or None, optional (default=None)
-            The number of parallel jobs to run for neighbors search. This parameter has no impact when
-            metric="precomputed" or (metric="euclidean" and method="exact"). None means 1 unless in a
-            joblib.parallel_backend context. -1 means using all processors.
+            n_jobs: int or None, optional (default=None)
+                The number of parallel jobs to run for neighbors search. This parameter has no impact when
+                metric="precomputed" or (metric="euclidean" and method="exact"). None means 1 unless in a
+                joblib.parallel_backend context. -1 means using all processors.
 
         """
         super().__init__()
-        self.n_components = n_components
-        self.tsne = manifold.TSNE(n_components=self.n_components,
-                                  perplexity=perplexity,
-                                  early_exaggeration=early_exaggeration,
-                                  learning_rate=learning_rate,
-                                  n_iter=n_iter,
-                                  n_iter_without_progress=n_iter_without_progress,
-                                  min_grad_norm=min_grad_norm,
-                                  metric=metric,
-                                  init=init,
-                                  verbose=verbose,
-                                  random_state=random_state,
-                                  method=method,
-                                  angle=angle,
-                                  n_jobs=n_jobs)
+        self.tsne = manifold.TSNE(**kwargs)
 
     def _run_unsupervised(self, dataset: Dataset, **kwargs) -> SmilesDataset:
         """
@@ -383,7 +343,7 @@ class TSNE(UnsupervisedLearn):
         """
         self.dataset = dataset
         x_new = self.tsne.fit_transform(dataset.X)
-        feature_names = [f"tsne_{i}" for i in range(self.n_components)]
+        feature_names = [f"tsne_{i}" for i in range(x_new.shape[1])]
         return SmilesDataset(smiles=dataset.smiles,
                              mols=dataset.mols,
                              X=x_new,
@@ -394,21 +354,21 @@ class TSNE(UnsupervisedLearn):
                              mode=dataset.mode)
 
     def plot(self, x_new: np.ndarray, path: str = None, **kwargs) -> None:
-        self.logger.info(f'{self.n_components} Components t-SNE: ')
+        self.logger.info(f'{x_new.shape[1]} Components t-SNE: ')
 
         if self.dataset.mode == 'classification':
             y = [str(i) for i in self.dataset.y]
         else:
             y = self.dataset.y
 
-        if self.n_components == 2:
+        if x_new.shape[1] == 2:
             fig = px.scatter(x_new, x=0, y=1, color=y, labels={'color': self.dataset.label_names[0]}, **kwargs)
-        elif self.n_components == 3:
+        elif x_new.shape[1] == 3:
             fig = px.scatter_3d(x_new, x=0, y=1, z=2, color=y, labels={'color': self.dataset.label_names[0]}, **kwargs)
         else:
             fig = px.scatter_matrix(x_new,
                                     color=y,
-                                    dimensions=range(self.n_components),
+                                    dimensions=range(x_new.shape[1]),
                                     labels={'color': self.dataset.label_names[0]},
                                     **kwargs)
             fig.update_traces(diagonal_visible=False)
@@ -425,67 +385,52 @@ class KMeans(UnsupervisedLearn):
 
     """
 
-    def __init__(self,
-                 n_clusters: Union[str, int] = 'elbow',
-                 init: str = 'k-means++',
-                 n_init: int = 10,
-                 max_iter: int = 300,
-                 tol: float = 0.0001,
-                 verbose: int = 0,
-                 random_state: int = None,
-                 copy_x: bool = True,
-                 algorithm: str = 'lloyd') -> None:
+    def __init__(self, **kwargs) -> None:
         """
         Initialize KMeans object.
 
         Parameters
         ----------
-        n_clusters: Union[int, str]
-            The number of clusters to form as well as the number of centroids to generate.
-            'elbow' uses the elbow method to determine the most suited number of clusters.
-        init: str {‘k-means++’, ‘random’, ndarray, callable}
-            Method for initialization:
-                ‘k-means++’ : selects initial cluster centers for k-mean clustering in a smart way to speed up
-                convergence. See section Notes in k_init for more details.
-                ‘random’: choose n_clusters observations (rows) at random from data for the initial centroids.
-                If a ndarray is passed, it should be of shape (n_clusters, n_features) and gives the initial centers.
-                If a callable is passed, it should take arguments X, n_clusters and a random state and return an
-                initialization.
-        n_init: int
-            Number of time the k-means algorithm will be run with different centroid seeds. The final results will be
-            the best output of n_init consecutive runs in terms of inertia.
-        max_iter: int
-            Maximum number of iterations of the k-means algorithm for a single run.
-        tol: float
-            Relative tolerance in regard to Frobenius norm of the difference in the cluster centers of two
-            consecutive iterations to declare convergence.
-        verbose: int
-            Verbosity mode.
-        random_state: int
-            Determines random number generation for centroid initialization. Use an int to make the randomness
-            deterministic.
-        copy_x: bool
-            When pre-computing distances it is more numerically accurate to center the data first. If copy_x is True
-            (default), then the original data is not modified. If False, the original data is modified, and put back
-            before the function returns, but small numerical differences may be introduced by subtracting and then
-            adding the data mean. Note that if the original data is not C-contiguous, a copy will be made even if
-            copy_x is False. If the original data is sparse, but not in CSR format, a copy will be made even if copy_x
-            is False.
-        algorithm: str {"lloyd", "elkan", "auto", "full"}
-            K-means algorithm to use. The classical EM-style algorithm is `"lloyd"`. The “elkan” variation is more
-            efficient on data with well-defined clusters, by using the triangle inequality. However, it’s more memory
-            intensive due to the allocation of an extra array of shape (n_samples, n_clusters).
+        kwargs:
+            Keyword arguments to pass to scikit-learn K-Means including:
+            n_clusters: Union[int, str]
+                The number of clusters to form as well as the number of centroids to generate.
+                'elbow' uses the elbow method to determine the most suited number of clusters.
+            init: str {‘k-means++’, ‘random’, ndarray, callable}
+                Method for initialization:
+                    ‘k-means++’ : selects initial cluster centers for k-mean clustering in a smart way to speed up
+                    convergence. See section Notes in k_init for more details.
+                    ‘random’: choose n_clusters observations (rows) at random from data for the initial centroids.
+                    If a ndarray is passed, it should be of shape (n_clusters, n_features) and gives the initial centers.
+                    If a callable is passed, it should take arguments X, n_clusters and a random state and return an
+                    initialization.
+            n_init: int
+                Number of time the k-means algorithm will be run with different centroid seeds. The final results will be
+                the best output of n_init consecutive runs in terms of inertia.
+            max_iter: int
+                Maximum number of iterations of the k-means algorithm for a single run.
+            tol: float
+                Relative tolerance in regard to Frobenius norm of the difference in the cluster centers of two
+                consecutive iterations to declare convergence.
+            verbose: int
+                Verbosity mode.
+            random_state: int
+                Determines random number generation for centroid initialization. Use an int to make the randomness
+                deterministic.
+            copy_x: bool
+                When pre-computing distances it is more numerically accurate to center the data first. If copy_x is True
+                (default), then the original data is not modified. If False, the original data is modified, and put back
+                before the function returns, but small numerical differences may be introduced by subtracting and then
+                adding the data mean. Note that if the original data is not C-contiguous, a copy will be made even if
+                copy_x is False. If the original data is sparse, but not in CSR format, a copy will be made even if copy_x
+                is False.
+            algorithm: str {"lloyd", "elkan", "auto", "full"}
+                K-means algorithm to use. The classical EM-style algorithm is `"lloyd"`. The “elkan” variation is more
+                efficient on data with well-defined clusters, by using the triangle inequality. However, it’s more memory
+                intensive due to the allocation of an extra array of shape (n_samples, n_clusters).
         """
         super().__init__()
-        self.n_clusters = n_clusters
-        self.init = init
-        self.n_init = n_init
-        self.max_iter = max_iter
-        self.tol = tol
-        self.verbose = verbose
-        self.random_state = random_state
-        self.copy_x = copy_x
-        self.algorithm = algorithm
+        self.kwargs = kwargs
 
     def _run_unsupervised(self, dataset: Dataset, **kwargs) -> SmilesDataset:
         """
@@ -495,7 +440,7 @@ class KMeans(UnsupervisedLearn):
         ----------
         dataset: Dataset
             Dataset to cluster.
-        **kwargs:
+        kwargs:
             Additional keyword arguments to pass to the elbow method.
 
         Returns
@@ -505,21 +450,14 @@ class KMeans(UnsupervisedLearn):
         """
         self.dataset = dataset
 
-        if self.n_clusters == 'elbow':
+        if self.kwargs['n_clusters'] == 'elbow':
             self.logger.info('Using elbow method to determine number of clusters.')
-            self.n_clusters = self._elbow(**kwargs)
+            n_clusters = self._elbow(**kwargs)
+            self.kwargs['n_clusters'] = n_clusters
 
-        self.k_means = cluster.KMeans(n_clusters=self.n_clusters,
-                                      init=self.init,
-                                      n_init=self.n_init,
-                                      max_iter=self.max_iter,
-                                      tol=self.tol,
-                                      verbose=self.verbose,
-                                      random_state=self.random_state,
-                                      copy_x=self.copy_x,
-                                      algorithm=self.algorithm)
+        self.k_means = cluster.KMeans(**self.kwargs)
         x_new = self.k_means.fit_transform(dataset.X)
-        feature_names = [f"cluster_{i}" for i in range(self.n_clusters)]
+        feature_names = [f"cluster_{i}" for i in range(x_new.shape[1])]
         return SmilesDataset(smiles=dataset.smiles,
                              mols=dataset.mols,
                              X=x_new,
@@ -535,7 +473,7 @@ class KMeans(UnsupervisedLearn):
 
         Parameters
         ----------
-        **kwargs:
+        kwargs:
             Additional keyword arguments to pass to the elbow method.
             kwargs include:
                 path: str
@@ -560,17 +498,13 @@ class KMeans(UnsupervisedLearn):
         int
             The optimal number of clusters.
         """
+        # kwargs without n_clusters
+        k_means_kwargs = self.kwargs.copy()
+        k_means_kwargs.pop('n_clusters')
         wcss = []
         for i in range(1, 11):
             kmeans_elbow = cluster.KMeans(n_clusters=i,
-                                          init=self.init,
-                                          n_init=self.n_init,
-                                          max_iter=self.max_iter,
-                                          tol=self.tol,
-                                          verbose=self.verbose,
-                                          random_state=self.random_state,
-                                          copy_x=self.copy_x,
-                                          algorithm=self.algorithm)
+                                          **k_means_kwargs)
             kmeans_elbow.fit(self.dataset.X)
             wcss.append(kmeans_elbow.inertia_)
         plt.plot(range(1, 11), wcss)

@@ -3,6 +3,7 @@ from unittest import TestCase
 import numpy as np
 
 from deepmol.metrics import Metric
+from deepmol.metrics.metrics_functions import pearson_score, spearman_score, prc_auc_score
 
 
 class TestMetric(TestCase):
@@ -62,3 +63,11 @@ class TestMetric(TestCase):
         metric_value_3 = metric_3.compute_metric(y_true_2, y_pred_2, n_tasks=3, per_task_metrics=True)
         self.assertEqual(metric_value_3[0], 1)
         self.assertEqual(metric_value_3[1], [1/3, 2/3, 1])
+
+    def test_predefined_metrics(self):
+        metrics = [Metric(pearson_score), Metric(spearman_score), Metric(prc_auc_score)]
+        y_true = np.array([0, 1, 0, 1, 0, 1, 0, 1, 0, 1])
+        y_pred = np.array([0, 1, 0, 1, 0, 1, 0, 1, 0, 1])
+        for metric in metrics:
+            metric_value = metric.compute_metric(y_true, y_pred, n_tasks=1)[0]
+            self.assertAlmostEqual(metric_value, 1.0, delta=0.00000001)

@@ -4,7 +4,6 @@ from typing import Dict, Union, List, Tuple
 import numpy as np
 
 from deepmol.datasets import Dataset
-from deepmol.evaluator._utils import _process_metric_input
 from deepmol.metrics import Metric
 from deepmol.utils.utils import normalize_labels_shape
 
@@ -63,19 +62,19 @@ class Evaluator:
         assert len(y_preds) == len(data_ids)
         with open(csv_out, "w") as csvfile:
             csvwriter = csv.writer(csvfile)
-            csvwriter.writerow(["ID"] + self.dataset.label_names)
+            csvwriter.writerow(["ID"] + list(self.dataset.label_names))
             for mol_id, y_pred in zip(data_ids, y_preds):
                 csvwriter.writerow([mol_id] + list(y_pred))
 
     def compute_model_performance(self,
-                                  metrics: Union[Metric, callable, List[Union[Metric, callable]]],
+                                  metrics: Union[Metric, List[Metric]],
                                   per_task_metrics: bool = False) -> Tuple[Dict, Union[None, Dict]]:
         """
         Computes statistics of model on test data and saves results to csv.
 
         Parameters
         ----------
-        metrics: Union[Metric, callable, List[Union[Metric, callable]]]
+        metrics: Union[Metric, List[Metric]]
             The set of metrics provided.
             If a single `Metric` object is provided or a list is provided, it will evaluate `Model` on those metrics.
         per_task_metrics: bool
@@ -90,9 +89,6 @@ class Evaluator:
         all_task_scores: dict
             If `per_task_metrics == True`, then returns a second dictionary of scores for each task separately.
         """
-        # Process input metrics
-        metrics = _process_metric_input(metrics)
-
         n_tasks = self.dataset.n_tasks
         y = self.dataset.y
         y_pred = self.model.predict(self.dataset)

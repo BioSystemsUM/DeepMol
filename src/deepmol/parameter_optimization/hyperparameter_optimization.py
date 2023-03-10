@@ -145,7 +145,6 @@ class HyperparameterOptimizerValidation(HyperparameterOptimizer):
                 raise ValueError(f'Train dataset mode does not match model operation mode! Got {train_dataset.mode} '
                                  f'but expected {self.mode}')
 
-        self.logger.info(f'MODE: {self.mode}')
         hyperparams = params_dict.keys()
         hyperparameter_values = params_dict.values()
 
@@ -214,7 +213,7 @@ class HyperparameterOptimizerValidation(HyperparameterOptimizer):
                 if (use_max and valid_score >= best_validation_score) or (
                         not use_max and valid_score <= best_validation_score):
                     best_validation_score = valid_score
-                    best_hyperparams = hyperparameter_tuple
+                    best_hyperparams = hyper_params
                     if best_model_dir is not None:
                         shutil.rmtree(best_model_dir)
                     best_model_dir = model_dir
@@ -229,7 +228,7 @@ class HyperparameterOptimizerValidation(HyperparameterOptimizer):
         if best_model is None:
             self.logger.warning("No models trained correctly.")
             # arbitrarily return last model
-            best_model, best_hyperparams = model, hyperparameter_tuple
+            best_model, best_hyperparams = model, hyper_params
             return best_model, best_hyperparams, all_scores
 
         multitask_scores = best_model.evaluate(train_dataset, [metric])[0]
@@ -259,7 +258,7 @@ class HyperparameterOptimizerCV(HyperparameterOptimizer):
                               logdir: str = None,
                               seed: int = None,
                               refit: bool = True,
-                              **kwargs):
+                              **kwargs) -> Tuple[Model, Dict, Dict]:
 
         """
         Perform hyperparams search according to params_dict.

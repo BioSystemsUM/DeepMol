@@ -13,9 +13,11 @@ from deepmol.utils.utils import smiles_to_mol, mol_to_smiles
 
 
 class Dataset(ABC):
+
     """
     Abstract base class for datasets
     Subclasses need to implement their own methods based on this class.
+
     """
 
     def __init__(self):
@@ -674,6 +676,7 @@ class SmilesDataset(Dataset):
     def mode(self, mode: str) -> None:
         """
         Set the mode of the dataset.
+
         Parameters
         ----------
         mode: str
@@ -687,6 +690,7 @@ class SmilesDataset(Dataset):
         """
         Get the shape of the dataset.
         Returns three tuples, giving the shape of the smiles, X and y arrays.
+
         Returns
         -------
         smiles_shape: Tuple
@@ -824,11 +828,12 @@ class SmilesDataset(Dataset):
     def select(self, ids: Union[List[str], List[int]], axis: int = 0) -> None:
         """
         Creates a new sub dataset of self from a selection of indexes.
+
         Parameters
         ----------
         ids: Union[List[str], List[int]]
-          List of ids/indexes to select.
-          IDs of the compounds in case axis = 0, indexes of the columns in case axis = 1.
+          List of ids/indexes to select.IDs of the compounds in case axis = 0,
+          indexes of the columns in case axis = 1.
         axis: int
             Axis to select along. 0 selects along the first axis, 1 selects along the second axis.
         """

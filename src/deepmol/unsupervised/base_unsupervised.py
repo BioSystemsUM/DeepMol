@@ -1,5 +1,4 @@
 from abc import abstractmethod, ABC
-from typing import Union
 
 from deepmol.datasets import Dataset, SmilesDataset
 

@@ -35,7 +35,7 @@ class TestDeepChemHyperparameterOptimization(ModelsTestCase, TestCase):
 
         model_graph = HyperparameterOptimizerCV(model_builder=graphconv_builder)
 
-        best_model, _, _ = model_graph.hyperparameter_search(train_dataset=ds_train, metric="roc_auc",
+        best_model, _, _ = model_graph.hyperparameter_search(train_dataset=ds_train, metric=Metric(roc_auc_score),
                                                              n_iter_search=2,
                                                              cv=2, params_dict={'graph_conv_layers': [[64, 64],
                                                                                                       [32, 32]]},

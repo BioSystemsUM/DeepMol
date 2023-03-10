@@ -27,6 +27,7 @@ class TestSklearnHyperparameterOptimization(ModelsTestCase, TestCase):
         best_svm, best_hyperparams, all_results = optimizer.hyperparameter_search(train_dataset=train_dataset,
                                                                                   valid_dataset=test_dataset,
                                                                                   metric=Metric(accuracy_score),
+                                                                                  maximize_metric=True,
                                                                                   n_iter_search=2,
                                                                                   params_dict=params_dict_svc)
 
@@ -64,7 +65,7 @@ class TestSklearnHyperparameterOptimization(ModelsTestCase, TestCase):
         self.assertEqual(all_results['params'][np.argmax(all_results['mean_test_score'])], best_hyperparams)
 
         best_rf, best_hyperparams, all_results = optimizer.hyperparameter_search(train_dataset=train_dataset,
-                                                                                 metric="roc_auc",
+                                                                                 metric=Metric(roc_auc_score),
                                                                                  n_iter_search=2,
                                                                                  cv=2, params_dict=params_dict_rf,
                                                                                  model_type="sklearn")
@@ -72,7 +73,7 @@ class TestSklearnHyperparameterOptimization(ModelsTestCase, TestCase):
         self.assertEqual(len(all_results['mean_test_score']), 2)
         self.assertEqual(all_results['params'][np.argmax(all_results['mean_test_score'])], best_hyperparams)
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(AttributeError):
             optimizer.hyperparameter_search(train_dataset=train_dataset,
                                             metric="not_a_metric",
                                             n_iter_search=2,
@@ -114,6 +115,7 @@ class TestSklearnHyperparameterOptimization(ModelsTestCase, TestCase):
         best_rf, best_hyperparams, all_results = optimizer.hyperparameter_search(train_dataset=train_dataset,
                                                                                  valid_dataset=test_dataset,
                                                                                  metric=Metric(roc_auc_score),
+                                                                                 maximize_metric=True,
                                                                                  n_iter_search=2,
                                                                                  params_dict=params_dict_rf)
 

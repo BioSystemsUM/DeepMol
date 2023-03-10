@@ -2,15 +2,17 @@ import os
 from typing import Callable
 from unittest import TestCase
 
+import numpy as np
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, accuracy_score
+from sklearn.svm import SVC
 
 from deepmol.compound_featurization import MorganFingerprint
 from deepmol.loaders import CSVLoader
 from deepmol.metrics import Metric
 from deepmol.models import SklearnModel
 from deepmol.parameter_optimization import HyperparameterOptimizerCV, HyperparameterOptimizerValidation
-from deepmol.parameter_optimization._utils import validate_metrics
+from deepmol.parameter_optimization._utils import validate_metrics, _convert_hyperparam_dict_to_filename
 from deepmol.splitters import SingletaskStratifiedSplitter
 from unit_tests.models.test_models import ModelsTestCase
 
@@ -18,11 +20,24 @@ from unit_tests.models.test_models import ModelsTestCase
 class TestSklearnHyperparameterOptimization(ModelsTestCase, TestCase):
 
     def test_fit_predict_evaluate(self):
-        pass
+        train_dataset, test_dataset = self.binary_dataset, self.binary_dataset_test
+
+        optimizer = HyperparameterOptimizerValidation(SVC)
+        params_dict_svc = {"C": [1.0, 1.2, 0.8]}
+        best_svm, best_hyperparams, all_results = optimizer.hyperparameter_search(train_dataset=train_dataset,
+                                                                                  valid_dataset=test_dataset,
+                                                                                  metric=Metric(accuracy_score),
+                                                                                  n_iter_search=2,
+                                                                                  params_dict=params_dict_svc)
+
+        # Evaluate model
+        result = best_svm.evaluate(test_dataset, [Metric(accuracy_score)])
+
+        best_model_name = _convert_hyperparam_dict_to_filename(best_hyperparams)
+        self.assertEqual(all_results[best_model_name], result[0]["accuracy_score"])
 
     def test_hyperparameter_optimization_cv(self):
-
-        MorganFingerprint().featurize(self.train_dataset)
+        train_dataset, test_dataset = self.binary_dataset, self.binary_dataset_test
 
         def rf_model_builder(n_estimators=10, class_weight=None):
             if class_weight is None:
@@ -39,32 +54,26 @@ class TestSklearnHyperparameterOptimization(ModelsTestCase, TestCase):
 
         metric = Metric(roc_auc_score)
 
-        print(str(roc_auc_score))
-
-        best_rf, best_hyperparams, all_results = optimizer.hyperparameter_search(train_dataset=self.train_dataset,
+        best_rf, best_hyperparams, all_results = optimizer.hyperparameter_search(train_dataset=train_dataset,
                                                                                  metric=metric,
                                                                                  n_iter_search=2,
                                                                                  cv=2, params_dict=params_dict_rf,
                                                                                  model_type="sklearn")
 
-        print('#################')
-        print(best_hyperparams)
-        print(best_rf)
-        print(all_results)
+        self.assertEqual(len(all_results['mean_test_score']), 2)
+        self.assertEqual(all_results['params'][np.argmax(all_results['mean_test_score'])], best_hyperparams)
 
-        best_rf, best_hyperparams, all_results = optimizer.hyperparameter_search(train_dataset=self.train_dataset,
+        best_rf, best_hyperparams, all_results = optimizer.hyperparameter_search(train_dataset=train_dataset,
                                                                                  metric="roc_auc",
                                                                                  n_iter_search=2,
                                                                                  cv=2, params_dict=params_dict_rf,
                                                                                  model_type="sklearn")
 
-        print('#################')
-        print(best_hyperparams)
-        print(best_rf)
-        print(all_results)
+        self.assertEqual(len(all_results['mean_test_score']), 2)
+        self.assertEqual(all_results['params'][np.argmax(all_results['mean_test_score'])], best_hyperparams)
 
         with self.assertRaises(ValueError):
-            optimizer.hyperparameter_search(train_dataset=self.train_dataset,
+            optimizer.hyperparameter_search(train_dataset=train_dataset,
                                             metric="not_a_metric",
                                             n_iter_search=2,
                                             cv=2, params_dict=params_dict_rf,
@@ -84,11 +93,7 @@ class TestSklearnHyperparameterOptimization(ModelsTestCase, TestCase):
         self.assertIsInstance(metric, str)
 
     def test_aucs(self):
-
-        MorganFingerprint().featurize(self.train_dataset)
-
-        splitter = SingletaskStratifiedSplitter()
-        train_dataset, test_dataset = splitter.train_test_split(self.train_dataset)
+        train_dataset, test_dataset = self.binary_dataset, self.binary_dataset_test
 
         def rf_model_builder(n_estimators=10, max_features='auto', class_weight=None):
             if class_weight is None:
@@ -112,9 +117,9 @@ class TestSklearnHyperparameterOptimization(ModelsTestCase, TestCase):
                                                                                  n_iter_search=2,
                                                                                  params_dict=params_dict_rf)
 
-        # best_model_name = _convert_hyperparam_dict_to_filename(best_hyperparams)
-        #
-        # # Evaluate model
-        # result = best_rf.evaluate(test_dataset, metrics)
-        #
-        # self.assertEqual(all_results[best_model_name], result[0]["roc_auc_score"])
+        best_model_name = _convert_hyperparam_dict_to_filename(best_hyperparams)
+
+        # Evaluate model
+        result = best_rf.evaluate(test_dataset, metrics)
+
+        self.assertEqual(all_results[best_model_name], result[0]["roc_auc_score"])

@@ -1,21 +1,21 @@
-# deepmol.datasets package
+deepmol.datasets package
+========================
 
-## Submodules
+Submodules
+----------
 
-## deepmol.datasets.datasets module
+deepmol.datasets.datasets module
+--------------------------------
 
-```{eval-rst}
 .. automodule:: deepmol.datasets.datasets
    :members:
    :undoc-members:
    :show-inheritance:
-```
 
-## Module contents
+Module contents
+---------------
 
-```{eval-rst}
 .. automodule:: deepmol.datasets
    :members:
    :undoc-members:
    :show-inheritance:
-```

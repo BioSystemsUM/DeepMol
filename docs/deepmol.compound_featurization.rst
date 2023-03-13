@@ -1,66 +1,61 @@
-# deepmol.compound_featurization package
+deepmol.compound\_featurization package
+=======================================
 
-## Submodules
+Submodules
+----------
 
-## deepmol.compound_featurization.base_featurizer module
+deepmol.compound\_featurization.base\_featurizer module
+-------------------------------------------------------
 
-```{eval-rst}
 .. automodule:: deepmol.compound_featurization.base_featurizer
    :members:
    :undoc-members:
    :show-inheritance:
-```
 
-## deepmol.compound_featurization.deepchem_featurizers module
+deepmol.compound\_featurization.deepchem\_featurizers module
+------------------------------------------------------------
 
-```{eval-rst}
 .. automodule:: deepmol.compound_featurization.deepchem_featurizers
    :members:
    :undoc-members:
    :show-inheritance:
-```
 
-## deepmol.compound_featurization.mixed_descriptors module
+deepmol.compound\_featurization.mixed\_descriptors module
+---------------------------------------------------------
 
-```{eval-rst}
 .. automodule:: deepmol.compound_featurization.mixed_descriptors
    :members:
    :undoc-members:
    :show-inheritance:
-```
 
-## deepmol.compound_featurization.mol2vec module
+deepmol.compound\_featurization.mol2vec module
+----------------------------------------------
 
-```{eval-rst}
 .. automodule:: deepmol.compound_featurization.mol2vec
    :members:
    :undoc-members:
    :show-inheritance:
-```
 
-## deepmol.compound_featurization.rdkit_descriptors module
+deepmol.compound\_featurization.rdkit\_descriptors module
+---------------------------------------------------------
 
-```{eval-rst}
 .. automodule:: deepmol.compound_featurization.rdkit_descriptors
    :members:
    :undoc-members:
    :show-inheritance:
-```
 
-## deepmol.compound_featurization.rdkit_fingerprints module
+deepmol.compound\_featurization.rdkit\_fingerprints module
+----------------------------------------------------------
 
-```{eval-rst}
 .. automodule:: deepmol.compound_featurization.rdkit_fingerprints
    :members:
    :undoc-members:
    :show-inheritance:
-```
 
-## Module contents
+Module contents
+---------------
 
-```{eval-rst}
 .. automodule:: deepmol.compound_featurization
    :members:
    :undoc-members:
    :show-inheritance:
-```

@@ -1,21 +1,21 @@
-# deepmol.splitters package
+deepmol.splitters package
+=========================
 
-## Submodules
+Submodules
+----------
 
-## deepmol.splitters.splitters module
+deepmol.splitters.splitters module
+----------------------------------
 
-```{eval-rst}
 .. automodule:: deepmol.splitters.splitters
    :members:
    :undoc-members:
    :show-inheritance:
-```
 
-## Module contents
+Module contents
+---------------
 
-```{eval-rst}
 .. automodule:: deepmol.splitters
    :members:
    :undoc-members:
    :show-inheritance:
-```

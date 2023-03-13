@@ -1,30 +1,29 @@
-# deepmol.utils package
+deepmol.utils package
+=====================
 
-## Submodules
+Submodules
+----------
 
-## deepmol.utils.errors module
+deepmol.utils.errors module
+---------------------------
 
-```{eval-rst}
 .. automodule:: deepmol.utils.errors
    :members:
    :undoc-members:
    :show-inheritance:
-```
 
-## deepmol.utils.utils module
+deepmol.utils.utils module
+--------------------------
 
-```{eval-rst}
 .. automodule:: deepmol.utils.utils
    :members:
    :undoc-members:
    :show-inheritance:
-```
 
-## Module contents
+Module contents
+---------------
 
-```{eval-rst}
 .. automodule:: deepmol.utils
    :members:
    :undoc-members:
    :show-inheritance:
-```

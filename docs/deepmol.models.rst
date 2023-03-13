@@ -1,66 +1,61 @@
-# deepmol.models package
+deepmol.models package
+======================
 
-## Submodules
+Submodules
+----------
 
-## deepmol.models.base_models module
+deepmol.models.base\_models module
+----------------------------------
 
-```{eval-rst}
 .. automodule:: deepmol.models.base_models
    :members:
    :undoc-members:
    :show-inheritance:
-```
 
-## deepmol.models.deepchem_models module
+deepmol.models.deepchem\_models module
+--------------------------------------
 
-```{eval-rst}
 .. automodule:: deepmol.models.deepchem_models
    :members:
    :undoc-members:
    :show-inheritance:
-```
 
-## deepmol.models.ensembles module
+deepmol.models.ensembles module
+-------------------------------
 
-```{eval-rst}
 .. automodule:: deepmol.models.ensembles
    :members:
    :undoc-members:
    :show-inheritance:
-```
 
-## deepmol.models.keras_models module
+deepmol.models.keras\_models module
+-----------------------------------
 
-```{eval-rst}
 .. automodule:: deepmol.models.keras_models
    :members:
    :undoc-members:
    :show-inheritance:
-```
 
-## deepmol.models.models module
+deepmol.models.models module
+----------------------------
 
-```{eval-rst}
 .. automodule:: deepmol.models.models
    :members:
    :undoc-members:
    :show-inheritance:
-```
 
-## deepmol.models.sklearn_models module
+deepmol.models.sklearn\_models module
+-------------------------------------
 
-```{eval-rst}
 .. automodule:: deepmol.models.sklearn_models
    :members:
    :undoc-members:
    :show-inheritance:
-```
 
-## Module contents
+Module contents
+---------------
 
-```{eval-rst}
 .. automodule:: deepmol.models
    :members:
    :undoc-members:
    :show-inheritance:
-```

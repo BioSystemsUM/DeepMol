@@ -1,30 +1,29 @@
-# deepmol.unsupervised package
+deepmol.unsupervised package
+============================
 
-## Submodules
+Submodules
+----------
 
-## deepmol.unsupervised.base_unsupervised module
+deepmol.unsupervised.base\_unsupervised module
+----------------------------------------------
 
-```{eval-rst}
 .. automodule:: deepmol.unsupervised.base_unsupervised
    :members:
    :undoc-members:
    :show-inheritance:
-```
 
-## deepmol.unsupervised.umap module
+deepmol.unsupervised.umap module
+--------------------------------
 
-```{eval-rst}
 .. automodule:: deepmol.unsupervised.umap
    :members:
    :undoc-members:
    :show-inheritance:
-```
 
-## Module contents
+Module contents
+---------------
 
-```{eval-rst}
 .. automodule:: deepmol.unsupervised
    :members:
    :undoc-members:
    :show-inheritance:
-```

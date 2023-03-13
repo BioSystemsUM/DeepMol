@@ -22,8 +22,8 @@ kneed==0.8.2
 kaleido==0.2.1
 plotly==5.13.1
 sphinx
-rst-to-myst==0.3.4
-sphinx-rtd-theme==1.2.0
-sphinx-autobuild==2021.3.14
-myst-parser==0.18.1
+rst-to-myst
+sphinx-rtd-theme
+sphinx-autobuild
+myst-parser
 

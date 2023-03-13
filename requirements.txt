@@ -11,7 +11,7 @@ h5py==3.7.0
 deepchem==2.5.0
 shap==0.41.0
 gensim==4.2.0
-mol2vec @ git+https://github.com/samoturk/mol2vec#egg=mol2vec
+#mol2vec @ git+https://github.com/samoturk/mol2vec#egg=mol2vec
 boruta==0.3
 tensorflow==2.10.0
 chembl_structure_pipeline==1.1.0
@@ -21,8 +21,9 @@ umap-learn==0.5.1
 kneed==0.8.2
 kaleido==0.2.1
 plotly==5.13.1
-rst-to-myst[sphinx]==0.3.4
+sphinx
+rst-to-myst==0.3.4
 sphinx-rtd-theme==1.2.0
 sphinx-autobuild==2021.3.14
-myst-parser==1.0.0
+myst-parser==0.18.1
 

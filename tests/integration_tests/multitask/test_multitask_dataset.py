@@ -11,7 +11,7 @@ from deepmol.compound_featurization import MorganFingerprint, ConvMolFeat
 from deepmol.loaders import CSVLoader
 from deepmol.metrics import Metric
 from deepmol.models import DeepChemModel, KerasModel
-from deepmol.models.base_models import create_dense_model, basic_multitask_dnn
+from deepmol.models.base_models import basic_multitask_dnn
 from deepmol.splitters import RandomSplitter
 from tests import TEST_DIR
 

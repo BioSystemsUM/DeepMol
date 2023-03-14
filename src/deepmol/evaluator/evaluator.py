@@ -40,8 +40,8 @@ class Evaluator:
         stats_out: str
             Name of file to write scores to.
         """
-        with open(stats_out, "w") as statsfile:
-            statsfile.write(str(scores) + "\n")
+        with open(stats_out, "w") as stats_file:
+            stats_file.write(str(scores) + "\n")
 
     def output_predictions(self, y_preds: np.ndarray, csv_out: str) -> None:
         """
@@ -79,8 +79,6 @@ class Evaluator:
             If a single `Metric` object is provided or a list is provided, it will evaluate `Model` on those metrics.
         per_task_metrics: bool
             If True, return computed metric for each task on multitask dataset.
-        kwargs:
-            Additional keyword arguments to pass to the Metric object.
 
         Returns
         -------

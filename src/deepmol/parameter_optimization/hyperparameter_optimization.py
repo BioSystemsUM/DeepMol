@@ -55,7 +55,7 @@ class HyperparameterOptimizer(object):
                               train_dataset: Dataset,
                               valid_dataset: Dataset,
                               metric: Metric,
-                              use_max: bool = True,
+                              maximize_metric: bool,
                               logdir: str = None,
                               **kwargs) -> Tuple[Model, Dict[str, Any], Dict[str, float]]:
         """
@@ -75,7 +75,7 @@ class HyperparameterOptimizer(object):
             The validation dataset.
         metric: Metric
             The metric to optimize.
-        use_max: bool
+        maximize_metric: bool
             If True, return the model with the highest score.
         logdir: str
             The directory in which to store created models. If not set, will use a temporary directory.
@@ -101,10 +101,10 @@ class HyperparameterOptimizerValidation(HyperparameterOptimizer):
                               train_dataset: Dataset,
                               valid_dataset: Dataset,
                               metric: Metric,
+                              maximize_metric: bool,
                               n_iter_search: int = 15,
                               n_jobs: int = 1,
                               verbose: int = 0,
-                              use_max: bool = True,
                               logdir: str = None,
                               **kwargs):
         """
@@ -122,14 +122,14 @@ class HyperparameterOptimizerValidation(HyperparameterOptimizer):
             The validation dataset.
         metric: Metric
             The metric to optimize.
+        maximize_metric: bool
+            If True, return the model with the highest score.
         n_iter_search: int
             Number of random combinations of parameters to test, if None performs complete grid search.
         n_jobs: int
             Number of jobs to run in parallel.
         verbose: int
             Controls the verbosity: the higher, the more messages.
-        use_max: bool
-            If True, return the model with the highest score.
         logdir: str
             The directory in which to store created models. If not set, will use a temporary directory.
 
@@ -145,13 +145,12 @@ class HyperparameterOptimizerValidation(HyperparameterOptimizer):
                 raise ValueError(f'Train dataset mode does not match model operation mode! Got {train_dataset.mode} '
                                  f'but expected {self.mode}')
 
-        self.logger.info(f'MODE: {self.mode}')
         hyperparams = params_dict.keys()
         hyperparameter_values = params_dict.values()
 
         number_combinations = reduce(mul, [len(vals) for vals in hyperparameter_values])
 
-        if use_max:
+        if maximize_metric:
             best_validation_score = -np.inf
         else:
             best_validation_score = np.inf
@@ -211,10 +210,10 @@ class HyperparameterOptimizerValidation(HyperparameterOptimizer):
                 hp_str = _convert_hyperparam_dict_to_filename(hyper_params)
                 all_scores[hp_str] = valid_score
 
-                if (use_max and valid_score >= best_validation_score) or (
-                        not use_max and valid_score <= best_validation_score):
+                if (maximize_metric and valid_score >= best_validation_score) or (
+                        not maximize_metric and valid_score <= best_validation_score):
                     best_validation_score = valid_score
-                    best_hyperparams = hyperparameter_tuple
+                    best_hyperparams = hyper_params
                     if best_model_dir is not None:
                         shutil.rmtree(best_model_dir)
                     best_model_dir = model_dir
@@ -229,7 +228,7 @@ class HyperparameterOptimizerValidation(HyperparameterOptimizer):
         if best_model is None:
             self.logger.warning("No models trained correctly.")
             # arbitrarily return last model
-            best_model, best_hyperparams = model, hyperparameter_tuple
+            best_model, best_hyperparams = model, hyper_params
             return best_model, best_hyperparams, all_scores
 
         multitask_scores = best_model.evaluate(train_dataset, [metric])[0]
@@ -251,7 +250,8 @@ class HyperparameterOptimizerCV(HyperparameterOptimizer):
                               model_type: str,
                               params_dict: Dict,
                               train_dataset: Dataset,
-                              metric: Union[str, Metric, callable],
+                              metric: Union[Metric, List[Metric]],
+                              maximize_metric: bool = True,
                               cv: int = 3,
                               n_iter_search: int = 15,
                               n_jobs: int = 1,
@@ -259,7 +259,7 @@ class HyperparameterOptimizerCV(HyperparameterOptimizer):
                               logdir: str = None,
                               seed: int = None,
                               refit: bool = True,
-                              **kwargs):
+                              **kwargs) -> Tuple[Model, Dict, Dict]:
 
         """
         Perform hyperparams search according to params_dict.
@@ -274,8 +274,10 @@ class HyperparameterOptimizerCV(HyperparameterOptimizer):
             Dictionary mapping hyperparameter names (strings) to lists of possible parameter values.
         train_dataset: Dataset
             Dataset to train on.
-        metric: Union[str, List[str], Metric, List[Metric], Dict]
+        metric: Union[Metric, List[Metric]]
             Metric or metrics to optimize over.
+        maximize_metric: bool
+            Whether to maximize or minimize the metric.
         cv: int
             Number of cross-validation folds to perform.
         n_iter_search: int
@@ -330,26 +332,25 @@ class HyperparameterOptimizerCV(HyperparameterOptimizer):
         else:
             raise ValueError('Only keras, sklearn and deepchem models are accepted.')
 
-        metric = validate_metrics(metric)
-
         number_combinations = reduce(mul, [len(vals) for vals in params_dict.values()])
         if number_combinations > n_iter_search:
             self.logger.info("Fitting %d random models from a space of %d possible models." % (n_iter_search,
                                                                                                number_combinations))
             if model_type == 'deepchem':
                 grid = DeepchemRandomSearchCV(model_build_fn=model, param_distributions=params_dict, scoring=metric,
-                                              cv=cv, mode=self.mode, n_iter=n_iter_search, refit=refit,
-                                              random_state=seed)
+                                              maximize=maximize_metric, cv=cv, mode=self.mode, n_iter=n_iter_search,
+                                              refit=refit, random_state=seed)
             else:
-                grid = RandomizedSearchCV(estimator=model, param_distributions=params_dict, scoring=metric,
+                grid = RandomizedSearchCV(estimator=model, param_distributions=params_dict, scoring=metric.metric,
                                           n_jobs=n_jobs, cv=cv, verbose=verbose, n_iter=n_iter_search, refit=refit,
                                           random_state=seed)
         else:
             if model_type == 'deepchem':
                 grid = DeepchemGridSearchCV(model_build_fn=model, param_grid=params_dict, scoring=metric,
-                                            cv=cv, mode=self.mode, refit=refit, random_state=seed)
+                                            maximize=maximize_metric, cv=cv, mode=self.mode, refit=refit,
+                                            random_state=seed)
             else:
-                grid = GridSearchCV(estimator=model, param_grid=params_dict, scoring=metric, n_jobs=n_jobs,
+                grid = GridSearchCV(estimator=model, param_grid=params_dict, scoring=metric.metric, n_jobs=n_jobs,
                                     cv=cv, verbose=verbose, refit=refit)
 
         if model_type == 'deepchem':

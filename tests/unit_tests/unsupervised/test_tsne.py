@@ -1,5 +1,8 @@
 from copy import copy
 from unittest import TestCase
+from unittest.mock import patch
+
+from plotly.graph_objs import Figure
 
 from deepmol.unsupervised import TSNE
 from unit_tests.unsupervised.test_unsupervised import UnsupervisedBaseTestCase
@@ -21,7 +24,8 @@ class TestTSNE(UnsupervisedBaseTestCase, TestCase):
         self.assertEqual(components_df.X.shape, (dataset.X.shape[0], n_components))
         pca.plot(components_df.X, path='test_components.png')
 
-    def test_run_unsupervised(self):
+    @patch.object(Figure, 'show')
+    def test_run_unsupervised(self, mock_show):
         self.validate_tsne_classification(2)
         self.validate_tsne_classification(3)
         self.validate_tsne_classification(4, method='exact')

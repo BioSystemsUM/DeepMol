@@ -70,9 +70,9 @@ class KerasModel(Model):
             self.model = KerasRegressor(build_fn=model_builder, nb_epoch=epochs, batch_size=batch_size, verbose=verbose,
                                         **kwargs)
         else:
-            raise ValueError('Only classification or regression is accepted.')
+            self.model = model_builder
 
-    def fit(self, dataset: Dataset) -> None:
+    def fit(self, dataset: Dataset, **kwargs) -> None:
         """
         Fits keras model to data.
 
@@ -80,12 +80,18 @@ class KerasModel(Model):
         ----------
         dataset: Dataset
             The `Dataset` to train this model on.
+        kwargs:
+            Additional arguments to pass to `fit` method of the keras model.
         """
         if self.mode != dataset.mode:
             raise ValueError('Dataset mode does not match model mode.')
-        features = dataset.X
-        y = np.squeeze(dataset.y)
-        self.model.fit(features, y)
+        features = dataset.X.astype('float32')
+        if len(dataset.label_names) == 1:
+            y = np.squeeze(dataset.y)
+        else:
+            targets = [dataset.y[:, i] for i in range(len(dataset.label_names))]
+            y = {f"{dataset.label_names[i]}": targets[i] for i in range(len(dataset.label_names))}
+        self.model.fit(features, y, **kwargs)
 
     def predict(self, dataset: Dataset) -> np.ndarray:
         """
@@ -103,11 +109,11 @@ class KerasModel(Model):
           scikit-learn model has both methods, the value is always a return value of `predict_proba`.
         """
         try:
-            return self.model.predict_proba(dataset.X)
+            return self.model.predict_proba(dataset.X.astype('float32'))
         except AttributeError:
             self.logger.info(str(self.model))
             self.logger.info(str(type(self.model)))
-            return self.model.predict(dataset.X)
+            return self.model.predict(dataset.X.astype('float32'))
 
     def predict_on_batch(self, X: Dataset) -> np.ndarray:
         """
@@ -197,12 +203,10 @@ class KerasModel(Model):
 
             dummy_model.fit(train_ds)
 
-            print('Train Score: ')
             train_score = dummy_model.evaluate(train_ds, metric)
             train_scores.append(train_score[metric.name])
             avg_train_score += train_score[metric.name]
 
-            print('Test Score: ')
             test_score = dummy_model.evaluate(test_ds, metric)
             test_scores.append(test_score[metric.name])
             avg_test_score += test_score[metric.name]

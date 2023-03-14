@@ -56,9 +56,8 @@ class DeepChemModel(BaseDeepChemModel):
           The model instance which inherits a DeepChem `Model` Class.
         model_dir: str, optional (default None)
           If specified the model will be stored in this directory. Else, a temporary directory will be used.
-        kwargs: dict
-          kwargs['use_weights'] is a bool which determines if we pass weights into
-          self.model.fit().
+        kwargs:
+          additional arguments to be passed to the model.
         """
         if 'model_instance' in kwargs:
             self.model_instance = kwargs['model_instance']
@@ -97,7 +96,6 @@ class DeepChemModel(BaseDeepChemModel):
             The weights for the data.
         """
 
-
     def get_task_type(self) -> str:
         """
         Returns the task type of the model.
@@ -119,30 +117,28 @@ class DeepChemModel(BaseDeepChemModel):
         """
 
     def fit(self, dataset: Dataset) -> None:
-        """Fits DeepChemModel to data.
+        """
+        Fits DeepChemModel to data.
+
         Parameters
         ----------
         dataset: Dataset
             The `Dataset` to train this model on.
         """
-        if self.model.model.mode != dataset.mode:
-            raise ValueError(f"The model mode and the dataset mode must be the same. "
-                             f"Got model mode: {self.model.model.mode} and dataset mode: {dataset.mode}")
+        # TODO: better way to validate model.mode and dataset.mode
+        if dataset.mode != 'multitask':
+            if self.model.model.mode != dataset.mode:
+                raise ValueError(f"The model mode and the dataset mode must be the same. "
+                                 f"Got model mode: {self.model.model.mode} and dataset mode: {dataset.mode}")
         # Afraid of model.fit not recognizes the input dataset as a deepchem.data.datasets.Dataset
         if isinstance(self.model, TorchModel) and self.model.model.mode == 'regression':
             y = np.expand_dims(dataset.y, axis=-1)  # need to do this so that the loss is calculated correctly
-            new_dataset = NumpyDataset(
-                X=dataset.X,
-                y=y,
-                ids=dataset.mols)
         else:
-            new_dataset = NumpyDataset(
-                X=dataset.X,
-                y=dataset.y,
-                # w = np.ones((np.shape(dataset.features)[0])),
-                ids=dataset.mols)
+            y = dataset.y
+        new_dataset = NumpyDataset(X=dataset.X, y=y, ids=dataset.ids, n_tasks=dataset.n_tasks)
+
         if isinstance(self.model, SeqToSeq):
-            self.model.fit_sequences(generate_sequences(epochs=self.model.epochs, train_smiles=dataset.ids))
+            self.model.fit_sequences(generate_sequences(epochs=self.model.epochs, train_smiles=dataset.smiles))
         elif isinstance(self.model, WGAN):
             pass
             # TODO: Wait for the implementation of iterbactches
@@ -173,11 +169,7 @@ class DeepChemModel(BaseDeepChemModel):
         """
         if transformers is None:
             transformers = []
-        new_dataset = NumpyDataset(
-            X=dataset.X,
-            y=dataset.y,
-            # w = np.ones((np.shape(dataset.features)[0],self.n_tasks)),
-            ids=dataset.mols)
+        new_dataset = NumpyDataset(X=dataset.X, y=dataset.y, ids=dataset.ids, n_tasks=dataset.n_tasks)
 
         res = self.model.predict(new_dataset, transformers)
 
@@ -266,13 +258,11 @@ class DeepChemModel(BaseDeepChemModel):
 
             dummy_model = DeepChemModel(self.model)
 
-            print('Train Score: ')
             # TODO: isto está testado ? estes transformers nao é um boleano
             train_score = dummy_model.evaluate(train_ds, [metric], transformers)
             train_scores.append(train_score[metric.name])
             avg_train_score += train_score[metric.name]
 
-            print('Test Score: ')
             test_score = dummy_model.evaluate(test_ds, [metric], transformers)
             test_scores.append(test_score[metric.name])
             avg_test_score += test_score[metric.name]
@@ -287,8 +277,7 @@ class DeepChemModel(BaseDeepChemModel):
     def evaluate(self,
                  dataset: Dataset,
                  metrics: List[Metric],
-                 per_task_metrics: bool = False,
-                 n_classes: int = 2):
+                 per_task_metrics: bool = False):
         """
         Evaluates the performance of the model on the provided dataset.
 
@@ -300,8 +289,6 @@ class DeepChemModel(BaseDeepChemModel):
             Metrics to evaluate the model on.
         per_task_metrics: bool
             If true, return computed metric for each task on multitask dataset.
-        n_classes: int
-            Number of classes in the dataset.
 
         Returns
         -------
@@ -312,4 +299,4 @@ class DeepChemModel(BaseDeepChemModel):
                 If `per_task_metrics == True`, then returns a second dictionary of scores for each task separately.
         """
         evaluator = Evaluator(self, dataset)
-        return evaluator.compute_model_performance(metrics, per_task_metrics=per_task_metrics, n_classes=n_classes)
+        return evaluator.compute_model_performance(metrics, per_task_metrics=per_task_metrics)

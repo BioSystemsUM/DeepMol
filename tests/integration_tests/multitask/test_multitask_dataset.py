@@ -20,7 +20,7 @@ class MultitaskBaseTestCase(ABC):
 
     def setUp(self):
         data_path = os.path.join(TEST_DIR, 'data')
-        dataset = os.path.join(data_path, "tox21.csv")
+        dataset = os.path.join(data_path, "tox21_small.csv")
         loader = CSVLoader(dataset,
                            smiles_field='smiles',
                            id_field='mol_id',

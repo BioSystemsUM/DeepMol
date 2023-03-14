@@ -74,7 +74,7 @@ class MACCSkeysFingerprint(MolecularFeaturizer):
         Initialize a MACCSkeysFingerprint object.
         """
         super().__init__(**kwargs)
-        self.feature_names = [f'maccs_{i}' for i in range(166)]
+        self.feature_names = [f'maccs_{i}' for i in range(167)]
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """

@@ -59,6 +59,7 @@ class MorganFingerprint(MolecularFeaturizer):
                                                             useChirality=self.chiral,
                                                             useBondTypes=self.bonds,
                                                             useFeatures=self.features)
+        fp = np.asarray(fp, dtype=np.float32)
         return fp
 
 

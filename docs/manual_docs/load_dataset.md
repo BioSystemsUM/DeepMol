@@ -1,10 +1,9 @@
 # Load a dataset from a CSV
 
-To load data from a CSV it's only required to provide the math and molecules 
+To load data from a CSV it's only required to provide the data path and molecules 
 field name. Optionally, it is also possible to provide a field with some ids, 
-the labels fields, features fields, features to keep (useful for instance 
-to select only the features kept after feature selection) and the number of 
-samples to load (by default loads the entire dataset).
+the labels fields, features fields and the number of  samples to load (by default 
+loads the entire dataset).
 
 ```python
 from deepmol.loaders.loaders import CSVLoader

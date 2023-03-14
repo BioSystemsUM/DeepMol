@@ -68,7 +68,7 @@ class Evaluator:
 
     def compute_model_performance(self,
                                   metrics: Union[Metric, List[Metric]],
-                                  per_task_metrics: bool = False) -> Tuple[Dict, Union[None, Dict]]:
+                                  per_task_metrics: bool = False) -> Tuple[Dict, Dict]:
         """
         Computes statistics of model on test data and saves results to csv.
 
@@ -105,9 +105,9 @@ class Evaluator:
                 multitask_scores[metric.name], computed_metrics = results
                 all_task_scores[metric.name] = computed_metrics
             else:
-                multitask_scores[metric.name], _ = results
+                multitask_scores[metric.name], all_task_scores = results
 
         if not per_task_metrics:
-            return multitask_scores, None
+            return multitask_scores, {}
         else:
             return multitask_scores, all_task_scores

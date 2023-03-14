@@ -34,7 +34,7 @@ class TestDeepChemModel(ModelsTestCase, TestCase):
 
         evaluate = model_graph.evaluate(ds_test, metrics)
         self.assertEqual(len(evaluate[0]), len(metrics))
-        self.assertEqual(evaluate[1], None)
+        self.assertEqual(evaluate[1], {})
 
         roc_value = roc_auc_score(ds_test.y, test_preds[:, 1])
         self.assertEqual(evaluate[0]['roc_auc_score'], roc_value)
@@ -72,7 +72,7 @@ class TestDeepChemModel(ModelsTestCase, TestCase):
 
         evaluate = model_graph.evaluate(ds_test, metrics)
         self.assertEqual(len(evaluate[0]), len(metrics))
-        self.assertEqual(evaluate[1], None)
+        self.assertEqual(evaluate[1], {})
 
         precision_score_value = precision_score(self.multitask_dataset_test.y, np.round(np.array(y_preds)),
                                                 average='micro')

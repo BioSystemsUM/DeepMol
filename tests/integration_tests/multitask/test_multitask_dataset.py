@@ -54,7 +54,7 @@ class TestMultitaskDataset(MultitaskBaseTestCase, TestCase):
 
         evaluate = model_graph.evaluate(test, metrics)
         self.assertEqual(len(evaluate[0]), len(metrics))
-        self.assertEqual(evaluate[1], None)
+        self.assertEqual(evaluate[1], {})
         self.assertTrue('roc_auc_score' in evaluate[0].keys())
 
     def test_multitask_keras_model(self):
@@ -78,7 +78,7 @@ class TestMultitaskDataset(MultitaskBaseTestCase, TestCase):
         self.assertIn('roc_auc_score', a.keys())
         self.assertIn('precision_score', a.keys())
         self.assertIn('accuracy_score', a.keys())
-        self.assertIsNone(b)
+        self.assertEqual(b, {})
         c, d = model.evaluate(test, metrics=metrics, per_task_metrics=True)
         self.assertIn('roc_auc_score', c.keys())
         self.assertIn('precision_score', c.keys())

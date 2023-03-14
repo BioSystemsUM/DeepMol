@@ -28,7 +28,7 @@ class TestSklearnModel(ModelsTestCase, TestCase):
 
         evaluate = model.evaluate(self.binary_dataset_test, metrics)
         self.assertEqual(len(evaluate[0]), len(metrics))
-        self.assertEqual(evaluate[1], None)
+        self.assertEqual(evaluate[1], {})
         self.assertTrue('roc_auc_score' in evaluate[0].keys())
         self.assertTrue('precision_score' in evaluate[0].keys())
         self.assertTrue('accuracy_score' in evaluate[0].keys())

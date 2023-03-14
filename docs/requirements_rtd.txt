@@ -21,3 +21,8 @@ umap-learn==0.5.1
 kneed==0.8.2
 kaleido==0.2.1
 plotly==5.13.1
+sphinx
+rst-to-myst
+sphinx-rtd-theme
+sphinx-autobuild
+myst-parser

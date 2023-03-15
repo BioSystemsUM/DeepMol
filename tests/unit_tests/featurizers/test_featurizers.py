@@ -46,7 +46,3 @@ class FeaturizerTestCase(ABC):
     @abstractmethod
     def test_featurize(self):
         raise NotImplementedError
-
-    @abstractmethod
-    def test_featurize_with_nan(self):
-        raise NotImplementedError

@@ -449,7 +449,8 @@ class KMeans(UnsupervisedLearn):
         """
         self.dataset = dataset
 
-        if self.kwargs['n_clusters'] == 'elbow':
+        if 'n_clusters' not in self.kwargs or self.kwargs['n_clusters'] == 'elbow':
+            self.kwargs['n_clusters'] = 'elbow'
             self.logger.info('Using elbow method to determine number of clusters.')
             n_clusters = self._elbow(**kwargs)
             self.kwargs['n_clusters'] = n_clusters

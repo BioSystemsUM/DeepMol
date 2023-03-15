@@ -43,7 +43,7 @@ class ShapValues:
             Additional arguments for the plot function
         """
         columns_names = self.dataset.feature_names
-        X = pd.DataFrame(self.dataset.X, columns=columns_names)
+        X = pd.DataFrame(self.dataset.X, columns=columns_names, dtype=float)
 
         model = self.model.model
 

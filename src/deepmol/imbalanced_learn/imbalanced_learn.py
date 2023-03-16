@@ -38,12 +38,7 @@ class ImbalancedLearn(object):
         features, y = self._sample()
         train_dataset._X = features
         train_dataset._y = y
-        n = len(features) - len(train_dataset.smiles)
-        if n > 0:  # over sampling
-            train_dataset._ids = np.concatenate([train_dataset.ids,
-                                                np.array([str(uuid.uuid4().hex) for _ in range(n)])])
-            train_dataset._mols = np.concatenate([train_dataset.mols, np.full(n, 'artificial_mol')])
-            train_dataset._smiles = np.concatenate([train_dataset.smiles, np.full(n, 'artificial_smiles')])
+        # TODO: how to keep track of which samples were over / under sampled (to ad/remove ids, mols and smiles)
         return train_dataset
 
     @abstractmethod

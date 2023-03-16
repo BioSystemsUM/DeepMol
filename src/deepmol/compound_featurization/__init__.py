@@ -10,6 +10,8 @@ from .rdkit_descriptors import ThreeDimensionalMoleculeGenerator, All3DDescripto
 from .rdkit_fingerprints import MorganFingerprint, AtomPairFingerprint, LayeredFingerprint, RDKFingerprint, \
     MACCSkeysFingerprint
 
+from .similarity_matrix import TanimotoSimilarityMatrix
+
 from .mixed_descriptors import MixedFeaturizer
 
 try:

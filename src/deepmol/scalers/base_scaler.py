@@ -78,8 +78,8 @@ class BaseScaler(ABC):
             res = self._fit_transform(dataset.X[:, columns])
             # TODO: due to X being a property, the "set" method must choose so that it could behave as a numpy array
             dataset.X[:, columns] = res
-        except:
-            raise Exception("It was not possible to scale the data")
+        except Exception as e:
+            raise Exception(f"It was not possible to scale the data. Error: {e}")
 
     @abstractmethod
     def _fit_transform(self, X: np.ndarray) -> None:

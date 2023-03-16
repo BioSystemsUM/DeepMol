@@ -35,8 +35,8 @@ class ImbalancedLearn(object):
         self.features = train_dataset.X
         self.y = train_dataset.y
         features, y = self._sample()
-        train_dataset.X = features
-        train_dataset.y = y
+        train_dataset._X = features
+        train_dataset._y = y
         return train_dataset
 
     @abstractmethod

@@ -15,6 +15,8 @@ from deepmol.datasets import Dataset
 from deepmol.loggers.logger import Logger
 from deepmol.utils.errors import PreConditionViolationException
 
+import signal
+
 
 def _no_conformers_message(e):
     """
@@ -306,6 +308,10 @@ def generate_conformers(generator: ThreeDimensionalMoleculeGenerator,
     return new_mol
 
 
+def handler(signum, frame):
+    raise Exception()
+
+
 # TODO : check whether sdf file is being correctly exported for multi-class classification
 def generate_conformers_to_sdf_file(dataset: Dataset,
                                     file_path: str,
@@ -368,24 +374,29 @@ def generate_conformers_to_sdf_file(dataset: Dataset,
         if iteration == total:
             print()
 
+    logger = Logger()
+
     generator = ThreeDimensionalMoleculeGenerator(max_iterations, n_conformations, threads, timeout_per_molecule)
     mol_set = dataset.mols
     final_set_with_conformations = []
     writer = Chem.SDWriter(file_path)
 
+    signal.signal(signal.SIGALRM, handler)
     for i in range(mol_set.shape[0]):
         printProgressBar(i, mol_set.shape[0])
         try:
+            signal.alarm(timeout_per_molecule)
             m2 = generate_conformers(generator, mol_set[i], etkg_version, optimization_mode)
+            signal.alarm(0)
             label = dataset.y[i]
             m2.SetProp("_Class", "%f" % label)
             if dataset.ids is not None and dataset.ids.size > 0:
                 mol_id = dataset.ids[i]
-                m2.SetProp("_ID", "%f" % mol_id)
+                m2.SetProp("_ID", f"{mol_id}")
             writer.write(m2)
             final_set_with_conformations.append(m2)
         except:
-            pass
+            logger.info("Timeout for molecule %d" % i)
 
     writer.close()
 

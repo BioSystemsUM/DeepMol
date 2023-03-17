@@ -158,7 +158,7 @@ class ShapValues:
             shap.plots.beeswarm(self.shap_values, **kwargs)
         else:
             # create a dependence scatter plot to show the effect of a single feature across the whole dataset
-            shap.plots.scatter(self.shap_values[:, index], color=self.shap_values, **kwargs)
+            shap.plots.scatter(self.shap_values[:, index], color=self.shap_values[:, index], **kwargs)
 
     def plotHeatMap(self, **kwargs):
         """

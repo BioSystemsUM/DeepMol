@@ -4,6 +4,7 @@ import joblib
 import numpy as np
 from sklearn import preprocessing
 
+from deepmol.datasets import Dataset
 from deepmol.scalers.base_scaler import BaseScaler
 
 
@@ -57,7 +58,7 @@ class StandardScaler(BaseScaler):
         """
         self._scaler_object = value
 
-    def load_scaler(self, file_path: str):
+    def load(self, file_path: str):
         """
         Loads the scaler object from a file.
 
@@ -116,6 +117,16 @@ class StandardScaler(BaseScaler):
         """
         return self.scaler_object.transform(X)
 
+    def partial_fit(self, dataset: Dataset) -> None:
+        """
+        Fits the scaler object to the dataset.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The dataset to fit the scaler object.
+        """
+
 
 class MinMaxScaler(BaseScaler):
     """
@@ -167,7 +178,7 @@ class MinMaxScaler(BaseScaler):
         """
         self._scaler_object = value
 
-    def load_scaler(self, file_path: str):
+    def load(self, file_path: str):
         """
         Loads the scaler object from a file.
 
@@ -225,6 +236,16 @@ class MinMaxScaler(BaseScaler):
         """
         return self.scaler_object.transform(X)
 
+    def partial_fit(self, dataset: Dataset) -> None:
+        """
+        Fits the scaler object to the dataset.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The dataset to fit the scaler object.
+        """
+
 
 class MaxAbsScaler(BaseScaler):
     """
@@ -268,7 +289,7 @@ class MaxAbsScaler(BaseScaler):
         """
         self._scaler_object = value
 
-    def load_scaler(self, file_path: str):
+    def load(self, file_path: str):
         """
         Loads the scaler object from a file.
 
@@ -326,6 +347,16 @@ class MaxAbsScaler(BaseScaler):
             The transformed data.
         """
         return self.scaler_object.transform(X)
+
+    def partial_fit(self, dataset: Dataset) -> None:
+        """
+        Fits the scaler object to the dataset.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The dataset to fit the scaler object.
+        """
 
 
 class RobustScaler(BaseScaler):
@@ -391,7 +422,7 @@ class RobustScaler(BaseScaler):
         """
         self._scaler_object = value
 
-    def load_scaler(self, file_path: str):
+    def load(self, file_path: str):
         """
         Loads the scaler object from a file.
 
@@ -449,6 +480,16 @@ class RobustScaler(BaseScaler):
             The transformed data.
         """
         return self.scaler_object.transform(X)
+
+    def partial_fit(self, dataset: Dataset) -> None:
+        """
+        Fits the scaler object to the dataset.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The dataset to fit the scaler object.
+        """
 
 
 class PolynomialFeatures(BaseScaler):
@@ -506,7 +547,7 @@ class PolynomialFeatures(BaseScaler):
         """
         self._scaler_object = value
 
-    def load_scaler(self, file_path: str):
+    def load(self, file_path: str):
         """
         Loads the scaler object from a file.
 
@@ -564,6 +605,16 @@ class PolynomialFeatures(BaseScaler):
             The transformed data.
         """
         return self.scaler_object.transform(X)
+
+    def partial_fit(self, dataset: Dataset) -> None:
+        """
+        Fits the scaler object to the dataset.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The dataset to fit the scaler object.
+        """
 
 
 class Normalizer(BaseScaler):
@@ -611,7 +662,7 @@ class Normalizer(BaseScaler):
         """
         self._scaler_object = value
 
-    def load_scaler(self, file_path: str):
+    def load(self, file_path: str):
         """
         Loads the scaler object from a file.
 
@@ -669,6 +720,16 @@ class Normalizer(BaseScaler):
             The transformed data.
         """
         return self.scaler_object.transform(X)
+
+    def partial_fit(self, dataset: Dataset) -> None:
+        """
+        Fits the scaler object to the dataset.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The dataset to fit the scaler object.
+        """
 
 
 class Binarizer(BaseScaler):
@@ -716,7 +777,7 @@ class Binarizer(BaseScaler):
         """
         self._scaler_object = value
 
-    def load_scaler(self, file_path: str):
+    def load(self, file_path: str):
         """
         Loads the scaler object from a file.
 
@@ -774,6 +835,16 @@ class Binarizer(BaseScaler):
             The transformed data.
         """
         return self.scaler_object.transform(X)
+
+    def partial_fit(self, dataset: Dataset) -> None:
+        """
+        Fits the scaler object to the dataset.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The dataset to fit the scaler object.
+        """
 
 
 class KernelCenterer(BaseScaler):
@@ -812,7 +883,7 @@ class KernelCenterer(BaseScaler):
         """
         self._scaler_object = value
 
-    def load_scaler(self, file_path: str):
+    def load(self, file_path: str):
         """
         Loads the scaler object from a file.
 
@@ -870,6 +941,16 @@ class KernelCenterer(BaseScaler):
             The transformed data.
         """
         return self.scaler_object.transform(X)
+
+    def partial_fit(self, dataset: Dataset) -> None:
+        """
+        Fits the scaler object to the dataset.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The dataset to fit the scaler object.
+        """
 
 
 class QuantileTransformer(BaseScaler):
@@ -941,7 +1022,7 @@ class QuantileTransformer(BaseScaler):
         """
         self._scaler_object = value
 
-    def load_scaler(self, file_path: str):
+    def load(self, file_path: str):
         """
         Loads the scaler object from a file.
 
@@ -999,6 +1080,16 @@ class QuantileTransformer(BaseScaler):
             The transformed data.
         """
         return self.scaler_object.transform(X)
+
+    def partial_fit(self, dataset: Dataset) -> None:
+        """
+        Fits the scaler object to the dataset.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The dataset to fit the scaler object.
+        """
 
 
 class PowerTransformer(BaseScaler):
@@ -1051,7 +1142,7 @@ class PowerTransformer(BaseScaler):
         """
         self._scaler_object = value
 
-    def load_scaler(self, file_path: str):
+    def load(self, file_path: str):
         """
         Loads the scaler object from a file.
 
@@ -1109,3 +1200,13 @@ class PowerTransformer(BaseScaler):
             The transformed data.
         """
         return self.scaler_object.transform(X)
+
+    def partial_fit(self, dataset: Dataset) -> None:
+        """
+        Fits the scaler object to the dataset.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The dataset to fit the scaler object.
+        """

@@ -1,9 +1,8 @@
 """Hyperparameter Optimization Classes for DeepchemModel models"""
 from collections import defaultdict
-from typing import Union
+from typing import Union, List
 
 import numpy as np
-from sklearn.metrics import SCORERS
 from sklearn.model_selection import ParameterGrid, ParameterSampler
 
 from deepmol.datasets import Dataset
@@ -21,7 +20,8 @@ class DeepchemBaseSearchCV(object):
     def __init__(self,
                  model_build_fn: callable,
                  param_grid: Union[dict, ParameterGrid, ParameterSampler],
-                 scoring: str,
+                 scoring: Union[Metric, List[Metric]],
+                 maximize: bool,
                  refit: bool,
                  cv: int,
                  mode: str,
@@ -36,8 +36,10 @@ class DeepchemBaseSearchCV(object):
             A function that builds a DeepchemModel model.
         param_grid: dict
             The hyperparameter grid to search.
-        scoring: str
-            The metric to use for scoring.
+        scoring: Union[Metric, List[Metric]]
+            The metrics to use for scoring.
+        maximize: bool
+            If True, maximize the metric. If False, minimize the metric.
         refit: bool
             If True, refit the best model on the whole dataset.
         cv: int
@@ -51,18 +53,8 @@ class DeepchemBaseSearchCV(object):
         """
         self.build_fn = model_build_fn
         self.param_grid = param_grid
-        # TODO: it would be easier if we could just pass a Metric object instead
-        if scoring in SCORERS.keys():
-            scorer = SCORERS[scoring]
-        else:
-            scorer = scoring
-        score_func = scorer._score_func
-        # kwargs = scorer._kwargs
-        self.metric = Metric(score_func, mode=mode)
-        if 'error' in score_func.__name__:
-            self.use_max = False
-        else:
-            self.use_max = True
+        self.metric = scoring
+        self.maximize = maximize
         self.mode = mode
         self.refit = refit
         self.cv = cv
@@ -83,10 +75,13 @@ class DeepchemBaseSearchCV(object):
         dataset: Dataset
             The dataset to use for the hyperparameter search.
         """
+        if self.mode != dataset.mode:
+            raise ValueError(f'The mode of the model and the dataset must be the same. Got {self.mode} and '
+                             f'{dataset.mode} respectively.')
         results_dict = defaultdict(list)
 
         # split dataset into folds
-        if self.mode == 'classification':
+        if dataset.mode == 'classification':
             splitter = SingletaskStratifiedSplitter()
         else:
             splitter = RandomSplitter()
@@ -117,7 +112,7 @@ class DeepchemBaseSearchCV(object):
                 results_dict[train_key].append(train_score)
                 results_dict[test_key].append(test_score)
 
-            if self.use_max:
+            if self.maximize:
                 if (self.best_score_ is None) or (mean_test_score > self.best_score_):
                     self.best_score_ = mean_test_score
                     self.best_params_ = param_combination
@@ -130,7 +125,6 @@ class DeepchemBaseSearchCV(object):
         self.best_estimator_ = self.build_fn(**self.best_params_)
 
         if self.refit:
-            print('Fitting best model!')
             self.best_estimator_.fit(dataset)
 
 
@@ -141,8 +135,9 @@ class DeepchemGridSearchCV(DeepchemBaseSearchCV):
 
     def __init__(self,
                  model_build_fn: callable,
-                 param_grid: dict,
-                 scoring: str,
+                 param_grid: Union[dict, ParameterGrid],
+                 scoring: Union[Metric, List[Metric]],
+                 maximize: bool,
                  refit: bool,
                  cv: int,
                  mode: str,
@@ -155,10 +150,12 @@ class DeepchemGridSearchCV(DeepchemBaseSearchCV):
         ----------
         model_build_fn: callable
             A function that builds a DeepchemModel model.
-        param_grid: dict
+        param_grid: Union[dict, ParameterGrid]
             The hyperparameter grid to search.
-        scoring: str
+        scoring: Union[Metric, List[Metric]]
             The metric to use for scoring.
+        maximize: bool
+            If True, maximize the metric. If False, minimize the metric.
         refit: bool
             If True, refit the best model on the whole dataset.
         cv: int
@@ -171,8 +168,8 @@ class DeepchemGridSearchCV(DeepchemBaseSearchCV):
             If True, return the training scores.
         """
         self.param_grid = ParameterGrid(param_grid)
-        super().__init__(model_build_fn=model_build_fn, param_grid=self.param_grid, scoring=scoring, refit=refit, cv=cv,
-                         mode=mode, random_state=random_state, return_train_score=return_train_score)
+        super().__init__(model_build_fn=model_build_fn, param_grid=self.param_grid, scoring=scoring, maximize=maximize,
+                         refit=refit, cv=cv, mode=mode, random_state=random_state, return_train_score=return_train_score)
 
 
 class DeepchemRandomSearchCV(DeepchemBaseSearchCV):
@@ -182,8 +179,9 @@ class DeepchemRandomSearchCV(DeepchemBaseSearchCV):
 
     def __init__(self,
                  model_build_fn: callable,
-                 param_distributions: dict,
-                 scoring: str,
+                 param_distributions: Union[dict, ParameterSampler],
+                 scoring: Union[Metric, List[Metric]],
+                 maximize: bool,
                  refit: bool,
                  cv: int,
                  mode: str,
@@ -197,10 +195,12 @@ class DeepchemRandomSearchCV(DeepchemBaseSearchCV):
         ----------
         model_build_fn: callable
             A function that builds a DeepchemModel model.
-        param_distributions: dict
-            The hyperparameter grid to search.
-        scoring: str
-            The metric to use for scoring.
+        param_distributions: Union[dict, ParameterSampler]
+            The hyperparameter sampler to search.
+        scoring: Union[Metric, List[Metric]]
+            The metrics to use for scoring.
+        maximize: bool
+            If True, maximize the metric. If False, minimize the metric.
         refit: bool
             If True, refit the best model on the whole dataset.
         cv: int
@@ -214,6 +214,6 @@ class DeepchemRandomSearchCV(DeepchemBaseSearchCV):
         n_iter: int
             The number of iterations to perform.
         """
-        self.param_grid = list(ParameterSampler(param_distributions, n_iter, random_state=random_state))
-        super().__init__(model_build_fn=model_build_fn, param_grid=self.param_grid, scoring=scoring, refit=refit, cv=cv,
-                         mode=mode, random_state=random_state, return_train_score=return_train_score)
+        self.param_grid = ParameterSampler(param_distributions, n_iter, random_state=random_state)
+        super().__init__(model_build_fn=model_build_fn, param_grid=self.param_grid, scoring=scoring, maximize=maximize,
+                         refit=refit, cv=cv, mode=mode, random_state=random_state, return_train_score=return_train_score)

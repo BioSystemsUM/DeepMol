@@ -1,6 +1,7 @@
 '''author: Bruno Pereira
 date: 28/04/2021
 '''
+# TODO: review this file
 import os
 from unittest import TestCase
 
@@ -560,6 +561,73 @@ def hyperoptimcnn(dataset):
     print(best_rf.evaluate(test_dataset, metrics))
     return
 
+def dag_transformation(dataset: Dataset, max_atoms: int = 10):
+    """
+    Function to transform ConvMol adjacency lists to DAG calculation orders.
+    Adapted from deepchem
+
+    Parameters
+    ----------
+    dataset: Dataset
+        Dataset to transform.
+    max_atoms: int
+        Maximum number of atoms to allow.
+
+    Returns
+    -------
+    dataset: Dataset
+        Transformed dataset.
+    """
+    new_dataset = NumpyDataset(
+        X=dataset.X,
+        y=dataset.y,
+        ids=dataset.mols)
+
+    transformer = DAGTransformer(max_atoms=max_atoms)
+    res = transformer.transform(new_dataset)
+    dataset.mols = res.ids
+    dataset.X = res.X
+    dataset.y = res.y
+
+    return dataset
+
+
+def irv_transformation(dataset: Dataset, K: int = 10, n_tasks: int = 1):
+    """
+    Function to transfrom ECFP to IRV features, used by MultitaskIRVClassifier as preprocessing step
+    Adapted from deepchem
+
+    Parameters
+    ----------
+    dataset: Dataset
+        Dataset to transform.
+    K: int
+        Number of IRV features to generate.
+    n_tasks: int
+        Number of tasks.
+
+    Returns
+    -------
+    dataset: Dataset
+        Transformed dataset.
+    """
+    try:
+        dummy_y = dataset.y[:, n_tasks]
+    except IndexError:
+        dataset.y = np.reshape(dataset.y, (np.shape(dataset.y)[0], n_tasks))
+    new_dataset = NumpyDataset(
+        X=dataset.X,
+        y=dataset.y,
+        ids=dataset.mols)
+
+    transformer = IRVTransformer(K, n_tasks, new_dataset)
+    res = transformer.transform(new_dataset)
+    dataset.mols = res.ids
+    dataset.X = res.X
+    dataset.y = np.reshape(res.y, (np.shape(res.y)[0],))
+
+    return dataset
+
 
 def menu():
     ds = None
@@ -601,7 +669,7 @@ def menu():
         if opt == 1:
             if ds is None:
                 dataset = CSVLoader(dataset_path='tests/data/preprocessed_dataset_wfoodb.csv',
-                                    mols_field='Smiles',
+                                    smiles_field='Smiles',
                                     labels_fields='Class',
                                     id_field='ID')  # , shard_size=4000)
                 ds = dataset.create_dataset()

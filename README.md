@@ -13,6 +13,7 @@ operations on molecular data.
 - [Requirements](#requirements)
 - [Installation](#installation)
     - [Pip](#pip)
+    - [Manually](#manually)
 - [Getting Started](#getting-started)
     - [Load dataset from csv](#load-a-dataset-from-a-csv)
     - [Compound Standardization](#compound-standardization)
@@ -32,16 +33,7 @@ operations on molecular data.
 
 ## Requirements
 
-- rdkit
-- tensorflow
-- keras
-- scikit-learn
-- deepchem
-- chembl_structure_pipeline
-- shap
-- imbalanced-learn
-- umap-learn
-- etc
+
   
 
 ## Installation
@@ -70,6 +62,7 @@ Also, you should install mol2vec and its dependencies:
 pip install git+https://github.com/samoturk/mol2vec#egg=mol2vec
 ```
 
+<!---
 ### Docker
 
 (IN PREPARATION - NOT FUNCTIONAL YET!)
@@ -91,12 +84,12 @@ docker build ...
 ```bash
 docker run ...
 ```
+--->
 
 ### Manually
 
-(IN PREPARATION - NOT FUNCTIONAL YET!)
 
-Alternatively, install dependencies and DeepMol manually.
+Alternatively, clone the repository and install the dependencies manually:
 
 1. Clone the repository:
 ```bash
@@ -107,7 +100,6 @@ git clone https://github.com/BioSystemsUM/DeepMol.git
 ```bash
 python setup.py install
 ```
---->
 
 ## Getting Started
 
@@ -140,19 +132,22 @@ samples to load (by default loads the entire dataset).
 ```python
 from deepmol.loaders.loaders import CSVLoader
 
-# load a dataset from a CSV (define data path, field with the molecules,
-# field with the labels (optional), field with ids (optional), etc).
-dataset = CSVLoader(dataset_path='data_path.csv',
-                    mols_field='Smiles',
-                    labels_fields='Class',
-                    id_field='ID')
-dataset = dataset.create_dataset()
+# load a dataset from a CSV (required fields: dataset_path and smiles_field)
+loader = CSVLoader(dataset_path='../../data/train_dataset.csv',
+                   smiles_field='mols',
+                   id_field='ids',
+                   labels_fields=['y'],
+                   features_fields=['feat_1', 'feat_2', 'feat_3', 'feat_4'],
+                   shard_size=1000,
+                   mode='auto')
 
-# print shape of the dataset (mols, X, y) 
+dataset = loader.create_dataset()
+
+# print shape of the dataset (molecules, X, y)
 dataset.get_shape()
-```
 
-![load_csv_image](docs/imgs/load_csv_output.png)
+((1000,), None, (1000,))
+```
 
 ### Compound Standardization
 
@@ -193,17 +188,19 @@ Seq2Seq and transformer-based are in  development and will be added soon.
 from deepmol.compound_featurization import MorganFingerprint
 
 # Compute morgan fingerprints for molecules in the previous loaded dataset
-dataset = MorganFingerprint(radius=2, size=1024).featurize(dataset)
+MorganFingerprint(radius=2, size=1024).featurize(dataset)
+# view the computed features (dataset.X)
+dataset.X
 ```
 
-![featurization_image](docs/imgs/featurization_output.png)
 
 ```python
 #print shape of the dataset to see difference in the X shape
 dataset.get_shape()
+
+((1000,), (1000, 1024), (1000,))
 ```
 
-![get_shape_output](docs/imgs/get_shape_output.png)
 
 ### Feature Selection
 
@@ -215,13 +212,13 @@ importance weights.
 from deepmol.feature_selection import LowVarianceFS
 
 # Feature Selection to remove features with low variance across molecules
-dataset = LowVarianceFS(0.15).featureSelection(dataset)
+LowVarianceFS(0.15).select_features(dataset)
 
 # print shape of the dataset to see difference in the X shape (fewer features)
 dataset.get_shape()
-```
 
-![get_shape_output_2](docs/imgs/get_shape_output_2.png)
+((1000,), (1000, 35), (1000,))
+```
 
 ### Unsupervised Exploration
 
@@ -229,9 +226,11 @@ It is possible to do unsupervised exploration of the datasets using PCA, tSNE,
 KMeans and UMAP.
 
 ```python
-from deepmol.unsupervised.umap import UMAP
+from deepmol.unsupervised import UMAP
 
-ump = UMAP().runUnsupervised(dataset)
+ump = UMAP()
+umap_df = ump.run_unsupervised(dataset)
+ump.plot(umap_df.X, path='umap_output.png')
 ```
 
 ![umap_output](docs/imgs/umap_output.png)
@@ -248,15 +247,18 @@ from deepmol.splitters.splitters import SingletaskStratifiedSplitter
 splitter = SingletaskStratifiedSplitter()
 train_dataset, valid_dataset, test_dataset = splitter.train_valid_test_split(dataset=dataset, frac_train=0.7,
                                                                              frac_valid=0.15, frac_test=0.15)
-print('Train:')
 train_dataset.get_shape()
-print('\nValidation:')
-valid_dataset.get_shape()
-print('\nTest:')
-test_dataset.get_shape()
-```
 
-![split_output](docs/imgs/split_output.png)
+((1628,), (1628, 1024), (1628,))
+
+valid_dataset.get_shape()
+
+((348,), (348, 1024), (348,))
+
+test_dataset.get_shape()
+
+((350,), (350, 1024), (350,))
+```
 
 ### Build, train and evaluate a model
 
@@ -292,6 +294,8 @@ model.cross_validate(dataset, Metric(roc_auc_score), folds=3)
 ![cross_validation_output](docs/imgs/cross_validation_output.png)
 
 ```python
+from sklearn.metrics import precision_score, accuracy_score, confusion_matrix, classification_report
+
 #evaluate the model using different metrics
 metrics = [Metric(roc_auc_score), Metric(precision_score), Metric(accuracy_score), Metric(confusion_matrix), 
            Metric(classification_report)]
@@ -456,7 +460,7 @@ for instance, the substructure in the molecule that most contributed to its
 classification as an active or inactive molecule against a receptor.
 
 ```python
-from deepmol.utils import draw_MACCS_Pattern
+from deepmol.utils.utils import draw_MACCS_Pattern
 
 patt_number = 54
 mol_number = 1

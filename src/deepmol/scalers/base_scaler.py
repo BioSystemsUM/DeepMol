@@ -11,7 +11,7 @@ class BaseScaler(ABC):
     Abstract class for all scalers. It is used to define the interface for all scalers.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Constructor for the BaseScaler class.
         """
@@ -20,24 +20,27 @@ class BaseScaler(ABC):
 
     @property
     @abstractmethod
-    def scaler_object(self):
+    def scaler_object(self) -> object:
         """
         Returns the scaler object.
+
+        Returns
+        -------
+        object
+            The scaler object.
         """
-        raise NotImplementedError
 
     @scaler_object.setter
     @abstractmethod
-    def scaler_object(self, value: object):
+    def scaler_object(self, value: object) -> None:
         """
         Sets the scaler object.
 
         value: object
             The scaler object.
         """
-        raise NotImplementedError
 
-    def save_scaler(self, file_path: str):
+    def save(self, file_path: str) -> None:
         """
         Saves the scaler object to a file.
 
@@ -47,16 +50,20 @@ class BaseScaler(ABC):
         joblib.dump(self.scaler_object, file_path)
 
     @abstractmethod
-    def load_scaler(self, file_path: str):
+    def load(self, file_path: str) -> object:
         """
         Loads the scaler object from a file.
 
         file_path: str
             The path to the file where the scaler object is saved.
-        """
-        raise NotImplementedError
 
-    def fit_transform(self, dataset: Dataset, columns: list = None):
+        Returns
+        -------
+        object
+            The scaler object.
+        """
+
+    def fit_transform(self, dataset: Dataset, columns: list = None) -> None:
         """
         Fits and transforms the dataset.
 
@@ -71,21 +78,19 @@ class BaseScaler(ABC):
             res = self._fit_transform(dataset.X[:, columns])
             # TODO: due to X being a property, the "set" method must choose so that it could behave as a numpy array
             dataset.X[:, columns] = res
-
-        except:
-             raise Exception("It was not possible to scale the data")
+        except Exception as e:
+            raise Exception(f"It was not possible to scale the data. Error: {e}")
 
     @abstractmethod
-    def _fit_transform(self, X: np.ndarray):
+    def _fit_transform(self, X: np.ndarray) -> None:
         """
         Fits and transforms the dataset.
 
         X: np.ndarray
             The dataset to be fitted and transformed.
         """
-        raise NotImplementedError
 
-    def fit(self, dataset: Dataset, columns: list = None):
+    def fit(self, dataset: Dataset, columns: list = None) -> None:
         """
         Fits the dataset.
 
@@ -103,16 +108,15 @@ class BaseScaler(ABC):
             raise Exception("It was not possible to scale the data")
 
     @abstractmethod
-    def _fit(self, X: np.ndarray):
+    def _fit(self, X: np.ndarray) -> None:
         """
         Fits the dataset.
 
         X: np.ndarray
             The dataset to be fitted.
         """
-        raise NotImplementedError
 
-    def transform(self, dataset: Dataset, columns: list = None):
+    def transform(self, dataset: Dataset, columns: list = None) -> None:
         """
         Transforms the dataset.
 
@@ -125,26 +129,24 @@ class BaseScaler(ABC):
             columns = [i for i in range(dataset.X.shape[1])]
         try:
             res = self._transform(dataset.X[:, columns])
-            dataset._X[:, columns] = res
+            dataset.X[:, columns] = res
 
         except:
             raise Exception("It was not possible to scale the data")
 
-    def _transform(self, X: np.ndarray):
+    def _transform(self, X: np.ndarray) -> None:
         """
         Transforms the dataset.
 
         X: np.ndarray
             The dataset to be transformed.
         """
-        raise NotImplementedError
 
     # TODO: figure out the better way of wrapping this method, as it intends to fit the dataset in batches
-    def partial_fit(self, dataset: Dataset):
+    def partial_fit(self, dataset: Dataset) -> None:
         """
         Partially fits the dataset.
 
         dataset: Dataset
             The dataset to be partially fitted.
         """
-        raise NotImplementedError

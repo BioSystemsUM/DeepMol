@@ -5,54 +5,47 @@ from deepmol.compound_featurization import MorganFingerprint, \
     MACCSkeysFingerprint, \
     LayeredFingerprint, RDKFingerprint, AtomPairFingerprint
 from tests.unit_tests.featurizers.test_featurizers import FeaturizerTestCase
-import numpy as np
 
 
 class TestRDKitFingerprints(FeaturizerTestCase, TestCase):
 
     def test_featurize(self):
         # test Atom Pair fingerprints (without NaN generation)
-        dataset_rows_number = len(self.mini_dataset_to_test.mols)
-        AtomPairFingerprint().featurize(self.mini_dataset_to_test)
-        self.assertEqual(dataset_rows_number, self.mini_dataset_to_test.X.shape[0])
+        dataset_rows_number = len(self.mock_dataset.mols)
+        AtomPairFingerprint().featurize(self.mock_dataset)
+        self.assertEqual(dataset_rows_number, self.mock_dataset._X.shape[0])
 
-        MorganFingerprint().featurize(self.mini_dataset_to_test)
-        self.assertEqual(dataset_rows_number, self.mini_dataset_to_test.X.shape[0])
+        MorganFingerprint().featurize(self.mock_dataset)
+        self.assertEqual(dataset_rows_number, self.mock_dataset._X.shape[0])
 
-        MACCSkeysFingerprint().featurize(self.mini_dataset_to_test)
-        self.assertEqual(dataset_rows_number, self.mini_dataset_to_test.X.shape[0])
+        MACCSkeysFingerprint().featurize(self.mock_dataset)
+        self.assertEqual(dataset_rows_number, self.mock_dataset._X.shape[0])
 
-        LayeredFingerprint().featurize(self.mini_dataset_to_test)
-        self.assertEqual(dataset_rows_number, self.mini_dataset_to_test.X.shape[0])
+        LayeredFingerprint().featurize(self.mock_dataset)
+        self.assertEqual(dataset_rows_number, self.mock_dataset._X.shape[0])
 
-        RDKFingerprint().featurize(self.mini_dataset_to_test)
-        self.assertEqual(dataset_rows_number, self.mini_dataset_to_test.X.shape[0])
+        RDKFingerprint().featurize(self.mock_dataset)
+        self.assertEqual(dataset_rows_number, self.mock_dataset._X.shape[0])
 
     def test_featurize_with_nan(self):
-        dataset_rows_number = len(self.mini_dataset_to_test.mols)
-        to_add = np.zeros(4)
-        ids_to_add = np.array([i for i in range(dataset_rows_number, dataset_rows_number + 4)])
+        dataset_rows_number = len(self.mock_dataset_with_invalid.mols) - 1  # one mol has invalid smiles
 
-        self.mini_dataset_to_test.mols = np.concatenate((self.mini_dataset_to_test.mols, to_add))
-        self.mini_dataset_to_test.y = np.concatenate((self.mini_dataset_to_test.y, to_add))
-        self.mini_dataset_to_test.ids = np.concatenate((self.mini_dataset_to_test.ids, ids_to_add))
+        dataset = copy(self.mock_dataset_with_invalid)
+        AtomPairFingerprint(n_jobs=1).featurize(dataset)
+        self.assertEqual(dataset_rows_number, dataset._X.shape[0])
 
-        dataset = copy(self.mini_dataset_to_test)
-        AtomPairFingerprint().featurize(dataset)
-        self.assertEqual(dataset_rows_number, dataset.X.shape[0])
-
-        dataset = copy(self.mini_dataset_to_test)
+        dataset = copy(self.mock_dataset_with_invalid)
         MorganFingerprint().featurize(dataset)
-        self.assertEqual(dataset_rows_number, dataset.X.shape[0])
+        self.assertEqual(dataset_rows_number, dataset._X.shape[0])
 
-        dataset = copy(self.mini_dataset_to_test)
+        dataset = copy(self.mock_dataset_with_invalid)
         MACCSkeysFingerprint().featurize(dataset)
-        self.assertEqual(dataset_rows_number, dataset.X.shape[0])
+        self.assertEqual(dataset_rows_number, dataset._X.shape[0])
 
-        dataset = copy(self.mini_dataset_to_test)
+        dataset = copy(self.mock_dataset_with_invalid)
         LayeredFingerprint().featurize(dataset)
-        self.assertEqual(dataset_rows_number, dataset.X.shape[0])
+        self.assertEqual(dataset_rows_number, dataset._X.shape[0])
 
-        dataset = copy(self.mini_dataset_to_test)
+        dataset = copy(self.mock_dataset_with_invalid)
         RDKFingerprint().featurize(dataset)
-        self.assertEqual(dataset_rows_number, dataset.X.shape[0])
+        self.assertEqual(dataset_rows_number, dataset._X.shape[0])

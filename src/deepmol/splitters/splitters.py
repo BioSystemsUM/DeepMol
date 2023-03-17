@@ -1,193 +1,21 @@
+import copy
 from abc import abstractmethod, ABC
 
 import numpy as np
 
-from typing import Tuple, List, Optional, Type
+from typing import Tuple, List
 
-from rdkit import Chem, DataStructs
-from rdkit.Chem import AllChem, Mol, MolFromSmiles
+from rdkit import DataStructs
+from rdkit.Chem import Mol
 from rdkit.Chem.Scaffolds.MurckoScaffold import MurckoScaffoldSmiles
 from rdkit.ML.Cluster import Butina
 
-from deepmol.datasets import Dataset, NumpyDataset
-
+from deepmol.datasets import Dataset
 from sklearn.model_selection import KFold, StratifiedKFold
 
-
-def get_train_valid_test_indexes(scaffold_sets: List[List[int]],
-                                 train_cutoff: float,
-                                 test_cutoff: float,
-                                 valid_cutoff: float,
-                                 frac_train: float,
-                                 frac_test: float,
-                                 homogenous_datasets: bool):
-    """
-    Get the indexes of the train, valid and test sets based on the scaffold sets.
-
-    Parameters
-    ----------
-    scaffold_sets: List[List[int]]
-        The scaffold sets.
-    train_cutoff: float
-        The cutoff to define the train set.
-    test_cutoff: float
-        The cutoff to define the test set.
-    valid_cutoff: float
-        The cutoff to define the valid set.
-    frac_train: float
-        The fraction of the train set.
-    frac_test: float
-        The fraction of the test set.
-    homogenous_datasets: bool
-        If True, the train, valid and test sets will be homogenous.
-
-    Returns
-    -------
-    Tuple[List[int], List[int], List[int]]:
-        The indexes of the train, valid and test sets.
-    """
-    train_inds = np.array([])
-    valid_inds = np.array([])
-    test_inds = np.array([])
-
-    for scaffold_set in scaffold_sets:
-        scaffold_set = np.array(scaffold_set)
-        if not homogenous_datasets:
-            if len(train_inds) + len(scaffold_set) > train_cutoff:
-                if len(test_inds) + len(scaffold_set) <= test_cutoff:
-                    test_inds = np.hstack([test_inds, scaffold_set])
-                elif len(valid_inds) + len(scaffold_set) <= valid_cutoff:
-                    valid_inds = np.hstack([valid_inds, scaffold_set])
-                else:
-                    np.random.shuffle(scaffold_set)
-                    train_index = int(np.round(len(scaffold_set) * frac_train))
-                    test_index = int(np.round(len(scaffold_set) * frac_test)) + train_index
-                    train_inds = np.hstack([train_inds, scaffold_set[:train_index]])
-                    test_inds = np.hstack([test_inds, scaffold_set[train_index:test_index]])
-                    valid_inds = np.hstack([valid_inds, scaffold_set[test_index:]])
-            else:
-                train_inds = np.hstack([train_inds, scaffold_set])
-
-        else:
-            np.random.shuffle(scaffold_set)
-            train_index = int(np.round(len(scaffold_set) * frac_train))
-            test_index = int(np.round(len(scaffold_set) * frac_test)) + train_index
-            train_inds = np.hstack([train_inds, scaffold_set[:train_index]])
-            test_inds = np.hstack([test_inds, scaffold_set[train_index:test_index]])
-            valid_inds = np.hstack([valid_inds, scaffold_set[test_index:]])
-
-    return list(map(int, train_inds)), list(map(int, valid_inds)), list(map(int, test_inds))
-
-
-def get_mols_for_each_class(mols: List[Mol], dataset: Dataset):
-    """
-    Get the molecules for each class.
-
-    Parameters
-    ----------
-    mols: List[Mol]
-        The molecules.
-    dataset: Dataset
-        The dataset.
-
-    Returns
-    -------
-    Tuple[Dict[int, List[Mol]], Dict[int, List[int]]]:
-        The molecules to class map and the indices to class map.
-    """
-    mols_classes_map = {}
-    indices_classes_map = {}
-    for i, mol in enumerate(mols):
-
-        if dataset.y[i] not in mols_classes_map:
-            mols_classes_map[dataset.y[i]] = [mol]
-            indices_classes_map[dataset.y[i]] = [i]
-
-        else:
-            mols_classes_map[dataset.y[i]].append(mol)
-            indices_classes_map[dataset.y[i]].append(i)
-
-    return mols_classes_map, indices_classes_map
-
-
-def get_fingerprints_for_each_class(mols: List[Mol], dataset: Dataset):
-    """
-    Get the fingerprints for each class.
-
-    Parameters
-    ----------
-    mols: List[Mol]
-        The molecules.
-    dataset: Dataset
-        The dataset.
-
-    Returns
-    -------
-    Tuple[Dict[int, List[DataStructs.ExplicitBitVect]], Dict[int, List[int]], List[DataStructs.ExplicitBitVect]]:
-        The fingerprints to class map, the indices to class map and the complete set of fingerprints.
-    """
-    fps_classes_map = {}
-    indices_classes_map = {}
-    all_fps = []
-    for i, mol in enumerate(mols):
-
-        fp = AllChem.GetMorganFingerprintAsBitVect(mol, 2, 1024)
-        all_fps.append(fp)
-        if dataset.y[i] not in fps_classes_map:
-            fps_classes_map[dataset.y[i]] = [fp]
-            indices_classes_map[dataset.y[i]] = [i]
-
-        else:
-            fps_classes_map[dataset.y[i]].append(fp)
-            indices_classes_map[dataset.y[i]].append(i)
-
-    return fps_classes_map, indices_classes_map, all_fps
-
-
-def generate_mols_and_delete_invalid_smiles(dataset: Dataset) -> List[Mol]:
-    """
-    Generate the molecules and delete the invalid smiles.
-
-    Parameters
-    ----------
-    dataset: Dataset
-        The dataset.
-
-    Returns
-    -------
-    List[Mol]:
-        The list of valid molecules.
-    """
-    to_remove = []  # added to deal with invalid smiles and remove them from the dataset #TODO: maybe it would be
-    # useful to convert the smiles to Mol upstream in the dataset load
-    if dataset.mols.size > 0:
-        if any([isinstance(mol, str) for mol in dataset.mols]):
-            mols = []
-
-            for i in range(len(dataset.mols)):
-                smiles = dataset.mols[i]
-                dataset_id = dataset.ids[i]
-                try:
-                    mol = Chem.MolFromSmiles(smiles)
-                    if not mol:
-                        to_remove.append(dataset_id)
-                    else:
-                        mols.append(mol)
-                except:
-                    to_remove.append(dataset_id)
-
-        elif any([isinstance(mol, Mol) for mol in dataset.mols]):
-            mols = dataset.mols
-
-        else:
-            raise Exception("There are no molecules in the correct format in this dataset")
-
-    else:
-        raise Exception("There are no molecules in this dataset")
-
-    if to_remove:
-        dataset.remove_elements(to_remove)
-    return mols
+from deepmol.loggers.logger import Logger
+from deepmol.splitters._utils import get_train_valid_test_indexes, get_fingerprints_for_each_class, \
+    get_mols_for_each_class
 
 
 class Splitter(ABC):
@@ -197,49 +25,8 @@ class Splitter(ABC):
     Or to k-fold split a dataset for cross-validation.
     """
 
-    # TODO: Possible upgrade: add directories input to save splits to file (update code)
-    def k_fold_split(self,
-                     dataset: Dataset,
-                     k: int,
-                     seed: int = None,  # added
-                     **kwargs) -> List[Tuple[Dataset, Dataset]]:
-        """
-        Split a dataset into k folds for cross-validation.
-
-        Parameters
-        ----------
-        dataset: Dataset
-            Dataset to do a k-fold split
-        k: int
-            Number of folds to split `dataset` into.
-        seed: int, optional
-            Random seed to use for reproducibility.
-        **kwargs: Dict[str, Any]
-            Other arguments.
-
-        Returns
-        -------
-        List[Tuple[Dataset, Dataset]]
-          List of length k tuples of (train, test) where `train` and `test` are both `Dataset`.
-        """
-        print("Computing K-fold split")
-
-        if isinstance(dataset, NumpyDataset):
-            ds = dataset
-        else:
-
-            ds = NumpyDataset(dataset.mols, dataset.X, dataset.y, dataset.ids, dataset.features2keep, dataset.n_tasks)
-
-        # kf = KFold(n_splits=k)
-        kf = KFold(n_splits=k, shuffle=True, random_state=seed)
-
-        train_datasets = []
-        test_datasets = []
-        for train_index, test_index in kf.split(ds.X):
-            train_datasets.append(ds.select_to_split(train_index))
-            test_datasets.append(ds.select_to_split(test_index))
-
-        return list(zip(train_datasets, test_datasets))
+    def __init__(self):
+        self.logger = Logger()
 
     def train_valid_test_split(self,
                                dataset: Dataset,
@@ -247,7 +34,6 @@ class Splitter(ABC):
                                frac_valid: float = None,
                                frac_test: float = None,
                                seed: int = None,
-                               log_every_n: int = 1000,
                                **kwargs) -> Tuple[Dataset, Dataset, Dataset]:
         """
         Splits a Dataset into train/validation/test sets.
@@ -265,8 +51,6 @@ class Splitter(ABC):
             The fraction of data to be used for the test split.
         seed: int
             Random seed to use.
-        log_every_n: int
-            Controls the logger by dictating how often logger outputs will be produced.
         **kwargs: Dict[str, Any]
             Other arguments.
 
@@ -281,18 +65,16 @@ class Splitter(ABC):
                             "not defined!")
 
         elif frac_test is None:
-            frac_test = 1 - frac_train + frac_valid
+            frac_test = 1 - (frac_train + frac_valid)
 
         elif frac_valid is None:
-            frac_valid = 1 - frac_train + frac_test
+            frac_valid = 1 - (frac_train + frac_test)
 
-        # print("Computing train/valid/test indices")
         train_inds, valid_inds, test_inds = self.split(dataset,
                                                        frac_train=frac_train,
                                                        frac_test=frac_test,
                                                        frac_valid=frac_valid,
                                                        seed=seed,
-                                                       log_every_n=log_every_n,
                                                        **kwargs)
 
         train_dataset = dataset.select_to_split(train_inds)
@@ -328,13 +110,12 @@ class Splitter(ABC):
         Tuple[Dataset, Dataset]
           A tuple of train and test datasets as Dataset objects.
         """
-        train_dataset, _, test_dataset = self.train_valid_test_split(
-            dataset,
-            frac_train=frac_train,
-            frac_test=1 - frac_train,
-            frac_valid=0.,
-            seed=seed,
-            **kwargs)
+        train_dataset, _, test_dataset = self.train_valid_test_split(dataset,
+                                                                     frac_train=frac_train,
+                                                                     frac_test=1 - frac_train,
+                                                                     frac_valid=0.,
+                                                                     seed=seed,
+                                                                     **kwargs)
         return train_dataset, test_dataset
 
     @abstractmethod
@@ -344,8 +125,7 @@ class Splitter(ABC):
               frac_valid: float = 0.1,
               frac_test: float = 0.1,
               seed: int = None,
-              log_every_n: int = None,
-              **kwargs) -> Tuple:
+              **kwargs) -> Tuple[List[int], List[int], List[int]]:
         """
         Return indices for specified splits.
 
@@ -361,17 +141,37 @@ class Splitter(ABC):
             The fraction of data to be used for the test split.
         seed: int
             Random seed to use.
-        log_every_n: int
-            Controls the logger by dictating how often logger outputs will be produced.
         **kwargs: Dict[str, Any]
             Other arguments.
 
         Returns
         -------
-        Tuple[ndarray, ndarray, ndarray]
+        Tuple[List[int], List[int], List[int]]
           A tuple `(train_inds, valid_inds, test_inds)` of the indices for the various splits.
         """
-        raise NotImplementedError
+
+    @abstractmethod
+    def k_fold_split(self,
+                     dataset: Dataset,
+                     k: int,
+                     seed: int = None) -> List[Tuple[Dataset, Dataset]]:
+        """
+        Split a dataset into k folds for cross-validation.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to do a k-fold split
+        k: int
+            Number of folds to split `dataset` into.
+        seed: int, optional
+            Random seed to use for reproducibility.
+
+        Returns
+        -------
+        List[Tuple[Dataset, Dataset]]
+          List of length k tuples of (train, test) where `train` and `test` are both `Dataset`.
+        """
 
 
 class RandomSplitter(Splitter):
@@ -379,13 +179,13 @@ class RandomSplitter(Splitter):
     Class for doing random data splits.
     """
 
-    def split(self, dataset: Dataset,
+    def split(self,
+              dataset: Dataset,
               frac_train: float = 0.8,
               frac_valid: float = 0.1,
               frac_test: float = 0.1,
               seed: int = None,
-              log_every_n: int = None,
-              **kwargs) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+              **kwargs) -> Tuple[List[int], List[int], List[int]]:
         """
         Splits randomly into train/validation/test.
 
@@ -401,25 +201,56 @@ class RandomSplitter(Splitter):
             The fraction of data to be used for the test split.
         seed: int
             Random seed to use.
-        log_every_n: int
-            Log every n examples (not currently used).
         **kwargs: Dict[str, Any]
             Other arguments.
 
         Returns
         -------
-        Tuple[np.ndarray, np.ndarray, np.ndarray]
+        Tuple[List[int], List[int], List[int]]
           A tuple of train indices, valid indices, and test indices.
         """
         np.testing.assert_almost_equal(frac_train + frac_valid + frac_test, 1.)
         if seed is not None:
             np.random.seed(seed)
-        # num_datapoints = len(dataset)
         num_datapoints = dataset.__len__()
         train_cutoff = int(frac_train * num_datapoints)
         valid_cutoff = int((frac_train + frac_valid) * num_datapoints)
         shuffled = np.random.permutation(range(num_datapoints))
-        return shuffled[:train_cutoff], shuffled[train_cutoff:valid_cutoff], shuffled[valid_cutoff:]
+        return list(shuffled[:train_cutoff]), list(shuffled[train_cutoff:valid_cutoff]), list(shuffled[valid_cutoff:])
+
+    def k_fold_split(self,
+                     dataset: Dataset,
+                     k: int,
+                     seed: int = None) -> List[Tuple[Dataset, Dataset]]:
+        """
+        Split a dataset into k folds for cross-validation.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to do a k-fold split
+        k: int
+            Number of folds to split `dataset` into.
+        seed: int, optional
+            Random seed to use for reproducibility.
+
+        Returns
+        -------
+        List[Tuple[Dataset, Dataset]]
+          List of length k tuples of (train, test) where `train` and `test` are both `Dataset`.
+        """
+        self.logger.info("Computing K-fold split")
+        ds = copy.deepcopy(dataset)
+
+        kf = KFold(n_splits=k, shuffle=True, random_state=seed)
+
+        train_datasets = []
+        test_datasets = []
+        for train_index, test_index in kf.split(ds.X):
+            train_datasets.append(ds.select_to_split(train_index))
+            test_datasets.append(ds.select_to_split(test_index))
+
+        return list(zip(train_datasets, test_datasets))
 
 
 class SingletaskStratifiedSplitter(Splitter):
@@ -430,9 +261,7 @@ class SingletaskStratifiedSplitter(Splitter):
     def k_fold_split(self,
                      dataset: Dataset,
                      k: int,
-                     seed: int = None,
-                     log_every_n: int = None,
-                     **kwargs) -> List[Tuple[NumpyDataset, NumpyDataset]]:
+                     seed: int = None) -> List[Tuple[Dataset, Dataset]]:
         """
         Splits compounds into k-folds using stratified sampling.
 
@@ -444,23 +273,16 @@ class SingletaskStratifiedSplitter(Splitter):
             Number of folds to split `dataset` into.
         seed: int
             Random seed to use.
-        log_every_n: int
-            Log every n examples (not currently used).
-        **kwargs: Dict[str, Any]
-            Other arguments.
 
         Returns
         -------
         fold_datasets: List[Tuple[NumpyDataset, NumpyDataset]]:
             A list of length k of tuples of train and test datasets as NumpyDataset objects.
         """
-        print("Computing Stratified K-fold split")
-        if isinstance(dataset, NumpyDataset):
-            ds = dataset
-        else:
-            ds = NumpyDataset(dataset.mols, dataset.X, dataset.y, dataset.ids, dataset.features2keep, dataset.n_tasks)
+        self.logger.info("Computing Stratified K-fold split")
+        ds = copy.deepcopy(dataset)
 
-        skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=seed)  # changed so that users can define the seed
+        skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=seed)
 
         train_datasets = []
         test_datasets = []
@@ -476,8 +298,8 @@ class SingletaskStratifiedSplitter(Splitter):
               frac_valid: float = 0.1,
               frac_test: float = 0.1,
               seed: int = None,
-              log_every_n: int = None,
-              **kwargs) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+              force_split: bool = False,
+              **kwargs) -> Tuple[List[int], List[int], List[int]]:
         """
         Splits compounds into train/validation/test using stratified sampling.
 
@@ -493,12 +315,12 @@ class SingletaskStratifiedSplitter(Splitter):
             Fraction of dataset put into test data.
         seed: int
             Random seed to use.
-        log_every_n: int
-            Log every n examples (not currently used).
+        force_split: bool
+            If True, will force the split without checking if it is a regression or classification label.
 
         Returns
         -------
-        Tuple[np.ndarray, np.ndarray, np.ndarray]
+        Tuple[List[int], List[int], List[int]]
             A tuple of train indices, valid indices, and test indices.
         """
         np.testing.assert_equal(frac_train + frac_valid + frac_test, 1.)
@@ -507,28 +329,43 @@ class SingletaskStratifiedSplitter(Splitter):
         if seed is not None:
             np.random.seed(seed)
 
-        sortidx = np.argsort(dataset.y)
-
-        split_cd = 10
-        train_cutoff = int(np.round(frac_train * split_cd))
-        valid_cutoff = int(np.round(frac_valid * split_cd)) + train_cutoff
-
         train_idx = np.array([])
         valid_idx = np.array([])
         test_idx = np.array([])
 
-        while sortidx.shape[0] >= split_cd:
-            sortidx_split, sortidx = np.split(sortidx, [split_cd])
-            shuffled = np.random.permutation(range(split_cd))
-            train_idx = np.hstack([train_idx, sortidx_split[shuffled[:train_cutoff]]])
-            valid_idx = np.hstack([valid_idx, sortidx_split[shuffled[train_cutoff:valid_cutoff]]])
-            test_idx = np.hstack([test_idx, sortidx_split[shuffled[valid_cutoff:]]])
+        # divide idx by y value
+        classes = np.unique(dataset.y)
+        if not force_split:
+            # check if regression or classification (assume regression if there are more than 10 unique y values)
+            if len(classes) > 10:
+                raise ValueError("Cannot stratify by regression labels. Use other splitter instead. "
+                                 "If you want to force the split, set force_split=True.")
+        remaining_idx = []
+        idx_by_class = {}
+        for c in classes:
+            idx_by_class[c] = np.where(dataset.y == c)[0]
+            np.random.shuffle(idx_by_class[c])
+            train_stop = int(frac_train * len(idx_by_class[c]))
+            valid_stop = int(train_stop + (frac_valid * len(idx_by_class[c])))
+            test_stop = int(valid_stop + (frac_test * len(idx_by_class[c])))
+            train_idx = np.hstack([train_idx, idx_by_class[c][:train_stop]])
+            valid_idx = np.hstack([valid_idx, idx_by_class[c][train_stop:valid_stop]])
+            test_idx = np.hstack([test_idx, idx_by_class[c][valid_stop:test_stop]])
+            remaining_idx.extend(idx_by_class[c][test_stop:])
 
-        # Append remaining examples to train
-        if sortidx.shape[0] > 0:
-            np.hstack([train_idx, sortidx])
+        # divide remaining idx randomly by test, valid and test (according to frac_test, frac_valid, frac_test)
+        if len(remaining_idx) > 0:
+            np.random.shuffle(remaining_idx)
+            train_remaining = int(frac_train * len(dataset.y)) - len(train_idx)
+            train_idx = np.hstack([train_idx, remaining_idx[:train_remaining]])
+            valid_remaining = int(frac_valid * len(dataset.y)) - len(valid_idx)
+            valid_idx = np.hstack([valid_idx, remaining_idx[train_remaining:train_remaining + valid_remaining]])
+            test_idx = np.hstack([test_idx, remaining_idx[train_remaining + valid_remaining:]])
 
-        return list(map(int, train_idx)), list(map(int, valid_idx)), list(map(int, test_idx))
+        train_indexes = list(map(int, train_idx))
+        valid_indexes = list(map(int, valid_idx))
+        test_indexes = list(map(int, test_idx))
+        return train_indexes, valid_indexes, test_indexes
 
 
 class SimilaritySplitter(Splitter):
@@ -542,8 +379,7 @@ class SimilaritySplitter(Splitter):
               frac_valid: float = 0.1,
               frac_test: float = 0.1,
               seed: int = None,
-              log_every_n: int = None,
-              homogenous_threshold: float = 0.7) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+              homogenous_threshold: float = 0.7) -> Tuple[List[int], List[int], List[int]]:
 
         """
         Splits compounds into train/validation/test based on similarity.
@@ -561,21 +397,16 @@ class SimilaritySplitter(Splitter):
             Fraction of dataset put into test data.
         seed: int
             Random seed to use.
-        log_every_n: int
-            Log every n examples (not currently used).
         homogenous_threshold: float
             Threshold for similarity, all the compounds with a similarity lower than this threshold will be separated
             in the training set and test set. The higher the threshold is, the more heterogeneous the split will be.
 
         Returns
         -------
-        Tuple[np.ndarray, np.ndarray, np.ndarray]
+        Tuple[List[int], List[int], List[int]]
             A tuple of train indices, valid indices, and test indices.
         """
-
-        mols = generate_mols_and_delete_invalid_smiles(dataset)
-
-        fps_classes_map, indices_classes_map, all_fps = get_fingerprints_for_each_class(mols, dataset)
+        fps_classes_map, indices_classes_map, all_fps = get_fingerprints_for_each_class(dataset)
 
         train_size = int(frac_train * len(dataset))
         valid_size = int(frac_valid * len(dataset))
@@ -584,7 +415,7 @@ class SimilaritySplitter(Splitter):
         train_inds = []
         test_valid_inds = []
 
-        is_regression = any([not isinstance(i.item(), int) and not i.item().is_integer() for i in dataset.y])
+        is_regression = dataset.mode == 'regression'
 
         if not is_regression:
             for class_ in fps_classes_map:
@@ -640,7 +471,8 @@ class SimilaritySplitter(Splitter):
                     valid_inds.extend(valid_inds_class_)
 
             else:
-                test_valid_fps = [i for i in range(len(all_fps)) if i in test_valid_inds]
+                test_valid_idx = [i for i in range(len(all_fps)) if i in test_valid_inds]
+                test_valid_fps = [all_fps[i] for i in test_valid_idx]
                 test_inds, valid_inds = self._split_fingerprints(test_valid_fps,
                                                                  test_size,
                                                                  valid_size,
@@ -648,6 +480,28 @@ class SimilaritySplitter(Splitter):
                                                                  homogenous_threshold)
 
         return train_inds, valid_inds, test_inds
+
+    def k_fold_split(self,
+                     dataset: Dataset,
+                     k: int,
+                     seed: int = None) -> List[Tuple[Dataset, Dataset]]:
+        """
+        Splits the dataset into k folds based on similarity.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to be split.
+        k: int
+            Number of folds.
+        seed: int
+            Random seed.
+
+        Returns
+        -------
+        List[Tuple[Dataset, Dataset]]
+            List of train/test pairs of size k.
+        """
 
     @staticmethod
     def _split_fingerprints(fps: List, size1: int, size2: int, indexes: List[int], homogenous_threshold: float):
@@ -733,8 +587,7 @@ class ScaffoldSplitter(Splitter):
               frac_valid: float = 0.1,
               frac_test: float = 0.1,
               seed: int = None,
-              log_every_n: int = 1000,
-              homogenous_datasets: bool = True) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+              homogenous_datasets: bool = True) -> Tuple[List[int], List[int], List[int]]:
         """
         Splits internal compounds into train/validation/test by scaffold.
 
@@ -750,22 +603,17 @@ class ScaffoldSplitter(Splitter):
             The fraction of data to be used for the test split.
         seed: int
             Random seed to use.
-        log_every_n: int
-            Controls the logger by dictating how often logger outputs will be produced.
         homogenous_datasets: bool
             Whether the datasets will be homogenous or not.
 
         Returns
         -------
-        Tuple[np.ndarray, np.ndarray, np.ndarray]
+        Tuple[List[int], List[int], List[int]]
           A tuple of train indices, valid indices, and test indices.
         """
         np.testing.assert_almost_equal(frac_train + frac_valid + frac_test, 1.)
 
-        mols = generate_mols_and_delete_invalid_smiles(dataset)
-        mols_classes_map, indices_classes_map = get_mols_for_each_class(mols, dataset)
-
-        is_regression = any([not isinstance(i.item(), int) and not i.item().is_integer() for i in dataset.y])
+        is_regression = dataset.mode == 'regression'
 
         train_cutoff = int(frac_train * len(dataset))
         valid_cutoff = int(frac_valid * len(dataset))
@@ -776,6 +624,7 @@ class ScaffoldSplitter(Splitter):
         test_inds: List[int] = []
 
         if not is_regression:
+            mols_classes_map, indices_classes_map = get_mols_for_each_class(dataset)
             for class_ in mols_classes_map:
                 mols = mols_classes_map[class_]
                 indexes = indices_classes_map[class_]
@@ -794,17 +643,43 @@ class ScaffoldSplitter(Splitter):
                 valid_inds.extend(valid_inds_class_)
 
         else:
-            scaffold_sets = self.generate_scaffolds(mols, [i for i in range(len(mols))])
-            train_inds, valid_inds, test_inds = get_train_valid_test_indexes(scaffold_sets, train_cutoff, test_cutoff,
-                                                                             valid_cutoff, frac_train, frac_test,
+            idsx = [i for i in range(len(dataset.mols))]
+            scaffold_sets = self.generate_scaffolds(dataset.mols, idsx)
+            train_inds, valid_inds, test_inds = get_train_valid_test_indexes(scaffold_sets,
+                                                                             train_cutoff,
+                                                                             test_cutoff,
+                                                                             valid_cutoff,
+                                                                             frac_train,
+                                                                             frac_test,
                                                                              homogenous_datasets)
 
         return train_inds, valid_inds, test_inds
 
+    def k_fold_split(self,
+                     dataset: Dataset,
+                     k: int,
+                     seed: int = None) -> List[Tuple[Dataset, Dataset]]:
+        """
+        Splits the dataset into k folds based on scaffolds.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to be split.
+        k: int
+            Number of folds.
+        seed: int
+            Random seed.
+
+        Returns
+        -------
+        List[Tuple[Dataset, Dataset]]
+            List of train/test pairs of size k.
+        """
+
     @staticmethod
-    def generate_scaffolds(mols: List[Mol],
-                           indexes: List[int],
-                           log_every_n: int = 1000) -> List[List[int]]:
+    def generate_scaffolds(mols: np.ndarray,
+                           indexes: List[int]) -> List[List[int]]:
         """
         Returns all scaffolds from the dataset.
 
@@ -814,8 +689,6 @@ class ScaffoldSplitter(Splitter):
             List of rdkit Mol objects for scaffold generation
         indexes: List[int]
             Molecules' indexes.
-        log_every_n: int
-            Controls the logger by dictating how often logger outputs will be produced.
 
         Returns
         -------
@@ -823,39 +696,20 @@ class ScaffoldSplitter(Splitter):
             List of indices of each scaffold in the dataset.
         """
         scaffolds = {}
-        data_len = len(mols)
         for ind, mol in enumerate(mols):
-            if ind % log_every_n == 0:
-                print("Generating scaffold %d/%d" % (ind, data_len))
+            scaffold = ScaffoldSplitter._generate_scaffold(mol)
 
-            if isinstance(mol, str):
-                try:
-                    mol_object = MolFromSmiles(mol)
-                    scaffold = ScaffoldSplitter._generate_scaffold(mol_object)
-                except:
-                    scaffold = None
-
-            elif isinstance(mol, Mol):
-                scaffold = ScaffoldSplitter._generate_scaffold(mol)
-
+            if scaffold not in scaffolds:
+                scaffolds[scaffold] = [indexes[ind]]
             else:
-                scaffold = False
-
-            if scaffold is not None:
-                if scaffold not in scaffolds:
-                    scaffolds[scaffold] = [indexes[ind]]
-                else:
-                    scaffolds[scaffold].append(indexes[ind])
+                scaffolds[scaffold].append(indexes[ind])
 
         # Sort from largest to smallest scaffold sets
         scaffolds = {key: sorted(value) for key, value in scaffolds.items()}
 
-        scaffold_sets = []
-
         scaffold_scaffold_set = sorted(scaffolds.items(), key=lambda x: (len(x[1]), x[1][0]), reverse=True)
 
-        for scaffold, scaffold_set in scaffold_scaffold_set:
-            scaffold_sets.append(scaffold_set)
+        scaffold_sets = [scaffold_set for _, scaffold_set in scaffold_scaffold_set]
 
         return scaffold_sets
 
@@ -906,8 +760,7 @@ class ButinaSplitter(Splitter):
               frac_valid: float = 0.1,
               frac_test: float = 0.1,
               seed: int = None,
-              log_every_n: int = None,
-              homogenous_datasets: bool = True) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+              homogenous_datasets: bool = True) -> Tuple[List[int], List[int], List[int]]:
         """
         Splits internal compounds into train and validation based on the butina clustering algorithm. The dataset is
         expected to be a classification dataset.
@@ -927,21 +780,17 @@ class ButinaSplitter(Splitter):
             The fraction of data to be used for the test split.
         seed: int
             Random seed to use.
-        log_every_n: int
-            Log every n examples (not currently used).
         homogenous_datasets: bool
             Whether the datasets will be homogenous or not.
 
         Returns
         -------
-        Tuple[np.ndarray, np.ndarray, np.ndarray]
+        Tuple[List[int], List[int], List[int]]
           A tuple of train indices, valid indices, and test indices.
         """
-        mols = generate_mols_and_delete_invalid_smiles(dataset)
+        fps_classes_map, indices_classes_map, all_fps = get_fingerprints_for_each_class(dataset)
 
-        fps_classes_map, indices_classes_map, all_fps = get_fingerprints_for_each_class(mols, dataset)
-
-        is_regression = any([not isinstance(i.item(), int) and not i.item().is_integer() for i in dataset.y])
+        is_regression = dataset.mode == 'regression'
 
         train_cutoff = int(frac_train * len(dataset))
         valid_cutoff = int(frac_valid * len(dataset))
@@ -1001,3 +850,25 @@ class ButinaSplitter(Splitter):
                                                                              frac_train, frac_test, homogenous_datasets)
 
         return train_inds, valid_inds, test_inds
+
+    def k_fold_split(self,
+                     dataset: Dataset,
+                     k: int,
+                     seed: int = None) -> List[Tuple[Dataset, Dataset]]:
+        """
+        Splits the dataset into k folds based on Butina splitter.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to be split.
+        k: int
+            Number of folds.
+        seed: int
+            Random seed.
+
+        Returns
+        -------
+        List[Tuple[Dataset, Dataset]]
+            List of train/test pairs of size k.
+        """

@@ -1,10 +1,11 @@
 import os
 import shutil
 import tempfile
-from typing import List, Sequence, Union
+from typing import List, Sequence, Union, Tuple, Dict
 import numpy as np
 from deepmol.datasets import Dataset
 from deepmol.evaluator.evaluator import Evaluator
+from deepmol.loggers.logger import Logger
 from deepmol.metrics.metrics import Metric
 
 from sklearn.base import BaseEstimator
@@ -46,6 +47,8 @@ class Model(BaseEstimator):
         self.model = model
         self.model_class = model.__class__
 
+        self.logger = Logger()
+
     def __del__(self):
         """
         Delete model directory if it was created by this object.
@@ -64,7 +67,6 @@ class Model(BaseEstimator):
         y: np.ndarray
             the labels for the batch
         """
-        raise NotImplementedError("Each class model must implement its own fit_on_batch method.")
 
     def predict_on_batch(self, X: Sequence):
         """
@@ -75,13 +77,11 @@ class Model(BaseEstimator):
         X: np.ndarray
             array of features
         """
-        raise NotImplementedError("Each class model must implement its own predict_on_batch method.")
 
     def reload(self) -> None:
         """
         Reload trained model from disk.
         """
-        raise NotImplementedError("Each class model must implement its own reload method.")
 
     @staticmethod
     def get_model_filename(model_dir: str) -> str:
@@ -122,7 +122,7 @@ class Model(BaseEstimator):
         Function for saving models.
         Each subclass is responsible for overriding this method.
         """
-        raise NotImplementedError("Each class model must implement its own save method.")
+        ("Each class model must implement its own save method.")
 
     def fit(self, dataset: Dataset):
         """
@@ -133,7 +133,6 @@ class Model(BaseEstimator):
         dataset: Dataset
             the Dataset to train on
         """
-        raise NotImplementedError("Each class model must implement its own fit method.")
 
     def predict(self, dataset: Dataset) -> np.ndarray:
         """
@@ -167,8 +166,7 @@ class Model(BaseEstimator):
     def evaluate(self,
                  dataset: Dataset,
                  metrics: Union[List[Metric], Metric],
-                 per_task_metrics: bool = False,
-                 n_classes: int = 2):
+                 per_task_metrics: bool = False) -> Tuple[Dict, Union[None, Dict]]:
         """
         Evaluates the performance of this model on specified dataset.
 
@@ -180,8 +178,8 @@ class Model(BaseEstimator):
             The set of metrics provided.
         per_task_metrics: bool
             If true, return computed metric for each task on multitask dataset.
-        n_classes: int
-            If specified, will use `n_classes` as the number of unique classes.
+        kwargs:
+            Additional keyword arguments to pass to `Evaluator.compute_model_performance`.
 
         Returns
         -------
@@ -192,18 +190,14 @@ class Model(BaseEstimator):
             for each task separately.
         """
         evaluator = Evaluator(self, dataset)
-        return evaluator.compute_model_performance(metrics,
-                                                   per_task_metrics=per_task_metrics,
-                                                   n_classes=n_classes)
+        return evaluator.compute_model_performance(metrics, per_task_metrics=per_task_metrics)
 
     def get_task_type(self) -> str:
         """
         Currently models can only be classifiers or regressors.
         """
-        raise NotImplementedError()
 
     def get_num_tasks(self) -> int:
         """
         Get number of tasks.
         """
-        raise NotImplementedError()

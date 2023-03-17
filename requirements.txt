@@ -5,7 +5,7 @@ torch==1.12.1
 torchvision==0.13.1
 torchaudio==0.12.1
 dgl==0.9.1
-joblib==1.1.0
+joblib==1.1.1
 pillow==8.4.0
 h5py==3.7.0
 deepchem==2.5.0
@@ -17,3 +17,7 @@ tensorflow==2.10.0
 chembl_structure_pipeline==1.1.0
 scikit-learn==1.1.3
 imblearn
+umap-learn==0.5.1
+kneed==0.8.2
+kaleido==0.2.1
+plotly==5.13.1

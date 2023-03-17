@@ -42,8 +42,8 @@ class ShapValues:
         kwargs: dict
             Additional arguments for the plot function
         """
-        columns_names = ['feat_' + str(i + 1) for i in range(self.dataset.X.shape[1])]
-        X = pd.DataFrame(self.dataset.X, columns=columns_names)
+        columns_names = self.dataset.feature_names
+        X = pd.DataFrame(self.dataset.X, columns=columns_names, dtype=float)
 
         model = self.model.model
 
@@ -86,7 +86,7 @@ class ShapValues:
         kwargs: dict
             Additional arguments for the plot function
         """
-        columns_names = ['feat_' + str(i + 1) for i in range(self.dataset.X.shape[1])]
+        columns_names = self.dataset.feature_names
         X = pd.DataFrame(self.dataset.X, columns=columns_names)
 
         model = self.model.model
@@ -115,7 +115,7 @@ class ShapValues:
                 shap.plots.beeswarm(self.shap_values, **kwargs)
 
     # TODO: check why force is not working (maybe java plugin is missing?)
-    def plotSampleExplanation(self, index: int = 0, plot_type: str = 'waterfall'):
+    def plotSampleExplanation(self, index: int = 0, plot_type: str = 'waterfall', **kwargs):
         """
         Plot the SHAP values of a single sample.
 
@@ -125,6 +125,8 @@ class ShapValues:
             Index of the sample to explain
         plot_type: str
             Type of plot to use. Can be 'waterfall' or 'force'
+        kwargs:
+            Additional arguments for the plot function.
         """
         if self.shap_values is None:
             print('Shap values not computed yet! Computing shap values...')
@@ -132,15 +134,15 @@ class ShapValues:
 
         if plot_type == 'waterfall':
             # visualize the nth prediction's explanation
-            shap.plots.waterfall(self.shap_values[index])
+            shap.plots.waterfall(self.shap_values[index], **kwargs)
         elif plot_type == 'force':
             shap.initjs()
             # visualize the first prediction's explanation with a force plot
-            shap.plots.force(self.shap_values[index])
+            shap.plots.force(self.shap_values[index], **kwargs)
         else:
             raise ValueError('Plot type must be waterfall or force!')
 
-    def plotFeatureExplanation(self, index: int = None):
+    def plotFeatureExplanation(self, index: int = None, **kwargs):
         """
         Plot the SHAP values of a single feature.
 
@@ -148,20 +150,27 @@ class ShapValues:
         ----------
         index: int
             Index of the feature to explain
+        kwargs:
+            Additional arguments for the plot function.
         """
         if index is None:
             # summarize the effects of all the features
-            shap.plots.beeswarm(self.shap_values)
+            shap.plots.beeswarm(self.shap_values, **kwargs)
         else:
             # create a dependence scatter plot to show the effect of a single feature across the whole dataset
-            shap.plots.scatter(self.shap_values[:, index], color=self.shap_values)
+            shap.plots.scatter(self.shap_values[:, index], color=self.shap_values[:, index], **kwargs)
 
-    def plotHeatMap(self):
+    def plotHeatMap(self, **kwargs):
         """
         Plot the SHAP values of all the features as a heatmap.
+
+        Parameters
+        ----------
+        kwargs:
+            Additional arguments for the plot function.
         """
         if self.shap_values is not None:
-            shap.plots.heatmap(self.shap_values)
+            shap.plots.heatmap(self.shap_values, **kwargs)
         else:
             raise ValueError('Shap values not computed yet!')
 

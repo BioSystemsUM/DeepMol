@@ -70,7 +70,7 @@ class TestRdkit3DDescriptors(TestCase):
 
     def test_autocorr3D_to_fail(self):
         loader = CSVLoader(self.test_dataset_to_fail,
-                           mols_field='Smiles',
+                           smiles_field='Smiles',
                            labels_fields='Class',
                            id_field='ID')
 
@@ -93,7 +93,7 @@ class TestRdkit3DDescriptors(TestCase):
 
     def test_RDF_to_fail(self):
         loader = CSVLoader(self.test_dataset_to_fail,
-                           mols_field='Smiles',
+                           smiles_field='Smiles',
                            labels_fields='Class',
                            id_field='ID')
 
@@ -116,7 +116,7 @@ class TestRdkit3DDescriptors(TestCase):
 
     def test_PDF_to_fail(self):
         loader = CSVLoader(self.test_dataset_to_fail,
-                           mols_field='Smiles',
+                           smiles_field='Smiles',
                            labels_fields='Class',
                            id_field='ID')
 
@@ -139,7 +139,7 @@ class TestRdkit3DDescriptors(TestCase):
 
     def test_MORSE_to_fail(self):
         loader = CSVLoader(self.test_dataset_to_fail,
-                           mols_field='Smiles',
+                           smiles_field='Smiles',
                            labels_fields='Class',
                            id_field='ID')
 
@@ -162,7 +162,7 @@ class TestRdkit3DDescriptors(TestCase):
 
     def test_WHIM_to_fail(self):
         loader = CSVLoader(self.test_dataset_to_fail,
-                           mols_field='Smiles',
+                           smiles_field='Smiles',
                            labels_fields='Class',
                            id_field='ID')
 
@@ -185,7 +185,7 @@ class TestRdkit3DDescriptors(TestCase):
 
     def test_radius_of_gyration_to_fail(self):
         loader = CSVLoader(self.test_dataset_to_fail,
-                           mols_field='Smiles',
+                           smiles_field='Smiles',
                            labels_fields='Class',
                            id_field='ID')
 
@@ -208,7 +208,7 @@ class TestRdkit3DDescriptors(TestCase):
 
     def test_isf_to_fail(self):
         loader = CSVLoader(self.test_dataset_to_fail,
-                           mols_field='Smiles',
+                           smiles_field='Smiles',
                            labels_fields='Class',
                            id_field='ID')
 
@@ -231,7 +231,7 @@ class TestRdkit3DDescriptors(TestCase):
 
     def test_eccentricity_to_fail(self):
         loader = CSVLoader(self.test_dataset_to_fail,
-                           mols_field='Smiles',
+                           smiles_field='Smiles',
                            labels_fields='Class',
                            id_field='ID')
 
@@ -254,7 +254,7 @@ class TestRdkit3DDescriptors(TestCase):
 
     def test_asphericity_to_fail(self):
         loader = CSVLoader(self.test_dataset_to_fail,
-                           mols_field='Smiles',
+                           smiles_field='Smiles',
                            labels_fields='Class',
                            id_field='ID')
 
@@ -277,7 +277,7 @@ class TestRdkit3DDescriptors(TestCase):
 
     def test_SpherocityIndex_to_fail(self):
         loader = CSVLoader(self.test_dataset_to_fail,
-                           mols_field='Smiles',
+                           smiles_field='Smiles',
                            labels_fields='Class',
                            id_field='ID')
 
@@ -300,7 +300,7 @@ class TestRdkit3DDescriptors(TestCase):
 
     def test_PMI_to_fail(self):
         loader = CSVLoader(self.test_dataset_to_fail,
-                           mols_field='Smiles',
+                           smiles_field='Smiles',
                            labels_fields='Class',
                            id_field='ID')
 
@@ -323,7 +323,7 @@ class TestRdkit3DDescriptors(TestCase):
 
     def test_NormalizedPrincipalMomentsRatios_to_fail(self):
         loader = CSVLoader(self.test_dataset_to_fail,
-                           mols_field='Smiles',
+                           smiles_field='Smiles',
                            labels_fields='Class',
                            id_field='ID')
 
@@ -345,7 +345,7 @@ class TestRdkit3DDescriptors(TestCase):
 
     def test_all_rdkit_descriptors_to_fail(self):
         loader = CSVLoader(self.test_dataset_to_fail,
-                           mols_field='Smiles',
+                           smiles_field='Smiles',
                            labels_fields='Class',
                            id_field='ID')
 
@@ -358,7 +358,7 @@ class TestRdkit3DDescriptors(TestCase):
 
     def test_all_rdkit_descriptors_generating_conformers(self):
         loader = CSVLoader(self.mini_dataset_to_generate_conformers,
-                           mols_field='Smiles',
+                           smiles_field='Smiles',
                            labels_fields='Class')
 
         dataset = loader.create_dataset()
@@ -593,7 +593,7 @@ class Test3DGenerator(TestCase):
         self.generator = ThreeDimensionalMoleculeGenerator(n_conformations=20)
         self.test_dataset_to_convert = "../data/test_to_convert_to_sdf.csv"
         loader = CSVLoader(self.test_dataset_to_convert,
-                           mols_field='Smiles',
+                           smiles_field='Smiles',
                            labels_fields='Class',
                            id_field='ID')
 

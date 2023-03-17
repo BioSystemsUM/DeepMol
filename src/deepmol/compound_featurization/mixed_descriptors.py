@@ -12,15 +12,16 @@ class MixedFeaturizer(MolecularFeaturizer):
     Features from different featurizers are concatenated.
     """
 
-    def __init__(self, featurizers: Iterable[MolecularFeaturizer]):
+    def __init__(self, featurizers: Iterable[MolecularFeaturizer], **kwargs) -> None:
         """
         Parameters
         ----------
         featurizers: Iterable[MolecularFeaturizer]
             Iterable of featurizer to use to create features.
         """
-        super().__init__()
+        super().__init__(**kwargs)
         self.featurizers = featurizers
+        self.feature_names = [name for featurizer in featurizers for name in featurizer.feature_names]
 
     def _featurize(self, mol: Mol):
         """
@@ -34,20 +35,12 @@ class MixedFeaturizer(MolecularFeaturizer):
         Returns
         -------
         np.ndarray
-          A numpy array of concatenared features.
+          A numpy array of concatenated features.
         """
+        final_features = np.array([])
+        for featurizer in self.featurizers:
+            current_features = featurizer._featurize(mol)
+            final_features = np.concatenate((final_features, current_features))
 
-        try:
-            final_features = np.array([])
-            for featurizer in self.featurizers:
-                current_features = featurizer._featurize(mol)
-                final_features = np.concatenate((final_features, current_features))
-
-        except Exception:
-            print('error in smile: ' + str(mol))
-            final_features = np.empty(80, dtype=float)
-            final_features[:] = np.NaN
-
-        final_features = np.asarray(final_features, dtype=np.float)
-
+        final_features = np.asarray(final_features, dtype=np.float32)
         return final_features

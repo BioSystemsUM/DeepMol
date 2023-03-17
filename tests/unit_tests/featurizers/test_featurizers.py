@@ -1,37 +1,48 @@
 from abc import abstractmethod, ABC
 
 import os
+from unittest.mock import MagicMock
 
-from deepmol.loaders.loaders import CSVLoader
+import numpy as np
+import pandas as pd
+from rdkit.Chem import MolFromSmiles
+
+from deepmol.datasets import SmilesDataset
+from deepmol.scalers import StandardScaler
 
 from tests import TEST_DIR
+
 
 class FeaturizerTestCase(ABC):
 
     def setUp(self) -> None:
-        self.data_path = os.path.join(TEST_DIR, 'data')
+        data_path = os.path.join(TEST_DIR, 'data/test_to_convert_to_sdf.csv')
+        self.original_smiles = pd.read_csv(data_path, sep=',').Smiles.values
+        mols = [self._smiles_to_mol(s) for s in self.original_smiles]
+        self.mock_dataset = MagicMock(spec=SmilesDataset,
+                                      smiles=np.array(self.original_smiles),
+                                      mols=np.array(mols),
+                                      ids=np.arange(len(self.original_smiles)))
+        self.original_smiles_with_invalid = np.append(self.original_smiles, ['CC(=O)[O-].NC', 'C1=CC=CC=C1('])
+        mols = [self._smiles_to_mol(s) for s in self.original_smiles_with_invalid]
+        self.mock_dataset_with_invalid = MagicMock(spec=SmilesDataset,
+                                                   smiles=np.array(self.original_smiles_with_invalid),
+                                                   mols=np.array(mols),
+                                                   ids=np.arange(len(self.original_smiles_with_invalid)))
 
-        dataset = os.path.join(self.data_path, "test_to_convert_to_sdf.csv")
-        loader = CSVLoader(dataset,
-                           mols_field='Standardized_Smiles',
-                           labels_fields='Class')
+        self.mock_scaler = MagicMock(spec=StandardScaler)
 
-        self.mini_dataset_to_test = loader.create_dataset()
+    def tearDown(self) -> None:
+        if os.path.exists('deepmol.log'):
+            os.remove('deepmol.log')
 
-        dataset = os.path.join(self.data_path, "invalid_smiles_dataset.csv")
-        loader = CSVLoader(dataset,
-                           mols_field='Standardized_Smiles',
-                           labels_fields='Class')
-
-        self.dataset_invalid_smiles = loader.create_dataset()
-
-        self.mol2vec_model = os.path.join(os.path.abspath(os.curdir), "compound_featurization", "mol2vec_models",
-                                        "model_300dim.pkl")
+    @staticmethod
+    def _smiles_to_mol(smiles):
+        try:
+            return MolFromSmiles(smiles)
+        except:
+            return None
 
     @abstractmethod
     def test_featurize(self):
-        raise NotImplementedError
-
-    @abstractmethod
-    def test_featurize_with_nan(self):
         raise NotImplementedError

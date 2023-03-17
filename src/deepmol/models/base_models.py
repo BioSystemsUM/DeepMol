@@ -1,13 +1,14 @@
 from typing import Union, List
 
-from keras.dtensor.optimizers import Adadelta
+from keras.optimizers import Adam
+from tensorflow import keras
+from keras.dtensor.optimizers import Adadelta, RMSprop
 from keras.layers import BatchNormalization, GaussianNoise
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
-from tensorflow.python.keras import Sequential, regularizers
-from tensorflow.python.keras.layers import Dense, Dropout, Reshape, Conv1D, Flatten
-from tensorflow.python.keras.optimizer_v2.adam import Adam
-from tensorflow.python.keras.optimizer_v2.rmsprop import RMSprop
+from tensorflow.keras import Sequential, regularizers
+from tensorflow.keras.layers import Dense, Dropout, Reshape, Conv1D, Flatten
+from tensorflow.keras import layers
 
 
 # TODO: add more pre-defined models
@@ -135,7 +136,7 @@ def create_dense_model(input_dim: int = 1024,
     model.add(Dropout(dropouts[0]))
     for i in range(n_hidden_layers):
         model.add(Dense(layers_units[i + 1], activation=activations[i + 1],
-                        kernel_regularizer=regularizers.l1_l2(l1=l1_l2[i + 1][0], l2=l1_l2[i + 1][1])))
+                        kernel_regularizer=regularizers.l1_l2(l1=l1_l2[i][0], l2=l1_l2[i][1])))
         if batch_normalization[i + 1]:
             model.add(BatchNormalization())
         model.add(Dropout(dropouts[i + 1]))
@@ -214,3 +215,35 @@ def make_cnn_model(input_dim: int = 1024,
 
     model.compile(loss=loss, optimizer=opt, metrics=metrics)
     return model
+
+
+def basic_multitask_dnn(input_shape, task_names, losses, metrics):
+    # Define the inputs
+    inputs = layers.Input(shape=input_shape)
+
+    # Define the shared layers
+    shared_layer_1 = layers.Dense(64, activation="relu")
+    shared_layer_2 = layers.Dense(32, activation="relu")
+
+    # Define the shared layers for the inputs
+    x = shared_layer_1(inputs)
+    x = shared_layer_2(x)
+
+    output_layers = []
+    for i in range(len(task_names)):
+        task_layer = layers.Dense(16, activation="relu")(x)
+        # Define the outputs for each task
+        task_output = layers.Dense(1, activation="sigmoid", name=f"{task_names[i]}")(task_layer)
+        output_layers.append(task_output)
+
+    # Define the model that outputs the predictions for each task
+    model = keras.Model(inputs=inputs, outputs=output_layers)
+    losses = {task_names[i]: losses[i] for i in range(len(task_names))}
+    metrics = {task_names[i]: metrics[i] for i in range(len(task_names))}
+    # Compile the model with different loss functions and metrics for each task
+    model.compile(
+        optimizer=keras.optimizers.Adam(learning_rate=0.001),
+        loss=losses,
+        metrics=metrics)
+    return model
+

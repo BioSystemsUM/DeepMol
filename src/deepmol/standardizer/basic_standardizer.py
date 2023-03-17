@@ -1,25 +1,7 @@
-from rdkit.Chem import SanitizeMol, Mol
+from rdkit.Chem import Mol
 
 from deepmol.standardizer import MolecularStandardizer
-
-
-def basic_standardizer(mol: Mol) -> Mol:
-    """
-    Basic standardization of a molecule.
-    Performs only Sanitization (Kekulize, check valencies, set aromaticity, conjugation and hybridization).
-
-    Parameters
-    ----------
-    mol: Mol
-        RDKit Mol object
-
-    Returns
-    -------
-    mol: Mol
-        Standardized mol.
-    """
-    SanitizeMol(mol)
-    return mol
+from deepmol.standardizer._utils import basic_standardizer
 
 
 class BasicStandardizer(MolecularStandardizer):
@@ -27,7 +9,7 @@ class BasicStandardizer(MolecularStandardizer):
     Standardizes a molecule SMILES using the SanitizeMol rdkit method.
     """
 
-    def _standardize(self, mol: Mol):
+    def _standardize(self, mol: Mol) -> Mol:
         """
         Standardizes a molecule SMILES using a custom set of steps.
 
@@ -41,8 +23,4 @@ class BasicStandardizer(MolecularStandardizer):
         mol: str
             Standardized mol.
         """
-        try:
-            mol = basic_standardizer(mol)
-        except Exception as e:
-            print('error in standardizing smile: ' + str(mol))
-        return mol
+        return basic_standardizer(mol)

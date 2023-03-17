@@ -3,12 +3,13 @@ from typing import Sequence
 import numpy as np
 from sklearn.base import BaseEstimator
 
+from deepmol.models._utils import save_to_disk
 from deepmol.models.models import Model
 from deepmol.datasets import Dataset
 from deepmol.splitters.splitters import RandomSplitter, SingletaskStratifiedSplitter
 from deepmol.metrics.metrics import Metric
 
-from deepmol.utils.utils import load_from_disk, save_to_disk
+from deepmol.utils.utils import load_from_disk
 
 from sklearn.base import clone
 
@@ -43,19 +44,16 @@ class SklearnModel(Model):
         """
         Fits model on batch of data.
         """
-        raise NotImplementedError
 
     def get_task_type(self) -> str:
         """
         Returns the task type of the model.
         """
-        raise NotImplementedError
 
     def get_num_tasks(self) -> int:
         """
         Returns the number of tasks.
         """
-        raise NotImplementedError
 
     def fit(self, dataset: Dataset) -> None:
         """
@@ -71,6 +69,9 @@ class SklearnModel(Model):
         BaseEstimator
             The trained scikit-learn model.
         """
+        if self.mode is not None and self.mode != dataset.mode:
+            raise ValueError(f'The mode of the dataset must match the mode of the model. '
+                             f'Got {dataset.mode} for dataset and {self.mode} for model.')
         features = dataset.X
         y = np.squeeze(dataset.y)
         return self.model.fit(features, y)
@@ -147,10 +148,10 @@ class SklearnModel(Model):
             of all folds and the sixth is the average test score of all folds.
         """
         # TODO: add option to choose between splitters
-        if self.mode == 'classification':
+        if dataset.mode == 'classification':
             splitter = SingletaskStratifiedSplitter()
             datasets = splitter.k_fold_split(dataset, folds)
-        elif self.mode == 'regression':
+        elif dataset.mode == 'regression':
             splitter = RandomSplitter()
             datasets = splitter.k_fold_split(dataset, folds)
         else:
@@ -171,18 +172,15 @@ class SklearnModel(Model):
         best_model = None
         split = 1
         for train_ds, test_ds in datasets:
-            print('\nSplit', str(split), ':')
             split += 1
             dummy_model = clone(SklearnModel(model=self.model))
 
             dummy_model.fit(train_ds)
 
-            print('Train Score: ')
             train_score = dummy_model.evaluate(train_ds, metric)[0]
             train_scores.append(train_score[metric.name])
             avg_train_score += train_score[metric.name]
 
-            print('Test Score: ')
             test_score = dummy_model.evaluate(test_ds, metric)[0]
             test_scores.append(test_score[metric.name])
             avg_test_score += test_score[metric.name]

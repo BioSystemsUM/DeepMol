@@ -30,7 +30,7 @@ standardizer_vr = CustomStandardizer(params=heavy_standardisation)
 
 #ds = CSVLoader('preprocessed_dataset.csv', 'Smiles', ['Class'], 'PubChem CID')#, chunk_size=1000)
 
-ds = CSVLoader(dataset_path='tests/data/preprocessed_dataset_wfoodb.csv', mols_field='Smiles', labels_fields='Class', id_field='ID', shard_size=5000)
+ds = CSVLoader(dataset_path='tests/data/preprocessed_dataset_wfoodb.csv', smiles_field='Smiles', labels_fields='Class', id_field='ID', shard_size=5000)
 ds = ds.create_dataset()
 
 ds.get_shape()
@@ -59,7 +59,7 @@ ds = LowVarianceFS(0.15).featureSelection(ds)
 ds.get_shape()
 print(len(np.where(ds.y==0)[0]), len(np.where(ds.y==1)[0]))
 
-pca = PCA().runUnsupervised(ds)
+pca = PCA().run_unsupervised(ds)
 
 
 splitter = SingletaskStratifiedSplitter()

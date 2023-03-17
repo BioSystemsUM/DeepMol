@@ -8,11 +8,7 @@ import gzip
 import pickle
 import numpy as np
 
-from deepchem.trans import DAGTransformer, IRVTransformer
-from deepchem.data import NumpyDataset
-from deepmol.datasets import Dataset
-
-from rdkit.Chem import rdMolDescriptors, rdDepictor, Mol, RDKFingerprint
+from rdkit.Chem import rdMolDescriptors, rdDepictor, Mol, RDKFingerprint, rdmolfiles, rdmolops
 from rdkit.Chem import Draw
 from IPython.display import SVG
 
@@ -22,6 +18,72 @@ import tempfile
 from PIL import Image
 
 from IPython.display import display
+
+from deepmol.loggers import Logger
+
+
+def smiles_to_mol(smiles: str, **kwargs) -> Union[Mol, None]:
+    """
+    Convert SMILES to RDKit molecule object.
+    Parameters
+    ----------
+    smiles: str
+        SMILES string to convert.
+   kwargs:
+           Keyword arguments for `rdkit.Chem.MolFromSmiles`.
+    Returns
+    -------
+    Mol
+        RDKit molecule object.
+    """
+    try:
+        return Chem.MolFromSmiles(smiles, **kwargs)
+    except TypeError:
+        return None
+
+
+def mol_to_smiles(mol: Mol, **kwargs) -> Union[str, None]:
+    """
+    Convert SMILES to RDKit molecule object.
+    Parameters
+    ----------
+    mol: Mol
+        RDKit molecule object to convert.
+   kwargs:
+           Keyword arguments for `rdkit.Chem.MolToSmiles`.
+    Returns
+    -------
+    smiles: str
+        SMILES string.
+    """
+    try:
+        return Chem.MolToSmiles(mol, **kwargs)
+    except TypeError:
+        return None
+
+
+def canonicalize_mol_object(mol_object: Mol) -> Mol:
+    """
+    Canonicalize a molecule object.
+
+    Parameters
+    ----------
+    mol_object: Mol
+        Molecule object to canonicalize.
+
+    Returns
+    -------
+    Mol
+        Canonicalized molecule object.
+    """
+    try:
+        # SMILES is unique, so set a canonical order of atoms
+        new_order = rdmolfiles.CanonicalRankAtoms(mol_object)
+        mol_object = rdmolops.RenumberAtoms(mol_object, new_order)
+    except Exception as e:
+        mol_object = mol_object
+
+    return mol_object
 
 
 def load_pickle_file(input_file: str) -> Any:
@@ -46,35 +108,14 @@ def load_pickle_file(input_file: str) -> Any:
             return pickle.load(opened_file)
 
 
-def save_to_disk(dataset: Union[np.ndarray, Dataset], filename: str, compress: int = 3):
-    """
-    Save a dataset to file.
-
-    Parameters
-    ----------
-    dataset: Union[np.ndarray, Dataset]
-        A dataset you want to save.
-    filename: str
-        Path to save data.
-    compress: int, default 3
-        The compress option when dumping joblib file.
-  """
-    if filename.endswith('.joblib'):
-        joblib.dump(dataset, filename, compress=compress)
-    elif filename.endswith('.npy'):
-        np.save(filename, dataset)
-    else:
-        raise ValueError("Filename with unsupported extension: %s" % filename)
-
-
 def load_from_disk(filename: str) -> Any:
     """
-    Load a dataset from file.
+    Load object from file.
 
     Parameters
     ----------
     filename: str
-        A filename you want to load data.
+        A filename you want to load.
 
     Returns
     -------
@@ -100,7 +141,36 @@ def load_from_disk(filename: str) -> Any:
         raise ValueError("Unrecognized filetype for %s" % filename)
 
 
-def normalize_labels_shape(y_pred: Union[List, np.ndarray]):
+def normalize_labels_shape(y_pred: Union[List, np.ndarray], n_tasks: int) -> np.ndarray:
+    """
+    Function to transform output from predict_proba (prob(0) prob(1)) to predict format (0 or 1).
+
+    Parameters
+    ----------
+    y_pred: array
+        array with predictions
+    n_tasks: int
+        number of tasks
+
+    Returns
+    -------
+    labels
+        Array of predictions in the format [0, 1, 0, ...]/[[0, 1, 0, ...], [0, 1, 1, ...], ...]
+    """
+    if n_tasks == 1:
+        labels = _normalize_singletask_labels_shape(y_pred)
+    else:
+        if isinstance(y_pred, np.ndarray):
+            if len(y_pred.shape) == 3:
+                y_pred = np.array([np.array([j[1] for j in i]) for i in y_pred]).T
+        labels = []
+        for task in y_pred:
+            labels.append(_normalize_singletask_labels_shape(task))
+        labels = np.array(labels).T
+    return labels
+
+
+def _normalize_singletask_labels_shape(y_pred: Union[List, np.ndarray]) -> np.ndarray:
     """
     Function to transform output from predict_proba (prob(0) prob(1)) to predict format (0 or 1).
 
@@ -112,89 +182,22 @@ def normalize_labels_shape(y_pred: Union[List, np.ndarray]):
     Returns
     -------
     labels
-        Array of predictions in the predict format (0 or 1).
+        Array of predictions in the format [0, 1, 0, ...]/[[0, 1, 0, ...], [0, 1, 1, ...], ...]
     """
     labels = []
-    for i in y_pred:
-        if isinstance(i, (np.floating, float)):
-            labels.append(int(round(i)))
-        elif len(i) == 2:
-            if i[0] > i[1]:
-                labels.append(0)
-            else:
-                labels.append(1)
-        elif len(i) == 1:
-            print(i)
-            labels.append(int(round(i[0])))
-    return np.array(labels)
-
-
-def dag_transformation(dataset: Dataset, max_atoms: int = 10):
-    """
-    Function to transform ConvMol adjacency lists to DAG calculation orders.
-    Adapted from deepchem
-
-    Parameters
-    ----------
-    dataset: Dataset
-        Dataset to transform.
-    max_atoms: int
-        Maximum number of atoms to allow.
-
-    Returns
-    -------
-    dataset: Dataset
-        Transformed dataset.
-    """
-    new_dataset = NumpyDataset(
-        X=dataset.X,
-        y=dataset.y,
-        ids=dataset.mols)
-
-    transformer = DAGTransformer(max_atoms=max_atoms)
-    res = transformer.transform(new_dataset)
-    dataset.mols = res.ids
-    dataset.X = res.X
-    dataset.y = res.y
-
-    return dataset
-
-
-def irv_transformation(dataset: Dataset, K: int = 10, n_tasks: int = 1):
-    """
-    Function to transfrom ECFP to IRV features, used by MultitaskIRVClassifier as preprocessing step
-    Adapted from deepchem
-
-    Parameters
-    ----------
-    dataset: Dataset
-        Dataset to transform.
-    K: int
-        Number of IRV features to generate.
-    n_tasks: int
-        Number of tasks.
-
-    Returns
-    -------
-    dataset: Dataset
-        Transformed dataset.
-    """
-    try:
-        dummy_y = dataset.y[:, n_tasks]
-    except IndexError:
-        dataset.y = np.reshape(dataset.y, (np.shape(dataset.y)[0], n_tasks))
-    new_dataset = NumpyDataset(
-        X=dataset.X,
-        y=dataset.y,
-        ids=dataset.mols)
-
-    transformer = IRVTransformer(K, n_tasks, new_dataset)
-    res = transformer.transform(new_dataset)
-    dataset.mols = res.ids
-    dataset.X = res.X
-    dataset.y = np.reshape(res.y, (np.shape(res.y)[0],))
-
-    return dataset
+    # list of probabilities in the format [0.1, 0.9, 0.2, ...]
+    if isinstance(y_pred[0], (np.floating, float)):
+        return np.array(y_pred)
+    # list of lists of probabilities in the format [[0.1], [0.2], ...]
+    elif len(y_pred[0]) == 1:
+        return np.array([i[0] for i in y_pred])
+    # list of lists of probabilities in the format [[0.1, 0.9], [0.2, 0.8], ...]
+    elif len(y_pred[0]) == 2:
+        return np.array([i[1] for i in y_pred])
+    elif len(y_pred[0]) > 2:
+        return np.array([np.argmax(i) for i in y_pred])
+    else:
+        raise ValueError("Unknown format for y_pred!")
 
 
 # DRAWING
@@ -392,14 +395,14 @@ MACCSsmartsPatts = {
 ######### MACCS KEYS #########
 ###############################
 
-def draw_MACCS_Pattern(smiles: str, smarts_patt_index: int, path: str = None):
+def draw_MACCS_Pattern(mol: Mol, smarts_patt_index: int, path: str = None):
     """
     Draw a molecule with a MACCS key highlighted.
 
     Parameters
     ----------
-    smiles: str
-        SMILES string of the molecule to draw.
+    mol: Mol
+        Molecule to draw.
     smarts_patt_index: int
         Index of the MACCS key to highlight.
     path: str
@@ -410,14 +413,13 @@ def draw_MACCS_Pattern(smiles: str, smarts_patt_index: int, path: str = None):
     im: PIL.Image.Image
         Image of the molecule with the MACCS key highlighted.
     """
-    mol = Chem.MolFromSmiles(smiles)
+
+    logger = Logger()
+
     smart = MACCSsmartsPatts[smarts_patt_index][0]
     patt = Chem.MolFromSmarts(smart)
-    print('Mol: ', smiles)
-    print('Pattern: ', smart)
 
     if mol.HasSubstructMatch(patt):
-        print('Pattern found!')
         hit_ats = mol.GetSubstructMatches(patt)
         bond_lists = []
         for i, hit_at in enumerate(hit_ats):
@@ -461,7 +463,7 @@ def draw_MACCS_Pattern(smiles: str, smarts_patt_index: int, path: str = None):
             im = Image.open(path)
             return im
     else:
-        print('Pattern does not match molecule!')
+        logger.info('Pattern does not match molecule!')
 
 
 ###############################
@@ -469,14 +471,14 @@ def draw_MACCS_Pattern(smiles: str, smarts_patt_index: int, path: str = None):
 ###############################
 
 
-def draw_morgan_bits(molecule: str, bits: Union[int, str, List[int]], radius: int = 2, nBits: int = 2048):
+def draw_morgan_bits(molecule: Mol, bits: Union[int, str, List[int]], radius: int = 2, nBits: int = 2048):
     """
     Draw a molecule with Morgan fingerprint bits highlighted.
 
     Parameters
     ----------
-    molecule: str
-        SMILES string of the molecule to draw.
+    molecule: Mol
+        Molecule to draw.
     bits: Union[int, str, List[int]]
         Bit(s) to highlight.
         If 'ON', all bits that are set to 1 are highlighted.
@@ -492,13 +494,15 @@ def draw_morgan_bits(molecule: str, bits: Union[int, str, List[int]], radius: in
     """
     bi = {}
 
-    mol = Chem.MolFromSmiles(molecule)
+    mol = molecule
 
     fp = rdMolDescriptors.GetMorganFingerprintAsBitVect(mol, radius=radius, nBits=nBits, bitInfo=bi)
 
+    logger = Logger()
+
     if isinstance(bits, int):
         if bits not in bi.keys():
-            print('Bits ON: ', bi.keys())
+            logger.info(f'Bits ON: {bi.keys()}')
             raise ValueError('Bit is off! Select a on bit')
         return Draw.DrawMorganBit(mol, bits, bi)
 
@@ -508,11 +512,11 @@ def draw_morgan_bits(molecule: str, bits: Union[int, str, List[int]], radius: in
             if b in bi.keys():
                 bits_on.append(b)
             else:
-                print('Bit %d is off!' % (b))
+                logger.info('Bit %d is off!' % (b))
         if len(bits_on) == 0:
             raise ValueError('All the selected bits are off! Select on bits!')
         elif len(bits_on) != len(bits):
-            print('Using only bits ON: ', bits_on)
+            logger.info('Using only bits ON: ', bits_on)
         tpls = [(mol, x, bi) for x in bits_on]
         return Draw.DrawMorganBits(tpls, molsPerRow=5, legends=['bit_' + str(x) for x in bits_on])
 
@@ -614,7 +618,7 @@ def getSubstructDepiction(mol: Mol, atomID: int, radius: int, molSize: Tuple[int
     return moltosvg(mol, molSize=molSize, highlightAtoms=atomsToUse, highlightAtomColors={atomID: (0.3, 0.3, 1)})
 
 
-def draw_morgan_bit_on_molecule(mol_smiles: str,
+def draw_morgan_bit_on_molecule(mol: Mol,
                                 bit: int,
                                 radius: int = 2,
                                 nBits: int = 2048,
@@ -625,8 +629,8 @@ def draw_morgan_bit_on_molecule(mol_smiles: str,
 
     Parameters
     ----------
-    mol_smiles: str
-        SMILES string of the molecule to draw.
+    mol: Mol
+        Molecule to draw.
     bit: int
         Bit to highlight.
     radius: int
@@ -643,19 +647,16 @@ def draw_morgan_bit_on_molecule(mol_smiles: str,
     SVG
         The molecule in SVG format.
     """
-    try:
-        mol = Chem.MolFromSmiles(mol_smiles)
-    except Exception as e:
-        raise ValueError('Invalid SMILES.')
-
     info = {}
     rdMolDescriptors.GetMorganFingerprintAsBitVect(mol, radius=radius, nBits=nBits, bitInfo=info, useChirality=chiral)
 
+    logger = Logger()
+
     if bit not in info.keys():
-        print('Bits ON: ', info.keys())
+        logger.info('Bits ON: ', info.keys())
         raise ValueError('Bit is off! Select a on bit')
 
-    print('Bit %d with %d hits!' % (bit, len(info[bit])))
+    logger.info('Bit %d with %d hits!' % (bit, len(info[bit])))
 
     aid, rad = info[bit][0]
     return getSubstructDepiction(mol, aid, rad, molSize=molSize)
@@ -665,14 +666,14 @@ def draw_morgan_bit_on_molecule(mol_smiles: str,
 ##### RDK FINGERPRINTS #####
 ###############################
 
-def draw_rdk_bits(smiles: str, bits: int, minPath: int = 2, maxPath: int = 7, fpSize: int = 2048):
+def draw_rdk_bits(mol: Mol, bits: int, minPath: int = 2, maxPath: int = 7, fpSize: int = 2048):
     """
     Draw a molecule with a RDK fingerprint bit highlighted.
 
     Parameters
     ----------
-    smiles: str
-        SMILES string of the molecule to draw.
+    mol: Mol
+        Molecule to draw.
     bits: int
         Bit to highlight.
     minPath: int
@@ -687,14 +688,13 @@ def draw_rdk_bits(smiles: str, bits: int, minPath: int = 2, maxPath: int = 7, fp
     Draw.DrawRDKitBits
         The molecule with the fingerprint bits.
     """
-    mol = Chem.MolFromSmiles(smiles)
-
     rdkbit = {}
     fp = RDKFingerprint(mol, minPath=minPath, maxPath=maxPath, fpSize=fpSize, bitInfo=rdkbit)
+    logger = Logger()
 
     if isinstance(bits, int):
         if bits not in rdkbit.keys():
-            print('Bits ON: ', rdkbit.keys())
+            logger.info(f'Bits ON: {rdkbit.keys()}')
             raise ValueError('Bit is off! Select a on bit')
         return Draw.DrawRDKitBit(mol, bits, rdkbit)
 
@@ -704,11 +704,11 @@ def draw_rdk_bits(smiles: str, bits: int, minPath: int = 2, maxPath: int = 7, fp
             if b in rdkbit.keys():
                 bits_on.append(b)
             else:
-                print('Bit %d is off!' % (b))
+                logger.info('Bit %d is off!' % (b))
         if len(bits_on) == 0:
             raise ValueError('All the selected bits are off! Select on bits!')
         elif len(bits_on) != len(bits):
-            print('Using only bits ON: ', bits_on)
+            logger.info(f'Bits ON: {bits_on}')
         tpls = [(mol, x, rdkbit) for x in bits_on]
         return Draw.DrawRDKitBits(tpls, molsPerRow=5, legends=['bit_' + str(x) for x in bits_on])
 
@@ -720,7 +720,7 @@ def draw_rdk_bits(smiles: str, bits: int, minPath: int = 2, maxPath: int = 7, fp
         raise ValueError('Bits must be intenger, list of integers or ON!')
 
 
-def draw_rdk_bit_on_molecule(mol_smiles: str,
+def draw_rdk_bit_on_molecule(mol: Mol,
                              bit: int,
                              minPath: int = 1,
                              maxPath: int = 7,
@@ -732,8 +732,8 @@ def draw_rdk_bit_on_molecule(mol_smiles: str,
 
     Parameters
     ----------
-    mol_smiles: str
-        SMILES string of the molecule to draw.
+    mol: Mol
+        Molecule to draw.
     bit: int
         Bit to highlight.
     minPath: int
@@ -752,19 +752,16 @@ def draw_rdk_bit_on_molecule(mol_smiles: str,
     Images
         The molecule with the fingerprint bit highlighted.
     """
-    try:
-        mol = Chem.MolFromSmiles(mol_smiles)
-    except Exception as e:
-        raise ValueError('Invalid SMILES.')
+    logger = Logger()
 
     info = {}
     RDKFingerprint(mol, minPath=minPath, maxPath=maxPath, fpSize=fpSize, bitInfo=info)
 
     if bit not in info.keys():
-        print('Bits ON: ', info.keys())
+        logger.info(f'Bits ON: {info.keys()}')
         raise ValueError('Bit is off! Select a on bit')
 
-    print('Bit %d with %d hits!' % (bit, len(info[bit])))
+    logger.info('Bit %d with %d hits!' % (bit, len(info[bit])))
 
     images = []
     for i in range(len(info[bit])):

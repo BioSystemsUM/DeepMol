@@ -1,1 +1,1 @@
-from .datasets import Dataset, NumpyDataset
+from .datasets import Dataset, SmilesDataset

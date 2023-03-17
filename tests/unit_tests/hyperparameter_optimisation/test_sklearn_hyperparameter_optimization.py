@@ -1,4 +1,3 @@
-import os
 from typing import Callable
 from unittest import TestCase
 
@@ -7,13 +6,9 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import roc_auc_score, accuracy_score
 from sklearn.svm import SVC
 
-from deepmol.compound_featurization import MorganFingerprint
-from deepmol.loaders import CSVLoader
 from deepmol.metrics import Metric
-from deepmol.models import SklearnModel
 from deepmol.parameter_optimization import HyperparameterOptimizerCV, HyperparameterOptimizerValidation
 from deepmol.parameter_optimization._utils import validate_metrics, _convert_hyperparam_dict_to_filename
-from deepmol.splitters import SingletaskStratifiedSplitter
 from unit_tests.models.test_models import ModelsTestCase
 
 

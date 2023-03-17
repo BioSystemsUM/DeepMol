@@ -192,13 +192,13 @@ class HyperparameterOptimizerValidation(HyperparameterOptimizer):
                     model = SklearnModel(model=self.model_builder(**model_params),
                                          mode=self.mode,
                                          model_dir=model_dir)
+                    model.fit(train_dataset)
 
                 except Exception as e:
                     model = KerasModel(model_builder=self.model_builder(**model_params),
                                        mode=self.mode,
                                        model_dir=model_dir)
-
-                model.fit(train_dataset)
+                    model.fit(train_dataset)
 
                 try:
                     model.save()

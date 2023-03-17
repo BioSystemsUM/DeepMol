@@ -5,7 +5,7 @@ torch==1.12.1
 torchvision==0.13.1
 torchaudio==0.12.1
 dgl==0.9.1
-joblib==1.1.0
+joblib==1.1.1
 pillow==8.4.0
 h5py==3.7.0
 deepchem==2.5.0

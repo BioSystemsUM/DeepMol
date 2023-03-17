@@ -395,14 +395,14 @@ MACCSsmartsPatts = {
 ######### MACCS KEYS #########
 ###############################
 
-def draw_MACCS_Pattern(smiles: str, smarts_patt_index: int, path: str = None):
+def draw_MACCS_Pattern(mol: Mol, smarts_patt_index: int, path: str = None):
     """
     Draw a molecule with a MACCS key highlighted.
 
     Parameters
     ----------
-    smiles: str
-        SMILES string of the molecule to draw.
+    mol: Mol
+        Molecule to draw.
     smarts_patt_index: int
         Index of the MACCS key to highlight.
     path: str
@@ -416,14 +416,10 @@ def draw_MACCS_Pattern(smiles: str, smarts_patt_index: int, path: str = None):
 
     logger = Logger()
 
-    mol = Chem.MolFromSmiles(smiles)
     smart = MACCSsmartsPatts[smarts_patt_index][0]
     patt = Chem.MolFromSmarts(smart)
-    logger.info('Mol: ', smiles)
-    logger.info('Pattern: ', smart)
 
     if mol.HasSubstructMatch(patt):
-        logger.info('Pattern found!')
         hit_ats = mol.GetSubstructMatches(patt)
         bond_lists = []
         for i, hit_at in enumerate(hit_ats):
@@ -475,14 +471,14 @@ def draw_MACCS_Pattern(smiles: str, smarts_patt_index: int, path: str = None):
 ###############################
 
 
-def draw_morgan_bits(molecule: str, bits: Union[int, str, List[int]], radius: int = 2, nBits: int = 2048):
+def draw_morgan_bits(molecule: Mol, bits: Union[int, str, List[int]], radius: int = 2, nBits: int = 2048):
     """
     Draw a molecule with Morgan fingerprint bits highlighted.
 
     Parameters
     ----------
-    molecule: str
-        SMILES string of the molecule to draw.
+    molecule: Mol
+        Molecule to draw.
     bits: Union[int, str, List[int]]
         Bit(s) to highlight.
         If 'ON', all bits that are set to 1 are highlighted.
@@ -498,7 +494,7 @@ def draw_morgan_bits(molecule: str, bits: Union[int, str, List[int]], radius: in
     """
     bi = {}
 
-    mol = Chem.MolFromSmiles(molecule)
+    mol = molecule
 
     fp = rdMolDescriptors.GetMorganFingerprintAsBitVect(mol, radius=radius, nBits=nBits, bitInfo=bi)
 
@@ -622,7 +618,7 @@ def getSubstructDepiction(mol: Mol, atomID: int, radius: int, molSize: Tuple[int
     return moltosvg(mol, molSize=molSize, highlightAtoms=atomsToUse, highlightAtomColors={atomID: (0.3, 0.3, 1)})
 
 
-def draw_morgan_bit_on_molecule(mol_smiles: str,
+def draw_morgan_bit_on_molecule(mol: Mol,
                                 bit: int,
                                 radius: int = 2,
                                 nBits: int = 2048,
@@ -633,8 +629,8 @@ def draw_morgan_bit_on_molecule(mol_smiles: str,
 
     Parameters
     ----------
-    mol_smiles: str
-        SMILES string of the molecule to draw.
+    mol: Mol
+        Molecule to draw.
     bit: int
         Bit to highlight.
     radius: int
@@ -651,11 +647,6 @@ def draw_morgan_bit_on_molecule(mol_smiles: str,
     SVG
         The molecule in SVG format.
     """
-    try:
-        mol = Chem.MolFromSmiles(mol_smiles)
-    except Exception as e:
-        raise ValueError('Invalid SMILES.')
-
     info = {}
     rdMolDescriptors.GetMorganFingerprintAsBitVect(mol, radius=radius, nBits=nBits, bitInfo=info, useChirality=chiral)
 
@@ -675,14 +666,14 @@ def draw_morgan_bit_on_molecule(mol_smiles: str,
 ##### RDK FINGERPRINTS #####
 ###############################
 
-def draw_rdk_bits(smiles: str, bits: int, minPath: int = 2, maxPath: int = 7, fpSize: int = 2048):
+def draw_rdk_bits(mol: Mol, bits: int, minPath: int = 2, maxPath: int = 7, fpSize: int = 2048):
     """
     Draw a molecule with a RDK fingerprint bit highlighted.
 
     Parameters
     ----------
-    smiles: str
-        SMILES string of the molecule to draw.
+    mol: Mol
+        Molecule to draw.
     bits: int
         Bit to highlight.
     minPath: int
@@ -697,8 +688,6 @@ def draw_rdk_bits(smiles: str, bits: int, minPath: int = 2, maxPath: int = 7, fp
     Draw.DrawRDKitBits
         The molecule with the fingerprint bits.
     """
-    mol = Chem.MolFromSmiles(smiles)
-
     rdkbit = {}
     fp = RDKFingerprint(mol, minPath=minPath, maxPath=maxPath, fpSize=fpSize, bitInfo=rdkbit)
     logger = Logger()
@@ -731,7 +720,7 @@ def draw_rdk_bits(smiles: str, bits: int, minPath: int = 2, maxPath: int = 7, fp
         raise ValueError('Bits must be intenger, list of integers or ON!')
 
 
-def draw_rdk_bit_on_molecule(mol_smiles: str,
+def draw_rdk_bit_on_molecule(mol: Mol,
                              bit: int,
                              minPath: int = 1,
                              maxPath: int = 7,
@@ -743,8 +732,8 @@ def draw_rdk_bit_on_molecule(mol_smiles: str,
 
     Parameters
     ----------
-    mol_smiles: str
-        SMILES string of the molecule to draw.
+    mol: Mol
+        Molecule to draw.
     bit: int
         Bit to highlight.
     minPath: int
@@ -763,11 +752,6 @@ def draw_rdk_bit_on_molecule(mol_smiles: str,
     Images
         The molecule with the fingerprint bit highlighted.
     """
-    try:
-        mol = Chem.MolFromSmiles(mol_smiles)
-    except Exception as e:
-        raise ValueError('Invalid SMILES.')
-
     logger = Logger()
 
     info = {}

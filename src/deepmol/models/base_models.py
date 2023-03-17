@@ -1,15 +1,14 @@
 from typing import Union, List
 
+from keras.optimizers import Adam
 from tensorflow import keras
-from keras.dtensor.optimizers import Adadelta
+from keras.dtensor.optimizers import Adadelta, RMSprop
 from keras.layers import BatchNormalization, GaussianNoise
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
-from tensorflow.python.keras import Sequential, regularizers
-from tensorflow.python.keras.layers import Dense, Dropout, Reshape, Conv1D, Flatten
-from tensorflow.python.keras.optimizer_v2.adam import Adam
-from tensorflow.python.keras.optimizer_v2.rmsprop import RMSprop
-from tensorflow.python.keras import layers
+from tensorflow.keras import Sequential, regularizers
+from tensorflow.keras.layers import Dense, Dropout, Reshape, Conv1D, Flatten
+from tensorflow.keras import layers
 
 
 # TODO: add more pre-defined models

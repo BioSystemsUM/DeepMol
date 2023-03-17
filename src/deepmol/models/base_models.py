@@ -9,7 +9,7 @@ from tensorflow.python.keras import Sequential, regularizers
 from tensorflow.python.keras.layers import Dense, Dropout, Reshape, Conv1D, Flatten
 from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.optimizer_v2.rmsprop import RMSprop
-from tensorflow.keras import layers
+from tensorflow.python.keras import layers
 
 
 # TODO: add more pre-defined models

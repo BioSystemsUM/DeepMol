@@ -2,6 +2,7 @@ import logging
 import os
 from unittest import TestCase
 
+from deepmol.compound_featurization import MorganFingerprint, AtomPairFingerprint, LayeredFingerprint
 from deepmol.loggers.logger import Logger
 from tests import TEST_DIR
 

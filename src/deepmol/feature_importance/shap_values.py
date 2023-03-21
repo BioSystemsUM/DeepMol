@@ -1,12 +1,9 @@
-from pathlib import Path
-
 import pandas as pd
 import shap
 from matplotlib import pyplot as plt
 
 from deepmol.datasets import Dataset
-from deepmol.feature_importance._utils import str_to_explainer, str_to_masker, get_model_instance_from_explainer
-from deepmol.loggers import Logger
+from deepmol.feature_importance._utils import str_to_explainer, str_to_masker, masker_args
 from deepmol.models.models import Model
 
 
@@ -24,12 +21,8 @@ class ShapValues:
         ----------
         explainer: str
             The explainer to use. It can be one of the following:
-            - 'explainer': Explainer
-            (https://shap.readthedocs.io/en/latest/generated/shap.Explainer.html#shap.Explainer)
             - 'permutation': Permutation explainer
-            (https://shap.readthedocs.io/en/latest/generated/shap.explainers.Permutation.html#shap.explainers.Permutation)
             - 'exact': Exact explainer
-            (https://shap.readthedocs.io/en/latest/example_notebooks/api_examples/explainers/Exact.html?highlight=exact#Exact-explainer)
             - 'additive': Additive explainer
             - 'tree': Tree explainer
             - 'gpu_tree': GPU Tree explainer
@@ -41,108 +34,28 @@ class ShapValues:
             The masker to use. It can be one of the following:
             - 'independent': Independent masker
             - 'partition': Partition masker
+            - 'impute': Impute masker
+            - 'text': Text masker
         """
-        self.explainer = str_to_explainer(explainer)
-        self.explainer_str = explainer
-        self.masker = str_to_masker(masker) if masker is not None else None
+        self.explainer = explainer
+        self.masker = masker
         self.shap_values = None
-        self.mode = None
-        self.logger = Logger()
 
-    def fit(self, dataset: Dataset, model: Model, **kwargs):
-        """
-        Compute the SHAP values for the given dataset and model.
-
-        Parameters
-        ----------
-        dataset: Dataset
-            The dataset to compute the SHAP values for.
-        model: Model
-            The model to compute the SHAP values for.
-        kwargs: dict
-            Additional arguments for the SHAP explainer.
-
-        Returns
-        -------
-        shap_values: np.array
-            The SHAP values.
-        """
-        self.mode = dataset.mode
-        if self.explainer_str == 'deep':
-            data = dataset.X
-            if self.masker is not None:
-                # TODO: check this
-                raise ValueError('DeepExplainer does not support maskers.')
-        else:
-            data = pd.DataFrame(dataset.X, columns=dataset.feature_names, dtype=float)
-        model_instance = get_model_instance_from_explainer(self.explainer_str, model)
+    def compute_shap(self, dataset: Dataset, model: Model, **kwargs):
+        data = pd.DataFrame(dataset.X, columns=dataset.feature_names, dtype=float)
+        kwargs = kwargs
         if self.masker is not None:
-            masker = self.masker(data)
-            if self.explainer_str in ['sampling', 'kernel']:
-                explainer = self.explainer(model_instance, data=data, masker=masker, **kwargs)
-            else:
-                explainer = self.explainer(model_instance, masker=masker, **kwargs)
+            masker_kwargs = masker_args(self.masker, **kwargs)
+            masker = str_to_masker(self.masker)(data, **masker_kwargs)
+            [kwargs.pop(k) for k in masker_kwargs.keys() if k in kwargs]
+            explainer = str_to_explainer(self.explainer)(model.model.predict, masker=masker)
         else:
-            explainer = self.explainer(model_instance, data, **kwargs)
-        try:
-            shap_values = explainer(data)
-        except Exception as e:
-            self.logger.error(f'Error while computing SHAP values: {e}. Using shap_values method instead.')
-            shap_values = explainer.shap_values(data)
-        self.shap_values = shap_values
-        return shap_values
+            explainer = str_to_explainer(self.explainer)(model.model.predict, data)
 
-    def beeswarm_plot(self, path: str = None, **kwargs):
-        """
-        Plot the SHAP values of all the features as a beeswarm plot.
+        self.shap_values = explainer(data, **kwargs)
+        return self.shap_values
 
-        Parameters
-        ----------
-        path: str
-            Path to save the plot to.
-        kwargs:
-            Additional keyword arguments for the plot function:
-        """
-        if path:
-            plt.figure()
-            shap.plots.beeswarm(self.shap_values, show=False, **kwargs)
-            plt.gcf().set_size_inches(10, 6)
-            plt.tight_layout()
-            plt.savefig(path)
-        else:
-            shap.plots.beeswarm(self.shap_values, **kwargs)
-
-    def bar_plot(self, path: str = None, **kwargs):
-        """
-        Plot the SHAP values of all the features as a beeswarm plot.
-
-        Parameters
-        ----------
-        path: str
-            Path to save the plot to.
-        kwargs:
-            Additional keyword arguments for the plot function:
-            max_display: int
-                Maximum number of features to display.
-            order: str
-                Ordered features. By default, the features are ordered by the absolute value of the SHAP value.
-            clustering:
-            clustering_cutoff=0.5
-            merge_cohorts=False
-            show_data="auto"
-            show=True
-
-        """
-        if path:
-            plt.figure()
-            shap.plots.bar(self.shap_values, show=False, **kwargs)
-            plt.gcf().set_size_inches(10, 6)
-            plt.tight_layout()
-            plt.savefig(path)
-        else:
-            shap.plots.bar(self.shap_values, **kwargs)
-
-    def sample_explanation_plot(self, index: int, plot_type: str = 'waterfall', path: str = None, **kwargs):
+    def plot_sample_explanation(self, index: int = 0, plot_type: str = 'waterfall', **kwargs):
         """
         Plot the SHAP values of a single sample.
 
@@ -152,34 +65,24 @@ class ShapValues:
             Index of the sample to explain
         plot_type: str
             Type of plot to use. Can be 'waterfall' or 'force'
-        path: str
-            Path to save the plot to.
         kwargs:
             Additional arguments for the plot function.
         """
+        if self.shap_values is None:
+            print('Shap values not computed yet! Computing shap values...')
+            self.computeShap(plot=False)
+
         if plot_type == 'waterfall':
             # visualize the nth prediction's explanation
-            if path:
-                plt.figure()
-                shap.plots.waterfall(self.shap_values[index], show=False, **kwargs)
-                plt.gcf().set_size_inches(10, 6)
-                plt.tight_layout()
-                plt.savefig(path)
-            else:
-                shap.plots.waterfall(self.shap_values[index], **kwargs)
+            shap.plots.waterfall(self.shap_values[index], **kwargs)
         elif plot_type == 'force':
             shap.initjs()
-            if path:
-                new_file_path = str(Path(path).with_suffix('.html'))
-                plot = shap.plots.force(self.shap_values[index], show=False, **kwargs)
-                shap.save_html(new_file_path, plot)
-            else:
-                shap.plots.force(self.shap_values[index], **kwargs)
-            shap.initjs()
+            # visualize the first prediction's explanation with a force plot
+            shap.plots.force(self.shap_values[index], **kwargs)
         else:
             raise ValueError('Plot type must be waterfall or force!')
 
-    def feature_explanation_plot(self, index: int, path: str = None, **kwargs):
+    def plot_feature_explanation(self, index: int = None, **kwargs):
         """
         Plot the SHAP values of a single feature.
 
@@ -187,108 +90,38 @@ class ShapValues:
         ----------
         index: int
             Index of the feature to explain
-        path: str
-            Path to save the plot to.
         kwargs:
             Additional arguments for the plot function.
         """
-        # create a dependence scatter plot to show the effect of a single feature across the whole dataset
-        if path:
-            plt.figure()
-            shap.plots.scatter(self.shap_values[:, index], color=self.shap_values[:, index], show=False, **kwargs)
-            plt.gcf().set_size_inches(10, 6)
-            plt.tight_layout()
-            plt.savefig(path)
+        if index is None:
+            # summarize the effects of all the features
+            shap.plots.beeswarm(self.shap_values, **kwargs)
         else:
+            # create a dependence scatter plot to show the effect of a single feature across the whole dataset
             shap.plots.scatter(self.shap_values[:, index], color=self.shap_values[:, index], **kwargs)
 
-    def heatmap_plot(self, path: str = None, **kwargs):
+    def plot_heat_map(self, **kwargs):
         """
         Plot the SHAP values of all the features as a heatmap.
 
         Parameters
         ----------
-        path: str
-            Path to save the plot to.
         kwargs:
             Additional arguments for the plot function.
         """
-        if path:
-            plt.figure()
-            shap.plots.heatmap(self.shap_values, show=False, **kwargs)
-            plt.gcf().set_size_inches(10, 6)
-            plt.tight_layout()
-            plt.savefig(path)
-        else:
+        if self.shap_values is not None:
             shap.plots.heatmap(self.shap_values, **kwargs)
-
-    def positive_class_plot(self, path: str = None, **kwargs) -> None:
-        """
-        Plot the SHAP values of the positive class as a bar plot.
-
-        Parameters
-        ----------
-        path: str
-            Path to save the plot to.
-        kwargs:
-            Additional arguments for the plot function.
-        """
-        if self.mode != 'classification':
-            raise ValueError('This method is only available for binary classification models.')
-        shap_values2 = self.shap_values[..., 1]
-        if path:
-            plt.figure()
-            shap.plots.bar(shap_values2, show=False, **kwargs)
-            plt.gcf().set_size_inches(10, 6)
-            plt.tight_layout()
-            plt.savefig(path)
         else:
-            shap.plots.bar(shap_values2, **kwargs)
+            raise ValueError('Shap values not computed yet!')
 
-    def negative_class_plot(self, path: str = None, **kwargs) -> None:
-        """
-        Plot the SHAP values of the positive class as a bar plot.
+    # TODO: check this again
+    '''
+    def plotPositiveClass(self):
+        shap_values2 = self.shap_values[...,1]
+        print(shap_values2)
+        shap.plots.bar(shap_values2)
 
-        Parameters
-        ----------
-        path: str
-            Path to save the plot to.
-        kwargs:
-            Additional arguments for the plot function.
-        """
-        if self.mode != 'classification':
-            raise ValueError('This method is only available for binary classification models.')
-        shap_values2 = self.shap_values[..., 0]
-        if path:
-            plt.figure()
-            shap.plots.bar(shap_values2, show=False, **kwargs)
-            plt.gcf().set_size_inches(10, 6)
-            plt.tight_layout()
-            plt.savefig(path)
-        else:
-            shap.plots.bar(shap_values2, **kwargs)
-
-    def decision_plot(self, path: str = None, **kwargs):
-        """
-        Plot the SHAP values of all the features as a decision plot.
-
-        Parameters
-        ----------
-        path: str
-            Path to save the plot to.
-        kwargs:
-            Additional arguments for the plot function.
-        """
-        # check if the explainer has an expected value
-        if not hasattr(self.explainer, 'expected_value'):
-            raise ValueError('The explainer does not support an expected value.')
-        expected_value = self.explainer.expected_value
-        if path:
-            plt.figure()
-            shap.plots.decision(self.shap_values, show=False, **kwargs)
-            plt.gcf().set_size_inches(10, 6)
-            plt.tight_layout()
-            plt.savefig(path)
-        else:
-            shap.plots.decision(expected_value, self.shap_values, **kwargs)
-
+    def plotNegativeClass(self):
+        shap_values2 = self.shap_values[...,0]
+        shap.plots.bar(shap_values2)
+    '''

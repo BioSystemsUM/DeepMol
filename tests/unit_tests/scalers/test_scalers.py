@@ -7,6 +7,7 @@ import pandas as pd
 
 from deepmol.datasets import SmilesDataset
 from tests import TEST_DIR
+from unit_tests._mock_utils import SmilesDatasetMagicMock
 
 
 class ScalersTestCase(ABC):
@@ -20,19 +21,19 @@ class ScalersTestCase(ABC):
         x = td.loc[:, feature_names].values[:100]
         # add some random values between -10 and 10 in the first column
         x[:, 0] = np.random.randint(-10, 10, x.shape[0])
-        self.dataset = MagicMock(spec=SmilesDataset,
-                                 X=x,
-                                 y=y,
-                                 feature_names=feature_names)
+        self.dataset = SmilesDatasetMagicMock(spec=SmilesDataset,
+                                              X=x,
+                                              y=y,
+                                              feature_names=feature_names)
         self.dataset.X = x
         self.dataset.y = y
         self.dataset.__len__.return_value = len(self.dataset.smiles)
 
         x = np.array([[0, 1], [2, 3], [4, 5]])
         y = np.array([0, 1, 2])
-        self.polynomial_features = MagicMock(spec=SmilesDataset,
-                                             X=x,
-                                             y=y)
+        self.polynomial_features = SmilesDatasetMagicMock(spec=SmilesDataset,
+                                                          X=x,
+                                                          y=y)
 
     def tearDown(self) -> None:
         if os.path.exists("test_scaler.pkl"):

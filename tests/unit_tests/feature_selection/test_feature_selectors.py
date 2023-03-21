@@ -1,7 +1,6 @@
 import copy
 import os
 from unittest import TestCase
-from unittest.mock import MagicMock
 
 import numpy as np
 import pandas as pd
@@ -10,6 +9,7 @@ from deepmol.datasets import SmilesDataset
 from deepmol.feature_selection import BorutaAlgorithm, LowVarianceFS, KbestFS, PercentilFS, RFECVFS, SelectFromModelFS
 
 from tests import TEST_DIR
+from unit_tests._mock_utils import SmilesDatasetMagicMock
 
 
 class TestFeatureSelectors(TestCase):
@@ -22,11 +22,11 @@ class TestFeatureSelectors(TestCase):
         x = td.loc[:, feature_names].values
         # add some random values between 0 and 5 to the features in the first 10 columns
         x[:, :10] += np.random.randint(0, 5, size=(x.shape[0], 10))
-        self.features_dataset = MagicMock(spec=SmilesDataset,
-                                          X=x,
-                                          y=y,
-                                          feature_names=feature_names,
-                                          mode='classification')
+        self.features_dataset = SmilesDatasetMagicMock(spec=SmilesDataset,
+                                                       X=x,
+                                                       y=y,
+                                                       feature_names=feature_names,
+                                                       mode='classification')
 
     def tearDown(self) -> None:
         if os.path.exists('deepmol.log'):

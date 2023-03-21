@@ -9,3 +9,9 @@ class TestLoggerFeaturizer(TestLogger):
         d1 = deepcopy(self.big_dataset_to_test)
 
         self.assertIsInstance(d1.logger, Logger)
+
+    def test_deep_copy(self):
+        d1 = deepcopy(self.big_dataset_to_test)
+
+        self.assertEqual(d1.X, self.big_dataset_to_test.X)
+        self.assertIsInstance(d1.logger, Logger)

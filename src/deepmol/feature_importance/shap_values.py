@@ -1,7 +1,9 @@
 import pandas as pd
 import shap
+from matplotlib import pyplot as plt
 
 from deepmol.datasets import Dataset
+from deepmol.feature_importance._utils import str_to_explainer, str_to_masker, masker_args
 from deepmol.models.models import Model
 
 
@@ -11,111 +13,49 @@ class ShapValues:
     It allows to compute and analyze the SHAP values of DeepMol models.
     """
 
-    def __init__(self, dataset: Dataset, model: Model):
+    def __init__(self, explainer: str = 'permutation', masker: str = None):
         """
         Initialize the ShapValues object
 
         Parameters
         ----------
-        dataset: Dataset
-            Dataset object
-        model: Model
-            Model object
+        explainer: str
+            The explainer to use. It can be one of the following:
+            - 'permutation': Permutation explainer
+            - 'exact': Exact explainer
+            - 'additive': Additive explainer
+            - 'tree': Tree explainer
+            - 'gpu_tree': GPU Tree explainer
+            - 'partition': Partition explainer
+            - 'linear': Linear explainer
+            - 'sampling': Sampling explainer
+            - 'deep': Deep explainer
+        masker: str
+            The masker to use. It can be one of the following:
+            - 'independent': Independent masker
+            - 'partition': Partition masker
+            - 'impute': Impute masker
+            - 'text': Text masker
         """
-        self.dataset = dataset
-        self.model = model
+        self.explainer = explainer
+        self.masker = masker
         self.shap_values = None
 
-    # TODO: masker not working
-    def computePermutationShap(self, masker: bool = False, plot: bool = True, max_evals: int = 500, **kwargs):
-        """
-        Compute the SHAP values using the Permutation explainer.
-
-        Parameters
-        ----------
-        masker: bool
-            If True, use a Partition masker to explain the model predictions on the given dataset
-        plot: bool
-            If True, plot the SHAP values
-        max_evals: int
-            Maximum number of iterations
-        kwargs: dict
-            Additional arguments for the plot function
-        """
-        columns_names = self.dataset.feature_names
-        X = pd.DataFrame(self.dataset.X, columns=columns_names, dtype=float)
-
-        model = self.model.model
-
-        if masker:
-            y = self.dataset.y
-
-            # build a clustering of the features based on shared information about y
-            clustering = shap.utils.hclust(X, y)
-
-            # above we implicitly used shap.maskers.Independent by passing a raw dataframe as the masker
-            # now we explicitly use a Partition masker that uses the clustering we just computed
-            masker = shap.maskers.Partition(X, clustering=clustering)
-
-            # build a Permutation explainer and explain the model predictions on the given dataset
-            explainer = shap.explainers.Permutation(model.predict_proba, masker)
-
+    def compute_shap(self, dataset: Dataset, model: Model, **kwargs):
+        data = pd.DataFrame(dataset.X, columns=dataset.feature_names, dtype=float)
+        kwargs = kwargs
+        if self.masker is not None:
+            masker_kwargs = masker_args(self.masker, **kwargs)
+            masker = str_to_masker(self.masker)(data, **masker_kwargs)
+            [kwargs.pop(k) for k in masker_kwargs.keys() if k in kwargs]
+            explainer = str_to_explainer(self.explainer)(model.model.predict, masker=masker)
         else:
-            explainer = shap.explainers.Permutation(model.predict, X)
+            explainer = str_to_explainer(self.explainer)(model.model.predict, data)
 
-        self.shap_values = explainer(X, max_evals=max_evals)
-        if plot:
-            # visualize all the training set predictions
-            if masker:
-                shap.plots.bar(self.shap_values, **kwargs)
-            else:
-                shap.plots.beeswarm(self.shap_values, **kwargs)
+        self.shap_values = explainer(data, **kwargs)
+        return self.shap_values
 
-    # TODO: masker not working
-    # TODO: too much iterations needed (remove?)
-    def computeExactShap(self, masker: bool = False, plot: bool = True, **kwargs):
-        """
-        Compute the SHAP values using the Exact explainer.
-
-        Parameters
-        ----------
-        masker: bool
-            If True, use a Partition masker to explain the model predictions on the given dataset
-        plot: bool
-            If True, plot the SHAP values
-        kwargs: dict
-            Additional arguments for the plot function
-        """
-        columns_names = self.dataset.feature_names
-        X = pd.DataFrame(self.dataset.X, columns=columns_names)
-
-        model = self.model.model
-
-        if masker:
-            y = self.dataset.y
-
-            # build a clustering of the features based on shared information about y
-            clustering = shap.utils.hclust(X, y)
-
-            # above we implicitly used shap.maskers.Independent by passing a raw dataframe as the masker
-            # now we explicitly use a Partition masker that uses the clustering we just computed
-            masker = shap.maskers.Partition(X, clustering=clustering)
-
-            # build an Exact explainer and explain the model predictions on the given dataset
-            explainer = shap.explainers.Exact(model.predict_proba, masker)
-        else:
-            explainer = shap.explainers.Exact(model.predict_proba, X)
-
-        self.shap_values = explainer(X)
-        if plot:
-            # visualize all the training set predictions
-            if masker:
-                shap.plots.bar(self.shap_values, **kwargs)
-            else:
-                shap.plots.beeswarm(self.shap_values, **kwargs)
-
-    # TODO: check why force is not working (maybe java plugin is missing?)
-    def plotSampleExplanation(self, index: int = 0, plot_type: str = 'waterfall', **kwargs):
+    def plot_sample_explanation(self, index: int = 0, plot_type: str = 'waterfall', **kwargs):
         """
         Plot the SHAP values of a single sample.
 
@@ -142,7 +82,7 @@ class ShapValues:
         else:
             raise ValueError('Plot type must be waterfall or force!')
 
-    def plotFeatureExplanation(self, index: int = None, **kwargs):
+    def plot_feature_explanation(self, index: int = None, **kwargs):
         """
         Plot the SHAP values of a single feature.
 
@@ -160,7 +100,7 @@ class ShapValues:
             # create a dependence scatter plot to show the effect of a single feature across the whole dataset
             shap.plots.scatter(self.shap_values[:, index], color=self.shap_values[:, index], **kwargs)
 
-    def plotHeatMap(self, **kwargs):
+    def plot_heat_map(self, **kwargs):
         """
         Plot the SHAP values of all the features as a heatmap.
 

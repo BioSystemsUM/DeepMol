@@ -33,3 +33,5 @@ class TestLoggerFeaturizer(TestLogger):
         MorganFingerprint().featurize(self.big_dataset_to_test)
         self.assertTrue(os.path.exists(os.path.join(TEST_DIR, "test2.log")))
         os.remove(os.path.join(TEST_DIR, "test2.log"))
+
+

@@ -1,6 +1,7 @@
 import uuid
 import warnings
 from abc import ABC, abstractmethod
+from copy import deepcopy
 from typing import Union, List, Tuple
 
 import numpy as np
@@ -22,6 +23,29 @@ class Dataset(ABC):
 
     def __init__(self):
         self.logger = Logger()
+
+    def __copy__(self):
+        """
+        Create a shallow copy of the dataset.
+        """
+        cls = self.__class__
+        result = cls.__new__(cls)
+        result.__dict__.update(self.__dict__)
+        result.logger = Logger()
+        return result
+
+    def __deepcopy__(self, memo):
+        """
+        Create a deep copy of the dataset.
+        """
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            setattr(result, k, deepcopy(v, memo))
+
+        result.logger = Logger()
+        return result
 
     @abstractmethod
     def __len__(self) -> int:

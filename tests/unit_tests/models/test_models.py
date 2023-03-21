@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 import numpy as np
 
 from deepmol.datasets import SmilesDataset
+from unit_tests._mock_utils import SmilesDatasetMagicMock
 
 
 class ModelsTestCase(ABC):
@@ -32,86 +33,87 @@ class ModelsTestCase(ABC):
         ids = np.array([str(i) for i in range(100)])
         ids_test = np.array([str(i) for i in range(100, 110)])
         # create binary classification dataset
-        self.binary_dataset = MagicMock(spec=SmilesDataset,
-                                        X=x,
-                                        y=y,
-                                        n_tasks=1,
-                                        label_names=['binary_label'],
-                                        mode='classification',
-                                        ids=ids)
+        self.binary_dataset = SmilesDatasetMagicMock(spec=SmilesDataset,
+                                                     X=x,
+                                                     y=y,
+                                                     n_tasks=1,
+                                                     label_names=['binary_label'],
+                                                     mode='classification',
+                                                     ids=ids)
         self.binary_dataset.__len__.return_value = 100
-        self.binary_dataset_test = MagicMock(spec=SmilesDataset,
-                                             X=x_test,
-                                             y=y_test,
-                                             n_tasks=1,
-                                             label_names=['binary_label'],
-                                             mode='classification',
-                                             ids=ids_test)
+        self.binary_dataset_test = SmilesDatasetMagicMock(spec=SmilesDataset,
+                                                          X=x_test,
+                                                          y=y_test,
+                                                          n_tasks=1,
+                                                          label_names=['binary_label'],
+                                                          mode='classification',
+                                                          ids=ids_test)
         self.binary_dataset_test.__len__.return_value = 10
 
         # create multiclass classification dataset
-        self.multiclass_dataset = MagicMock(spec=SmilesDataset,
-                                            X=x,
-                                            y=y_multiclass,
-                                            n_tasks=1,
-                                            label_names=['multiclass_label'])
+        self.multiclass_dataset = SmilesDatasetMagicMock(spec=SmilesDataset,
+                                                         X=x,
+                                                         y=y_multiclass,
+                                                         n_tasks=1,
+                                                         label_names=['multiclass_label'])
         self.multiclass_dataset.__len__.return_value = 100
-        self.multiclass_dataset_test = MagicMock(spec=SmilesDataset,
-                                                 X=x_test,
-                                                 y=y_multiclass_test,
-                                                 n_tasks=1,
-                                                 label_names=['multiclass_label'])
+        self.multiclass_dataset_test = SmilesDatasetMagicMock(spec=SmilesDataset,
+                                                              X=x_test,
+                                                              y=y_multiclass_test,
+                                                              n_tasks=1,
+                                                              label_names=['multiclass_label'])
         self.multiclass_dataset_test.__len__.return_value = 10
 
         # create multitask classification dataset
-        self.multitask_dataset = MagicMock(spec=SmilesDataset,
-                                           X=x,
-                                           y=y_multitask,
-                                           ids=ids,
-                                           n_tasks=3,
-                                           label_names=['multitask_label_1', 'multitask_label_2', 'multitask_label_3'],
-                                           mode='multitask')
+        self.multitask_dataset = SmilesDatasetMagicMock(spec=SmilesDataset,
+                                                        X=x,
+                                                        y=y_multitask,
+                                                        ids=ids,
+                                                        n_tasks=3,
+                                                        label_names=['multitask_label_1', 'multitask_label_2',
+                                                                     'multitask_label_3'],
+                                                        mode='multitask')
         self.multitask_dataset.__len__.return_value = 100
-        self.multitask_dataset_test = MagicMock(spec=SmilesDataset,
-                                                X=x_test,
-                                                y=y_multitask_test,
-                                                ids=ids_test,
-                                                n_tasks=3,
-                                                label_names=['multitask_label_1', 'multitask_label_2',
-                                                             'multitask_label_3'],
-                                                mode='multitask')
+        self.multitask_dataset_test = SmilesDatasetMagicMock(spec=SmilesDataset,
+                                                             X=x_test,
+                                                             y=y_multitask_test,
+                                                             ids=ids_test,
+                                                             n_tasks=3,
+                                                             label_names=['multitask_label_1', 'multitask_label_2',
+                                                                          'multitask_label_3'],
+                                                             mode='multitask')
         self.multitask_dataset_test.__len__.return_value = 10
 
         # create regression dataset
-        self.regression_dataset = MagicMock(spec=SmilesDataset,
-                                            X=x,
-                                            y=y_regression,
-                                            n_tasks=1,
-                                            label_names=['regression_label'])
+        self.regression_dataset = SmilesDatasetMagicMock(spec=SmilesDataset,
+                                                         X=x,
+                                                         y=y_regression,
+                                                         n_tasks=1,
+                                                         label_names=['regression_label'])
         self.regression_dataset.__len__.return_value = 100
-        self.regression_dataset_test = MagicMock(spec=SmilesDataset,
-                                                 X=x_test,
-                                                 y=y_regression_test,
-                                                 n_tasks=1,
-                                                 label_names=['regression_label'])
+        self.regression_dataset_test = SmilesDatasetMagicMock(spec=SmilesDataset,
+                                                              X=x_test,
+                                                              y=y_regression_test,
+                                                              n_tasks=1,
+                                                              label_names=['regression_label'])
         self.regression_dataset_test.__len__.return_value = 100
 
         # create multitask regression dataset
-        self.multitask_regression_dataset = MagicMock(spec=SmilesDataset,
-                                                      X=x,
-                                                      y=y_multitask_regression,
-                                                      n_tasks=3,
-                                                      label_names=['multitask_regression_label_1',
-                                                                   'multitask_regression_label_2',
-                                                                   'multitask_regression_label_3'])
+        self.multitask_regression_dataset = SmilesDatasetMagicMock(spec=SmilesDataset,
+                                                                   X=x,
+                                                                   y=y_multitask_regression,
+                                                                   n_tasks=3,
+                                                                   label_names=['multitask_regression_label_1',
+                                                                                'multitask_regression_label_2',
+                                                                                'multitask_regression_label_3'])
         self.multitask_regression_dataset.__len__.return_value = 100
-        self.multitask_regression_dataset_test = MagicMock(spec=SmilesDataset,
-                                                           X=x_test,
-                                                           y=y_multitask_regression_test,
-                                                           n_tasks=3,
-                                                           label_names=['multitask_regression_label_1',
-                                                                        'multitask_regression_label_2',
-                                                                        'multitask_regression_label_3'])
+        self.multitask_regression_dataset_test = SmilesDatasetMagicMock(spec=SmilesDataset,
+                                                                        X=x_test,
+                                                                        y=y_multitask_regression_test,
+                                                                        n_tasks=3,
+                                                                        label_names=['multitask_regression_label_1',
+                                                                                     'multitask_regression_label_2',
+                                                                                     'multitask_regression_label_3'])
         self.multitask_regression_dataset_test.__len__.return_value = 10
 
     def tearDown(self) -> None:

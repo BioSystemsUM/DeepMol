@@ -1,23 +1,37 @@
 from shap import Explainer
 from shap.explainers import Additive, Exact, GPUTree, Permutation, Partition, Tree, Linear, Sampling, Deep
-from shap.maskers import Independent, Impute, Text, Masker
+from shap.explainers._gradient import Gradient
+from shap.explainers._kernel import Kernel
+from shap.explainers.other import Coefficent, Random, LimeTabular, Maple, TreeMaple, TreeGain
+from shap.maskers import Independent, Impute, Text, Masker, Fixed, Image
 from shap.maskers import Partition as PartitionM
 
-explainers = {'additive': Additive,
-              'exact': Exact,
-              'gpu_tree': GPUTree,  # not sure if it is an explainer
+explainers = {'explainer': Explainer,
+              'tree': Tree,
+              'gpu_tree': GPUTree,
+              'linear': Linear,
               'permutation': Permutation,
               'partition': Partition,
-              'tree': Tree,
-              'linear': Linear,
               'sampling': Sampling,
-              'deep': Deep
+              'additive': Additive,
+              'gradient': Gradient,
+              'deep': Deep,
+              'exact': Exact,
+              'kernel': Kernel,
+              'coefficient': Coefficent,
+              'random': Random,
+              'lime_tabular': LimeTabular,
+              'maple': Maple,
+              'tree_maple': TreeMaple,
+              'tree_gain': TreeGain,
               }
 
-maskers = {'independent': Independent,  # data, max_samples=100
-           'partition': PartitionM,  # data, max_samples=100, clustering="correlation"
-           'impute': Impute,  # data, method="linear"
-           'text': Text,  # tokenizer=None, mask_token=None, collapse_mask_token="auto", output_type="string"
+maskers = {'independent': Independent,
+           'partition': PartitionM,
+           'impute': Impute,
+           'fixed': Fixed,
+           'text': Text,
+           'image': Image,
            }
 
 
@@ -35,6 +49,9 @@ def str_to_explainer(explainer: str) -> Explainer:
     explainer: Explainer
         The SHAP explainer.
     """
+    if explainer not in explainers.keys():
+        raise ValueError(f'Explainer {explainer} not supported. '
+                         f'Available explainers: {list(explainers.keys())}')
     return explainers[explainer]
 
 
@@ -52,6 +69,9 @@ def str_to_masker(masker: str) -> Masker:
     masker: Masker
         The SHAP masker.
     """
+    if masker not in maskers.keys():
+        raise ValueError(f'Masker {masker} not supported. '
+                         f'Available maskers: {list(maskers.keys())}')
     return maskers[masker]
 
 
@@ -83,5 +103,10 @@ def masker_args(masker: str, **kwargs) -> dict:
                 'mask_token': kwargs.get('mask_token', None),
                 'collapse_mask_token': kwargs.get('collapse_mask_token', 'auto'),
                 'output_type': kwargs.get('output_type', 'string')}
+    elif masker == 'fixed':
+        return {}
+    elif masker == 'image':
+        return {'mask_value': kwargs.get('mask_value'),
+                'shape': kwargs.get('shape', None)}
     else:
         raise ValueError(f'Unknown masker: {masker}')

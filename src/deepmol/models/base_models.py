@@ -9,6 +9,7 @@ from sklearn.svm import SVC
 from tensorflow.keras import Sequential, regularizers
 from tensorflow.keras.layers import Dense, Dropout, Reshape, Conv1D, Flatten
 from tensorflow.keras import layers
+import tensorflow as tf
 
 
 # TODO: add more pre-defined models
@@ -247,3 +248,11 @@ def basic_multitask_dnn(input_shape, task_names, losses, metrics):
         metrics=metrics)
     return model
 
+
+def basic_dnn_regression(input_size):
+    inputs = tf.keras.layers.Input(shape=(input_size,))
+    x = tf.keras.layers.Dense(3, activation='relu')(inputs)
+    output = tf.keras.layers.Dense(1, activation='linear')(x)
+    model = tf.keras.models.Model(inputs=inputs, outputs=output)
+    model.compile(loss=tf.losses.mean_squared_error, optimizer='sgd')
+    return model

@@ -1,6 +1,5 @@
 import pandas as pd
 import shap
-from matplotlib import pyplot as plt
 
 from deepmol.datasets import Dataset
 from deepmol.feature_importance._utils import str_to_explainer, str_to_masker, masker_args
@@ -21,8 +20,12 @@ class ShapValues:
         ----------
         explainer: str
             The explainer to use. It can be one of the following:
+            - 'explainer': Explainer
+            (https://shap.readthedocs.io/en/latest/generated/shap.Explainer.html#shap.Explainer)
             - 'permutation': Permutation explainer
+            (https://shap.readthedocs.io/en/latest/generated/shap.explainers.Permutation.html#shap.explainers.Permutation)
             - 'exact': Exact explainer
+            (https://shap.readthedocs.io/en/latest/example_notebooks/api_examples/explainers/Exact.html?highlight=exact#Exact-explainer)
             - 'additive': Additive explainer
             - 'tree': Tree explainer
             - 'gpu_tree': GPU Tree explainer
@@ -44,18 +47,53 @@ class ShapValues:
     def compute_shap(self, dataset: Dataset, model: Model, **kwargs):
         data = pd.DataFrame(dataset.X, columns=dataset.feature_names, dtype=float)
         kwargs = kwargs
+        if 'tree' in self.explainer:
+            raise ValueError('Tree explainer not supported yet! Referring to '
+                             'https://github.com/slundberg/shap/issues/1136 and '
+                             'https://github.com/slundberg/shap/issues/1650')
+        elif self.explainer in ['deep', 'linear', 'gradient']:
+            model_instance = model.model
+        else:
+            if dataset.mode == 'classification':
+                model_instance = model.model.predict_proba
+            else:
+                model_instance = model.model.predict
         if self.masker is not None:
             masker_kwargs = masker_args(self.masker, **kwargs)
             masker = str_to_masker(self.masker)(data, **masker_kwargs)
             [kwargs.pop(k) for k in masker_kwargs.keys() if k in kwargs]
-            explainer = str_to_explainer(self.explainer)(model.model.predict, masker=masker)
+            explainer = str_to_explainer(self.explainer)(model_instance, masker=masker)
         else:
-            explainer = str_to_explainer(self.explainer)(model.model.predict, data)
+            explainer = str_to_explainer(self.explainer)(model_instance, data)
 
         self.shap_values = explainer(data, **kwargs)
         return self.shap_values
 
-    def plot_sample_explanation(self, index: int = 0, plot_type: str = 'waterfall', **kwargs):
+    def beeswarm_plot(self, **kwargs):
+        shap.plots.beeswarm(self.shap_values, **kwargs)
+
+    def bar_plot(self, **kwargs):
+        """
+        Plot the SHAP values of all the features as a bar plot.
+
+        Parameters
+        ----------
+        kwargs:
+            Additional keyword arguments for the plot function:
+            max_display: int
+                Maximum number of features to display.
+            order: str
+                Ordered features. By default, the features are ordered by the absolute value of the SHAP value.
+            clustering:
+            clustering_cutoff=0.5
+            merge_cohorts=False
+            show_data="auto"
+            show=True
+
+        """
+        shap.plots.bar(self.shap_values, **kwargs)
+
+    def sample_explanation_plot(self, index: int, plot_type: str = 'waterfall', **kwargs):
         """
         Plot the SHAP values of a single sample.
 
@@ -68,10 +106,6 @@ class ShapValues:
         kwargs:
             Additional arguments for the plot function.
         """
-        if self.shap_values is None:
-            print('Shap values not computed yet! Computing shap values...')
-            self.computeShap(plot=False)
-
         if plot_type == 'waterfall':
             # visualize the nth prediction's explanation
             shap.plots.waterfall(self.shap_values[index], **kwargs)
@@ -82,7 +116,7 @@ class ShapValues:
         else:
             raise ValueError('Plot type must be waterfall or force!')
 
-    def plot_feature_explanation(self, index: int = None, **kwargs):
+    def feature_explanation_plot(self, index: int, **kwargs):
         """
         Plot the SHAP values of a single feature.
 
@@ -93,12 +127,8 @@ class ShapValues:
         kwargs:
             Additional arguments for the plot function.
         """
-        if index is None:
-            # summarize the effects of all the features
-            shap.plots.beeswarm(self.shap_values, **kwargs)
-        else:
-            # create a dependence scatter plot to show the effect of a single feature across the whole dataset
-            shap.plots.scatter(self.shap_values[:, index], color=self.shap_values[:, index], **kwargs)
+        # create a dependence scatter plot to show the effect of a single feature across the whole dataset
+        shap.plots.scatter(self.shap_values[:, index], color=self.shap_values[:, index], **kwargs)
 
     def plot_heat_map(self, **kwargs):
         """
@@ -109,10 +139,7 @@ class ShapValues:
         kwargs:
             Additional arguments for the plot function.
         """
-        if self.shap_values is not None:
-            shap.plots.heatmap(self.shap_values, **kwargs)
-        else:
-            raise ValueError('Shap values not computed yet!')
+        shap.plots.heatmap(self.shap_values, **kwargs)
 
     # TODO: check this again
     '''

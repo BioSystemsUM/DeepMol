@@ -1,9 +1,8 @@
 from shap import Explainer
 from shap.explainers import Additive, Exact, GPUTree, Permutation, Partition, Tree, Linear, Sampling, Deep
 from shap.explainers._gradient import Gradient
-from shap.explainers._kernel import Kernel
-from shap.explainers.other import Coefficent, Random, LimeTabular, Maple, TreeMaple, TreeGain
-from shap.maskers import Independent, Impute, Text, Masker, Fixed, Image
+from shap.explainers.other import Random
+from shap.maskers import Independent, Impute, Masker
 from shap.maskers import Partition as PartitionM
 
 explainers = {'explainer': Explainer,
@@ -17,21 +16,12 @@ explainers = {'explainer': Explainer,
               'gradient': Gradient,
               'deep': Deep,
               'exact': Exact,
-              'kernel': Kernel,
-              'coefficient': Coefficent,
-              'random': Random,
-              'lime_tabular': LimeTabular,
-              'maple': Maple,
-              'tree_maple': TreeMaple,
-              'tree_gain': TreeGain,
+              'random': Random
               }
 
 maskers = {'independent': Independent,
            'partition': PartitionM,
            'impute': Impute,
-           'fixed': Fixed,
-           'text': Text,
-           'image': Image,
            }
 
 
@@ -98,15 +88,5 @@ def masker_args(masker: str, **kwargs) -> dict:
                 'clustering': kwargs.get('clustering', 'correlation')}
     elif masker == 'impute':
         return {'method': kwargs.get('method', 'linear')}
-    elif masker == 'text':
-        return {'tokenizer': kwargs.get('tokenizer', None),
-                'mask_token': kwargs.get('mask_token', None),
-                'collapse_mask_token': kwargs.get('collapse_mask_token', 'auto'),
-                'output_type': kwargs.get('output_type', 'string')}
-    elif masker == 'fixed':
-        return {}
-    elif masker == 'image':
-        return {'mask_value': kwargs.get('mask_value'),
-                'shape': kwargs.get('shape', None)}
     else:
         raise ValueError(f'Unknown masker: {masker}')

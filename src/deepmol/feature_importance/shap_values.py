@@ -37,8 +37,6 @@ class ShapValues:
             The masker to use. It can be one of the following:
             - 'independent': Independent masker
             - 'partition': Partition masker
-            - 'impute': Impute masker
-            - 'text': Text masker
         """
         self.explainer = explainer
         self.masker = masker
@@ -47,11 +45,13 @@ class ShapValues:
     def compute_shap(self, dataset: Dataset, model: Model, **kwargs):
         data = pd.DataFrame(dataset.X, columns=dataset.feature_names, dtype=float)
         kwargs = kwargs
-        if 'tree' in self.explainer:
+        if self.explainer == 'gpu_tree':
             raise ValueError('Tree explainer not supported yet! Referring to '
                              'https://github.com/slundberg/shap/issues/1136 and '
                              'https://github.com/slundberg/shap/issues/1650')
-        elif self.explainer in ['deep', 'linear', 'gradient']:
+        #elif self.explainer in ['deep', 'linear', 'gradient', 'tree', 'gpu_tree']:
+        #    model_instance = model.model
+        elif self.explainer in ['tree', 'linear', 'gradient', 'deep']:
             model_instance = model.model
         else:
             if dataset.mode == 'classification':
@@ -60,9 +60,15 @@ class ShapValues:
                 model_instance = model.model.predict
         if self.masker is not None:
             masker_kwargs = masker_args(self.masker, **kwargs)
-            masker = str_to_masker(self.masker)(data, **masker_kwargs)
+            if self.masker == 'text':
+                masker = str_to_masker(self.masker)(**masker_kwargs)
+            else:
+                masker = str_to_masker(self.masker)(data, **masker_kwargs)
             [kwargs.pop(k) for k in masker_kwargs.keys() if k in kwargs]
-            explainer = str_to_explainer(self.explainer)(model_instance, masker=masker)
+            if self.explainer == 'sampling':
+                explainer = str_to_explainer(self.explainer)(model_instance, data, masker=masker, **kwargs)
+            else:
+                explainer = str_to_explainer(self.explainer)(model_instance, masker=masker)
         else:
             explainer = str_to_explainer(self.explainer)(model_instance, data)
 
@@ -141,14 +147,12 @@ class ShapValues:
         """
         shap.plots.heatmap(self.shap_values, **kwargs)
 
-    # TODO: check this again
-    '''
-    def plotPositiveClass(self):
-        shap_values2 = self.shap_values[...,1]
+    def positive_class_plot(self):
+        shap_values2 = self.shap_values[..., 1]
         print(shap_values2)
         shap.plots.bar(shap_values2)
 
-    def plotNegativeClass(self):
-        shap_values2 = self.shap_values[...,0]
+    def negative_class_plot(self):
+        shap_values2 = self.shap_values[..., 0]
         shap.plots.bar(shap_values2)
-    '''
+

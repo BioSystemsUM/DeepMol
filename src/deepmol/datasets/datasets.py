@@ -12,6 +12,8 @@ from deepmol.loggers.logger import Logger
 from deepmol.datasets._utils import merge_arrays, merge_arrays_of_arrays
 from deepmol.utils.utils import smiles_to_mol, mol_to_smiles
 
+from cached_property import cached_property
+
 
 class Dataset(ABC):
 
@@ -23,6 +25,14 @@ class Dataset(ABC):
 
     def __init__(self):
         self.logger = Logger()
+
+    def clear_cached_properties(self):
+        """
+        Clears the cached properties of the class.
+        """
+        for name in dir(type(self)):
+            if isinstance(getattr(type(self), name), cached_property):
+                vars(self).pop(name, None)
 
     def __copy__(self):
         """
@@ -631,7 +641,7 @@ class SmilesDataset(Dataset):
             raise ValueError('The label names must be unique.')
         self._label_names = np.array([str(ln) for ln in label_names])
 
-    @property
+    @cached_property
     def X(self) -> np.ndarray:
         """
         Get the features of the molecules in the dataset.

@@ -1,8 +1,7 @@
 from shap import Explainer
 from shap.explainers import Additive, Exact, GPUTree, Permutation, Partition, Tree, Linear, Sampling, Deep
-from shap.explainers._gradient import Gradient
 from shap.explainers.other import Random
-from shap.maskers import Independent, Impute, Masker
+from shap.maskers import Independent, Masker
 from shap.maskers import Partition as PartitionM
 
 explainers = {'explainer': Explainer,
@@ -13,7 +12,6 @@ explainers = {'explainer': Explainer,
               'partition': Partition,
               'sampling': Sampling,
               'additive': Additive,
-              'gradient': Gradient,
               'deep': Deep,
               'exact': Exact,
               'random': Random
@@ -21,7 +19,6 @@ explainers = {'explainer': Explainer,
 
 maskers = {'independent': Independent,
            'partition': PartitionM,
-           'impute': Impute,
            }
 
 

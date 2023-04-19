@@ -13,8 +13,8 @@ from deepmol.datasets._utils import merge_arrays, merge_arrays_of_arrays
 from deepmol.utils.cached_properties import deepmol_cached_property
 from deepmol.utils.utils import smiles_to_mol, mol_to_smiles
 
-class Dataset(ABC):
 
+class Dataset(ABC):
     """
     Abstract base class for datasets
     Subclasses need to implement their own methods based on this class.

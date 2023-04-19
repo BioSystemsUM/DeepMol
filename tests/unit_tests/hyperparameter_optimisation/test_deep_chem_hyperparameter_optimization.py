@@ -1,3 +1,4 @@
+import os
 from unittest import TestCase
 from unittest.mock import MagicMock
 
@@ -11,6 +12,8 @@ from deepmol.metrics import Metric
 from deepmol.models import DeepChemModel
 from deepmol.parameter_optimization import HyperparameterOptimizerCV
 from unit_tests.models.test_models import ModelsTestCase
+
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 
 class TestDeepChemHyperparameterOptimization(ModelsTestCase, TestCase):

@@ -1,3 +1,4 @@
+import os
 from unittest import TestCase
 
 import numpy as np
@@ -12,14 +13,18 @@ from deepmol.metrics import Metric
 from deepmol.models import DeepChemModel
 from unit_tests.models.test_models import ModelsTestCase
 
+import tensorflow as tf
+
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
+
 
 class TestDeepChemModel(ModelsTestCase, TestCase):
 
     def test_fit_predict_evaluate(self):
         ds_train = self.binary_dataset
-        ds_train.X = ConvMolFeaturizer().featurize([MolFromSmiles('CCC')]*100)
+        ds_train.X = ConvMolFeaturizer().featurize([MolFromSmiles('CCC')] * 100)
         ds_test = self.binary_dataset_test
-        ds_test.X = ConvMolFeaturizer().featurize([MolFromSmiles('CCC')]*10)
+        ds_test.X = ConvMolFeaturizer().featurize([MolFromSmiles('CCC')] * 10)
 
         graph = GraphConvModel(n_tasks=1, mode='classification')
         model_graph = DeepChemModel(graph)
@@ -50,9 +55,9 @@ class TestDeepChemModel(ModelsTestCase, TestCase):
 
     def test_multiclass(self):
         ds_train = self.multitask_dataset
-        ds_train.X = ConvMolFeaturizer().featurize([MolFromSmiles('CCC')]*100)
+        ds_train.X = ConvMolFeaturizer().featurize([MolFromSmiles('CCC')] * 100)
         ds_test = self.multitask_dataset_test
-        ds_test.X = ConvMolFeaturizer().featurize([MolFromSmiles('CCC')]*10)
+        ds_test.X = ConvMolFeaturizer().featurize([MolFromSmiles('CCC')] * 10)
 
         graph = GraphConvModel(n_tasks=ds_train.n_tasks, mode='classification')
         model_graph = DeepChemModel(graph)

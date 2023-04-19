@@ -10,10 +10,8 @@ from rdkit.Chem import Mol
 
 from deepmol.loggers.logger import Logger
 from deepmol.datasets._utils import merge_arrays, merge_arrays_of_arrays
+from deepmol.utils.cached_properties import deepmol_cached_property
 from deepmol.utils.utils import smiles_to_mol, mol_to_smiles
-
-from cached_property import cached_property
-
 
 class Dataset(ABC):
 
@@ -31,7 +29,7 @@ class Dataset(ABC):
         Clears the cached properties of the class.
         """
         for name in dir(type(self)):
-            if isinstance(getattr(type(self), name), cached_property):
+            if isinstance(getattr(type(self), name), deepmol_cached_property):
                 vars(self).pop(name, None)
 
     def __copy__(self):
@@ -120,18 +118,6 @@ class Dataset(ABC):
         -------
         X: np.ndarray
             The features in the dataset.
-        """
-
-    @X.setter
-    @abstractmethod
-    def X(self, value: Union[List, np.ndarray]) -> None:
-        """
-        Set the features in the dataset.
-
-        Parameters
-        ----------
-        value: Union[List, np.ndarray]
-            The features to set in the dataset.
         """
 
     @property
@@ -641,7 +627,7 @@ class SmilesDataset(Dataset):
             raise ValueError('The label names must be unique.')
         self._label_names = np.array([str(ln) for ln in label_names])
 
-    @cached_property
+    @deepmol_cached_property
     def X(self) -> np.ndarray:
         """
         Get the features of the molecules in the dataset.
@@ -794,6 +780,7 @@ class SmilesDataset(Dataset):
         """
         if len(indexes) != 0:
             self.select(indexes, axis=1)
+            self.clear_cached_properties()
 
     def select_features_by_name(self, names: List[str]) -> None:
         """
@@ -807,6 +794,7 @@ class SmilesDataset(Dataset):
             # Get the indexes of the features to select
             indexes = [i for i, name in enumerate(self._feature_names) if name in names]
             self.select(indexes, axis=1)
+            self.clear_cached_properties()
 
     def remove_nan(self, axis: int = 0) -> None:
         """
@@ -840,6 +828,8 @@ class SmilesDataset(Dataset):
                 if len(self._X.shape) <= 2:  # feature names in datasets with more than two dimensions not supported
                     feature_names_to_delete = [self._feature_names[i] for i in columns]
                     self._feature_names = [name for name in self._feature_names if name not in feature_names_to_delete]
+
+                self.clear_cached_properties()
         else:
             raise ValueError('The axis must be 0 or 1.')
 

@@ -49,10 +49,11 @@ class ShapValues:
             raise ValueError('Tree explainer not supported yet! Referring to '
                              'https://github.com/slundberg/shap/issues/1136 and '
                              'https://github.com/slundberg/shap/issues/1650')
-        #elif self.explainer in ['deep', 'linear', 'gradient', 'tree', 'gpu_tree']:
-        #    model_instance = model.model
-        elif self.explainer in ['tree', 'linear', 'gradient', 'deep']:
+        elif self.explainer in ['tree', 'linear']:
             model_instance = model.model
+        elif self.explainer == 'deep':
+            model_instance = model.model.model
+            data = dataset.X
         else:
             if dataset.mode == 'classification':
                 model_instance = model.model.predict_proba
@@ -60,10 +61,7 @@ class ShapValues:
                 model_instance = model.model.predict
         if self.masker is not None:
             masker_kwargs = masker_args(self.masker, **kwargs)
-            if self.masker == 'text':
-                masker = str_to_masker(self.masker)(**masker_kwargs)
-            else:
-                masker = str_to_masker(self.masker)(data, **masker_kwargs)
+            masker = str_to_masker(self.masker)(data, **masker_kwargs)
             [kwargs.pop(k) for k in masker_kwargs.keys() if k in kwargs]
             if self.explainer == 'sampling':
                 explainer = str_to_explainer(self.explainer)(model_instance, data, masker=masker, **kwargs)
@@ -71,8 +69,10 @@ class ShapValues:
                 explainer = str_to_explainer(self.explainer)(model_instance, masker=masker)
         else:
             explainer = str_to_explainer(self.explainer)(model_instance, data)
-
-        self.shap_values = explainer(data, **kwargs)
+        if self.explainer == 'deep':
+            self.shap_values = explainer.shap_values(data)
+        else:
+            self.shap_values = explainer(data, **kwargs)
         return self.shap_values
 
     def beeswarm_plot(self, **kwargs):

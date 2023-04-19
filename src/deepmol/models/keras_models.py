@@ -5,7 +5,7 @@ from deepmol.splitters.splitters import RandomSplitter, SingletaskStratifiedSpli
 from typing import Sequence
 import numpy as np
 from deepmol.datasets import Dataset
-from keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
+from tensorflow.keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
 from sklearn.base import clone
 
 

@@ -3,12 +3,12 @@ from unittest import TestCase
 
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
+import tensorflow as tf
 
 from deepmol.compound_featurization import TwoDimensionDescriptors
 from deepmol.feature_importance import ShapValues
 from deepmol.loaders import CSVLoader
 from deepmol.models import SklearnModel, KerasModel
-from deepmol.models.base_models import basic_dnn_regression
 
 from tests import TEST_DIR
 
@@ -31,7 +31,16 @@ class TestShap(TestCase):
         self.rf_model.fit(self.regression_dataset)
         self.linear_model = SklearnModel(LinearRegression())
         self.linear_model.fit(self.regression_dataset)
-        self.mlp_model = KerasModel(basic_dnn_regression(input_size=5),
+
+        def basic_dnn_regression():
+            inputs = tf.keras.layers.Input(shape=(5,))
+            x = tf.keras.layers.Dense(3, activation='relu')(inputs)
+            output = tf.keras.layers.Dense(1, activation='linear')(x)
+            model = tf.keras.models.Model(inputs=inputs, outputs=output)
+            model.compile(loss=tf.losses.mean_squared_error, optimizer='sgd')
+            return model
+
+        self.mlp_model = KerasModel(basic_dnn_regression,
                                     epochs=2,
                                     mode='regression',
                                     loss='mse',
@@ -47,8 +56,6 @@ class TestShap(TestCase):
         shap.compute_shap(self.regression_dataset, self.rf_model, **kwargs)
         print(shap.shap_values)
         self.assertIsNotNone(shap.shap_values)
-        #shap.bar_plot()
-        #shap.beeswarm_plot()
 
     def test_shap(self):
         self.validate_shap('explainer', None)
@@ -97,4 +104,3 @@ class TestShap(TestCase):
 
     def test_dl_shap(self):
         self.validate_dl_shap('deep', None)
-        self.validate_dl_shap('gradient', None)

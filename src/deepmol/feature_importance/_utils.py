@@ -1,24 +1,32 @@
+from typing import Union
+
 from shap import Explainer
-from shap.explainers import Additive, Exact, GPUTree, Permutation, Partition, Tree, Linear, Sampling, Deep
+from shap.explainers import Exact
 from shap.explainers.other import Random
 from shap.maskers import Independent, Masker
-from shap.maskers import Partition as PartitionM
+from shap.maskers import Partition
+
+from shap import TreeExplainer, DeepExplainer, LinearExplainer, KernelExplainer, GPUTreeExplainer, \
+    PermutationExplainer, PartitionExplainer, SamplingExplainer, AdditiveExplainer
+
+from deepmol.models import Model
 
 explainers = {'explainer': Explainer,
-              'tree': Tree,
-              'gpu_tree': GPUTree,
-              'linear': Linear,
-              'permutation': Permutation,
-              'partition': Partition,
-              'sampling': Sampling,
-              'additive': Additive,
-              'deep': Deep,
+              'kernel': KernelExplainer,
+              'sampling': SamplingExplainer,
+              'tree': TreeExplainer,
+              'gpu_tree': GPUTreeExplainer,
+              'deep': DeepExplainer,
+              'linear': LinearExplainer,
+              'partition': PartitionExplainer,
+              'permutation': PermutationExplainer,
+              'additive': AdditiveExplainer,
               'exact': Exact,
-              'random': Random
+              'random': Random,
               }
 
 maskers = {'independent': Independent,
-           'partition': PartitionM,
+           'partition': Partition,
            }
 
 
@@ -62,28 +70,29 @@ def str_to_masker(masker: str) -> Masker:
     return maskers[masker]
 
 
-def masker_args(masker: str, **kwargs) -> dict:
+def get_model_instance_from_explainer(explainer: str, model: Model) -> Union[Model, callable]:
     """
-    Get the arguments of a SHAP masker.
+    Get the model instance/prediction function based on the explainer type.
 
     Parameters
     ----------
-    masker: str
-        The name of the masker
-    **kwargs: dict
-        Additional arguments for the masker.
+    explainer: str
+        The name of the explainer
+    model: Model
+        The model to explain
 
     Returns
     -------
-    args: dict
-        The arguments of the masker.
+    model_instance: Model or callable
+        The model instance or prediction function.
     """
-    if masker == 'independent':
-        return {'max_samples': kwargs.get('max_samples', 100)}
-    elif masker == 'partition':
-        return {'max_samples': kwargs.get('max_samples', 100),
-                'clustering': kwargs.get('clustering', 'correlation')}
-    elif masker == 'impute':
-        return {'method': kwargs.get('method', 'linear')}
+    if explainer in ['tree', 'linear']:
+        return model.model
+    if explainer == 'gpu_tree':
+        raise ValueError('Tree explainer not supported yet! Referring to '
+                         'https://github.com/slundberg/shap/issues/1136 and '
+                         'https://github.com/slundberg/shap/issues/1650')
+    elif explainer == 'deep':
+        return model.model.model
     else:
-        raise ValueError(f'Unknown masker: {masker}')
+        return model.model.predict

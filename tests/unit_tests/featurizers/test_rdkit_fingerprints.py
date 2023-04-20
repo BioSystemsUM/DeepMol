@@ -1,10 +1,8 @@
 import os
 import shutil
-import sys
 from copy import copy
 from unittest import TestCase
 
-from IPython.core.display import SVG
 from PIL.PngImagePlugin import PngImageFile
 from rdkit.Chem import MolFromSmiles
 
@@ -67,8 +65,6 @@ class TestRDKitFingerprints(FeaturizerTestCase, TestCase):
         AtomPairFingerprintCallbackHash().featurize(dataset)
         self.assertEqual(dataset_rows_number, dataset._X.shape[0])
 
-
-
     def test_units_of_fingerprints(self):
         dataset = copy(self.mock_dataset)
         molecule = dataset.mols[0]
@@ -89,11 +85,10 @@ class TestRDKitFingerprints(FeaturizerTestCase, TestCase):
         dataset = copy(self.mock_dataset)
         molecule = dataset.mols[0]
         morgan_fingerprint = MorganFingerprint()
-        depiction = morgan_fingerprint.draw_bit(molecule, 1,
+        morgan_fingerprint.draw_bit(molecule, 1,
                                                 file_path=os.path.join(TEST_DIR, "data",
                                                                        'test_morgan_fingerprint_draw_bit.svg'))
 
-        self.assertTrue(isinstance(depiction, SVG))
         self.assertTrue(os.path.exists(os.path.join(TEST_DIR, "data", 'test_morgan_fingerprint_draw_bit.svg')))
         os.remove(os.path.join(TEST_DIR, "data", 'test_morgan_fingerprint_draw_bit.svg'))
 
@@ -103,22 +98,19 @@ class TestRDKitFingerprints(FeaturizerTestCase, TestCase):
         dataset = copy(self.mock_dataset)
         molecule = dataset.mols[0]
         morgan_fingerprint = MorganFingerprint()
-        depiction = morgan_fingerprint.draw_bits(molecule, [1, 114, 227], file_path=os.path.join(TEST_DIR,
+        morgan_fingerprint.draw_bits(molecule, [1, 114, 227], file_path=os.path.join(TEST_DIR,
                                                                                                  "data",
                                                                                                  'test_morgan_fingerprint_draw_bit.svg'))
-        self.assertTrue(isinstance(depiction, SVG))
         self.assertTrue(os.path.exists(os.path.join(TEST_DIR, "data", 'test_morgan_fingerprint_draw_bit.svg')))
 
-        depiction = morgan_fingerprint.draw_bits(molecule, "ON", file_path=os.path.join(TEST_DIR,
+        morgan_fingerprint.draw_bits(molecule, "ON", file_path=os.path.join(TEST_DIR,
                                                                                         "data",
                                                                                         'test_morgan_fingerprint_draw_bit.svg'))
-        self.assertTrue(isinstance(depiction, SVG))
         self.assertTrue(os.path.exists(os.path.join(TEST_DIR, "data", 'test_morgan_fingerprint_draw_bit.svg')))
 
-        depiction = morgan_fingerprint.draw_bits(molecule, 1, file_path=os.path.join(TEST_DIR,
+        morgan_fingerprint.draw_bits(molecule, 1, file_path=os.path.join(TEST_DIR,
                                                                                      "data",
                                                                                      'test_morgan_fingerprint_draw_bit.svg'))
-        self.assertTrue(isinstance(depiction, SVG))
         self.assertTrue(os.path.exists(os.path.join(TEST_DIR, "data", 'test_morgan_fingerprint_draw_bit.svg')))
         os.remove(os.path.join(TEST_DIR, "data", 'test_morgan_fingerprint_draw_bit.svg'))
 
@@ -181,10 +173,9 @@ class TestRDKitFingerprints(FeaturizerTestCase, TestCase):
         dataset = copy(self.mock_dataset)
         molecule = dataset.mols[0]
         rdk_fingerprints = RDKFingerprint()
-        images = rdk_fingerprints.draw_bits(molecule, [56, 61, 137], file_path=os.path.join(TEST_DIR, "data",
+        rdk_fingerprints.draw_bits(molecule, [56, 61, 137], file_path=os.path.join(TEST_DIR, "data",
                                                                                             "maccs_keys_fingerprints.svg"))
 
-        self.assertTrue(isinstance(images, SVG))
         self.assertTrue(os.path.exists(os.path.join(TEST_DIR, "data", "maccs_keys_fingerprints.svg")))
         os.remove(os.path.join(TEST_DIR, "data", "maccs_keys_fingerprints.svg"))
 
@@ -204,7 +195,7 @@ class TestRDKitFingerprints(FeaturizerTestCase, TestCase):
         print(dataset.smiles[0])
         RDK_fingerprints = RDKFingerprint()
         RDK_fingerprints.draw_bits(molecule, [56, 61, 137], file_path=os.path.join(TEST_DIR, "data",
-                                                                                            "rdk_fingeprints.svg"))
+                                                                                   "rdk_fingeprints.svg"))
         self.assertTrue(os.path.exists(os.path.join(TEST_DIR, "data", "rdk_fingeprints.svg")))
         os.remove(os.path.join(TEST_DIR, "data", "rdk_fingeprints.svg"))
 
@@ -213,14 +204,13 @@ class TestRDKitFingerprints(FeaturizerTestCase, TestCase):
         self.assertRaises(ValueError, RDK_fingerprints.draw_bits, molecule, "OFF")
 
         RDK_fingerprints.draw_bits(molecule, "ON", file_path=os.path.join(TEST_DIR, "data",
-                                                                                   "maccs_keys_fingerprints.svg"))
-        self.assertTrue(os.path.exists(os.path.join(TEST_DIR, "data", "maccs_keys_fingerprints.svg")))
-        os.remove(os.path.join(TEST_DIR, "data", "maccs_keys_fingerprints.svg"))
-
-        RDK_fingerprints.draw_bits(molecule, 56, file_path=os.path.join(TEST_DIR, "data",
                                                                           "maccs_keys_fingerprints.svg"))
         self.assertTrue(os.path.exists(os.path.join(TEST_DIR, "data", "maccs_keys_fingerprints.svg")))
         os.remove(os.path.join(TEST_DIR, "data", "maccs_keys_fingerprints.svg"))
 
-        self.assertRaises(ValueError, RDK_fingerprints.draw_bits, molecule, 1, "test.png")
+        RDK_fingerprints.draw_bits(molecule, 56, file_path=os.path.join(TEST_DIR, "data",
+                                                                        "maccs_keys_fingerprints.svg"))
+        self.assertTrue(os.path.exists(os.path.join(TEST_DIR, "data", "maccs_keys_fingerprints.svg")))
+        os.remove(os.path.join(TEST_DIR, "data", "maccs_keys_fingerprints.svg"))
 
+        self.assertRaises(ValueError, RDK_fingerprints.draw_bits, molecule, 1, "test.png")

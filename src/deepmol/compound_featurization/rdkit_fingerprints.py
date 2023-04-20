@@ -4,7 +4,6 @@ from typing import Tuple, Union, List
 
 import PIL
 import numpy as np
-from IPython.core.display import SVG
 from IPython.core.display_functions import display
 from rdkit.Chem import MACCSkeys, Draw
 from rdkit.Chem.rdMolDescriptors import GetAtomPairAtomCode
@@ -79,7 +78,7 @@ class MorganFingerprint(MolecularFeaturizer):
         fp = np.asarray(fp, dtype=np.float32)
         return fp
 
-    def draw_bit(self, mol: Mol, bit: int, molSize: Tuple[int, int] = (450, 200), file_path: str = None):
+    def draw_bit(self, mol: Mol, bit: int, molSize: Tuple[int, int] = (450, 200), file_path: str = None) -> str:
         """
         Draw a molecule with a Morgan fingerprint bit highlighted.
 
@@ -96,7 +95,7 @@ class MorganFingerprint(MolecularFeaturizer):
 
         Returns
         -------
-        SVG
+        str
             The molecule in SVG format.
         """
         if mol is None:
@@ -126,7 +125,7 @@ class MorganFingerprint(MolecularFeaturizer):
         return depiction
 
     def draw_bits(self, mol: Mol, bit_indexes: Union[int, str, List[int]],
-                  file_path: str = None) -> SVG:
+                  file_path: str = None) -> str:
         """
         Draw a molecule with a Morgan fingerprint bit highlighted.
 
@@ -137,14 +136,12 @@ class MorganFingerprint(MolecularFeaturizer):
         bit_indexes: Union[int, str, List[int]]
             Bit to highlight. If int, only one bit is highlighted. If list, all the bits in the list are highlighted.
             If 'ON', all the bits ON are highlighted.
-        molSize: Tuple[int, int]
-            Size of the molecule.
         file_path : str
             Path to save the image.
 
         Returns
         -------
-        SVG
+        str
         """
 
         if mol is None:
@@ -167,7 +164,7 @@ class MorganFingerprint(MolecularFeaturizer):
             svg_text = Draw.DrawMorganBit(mol, bit_indexes, bi)
             if file_path is not None:
                 svg_text_to_file(svg_text, file_path)
-            return SVG(svg_text)
+            return svg_text
 
         elif isinstance(bit_indexes, list):
             bits_on = []
@@ -186,13 +183,13 @@ class MorganFingerprint(MolecularFeaturizer):
             if file_path is not None:
                 svg_text_to_file(svg_text, file_path)
 
-            return SVG(svg_text)
+            return svg_text
         elif bit_indexes == 'ON':
             tpls = [(mol, x, bi) for x in fp.GetOnBits()]
             svg_text = Draw.DrawMorganBits(tpls, molsPerRow=5, legends=[str(x) for x in fp.GetOnBits()])
             if file_path is not None:
                 svg_text_to_file(svg_text, file_path)
-            return SVG(svg_text)
+            return svg_text
 
         else:
             raise ValueError('Bits must be integer, list of integers or ON!')
@@ -473,7 +470,7 @@ class RDKFingerprint(MolecularFeaturizer):
         fp = np.asarray(fp, dtype=np.float32)
         return fp
 
-    def draw_bits(self, mol: Mol, bits: Union[int, str, List[int]], file_path: str = None) -> SVG:
+    def draw_bits(self, mol: Mol, bits: Union[int, str, List[int]], file_path: str = None) -> str:
         """
         Draw a molecule with a RDK fingerprint bit highlighted.
 
@@ -488,7 +485,7 @@ class RDKFingerprint(MolecularFeaturizer):
             Path to save the image. If None, the image is not saved.
         Returns
         -------
-        Draw.DrawRDKitBits
+        Str
             The molecule with the fingerprint bits.
         """
         rdkbit = {}
@@ -510,7 +507,7 @@ class RDKFingerprint(MolecularFeaturizer):
             svg_text = Draw.DrawRDKitBit(mol, bits, rdkbit)
             if file_path is not None:
                 svg_text_to_file(svg_text, file_path)
-            return SVG(svg_text)
+            return svg_text
 
         elif isinstance(bits, list):
             bits_on = []
@@ -529,14 +526,14 @@ class RDKFingerprint(MolecularFeaturizer):
             svg_text = Draw.DrawRDKitBits(tpls, molsPerRow=5, legends=['bit_' + str(x) for x in bits_on])
             if file_path is not None:
                 svg_text_to_file(svg_text, file_path)
-            return SVG(svg_text)
+            return svg_text
 
         elif bits == 'ON':
             tpls = [(mol, x, rdkbit) for x in fp.GetOnBits()]
             svg_text = Draw.DrawRDKitBits(tpls, molsPerRow=5, legends=[str(x) for x in fp.GetOnBits()])
             if file_path is not None:
                 svg_text_to_file(svg_text, file_path)
-            return SVG(svg_text)
+            return svg_text
 
         else:
             raise ValueError('Bits must be integer, list of integers or ON!')

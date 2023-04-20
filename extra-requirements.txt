@@ -12,12 +12,10 @@ kneed==0.8.2: machine_learning
 kaleido==0.2.1: machine_learning
 plotly==5.13.1: machine_learning
 chembl_structure_pipeline==1.1.0: preprocessing
-torch==1.12.1: deep_learning
-torchvision==0.13.1: deep_learning
-torchaudio==0.12.1: deep_learning
+torch==2.0.0: deep_learning
 dgl==0.9.1: deep_learning
-deepchem==2.5.0: deep_learning
-tensorflow==2.10.0: deep_learning
+deepchem==2.7.1: deep_learning
+tensorflow==2.11.0: deep_learning
 boruta==0.3: preprocessing
 scikit-learn==1.2.0: machine_learning, deep_learning
 pytest>=7.1.1: test

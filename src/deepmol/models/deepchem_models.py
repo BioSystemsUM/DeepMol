@@ -260,16 +260,16 @@ class DeepChemModel(BaseDeepChemModel):
 
             # TODO: isto está testado ? estes transformers nao é um boleano
             train_score = dummy_model.evaluate(train_ds, [metric], transformers)
-            train_scores.append(train_score[metric.name])
-            avg_train_score += train_score[metric.name]
+            train_scores.append(train_score[0][metric.name])
+            avg_train_score += train_score[0][metric.name]
 
             test_score = dummy_model.evaluate(test_ds, [metric], transformers)
-            test_scores.append(test_score[metric.name])
-            avg_test_score += test_score[metric.name]
+            test_scores.append(test_score[0][metric.name])
+            avg_test_score += test_score[0][metric.name]
 
-            if test_score[metric.name] > test_score_best_model:
-                test_score_best_model = test_score[metric.name]
-                train_score_best_model = train_score[metric.name]
+            if test_score[0][metric.name] > test_score_best_model:
+                test_score_best_model = test_score[0][metric.name]
+                train_score_best_model = train_score[0][metric.name]
                 best_model = dummy_model
 
         return best_model, train_score_best_model, test_score_best_model, train_scores, test_scores, avg_train_score / folds, avg_test_score / folds

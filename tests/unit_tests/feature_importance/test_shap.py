@@ -37,9 +37,9 @@ class TestShap(TestCase):
     def tearDown(self) -> None:
         paths_to_remove = ['deepmol.log', self.path, self.html_path]
         # Remove each path if it exists
-        #for path in paths_to_remove:
-        #    if os.path.exists(path):
-        #        os.remove(path)
+        for path in paths_to_remove:
+            if os.path.exists(path):
+                os.remove(path)
 
     def test_shap(self):
         self.assertIsNotNone(self.shap.shap_values)

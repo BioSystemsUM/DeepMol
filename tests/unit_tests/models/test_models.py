@@ -40,6 +40,13 @@ class ModelsTestCase(ABC):
                                                      label_names=['binary_label'],
                                                      mode='classification',
                                                      ids=ids)
+        self.binary_dataset.select_to_split.side_effect = lambda arg: MagicMock(spec=SmilesDataset,
+                                                                     X=x[arg],
+                                                                     y=y[arg],
+                                                                     n_tasks=1,
+                                                                     label_names=['binary_label'],
+                                                                     mode='classification',
+                                                                     ids=ids[arg])
         self.binary_dataset.__len__.return_value = 100
         self.binary_dataset_test = SmilesDatasetMagicMock(spec=SmilesDataset,
                                                           X=x_test,

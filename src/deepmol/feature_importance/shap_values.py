@@ -3,6 +3,7 @@ from pathlib import Path
 import pandas as pd
 import shap
 from matplotlib import pyplot as plt
+from shap import Explanation
 
 from deepmol.datasets import Dataset
 from deepmol.feature_importance._utils import str_to_explainer, str_to_masker, get_model_instance_from_explainer
@@ -16,7 +17,7 @@ class ShapValues:
     It allows to compute and analyze the SHAP values of DeepMol models.
     """
 
-    def __init__(self, explainer: str = 'permutation', masker: str = None):
+    def __init__(self, explainer: str = 'permutation', masker: str = None) -> None:
         """
         Initialize the ShapValues object
 
@@ -31,16 +32,31 @@ class ShapValues:
             - 'exact': Exact explainer
             (https://shap.readthedocs.io/en/latest/example_notebooks/api_examples/explainers/Exact.html?highlight=exact#Exact-explainer)
             - 'additive': Additive explainer
+            (https://shap.readthedocs.io/en/latest/generated/shap.explainers.Additive.html)
             - 'tree': Tree explainer
+            (https://shap.readthedocs.io/en/latest/generated/shap.explainers.Tree.html)
             - 'gpu_tree': GPU Tree explainer
+            (https://shap.readthedocs.io/en/latest/generated/shap.explainers.GPUTree.html)
             - 'partition': Partition explainer
+            (https://shap.readthedocs.io/en/latest/generated/shap.explainers.Partition.html)
             - 'linear': Linear explainer
+            (https://shap.readthedocs.io/en/latest/generated/shap.explainers.Linear.html)
             - 'sampling': Sampling explainer
+            (https://shap.readthedocs.io/en/latest/generated/shap.explainers.Sampling.html)
             - 'deep': Deep explainer
+            (https://github.com/slundberg/shap/blob/master/shap/explainers/_deep/deep_tf.py) and
+            (https://github.com/slundberg/shap/blob/master/shap/explainers/_deep/deep_pytorch.py)
+            - 'kernel': Kernel explainer
+            (https://github.com/slundberg/shap/blob/master/shap/explainers/_kernel.py)
+            - 'random': Random explainer
+            (https://shap.readthedocs.io/en/latest/generated/shap.explainers.other.Random.html)
+
         masker: str
             The masker to use. It can be one of the following:
             - 'independent': Independent masker
+            (https://shap.readthedocs.io/en/latest/generated/shap.maskers.Independent.html)
             - 'partition': Partition masker
+            (https://shap.readthedocs.io/en/latest/generated/shap.maskers.Partition.html)
         """
         self.explainer = str_to_explainer(explainer)
         self.explainer_str = explainer
@@ -49,7 +65,7 @@ class ShapValues:
         self.mode = None
         self.logger = Logger()
 
-    def fit(self, dataset: Dataset, model: Model, **kwargs):
+    def fit(self, dataset: Dataset, model: Model, **kwargs) -> Explanation:
         """
         Compute the SHAP values for the given dataset and model.
 
@@ -92,7 +108,7 @@ class ShapValues:
         self.shap_values = shap_values
         return shap_values
 
-    def beeswarm_plot(self, path: str = None, **kwargs):
+    def beeswarm_plot(self, path: str = None, **kwargs) -> None:
         """
         Plot the SHAP values of all the features as a beeswarm plot.
 
@@ -102,6 +118,8 @@ class ShapValues:
             Path to save the plot to.
         kwargs:
             Additional keyword arguments for the plot function:
+            see:
+            https://github.com/slundberg/shap/blob/45b85c1837283fdaeed7440ec6365a886af4a333/shap/plots/_beeswarm.py#L23
         """
         if path:
             plt.figure()
@@ -112,7 +130,7 @@ class ShapValues:
         else:
             shap.plots.beeswarm(self.shap_values, **kwargs)
 
-    def bar_plot(self, path: str = None, **kwargs):
+    def bar_plot(self, path: str = None, **kwargs) -> None:
         """
         Plot the SHAP values of all the features as a beeswarm plot.
 
@@ -122,16 +140,7 @@ class ShapValues:
             Path to save the plot to.
         kwargs:
             Additional keyword arguments for the plot function:
-            max_display: int
-                Maximum number of features to display.
-            order: str
-                Ordered features. By default, the features are ordered by the absolute value of the SHAP value.
-            clustering:
-            clustering_cutoff=0.5
-            merge_cohorts=False
-            show_data="auto"
-            show=True
-
+            see: https://github.com/slundberg/shap/blob/45b85c1837283fdaeed7440ec6365a886af4a333/shap/plots/_bar.py#L19
         """
         if path:
             plt.figure()
@@ -142,7 +151,7 @@ class ShapValues:
         else:
             shap.plots.bar(self.shap_values, **kwargs)
 
-    def sample_explanation_plot(self, index: int, plot_type: str = 'waterfall', path: str = None, **kwargs):
+    def sample_explanation_plot(self, index: int, plot_type: str = 'waterfall', path: str = None, **kwargs) -> None:
         """
         Plot the SHAP values of a single sample.
 
@@ -156,6 +165,8 @@ class ShapValues:
             Path to save the plot to.
         kwargs:
             Additional arguments for the plot function.
+            see:https://github.com/slundberg/shap/blob/45b85c1837283fdaeed7440ec6365a886af4a333/shap/plots/_force.py#L33
+            https://github.com/slundberg/shap/blob/45b85c1837283fdaeed7440ec6365a886af4a333/shap/plots/_waterfall.py#L18
         """
         if plot_type == 'waterfall':
             # visualize the nth prediction's explanation
@@ -179,7 +190,7 @@ class ShapValues:
         else:
             raise ValueError('Plot type must be waterfall or force!')
 
-    def feature_explanation_plot(self, index: int, path: str = None, **kwargs):
+    def feature_explanation_plot(self, index: int, path: str = None, **kwargs) -> None:
         """
         Plot the SHAP values of a single feature.
 
@@ -191,6 +202,8 @@ class ShapValues:
             Path to save the plot to.
         kwargs:
             Additional arguments for the plot function.
+            see:
+            https://github.com/slundberg/shap/blob/45b85c1837283fdaeed7440ec6365a886af4a333/shap/plots/_scatter.py#L19
         """
         # create a dependence scatter plot to show the effect of a single feature across the whole dataset
         if path:
@@ -202,7 +215,7 @@ class ShapValues:
         else:
             shap.plots.scatter(self.shap_values[:, index], color=self.shap_values[:, index], **kwargs)
 
-    def heatmap_plot(self, path: str = None, **kwargs):
+    def heatmap_plot(self, path: str = None, **kwargs) -> None:
         """
         Plot the SHAP values of all the features as a heatmap.
 
@@ -212,6 +225,8 @@ class ShapValues:
             Path to save the plot to.
         kwargs:
             Additional arguments for the plot function.
+            see:
+            https://github.com/slundberg/shap/blob/45b85c1837283fdaeed7440ec6365a886af4a333/shap/plots/_heatmap.py#L12
         """
         if path:
             plt.figure()
@@ -232,6 +247,7 @@ class ShapValues:
             Path to save the plot to.
         kwargs:
             Additional arguments for the plot function.
+            see: https://github.com/slundberg/shap/blob/45b85c1837283fdaeed7440ec6365a886af4a333/shap/plots/_bar.py#L19
         """
         if self.mode != 'classification':
             raise ValueError('This method is only available for binary classification models.')
@@ -255,6 +271,7 @@ class ShapValues:
             Path to save the plot to.
         kwargs:
             Additional arguments for the plot function.
+            see: https://github.com/slundberg/shap/blob/45b85c1837283fdaeed7440ec6365a886af4a333/shap/plots/_bar.py#L19
         """
         if self.mode != 'classification':
             raise ValueError('This method is only available for binary classification models.')
@@ -268,7 +285,7 @@ class ShapValues:
         else:
             shap.plots.bar(shap_values2, **kwargs)
 
-    def decision_plot(self, path: str = None, **kwargs):
+    def decision_plot(self, path: str = None, **kwargs) -> None:
         """
         Plot the SHAP values of all the features as a decision plot.
 
@@ -278,6 +295,8 @@ class ShapValues:
             Path to save the plot to.
         kwargs:
             Additional arguments for the plot function.
+            see:
+            https://github.com/slundberg/shap/blob/45b85c1837283fdaeed7440ec6365a886af4a333/shap/plots/_decision.py#L222
         """
         # check if the explainer has an expected value
         if not hasattr(self.explainer, 'expected_value'):

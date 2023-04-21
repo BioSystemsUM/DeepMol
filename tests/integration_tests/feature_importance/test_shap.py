@@ -61,13 +61,6 @@ class TestShap(TestCase):
                                     batch_size=1)
         self.mlp_model.fit(self.regression_dataset)
 
-    def tearDown(self) -> None:
-        paths_to_remove = ['deepmol.log', self.plot_path]
-        # Remove each path if it exists
-        for path in paths_to_remove:
-            if os.path.exists(path):
-                os.remove(path)
-
     def validate_shap(self, explainer, masker, **kwargs):
         # REGRESSION
         shap = ShapValues(explainer=explainer, masker=masker)
@@ -141,3 +134,10 @@ class TestShap(TestCase):
         self.validate_dl_shap('deep', None)
         with self.assertRaises(ValueError):
             self.validate_dl_shap('deep', 'partition')
+
+    def tearDown(self) -> None:
+        paths_to_remove = ['deepmol.log', self.plot_path]
+        # Remove each path if it exists
+        for path in paths_to_remove:
+            if os.path.exists(path):
+                os.remove(path)

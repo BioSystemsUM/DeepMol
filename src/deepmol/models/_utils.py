@@ -37,4 +37,3 @@ def _get_splitter(dataset: Dataset) -> Splitter:
         splitter = RandomSplitter()
     else:
         splitter = RandomSplitter()
-    return splitter

@@ -1,6 +1,9 @@
 import joblib
 import numpy as np
 
+from deepmol.datasets import Dataset
+from deepmol.splitters.splitters import Splitter, SingletaskStratifiedSplitter, RandomSplitter
+
 
 # TODO: review this function
 def save_to_disk(model: 'Model', filename: str, compress: int = 3):
@@ -22,3 +25,15 @@ def save_to_disk(model: 'Model', filename: str, compress: int = 3):
         np.save(filename, model)
     else:
         raise ValueError("Filename with unsupported extension: %s" % filename)
+
+
+def _get_splitter(dataset: Dataset) -> Splitter:
+    """
+    Returns a splitter for a dataset.
+    """
+    if dataset.mode == 'classification' and dataset.n_tasks == 1:
+        splitter = SingletaskStratifiedSplitter()
+    elif dataset.mode == 'regression':
+        splitter = RandomSplitter()
+    else:
+        splitter = RandomSplitter()

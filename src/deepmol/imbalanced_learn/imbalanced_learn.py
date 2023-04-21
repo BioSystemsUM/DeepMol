@@ -1,8 +1,6 @@
-import uuid
 from abc import abstractmethod
 from typing import Union
 
-import numpy as np
 from imblearn import over_sampling, under_sampling, combine
 from numpy.random import RandomState
 from sklearn.cluster import KMeans
@@ -28,18 +26,20 @@ class ImbalancedLearn(object):
 
         self.features = None
         self.y = None
+        self.ids = None
 
-    def sample(self, train_dataset: Dataset):
+    def sample(self, dataset: Dataset):
         """
         Sample the dataset.
         """
-        self.features = train_dataset.X
-        self.y = train_dataset.y
-        features, y = self._sample()
-        train_dataset._X = features
-        train_dataset._y = y
-        # TODO: how to keep track of which samples were over / under sampled (to ad/remove ids, mols and smiles)
-        return train_dataset
+        self.features = dataset.X
+        self.y = dataset.y
+        self.ids = dataset.ids
+        features, y, ids = self._sample()
+        dataset._X = features
+        dataset._y = y
+        dataset._ids = ids
+        return dataset
 
     @abstractmethod
     def _sample(self):
@@ -100,12 +100,29 @@ class RandomOverSampler(ImbalancedLearn):
         self.sampling_strategy = sampling_strategy
         self.random_state = random_state
 
+    @staticmethod
+    def _get_new_ids(ids, idx):
+        new_ids = []
+        seen_indexes = {}
+        for i in idx:
+            if i not in seen_indexes:
+                new_ids.append(ids[i])
+                seen_indexes[i] = 1
+            else:
+                if f"ib{seen_indexes[i] - 1}_{ids[i]}" not in new_ids:
+                    new_ids.append(f"ib{seen_indexes[i] - 1}_{ids[i]}")
+                seen_indexes[i] += 1
+        return new_ids
+
     def _sample(self):
         """
         Returns features resampled and y resampled.
         """
         ros = over_sampling.RandomOverSampler(sampling_strategy=self.sampling_strategy, random_state=self.random_state)
-        return ros.fit_resample(self.features, self.y)
+        x, y = ros.fit_resample(self.features, self.y)
+        indexes = ros.sample_indices_
+        ids = self._get_new_ids(self.ids, indexes)
+        return x, y, ids
 
 
 class SMOTE(ImbalancedLearn):

@@ -7,6 +7,7 @@ from sklearn.multioutput import MultiOutputClassifier, MultiOutputRegressor
 
 from deepmol.metrics import Metric
 from deepmol.models import SklearnModel
+from deepmol.splitters import RandomSplitter
 from unit_tests.models.test_models import ModelsTestCase
 
 
@@ -110,3 +111,30 @@ class TestSklearnModel(ModelsTestCase, TestCase):
         self.assertEqual(mean_squared_error_value, test_score[0]["mean_squared_error"])
         self.assertEqual(mean_absolute_error_value, test_score[0]["mean_absolute_error"])
         self.assertEqual(r2_score_value, test_score[0]["r2_score"])
+
+    def test_cross_validate(self):
+        rf = RandomForestClassifier()
+        model = SklearnModel(model=rf)
+        best_model, train_score_best_model, test_score_best_model, train_scores, test_scores, avg_train_score, \
+            avg_test_score = model.cross_validate(self.binary_dataset, metric=Metric(roc_auc_score), folds=3)
+        self.assertIsNotNone(best_model)
+        self.assertIsInstance(train_score_best_model, float)
+        self.assertIsInstance(test_score_best_model, float)
+        self.assertEqual(len(train_scores), 3)
+        self.assertEqual(len(test_scores), 3)
+        self.assertIsInstance(avg_train_score, float)
+        self.assertIsInstance(avg_test_score, float)
+
+        splitter = RandomSplitter()
+        best_model, train_score_best_model, test_score_best_model, train_scores, test_scores, avg_train_score, \
+            avg_test_score = model.cross_validate(self.binary_dataset,
+                                                  metric=Metric(roc_auc_score),
+                                                  splitter=splitter,
+                                                  folds=3)
+        self.assertIsNotNone(best_model)
+        self.assertIsInstance(train_score_best_model, float)
+        self.assertIsInstance(test_score_best_model, float)
+        self.assertEqual(len(train_scores), 3)
+        self.assertEqual(len(test_scores), 3)
+        self.assertIsInstance(avg_train_score, float)
+        self.assertIsInstance(avg_test_score, float)

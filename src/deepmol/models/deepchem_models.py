@@ -10,7 +10,7 @@ from deepchem.models import Model as BaseDeepChemModel
 from deepchem.data import NumpyDataset
 import deepchem as dc
 
-from deepmol.models._utils import save_to_disk
+from deepmol.models._utils import save_to_disk, _get_splitter
 from deepmol.splitters.splitters import Splitter
 from deepmol.utils.utils import load_from_disk
 
@@ -214,7 +214,7 @@ class DeepChemModel(BaseDeepChemModel):
     def cross_validate(self,
                        dataset: Dataset,
                        metric: Metric,
-                       splitter: Splitter,
+                       splitter: Splitter = None,
                        transformers: List[dc.trans.NormalizationTransformer] = None,
                        folds: int = 3):
         """
@@ -227,7 +227,7 @@ class DeepChemModel(BaseDeepChemModel):
         metric: Metric
             Metric to evaluate the model on.
         splitter: Splitter
-            Splitter to split the dataset into train and test sets.
+            Splitter to use for cross validation.
         transformers: List[Transformer]
             Transformers that the input data has been transformed by.
         folds: int
@@ -240,8 +240,8 @@ class DeepChemModel(BaseDeepChemModel):
             score of the best model, the fourth is the test scores of all models, the fifth is the average train scores
             of all folds and the sixth is the average test score of all folds.
         """
-        # TODO: add option to choose between splitters (later, for now we only have random)
-        # splitter = RandomSplitter()
+        if splitter is None:
+            splitter = _get_splitter(dataset)
         if transformers is None:
             transformers = []
         datasets = splitter.k_fold_split(dataset, folds)

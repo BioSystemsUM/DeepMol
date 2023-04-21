@@ -1,7 +1,8 @@
+from deepmol.models._utils import _get_splitter
 from deepmol.models.models import Model
 from deepmol.models.sklearn_models import SklearnModel
 from deepmol.metrics.metrics import Metric
-from deepmol.splitters.splitters import RandomSplitter, SingletaskStratifiedSplitter
+from deepmol.splitters.splitters import Splitter
 from typing import Sequence
 import numpy as np
 from deepmol.datasets import Dataset
@@ -159,6 +160,7 @@ class KerasModel(Model):
     def cross_validate(self,
                        dataset: Dataset,
                        metric: Metric,
+                       splitter: Splitter = None,
                        folds: int = 3):
         """
         Cross validates the model on a dataset.
@@ -169,6 +171,8 @@ class KerasModel(Model):
             The `Dataset` to cross validate on.
         metric: Metric
             The metric to use for cross validation.
+        splitter: Splitter
+            The splitter to use for cross validation.
         folds: int
             The number of folds to use for cross validation.
 
@@ -179,14 +183,8 @@ class KerasModel(Model):
             score of the best model, the fourth is the test scores of all models, the fifth is the average train scores
             of all folds and the sixth is the average test score of all folds.
         """
-        # TODO: add option to choose between splitters
-        splitter = None
-        if dataset.mode == 'classification':
-            splitter = SingletaskStratifiedSplitter()
-        if dataset.mode == 'regression':
-            splitter = RandomSplitter()
-
-        assert splitter is not None
+        if splitter is None:
+            splitter = _get_splitter(dataset)
 
         datasets = splitter.k_fold_split(dataset, folds)
 

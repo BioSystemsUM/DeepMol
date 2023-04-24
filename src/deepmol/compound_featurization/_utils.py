@@ -1,9 +1,11 @@
 from typing import List, Dict, Tuple
 
 import numpy as np
+from IPython.core.display import SVG
 from deepchem.utils import ConformerGenerator
-from rdkit import DataStructs
-from rdkit.Chem import Mol, AllChem
+from rdkit import DataStructs, Chem
+from rdkit.Chem import Mol, AllChem, rdDepictor
+from rdkit.Chem.Draw import rdMolDraw2D
 
 from deepmol.loggers import Logger
 
@@ -113,7 +115,7 @@ def calc_morgan_fingerprints(mols: np.ndarray, **kwargs) -> List[np.ndarray]:
     return fps
 
 
-def calc_similarity(first_fp_idx: int, second_fp_idx: int,  fps: List[np.ndarray]) -> Tuple[int, int, float]:
+def calc_similarity(first_fp_idx: int, second_fp_idx: int, fps: List[np.ndarray]) -> Tuple[int, int, float]:
     """
     Calculates the Tanimoto similarity between two fingerprints.
 
@@ -136,3 +138,108 @@ def calc_similarity(first_fp_idx: int, second_fp_idx: int,  fps: List[np.ndarray
         Tanimoto similarity between the two fingerprints
     """
     return first_fp_idx, second_fp_idx, DataStructs.TanimotoSimilarity(fps[first_fp_idx], fps[second_fp_idx])
+
+
+def prepare_mol(mol: Mol, kekulize: bool):
+    """
+    Prepare a molecule for drawing.
+
+    Parameters
+    ----------
+    mol: Mol
+        Molecule to prepare.
+    kekulize: bool
+        If True, the molecule is kekulized.
+
+    Returns
+    -------
+    mc: Mol
+        Prepared molecule.
+    """
+    mc = Chem.Mol(mol.ToBinary())
+    if kekulize:
+        try:
+            Chem.Kekulize(mc)
+        except:
+            mc = Chem.Mol(mol.ToBinary())
+    if not mc.GetNumConformers():
+        rdDepictor.Compute2DCoords(mc)
+    return mc
+
+
+def mol_to_svg(mol: Mol, molSize: Tuple[int, int] = (450, 200), kekulize: bool = True, drawer: object = None, **kwargs):
+    """
+    Convert a molecule to SVG.
+
+    Parameters
+    ----------
+    mol: Mol
+        Molecule to convert.
+    molSize: Tuple[int, int]
+        Size of the molecule.
+    kekulize: bool
+        If True, the molecule is kekulized.
+    drawer: object
+        Object to draw the molecule.
+    **kwargs:
+        Additional arguments for the drawer.
+
+    Returns
+    -------
+    SVG
+        The molecule in SVG format.
+    """
+    mc = prepare_mol(mol, kekulize)
+    if drawer is None:
+        drawer = rdMolDraw2D.MolDraw2DSVG(molSize[0], molSize[1])
+    drawer.DrawMolecule(mc, **kwargs)
+    drawer.FinishDrawing()
+    svg = drawer.GetDrawingText()
+    return SVG(svg.replace('svg:', ''))
+
+
+def svg_text_to_file(svg_text: str, file_name: str):
+    """
+    Save a SVG text to a file.
+
+    Parameters
+    ----------
+    svg_text: str
+        SVG text to save.
+    file_name: str
+        Name of the file to save.
+    """
+    with open(file_name, 'w') as f:
+        f.write(svg_text)
+
+
+def get_substructure_depiction(mol: Mol, atomID: int, radius: int, molSize: Tuple[int, int] = (450, 200)):
+    """
+    Get a depiction of a substructure.
+
+    Parameters
+    ----------
+    mol: Mol
+        Molecule to draw.
+    atomID: int
+        ID of the atom to highlight.
+    radius: int
+        Radius of the substructure.
+    molSize: Tuple[int, int]
+        Size of the molecule.
+
+    Returns
+    -------
+    SVG
+        The molecule in SVG format.
+    """
+    if radius > 0:
+        env = Chem.FindAtomEnvironmentOfRadiusN(mol, radius, atomID)
+        atomsToUse = []
+        for b in env:
+            atomsToUse.append(mol.GetBondWithIdx(b).GetBeginAtomIdx())
+            atomsToUse.append(mol.GetBondWithIdx(b).GetEndAtomIdx())
+        atomsToUse = list(set(atomsToUse))
+    else:
+        atomsToUse = [atomID]
+    return mol_to_svg(mol, molSize=molSize, highlightAtoms=atomsToUse, highlightAtomColors={atomID: (0.3, 0.3, 1)})

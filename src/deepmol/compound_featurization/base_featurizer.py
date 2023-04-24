@@ -112,6 +112,8 @@ class MolecularFeaturizer(ABC):
             pass
         else:
             features = np.vstack(features)
+
+        dataset.clear_cached_properties()
         dataset._X = features
         dataset.feature_names = self.feature_names
 

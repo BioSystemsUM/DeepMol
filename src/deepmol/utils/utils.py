@@ -1,25 +1,14 @@
-import random
-
 import pandas as pd
 import joblib
 import os
-from typing import Any, cast, IO, List, Union, Tuple
+from typing import Any, cast, IO, List, Union
 import gzip
 import pickle
 import numpy as np
 
-from rdkit.Chem import rdMolDescriptors, rdDepictor, Mol, RDKFingerprint, rdmolfiles, rdmolops
-from rdkit.Chem import Draw
-from IPython.display import SVG
+from rdkit.Chem import Mol, rdmolfiles, rdmolops
 
-from rdkit.Chem.Draw import rdMolDraw2D
 from rdkit import Chem
-import tempfile
-from PIL import Image
-
-from IPython.display import display
-
-from deepmol.loggers import Logger
 
 
 def smiles_to_mol(smiles: str, **kwargs) -> Union[Mol, None]:

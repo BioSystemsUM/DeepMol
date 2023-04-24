@@ -1,11 +1,14 @@
+import uuid
 from abc import abstractmethod
 from typing import Union
 
+import numpy as np
 from imblearn import over_sampling, under_sampling, combine
 from numpy.random import RandomState
 from sklearn.cluster import KMeans
 
 from deepmol.datasets import Dataset
+from deepmol.imbalanced_learn._utils import _get_new_ids
 
 
 class ImbalancedLearn(object):
@@ -17,7 +20,7 @@ class ImbalancedLearn(object):
     Subclasses need to implement a _sample method to perform over/under sampling.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the ImbalancedLearn sampler.
         """
@@ -28,9 +31,19 @@ class ImbalancedLearn(object):
         self.y = None
         self.ids = None
 
-    def sample(self, dataset: Dataset):
+    def sample(self, dataset: Dataset) -> Dataset:
         """
-        Sample the dataset.
+        Sample the dataset according to the sampling strategy.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to sample.
+
+        Returns
+        -------
+        dataset: Dataset
+            Sampled dataset.
         """
         self.features = dataset.X
         self.y = dataset.y
@@ -42,9 +55,18 @@ class ImbalancedLearn(object):
         return dataset
 
     @abstractmethod
-    def _sample(self):
+    def _sample(self) -> (np.ndarray, np.ndarray, np.ndarray):
         """
         Perform over/under sampling.
+
+        Returns
+        -------
+        features: np.ndarray
+            Features of the sampled dataset.
+        y: np.ndarray
+            Labels of the sampled dataset.
+        ids: np.ndarray
+            Ids of the sampled dataset.
         """
 
 
@@ -64,7 +86,7 @@ class RandomOverSampler(ImbalancedLearn):
 
     def __init__(self,
                  sampling_strategy: Union[float, str, dict, callable] = "auto",
-                 random_state: Union[int, RandomState] = None):
+                 random_state: Union[int, RandomState] = None) -> None:
         """
         Initialize the RandomOverSampler.
 
@@ -102,6 +124,22 @@ class RandomOverSampler(ImbalancedLearn):
 
     @staticmethod
     def _get_new_ids(ids, idx):
+        """
+        Returns new ids for the resampled dataset. If the sample is artificial, the id is prefixed with "ib_", followed
+        by the original id.
+
+        Parameters
+        ----------
+        ids: np.ndarray
+            Original ids.
+        idx: np.ndarray
+            Indexes of the resampled dataset.
+
+        Returns
+        -------
+        new_ids: np.ndarray
+            New ids for the resampled dataset.
+        """
         new_ids = []
         seen_indexes = {}
         for i in idx:
@@ -114,9 +152,18 @@ class RandomOverSampler(ImbalancedLearn):
                 seen_indexes[i] += 1
         return new_ids
 
-    def _sample(self):
+    def _sample(self) -> (np.ndarray, np.ndarray, np.ndarray):
         """
-        Returns features resampled and y resampled.
+        Compute the over-sampling.
+
+        Returns
+        -------
+        x: np.ndarray
+            Features of the sampled dataset.
+        y: np.ndarray
+            Labels of the sampled dataset.
+        ids: np.ndarray
+            Ids of the sampled dataset.
         """
         ros = over_sampling.RandomOverSampler(sampling_strategy=self.sampling_strategy, random_state=self.random_state)
         x, y = ros.fit_resample(self.features, self.y)
@@ -137,7 +184,7 @@ class SMOTE(ImbalancedLearn):
                  sampling_strategy: Union[float, str, dict, callable] = "auto",
                  random_state: Union[int, RandomState] = None,
                  k_neighbors: int = 5,
-                 n_jobs: int = None):
+                 n_jobs: int = None) -> None:
         """
         Initialize the SMOTE.
 
@@ -182,15 +229,27 @@ class SMOTE(ImbalancedLearn):
         self.k_neighbors = k_neighbors
         self.n_jobs = n_jobs
 
-    def _sample(self):
+    def _sample(self) -> (np.ndarray, np.ndarray, np.ndarray):
         """
-        Returns features resampled and y resampled.
+        Compute the over-sampling.
+
+        Returns
+        -------
+        x: np.ndarray
+            Features of the sampled dataset.
+        y: np.ndarray
+            Labels of the sampled dataset.
+        ids: np.ndarray
+            Ids of the sampled dataset.
         """
         ros = over_sampling.SMOTE(sampling_strategy=self.sampling_strategy,
                                   random_state=self.random_state,
                                   k_neighbors=self.k_neighbors,
                                   n_jobs=self.n_jobs)
-        return ros.fit_resample(self.features, self.y)
+        x, y = ros.fit_resample(self.features, self.y)
+        # list of original ids + artificial ids
+        ids = np.concatenate((self.ids, [f"ib_{uuid.uuid4().hex}" for _ in range(x.shape[0] - self.features.shape[0])]))
+        return x, y, ids
 
 
 #########################################
@@ -211,7 +270,7 @@ class ClusterCentroids(ImbalancedLearn):
                  sampling_strategy: Union[float, str, dict, callable] = "auto",
                  random_state: Union[int, RandomState] = None,
                  estimator: callable = KMeans(),
-                 voting: str = 'auto'):
+                 voting: str = 'auto') -> None:
         """
         Initialize the ClusterCentroids.
 
@@ -261,15 +320,26 @@ class ClusterCentroids(ImbalancedLearn):
         self.estimator = estimator
         self.voting = voting
 
-    def _sample(self):
+    def _sample(self) -> (np.ndarray, np.ndarray, np.ndarray):
         """
-        Returns features resampled and y resampled.
+        Compute the under-sampling.
+
+        Returns
+        -------
+        x: np.ndarray
+            Features of the sampled dataset.
+        y: np.ndarray
+            Labels of the sampled dataset.
+        ids: np.ndarray
+            Ids of the sampled dataset.
         """
         ros = under_sampling.ClusterCentroids(sampling_strategy=self.sampling_strategy,
                                               random_state=self.random_state,
                                               estimator=self.estimator,
                                               voting=self.voting)
-        return ros.fit_resample(self.features, self.y)
+        x, y = ros.fit_resample(self.features, self.y)
+        ids = _get_new_ids(self.features, x, self.ids)
+        return x, y, ids
 
 
 class RandomUnderSampler(ImbalancedLearn):
@@ -285,7 +355,7 @@ class RandomUnderSampler(ImbalancedLearn):
     def __init__(self,
                  sampling_strategy: Union[float, str, dict, callable] = "auto",
                  random_state: Union[int, RandomState] = None,
-                 replacement: bool = False):
+                 replacement: bool = False) -> None:
         """
         Initialize the RandomUnderSampler.
 
@@ -326,14 +396,26 @@ class RandomUnderSampler(ImbalancedLearn):
         self.random_state = random_state
         self.replacement = replacement
 
-    def _sample(self):
+    def _sample(self) -> (np.ndarray, np.ndarray, np.ndarray):
         """
-        Returns features resampled and y resampled.
+        Compute the under-sampling.
+
+        Returns
+        -------
+        x: np.ndarray
+            Features of the sampled dataset.
+        y: np.ndarray
+            Labels of the sampled dataset.
+        ids: np.ndarray
+            Ids of the sampled dataset.
         """
         ros = under_sampling.RandomUnderSampler(sampling_strategy=self.sampling_strategy,
                                                 random_state=self.random_state,
                                                 replacement=self.replacement)
-        return ros.fit_resample(self.features, self.y)
+        x, y = ros.fit_resample(self.features, self.y)
+        indexes = ros.sample_indices_
+        ids = self.ids[indexes]
+        return x, y, ids
 
 
 #########################################
@@ -356,7 +438,7 @@ class SMOTEENN(ImbalancedLearn):
                  random_state: Union[int, RandomState] = None,
                  smote: callable = None,
                  enn: callable = None,
-                 n_jobs: int = None):
+                 n_jobs: int = None) -> None:
         """
         Initialize the SMOTEENN.
 
@@ -406,16 +488,27 @@ class SMOTEENN(ImbalancedLearn):
         self.enn = enn
         self.n_jobs = n_jobs
 
-    def _sample(self):
+    def _sample(self) -> (np.ndarray, np.ndarray, np.ndarray):
         """
-        Returns features resampled and y resampled.
+        Compute the under-sampling and over-sampling.
+
+        Returns
+        -------
+        x: np.ndarray
+            Features of the sampled dataset.
+        y: np.ndarray
+            Labels of the sampled dataset.
+        ids: np.ndarray
+            Ids of the sampled dataset.
         """
         ros = combine.SMOTEENN(sampling_strategy=self.sampling_strategy,
                                random_state=self.random_state,
                                smote=self.smote,
                                enn=self.enn,
                                n_jobs=self.n_jobs)
-        return ros.fit_resample(self.features, self.y)
+        x, y = ros.fit_resample(self.features, self.y)
+        ids = _get_new_ids(self.features, x, self.ids)
+        return x, y, ids
 
 
 class SMOTETomek(ImbalancedLearn):
@@ -434,7 +527,7 @@ class SMOTETomek(ImbalancedLearn):
                  random_state: Union[int, RandomState] = None,
                  smote: callable = None,
                  tomek: callable = None,
-                 n_jobs: int = None):
+                 n_jobs: int = None) -> None:
         """
         Initialize the SMOTETomek.
 
@@ -478,20 +571,30 @@ class SMOTETomek(ImbalancedLearn):
             joblib.parallel_backend context. -1 means using all processors.
         """
         super().__init__()
-        self.replacement = None
         self.sampling_strategy = sampling_strategy
         self.random_state = random_state
         self.smote = smote
         self.tomek = tomek
         self.n_jobs = n_jobs
 
-    def _sample(self):
+    def _sample(self) -> (np.ndarray, np.ndarray, np.ndarray):
         """
-        Returns features resampled and y resampled.
+        Compute the under-sampling and over-sampling.
+
+        Returns
+        -------
+        x: np.ndarray
+            Features of the sampled dataset.
+        y: np.ndarray
+            Labels of the sampled dataset.
+        ids: np.ndarray
+            Ids of the sampled dataset.
         """
         ros = combine.SMOTETomek(sampling_strategy=self.sampling_strategy,
                                  random_state=self.random_state,
-                                 smote=self.replacement,
+                                 smote=self.smote,
                                  tomek=self.tomek,
                                  n_jobs=self.n_jobs)
-        return ros.fit_resample(self.features, self.y)
+        x, y = ros.fit_resample(self.features, self.y)
+        ids = _get_new_ids(self.features, x, self.ids)
+        return x, y, ids

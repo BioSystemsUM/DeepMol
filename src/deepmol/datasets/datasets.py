@@ -737,7 +737,7 @@ class SmilesDataset(Dataset):
         return smiles_shape, x_shape, y_shape
 
     @inplace_decorator
-    def remove_duplicates(self) -> None:
+    def remove_duplicates(self, inplace: bool = False) -> None:
         """
         Remove molecules with duplicated features from the dataset.
 
@@ -751,10 +751,10 @@ class SmilesDataset(Dataset):
                 warnings.warn('The dataset contains NaNs. Molecules with NaNs will be ignored.')
             unique, index = np.unique(self.X, return_index=True, axis=0)
             ids = self.ids[index]
-            self.select(ids, axis=0, inplace=True)
+            self.select(ids, axis=0)
 
     @inplace_decorator
-    def remove_elements(self, ids: List[str]) -> None:
+    def remove_elements(self, ids: List[str], inplace: bool = False) -> None:
         """
         Remove elements with specific IDs from the dataset.
         Parameters
@@ -767,10 +767,10 @@ class SmilesDataset(Dataset):
         if len(ids) != 0:
             all_indexes = self.ids
             indexes_to_keep = list(set(all_indexes) - set(ids))
-            self.select(indexes_to_keep, inplace=True)
+            self.select(indexes_to_keep)
 
     @inplace_decorator
-    def remove_elements_by_index(self, indexes: List[int]) -> None:
+    def remove_elements_by_index(self, indexes: List[int], inplace: bool = False) -> None:
         """
         Remove elements with specific indexes from the dataset.
         Parameters
@@ -782,10 +782,10 @@ class SmilesDataset(Dataset):
         """
         if len(indexes) > 0:
             indexes = self._ids[indexes]
-            self.remove_elements(indexes, inplace=True)
+            self.remove_elements(indexes)
 
     @inplace_decorator
-    def select_features_by_index(self, indexes: List[int]) -> None:
+    def select_features_by_index(self, indexes: List[int], inplace: bool = False) -> None:
         """
         Select features with specific indexes from the dataset
         Parameters
@@ -796,11 +796,11 @@ class SmilesDataset(Dataset):
             If True, the dataset will be modified in place.
         """
         if len(indexes) != 0:
-            self.select(indexes, axis=1, inplace=True)
+            self.select(indexes, axis=1)
             self.clear_cached_properties()
 
     @inplace_decorator
-    def select_features_by_name(self, names: List[str]) -> None:
+    def select_features_by_name(self, names: List[str], inplace: bool = False) -> None:
         """
         Select features with specific names from the dataset
         Parameters
@@ -813,11 +813,11 @@ class SmilesDataset(Dataset):
         if len(names) != 0:
             # Get the indexes of the features to select
             indexes = [i for i, name in enumerate(self._feature_names) if name in names]
-            self.select(indexes, axis=1, inplace=True)
+            self.select(indexes, axis=1)
             self.clear_cached_properties()
 
     @inplace_decorator
-    def remove_nan(self, axis: int = 0) -> None:
+    def remove_nan(self, axis: int = 0, inplace: bool = False) -> None:
         """
         Remove samples with at least one NaN in the features (when axis = 0)
         Or remove samples with all features with NaNs and the features with at least one NaN (axis = 1)
@@ -836,15 +836,15 @@ class SmilesDataset(Dataset):
             else:
                 indexes = np.where(pd.isna(self._X).any(axis=1))[0]
             # rows with at least one NaN
-            self.remove_elements_by_index(indexes, inplace=True)
+            self.remove_elements_by_index(indexes)
         elif axis == 1:
             if len(self._X.shape) == 1:
                 indexes = np.where(np.isnan(self._X))[0]
-                self.remove_elements_by_index(indexes, inplace=True)
+                self.remove_elements_by_index(indexes)
             else:
                 # rows with all NaNs
                 indexes = np.where(np.isnan(self._X).all(axis=1))[0]
-                self.remove_elements_by_index(indexes, inplace=True)
+                self.remove_elements_by_index(indexes)
                 # columns with at least one NaN
                 columns = list(set(np.where(np.isnan(self._X).any(axis=0))[0]))
                 self._X = np.delete(self._X, columns, axis=1)
@@ -879,7 +879,7 @@ class SmilesDataset(Dataset):
         return SmilesDataset(smiles, mols, ids, X, feature_names, y, label_names, mode)
 
     @inplace_decorator
-    def select(self, ids: Union[List[str], List[int]], axis: int = 0) -> None:
+    def select(self, ids: Union[List[str], List[int]], axis: int = 0, inplace: bool = False) -> None:
         """
         Creates a new sub dataset of self from a selection of indexes.
 
@@ -980,7 +980,7 @@ class SmilesDataset(Dataset):
         df.to_csv(path, index=False)
 
     @inplace_decorator
-    def load_features(self, path: str, **kwargs) -> None:
+    def load_features(self, path: str, inplace: bool = False, **kwargs) -> None:
         """
         Load features from a csv file.
         Parameters

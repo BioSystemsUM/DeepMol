@@ -11,6 +11,7 @@ from rdkit.Chem import Mol
 from deepmol.loggers.logger import Logger
 from deepmol.datasets._utils import merge_arrays, merge_arrays_of_arrays
 from deepmol.utils.cached_properties import deepmol_cached_property
+from deepmol.utils.decorators import inplace_decorator
 from deepmol.utils.utils import smiles_to_mol, mol_to_smiles
 
 
@@ -390,7 +391,8 @@ class SmilesDataset(Dataset):
         self._X = np.array(X) if X is not None else None
         self._y = np.array(y) if y is not None else None
         self._mols = np.array(mols) if mols is not None else np.array([smiles_to_mol(s) for s in self._smiles])
-        self.remove_elements([self._ids[i] for i, m in enumerate(self._mols) if m is None])
+        invalid = [self._ids[i] for i, m in enumerate(self._mols) if m is None]
+        self.remove_elements(invalid, inplace=True)
         self._feature_names = np.array(feature_names) if feature_names is not None else None
         self._label_names = np.array(label_names) if label_names is not None else None
         self._validate_params()
@@ -499,7 +501,7 @@ class SmilesDataset(Dataset):
         self._y = None
         self._n_tasks = None
         self._mols = np.array([smiles_to_mol(s) for s in self._smiles])
-        self.remove_elements([self._ids[i] for i, m in enumerate(self._mols) if m is None])
+        self.remove_elements([self._ids[i] for i, m in enumerate(self._mols) if m is None], inplace=True)
         self._feature_names = None
         self._label_names = None
         self.mode = None
@@ -734,9 +736,15 @@ class SmilesDataset(Dataset):
         self.logger.info(f'Labels_shape: {y_shape}')
         return smiles_shape, x_shape, y_shape
 
-    def remove_duplicates(self) -> None:
+    @inplace_decorator
+    def remove_duplicates(self, inplace: bool = False) -> None:
         """
         Remove molecules with duplicated features from the dataset.
+
+        Parameters
+        ----------
+        inplace: bool, optional (default False)
+            If True, the dataset will be modified in place.
         """
         if self._X is not None:
             if np.isnan(np.stack(self._X)).any():
@@ -745,50 +753,62 @@ class SmilesDataset(Dataset):
             ids = self.ids[index]
             self.select(ids, axis=0)
 
-    def remove_elements(self, ids: List[str]) -> None:
+    @inplace_decorator
+    def remove_elements(self, ids: List[str], inplace: bool = False) -> None:
         """
         Remove elements with specific IDs from the dataset.
         Parameters
         ----------
         ids: List[str]
             IDs of the elements to remove.
+        inplace: bool, optional (default False)
+            If True, the dataset will be modified in place.
         """
         if len(ids) != 0:
             all_indexes = self.ids
             indexes_to_keep = list(set(all_indexes) - set(ids))
             self.select(indexes_to_keep)
 
-    def remove_elements_by_index(self, indexes: List[int]) -> None:
+    @inplace_decorator
+    def remove_elements_by_index(self, indexes: List[int], inplace: bool = False) -> None:
         """
         Remove elements with specific indexes from the dataset.
         Parameters
         ----------
         indexes: List[int]
             Indexes of the elements to remove.
+        inplace: bool, optional (default False)
+            If True, the dataset will be modified in place.
         """
         if len(indexes) > 0:
             indexes = self._ids[indexes]
             self.remove_elements(indexes)
 
-    def select_features_by_index(self, indexes: List[int]) -> None:
+    @inplace_decorator
+    def select_features_by_index(self, indexes: List[int], inplace: bool = False) -> None:
         """
         Select features with specific indexes from the dataset
         Parameters
         ----------
         indexes: List[int]
             The indexes of the features to select from the dataset.
+        inplace: bool, optional (default False)
+            If True, the dataset will be modified in place.
         """
         if len(indexes) != 0:
             self.select(indexes, axis=1)
             self.clear_cached_properties()
 
-    def select_features_by_name(self, names: List[str]) -> None:
+    @inplace_decorator
+    def select_features_by_name(self, names: List[str], inplace: bool = False) -> None:
         """
         Select features with specific names from the dataset
         Parameters
         ----------
         names: List[str]
             The names of the features to select from the dataset.
+        inplace: bool, optional (default False)
+            If True, the dataset will be modified in place.
         """
         if len(names) != 0:
             # Get the indexes of the features to select
@@ -796,7 +816,8 @@ class SmilesDataset(Dataset):
             self.select(indexes, axis=1)
             self.clear_cached_properties()
 
-    def remove_nan(self, axis: int = 0) -> None:
+    @inplace_decorator
+    def remove_nan(self, axis: int = 0, inplace: bool = False) -> None:
         """
         Remove samples with at least one NaN in the features (when axis = 0)
         Or remove samples with all features with NaNs and the features with at least one NaN (axis = 1)
@@ -804,6 +825,8 @@ class SmilesDataset(Dataset):
         ----------
         axis: int
             The axis to remove the NaNs from.
+        inplace: bool, optional (default False)
+            If True, the dataset will be modified in place.
         """
         if self._X is None or len(self._X.shape) == 0:
             return
@@ -855,7 +878,8 @@ class SmilesDataset(Dataset):
         mode = self._mode
         return SmilesDataset(smiles, mols, ids, X, feature_names, y, label_names, mode)
 
-    def select(self, ids: Union[List[str], List[int]], axis: int = 0) -> None:
+    @inplace_decorator
+    def select(self, ids: Union[List[str], List[int]], axis: int = 0, inplace: bool = False) -> None:
         """
         Creates a new sub dataset of self from a selection of indexes.
 
@@ -866,6 +890,8 @@ class SmilesDataset(Dataset):
           indexes of the columns in case axis = 1.
         axis: int
             Axis to select along. 0 selects along the first axis, 1 selects along the second axis.
+        inplace: bool, optional (default False)
+            If True, the dataset will be modified in place.
         """
         if axis == 0:
             ids_to_delete = sorted(list(set(self._ids) - set(ids)))
@@ -953,13 +979,16 @@ class SmilesDataset(Dataset):
 
         df.to_csv(path, index=False)
 
-    def load_features(self, path: str, **kwargs) -> None:
+    @inplace_decorator
+    def load_features(self, path: str, inplace: bool = False, **kwargs) -> None:
         """
         Load features from a csv file.
         Parameters
         ----------
         path: str
             Path to the csv file.
+        inplace: bool, optional (default False)
+            If True, the dataset will be modified in place.
         kwargs:
             Keyword arguments to pass to pandas.read_csv.
         """

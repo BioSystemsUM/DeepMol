@@ -72,13 +72,13 @@ class TestSmilesDataset(TestCase):
     def test_remove_duplicates(self):
         df0 = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCC', 'CCCC', 'CCCC', 'CCCCC'])
         self.assertEqual(df0.__len__(), 7)
-        df0.remove_duplicates()
+        df0.remove_duplicates(inplace=True)
         self.assertEqual(df0.__len__(), 7)
 
         df = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCC', 'CCCC', 'CCCC', 'CCCCC'],
                            X=[1, 1, 3, 4, 5, 6, 1])
         self.assertEqual(df.__len__(), 7)
-        df.remove_duplicates()
+        df.remove_duplicates(inplace=True)
         self.assertEqual(df.__len__(), 5)
         self.assertTrue('CC' not in df.smiles)
         self.assertTrue('CCCCC' not in df.smiles)
@@ -86,7 +86,7 @@ class TestSmilesDataset(TestCase):
         df2 = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCC', 'CCCC', 'CCCC', 'CCCCC'],
                             X=[[1, 1], [1, 1], [3, 4], [4, 5], [5, 6], [6, 1], [1, 1]])
         self.assertEqual(df2.__len__(), 7)
-        df2.remove_duplicates()
+        df2.remove_duplicates(inplace=True)
         self.assertEqual(df2.__len__(), 5)
         self.assertTrue('CC' not in df2.smiles)
         self.assertTrue('CCCCC' not in df2.smiles)
@@ -100,7 +100,7 @@ class TestSmilesDataset(TestCase):
                                [[1, 0, 0], [0, 1, 1], [0, 0, 1]],
                                [[1, 0, 0], [0, 1, 0], [0, 0, 1]]])
         self.assertEqual(df3.__len__(), 7)
-        df3.remove_duplicates()
+        df3.remove_duplicates(inplace=True)
         self.assertEqual(df3.__len__(), 5)
         self.assertTrue('CC' not in df3.smiles)
         self.assertTrue('CCCCC' not in df3.smiles)
@@ -108,7 +108,7 @@ class TestSmilesDataset(TestCase):
         df2 = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCC', 'CCCC', 'CCCC', 'CCCCC'],
                             X=[[1, 1], [1, np.nan], [3, 4], [4, 5], [5, 6], [6, 1], [1, np.nan]])
         self.assertEqual(df2.__len__(), 7)
-        df2.remove_duplicates()
+        df2.remove_duplicates(inplace=True)
         self.assertEqual(df2.__len__(), 7)
 
         df2.feature_names = ['feature1', 'feature2']
@@ -118,6 +118,16 @@ class TestSmilesDataset(TestCase):
             df2.feature_names = ['feature1', 'feature2', 'feature3']
         with self.assertRaises(ValueError):
             df2.feature_names = ['feature1', 'feature1']
+
+        # inplace=False
+        df0 = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCC', 'CCCC', 'CCCC', 'CCCCC'],
+                            X=[1, 1, 3, 4, 5, 6, 1])
+        self.assertEqual(df0.__len__(), 7)
+        df0.remove_duplicates()
+        self.assertEqual(df0.__len__(), 7)
+        df00 = df0.remove_duplicates(inplace=False)
+        self.assertEqual(df00.__len__(), 5)
+        self.assertEqual(df0.__len__(), 7)
 
     def test_remove_nan_axis_0(self):
         df0 = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCC', 'CCCC', 'CCCC', 'CCCCC'])

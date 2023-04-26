@@ -45,13 +45,13 @@ def inplace_decorator(method: callable) -> Union[callable, None]:
     return inplace_method
 
 
-def copy_on_write_decorator(original_func: callable) -> Union[callable, None]:
+def copy_on_write_decorator(method: callable) -> Union[callable, None]:
     """
     Decorator to make a method copy-on-write.
 
     Parameters
     ----------
-    original_func: callable
+    method: callable
         Method to decorate.
 
     Returns
@@ -59,7 +59,7 @@ def copy_on_write_decorator(original_func: callable) -> Union[callable, None]:
     new_func: callable
         Decorated method.
     """
-    def new_func(self, other_object, inplace=False):
+    def new_func(self, other_object, inplace=False, **kwargs):
         """
         Method to make copy-on-write.
 
@@ -71,6 +71,8 @@ def copy_on_write_decorator(original_func: callable) -> Union[callable, None]:
             Object to apply the method to.
         inplace: bool
             Whether to apply the method inplace.
+        kwargs: dict
+            Keyword arguments to pass to the method.
 
         Returns
         -------
@@ -79,11 +81,11 @@ def copy_on_write_decorator(original_func: callable) -> Union[callable, None]:
         """
         if inplace:
             # modify the other_object in-place
-            original_func(self, other_object)
+            method(self, other_object, **kwargs)
             return None
         else:
             # create a new copy of the other_object
             new_object = other_object.__copy__()
-            original_func(self, new_object)
+            method(self, new_object, **kwargs)
             return new_object
     return new_func

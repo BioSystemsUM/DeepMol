@@ -2,12 +2,12 @@ import uuid
 from abc import abstractmethod
 from typing import Union
 
-import numpy as np
 from imblearn import over_sampling, under_sampling, combine
 from numpy.random import RandomState
 from sklearn.cluster import KMeans
 
 from deepmol.datasets import Dataset
+from deepmol.utils.decorators import copy_on_write_decorator
 
 
 class ImbalancedLearn(object):
@@ -29,6 +29,7 @@ class ImbalancedLearn(object):
         self.features = None
         self.y = None
 
+    @copy_on_write_decorator
     def sample(self, train_dataset: Dataset):
         """
         Sample the dataset.

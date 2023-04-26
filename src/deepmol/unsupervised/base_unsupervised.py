@@ -1,6 +1,7 @@
 from abc import abstractmethod, ABC
+from typing import Tuple
 
-from deepmol.datasets import Dataset, SmilesDataset
+from deepmol.datasets import Dataset
 
 import pandas as pd
 import numpy as np
@@ -11,6 +12,7 @@ from kneed import KneeLocator
 from sklearn import cluster, decomposition, manifold
 
 from deepmol.loggers.logger import Logger
+from deepmol.utils.decorators import copy_on_write_decorator
 
 
 class UnsupervisedLearn(ABC):
@@ -28,7 +30,8 @@ class UnsupervisedLearn(ABC):
         """
         self.logger = Logger()
 
-    def run_unsupervised(self, dataset: Dataset, **kwargs) -> SmilesDataset:
+    @copy_on_write_decorator
+    def run(self, dataset: Dataset, **kwargs) -> Dataset:
         """
         Run unsupervised learning.
 
@@ -41,14 +44,14 @@ class UnsupervisedLearn(ABC):
 
         Returns
         -------
-        df: SmilesDataset
+        df: Dataset
             The dataset with the unsupervised features in dataset.X.
         """
-        df = self._run_unsupervised(dataset=dataset, **kwargs)
-        return df
+        dataset._X, dataset.feature_names = self._run_unsupervised(dataset=dataset, **kwargs)
+        return dataset
 
     @abstractmethod
-    def _run_unsupervised(self, dataset: Dataset, **kwargs) -> SmilesDataset:
+    def _run_unsupervised(self, dataset: Dataset, **kwargs) -> Dataset:
         """
         Run unsupervised learning.
 
@@ -61,7 +64,7 @@ class UnsupervisedLearn(ABC):
 
         Returns
         -------
-        x: SmilesDataset
+        x: Dataset
             The dataset with the unsupervised features in dataset.X.
         """
 
@@ -143,7 +146,7 @@ class PCA(UnsupervisedLearn):
         super().__init__()
         self.pca = decomposition.PCA(**kwargs)
 
-    def _run_unsupervised(self, dataset: Dataset, **kwargs) -> SmilesDataset:
+    def _run_unsupervised(self, dataset: Dataset, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
         """
         Fit the model with X and apply the dimensionality reduction on X.
 
@@ -156,20 +159,15 @@ class PCA(UnsupervisedLearn):
 
         Returns
         -------
-        df: SmilesDataset
-            The dataset with the unsupervised features in dataset.X.
+        x_new: np.ndarray
+            Transformed values.
+        feature_names: np.ndarray
+            The names of the features.
         """
         self.dataset = dataset
         x_new = self.pca.fit_transform(dataset.X)
-        feature_names = [f'PCA_{i}' for i in range(x_new.shape[1])]
-        return SmilesDataset(smiles=dataset.smiles,
-                             mols=dataset.mols,
-                             X=x_new,
-                             y=dataset.y,
-                             ids=dataset.ids,
-                             feature_names=feature_names,
-                             label_names=dataset.label_names,
-                             mode=dataset.mode)
+        feature_names = np.array([f'PCA_{i}' for i in range(x_new.shape[1])])
+        return x_new, feature_names
 
     def plot(self, x_new: np.ndarray, path: str = None, **kwargs) -> None:
         """
@@ -326,7 +324,7 @@ class TSNE(UnsupervisedLearn):
         super().__init__()
         self.tsne = manifold.TSNE(**kwargs)
 
-    def _run_unsupervised(self, dataset: Dataset, **kwargs) -> SmilesDataset:
+    def _run_unsupervised(self, dataset: Dataset, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
         """
         Fit X into an embedded space and return that transformed output.
 
@@ -337,20 +335,15 @@ class TSNE(UnsupervisedLearn):
 
         Returns
         -------
-        SmilesDataset
-            Transformed dataset.
+        x_new: np.ndarray
+            The transformed output.
+        feature_names: np.ndarray
+            The feature names.
         """
         self.dataset = dataset
         x_new = self.tsne.fit_transform(dataset.X)
-        feature_names = [f"tsne_{i}" for i in range(x_new.shape[1])]
-        return SmilesDataset(smiles=dataset.smiles,
-                             mols=dataset.mols,
-                             X=x_new,
-                             y=dataset.y,
-                             ids=dataset.ids,
-                             feature_names=feature_names,
-                             label_names=dataset.label_names,
-                             mode=dataset.mode)
+        feature_names = np.array([f"tsne_{i}" for i in range(x_new.shape[1])])
+        return x_new, feature_names
 
     def plot(self, x_new: np.ndarray, path: str = None, **kwargs) -> None:
         self.logger.info(f'{x_new.shape[1]} Components t-SNE: ')
@@ -431,7 +424,7 @@ class KMeans(UnsupervisedLearn):
         super().__init__()
         self.kwargs = kwargs
 
-    def _run_unsupervised(self, dataset: Dataset, **kwargs) -> SmilesDataset:
+    def _run_unsupervised(self, dataset: Dataset, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
         """
         Compute cluster centers and predict cluster index for each sample.
 
@@ -444,8 +437,10 @@ class KMeans(UnsupervisedLearn):
 
         Returns
         -------
-        SmilesDataset
-            Transformed dataset.
+        x_new: np.ndarray
+            The transformed output.
+        feature_names: np.ndarray
+            The feature names.
         """
         self.dataset = dataset
 
@@ -457,15 +452,8 @@ class KMeans(UnsupervisedLearn):
 
         self.k_means = cluster.KMeans(**self.kwargs)
         x_new = self.k_means.fit_transform(dataset.X)
-        feature_names = [f"cluster_{i}" for i in range(x_new.shape[1])]
-        return SmilesDataset(smiles=dataset.smiles,
-                             mols=dataset.mols,
-                             X=x_new,
-                             y=dataset.y,
-                             ids=dataset.ids,
-                             feature_names=feature_names,
-                             label_names=dataset.label_names,
-                             mode=dataset.mode)
+        feature_names = np.array([f"cluster_{i}" for i in range(x_new.shape[1])])
+        return x_new, feature_names
 
     def _elbow(self, **kwargs):
         """

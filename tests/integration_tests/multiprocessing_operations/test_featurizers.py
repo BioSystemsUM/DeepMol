@@ -8,7 +8,7 @@ from integration_tests.multiprocessing_operations.test_multiprocessing import Te
 class TestMultiprocessingFeaturizers(TestMultiprocessing):
 
     def test_multiprocessing_featurizers_small_dataset(self):
-        MorganFingerprint().featurize(self.small_dataset_to_test)
+        MorganFingerprint().featurize(self.small_dataset_to_test, inplace=True)
         self.small_pandas_dataset = self.small_pandas_dataset.drop([7], axis=0)  # Remove the seventh row as it is
         # not a valid SMILES and DeepMol will remove it
         for j in range(len(self.small_dataset_to_test.mols)):
@@ -19,7 +19,7 @@ class TestMultiprocessingFeaturizers(TestMultiprocessing):
                 self.assertEqual(self.small_dataset_to_test.X[j, i], value)
 
     def test_multiprocessing_featurizers_big_dataset(self):
-        MorganFingerprint().featurize(self.big_dataset_to_test)
+        MorganFingerprint().featurize(self.big_dataset_to_test, inplace=True)
         to_remove = []
         for j in range(len(self.big_pandas_dataset.Smiles)):
             mol = MolFromSmiles(self.big_pandas_dataset.iloc[j, 6])

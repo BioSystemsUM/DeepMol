@@ -10,7 +10,7 @@ from deepchem.models import Model as BaseDeepChemModel
 from deepchem.data import NumpyDataset
 import deepchem as dc
 
-from deepmol.models._utils import save_to_disk
+from deepmol.models._utils import save_to_disk, _get_splitter
 from deepmol.splitters.splitters import Splitter
 from deepmol.utils.utils import load_from_disk
 
@@ -214,7 +214,7 @@ class DeepChemModel(BaseDeepChemModel):
     def cross_validate(self,
                        dataset: Dataset,
                        metric: Metric,
-                       splitter: Splitter,
+                       splitter: Splitter = None,
                        transformers: List[dc.trans.NormalizationTransformer] = None,
                        folds: int = 3):
         """
@@ -227,7 +227,7 @@ class DeepChemModel(BaseDeepChemModel):
         metric: Metric
             Metric to evaluate the model on.
         splitter: Splitter
-            Splitter to split the dataset into train and test sets.
+            Splitter to use for cross validation.
         transformers: List[Transformer]
             Transformers that the input data has been transformed by.
         folds: int
@@ -240,8 +240,8 @@ class DeepChemModel(BaseDeepChemModel):
             score of the best model, the fourth is the test scores of all models, the fifth is the average train scores
             of all folds and the sixth is the average test score of all folds.
         """
-        # TODO: add option to choose between splitters (later, for now we only have random)
-        # splitter = RandomSplitter()
+        if splitter is None:
+            splitter = _get_splitter(dataset)
         if transformers is None:
             transformers = []
         datasets = splitter.k_fold_split(dataset, folds)
@@ -260,16 +260,16 @@ class DeepChemModel(BaseDeepChemModel):
 
             # TODO: isto está testado ? estes transformers nao é um boleano
             train_score = dummy_model.evaluate(train_ds, [metric], transformers)
-            train_scores.append(train_score[metric.name])
-            avg_train_score += train_score[metric.name]
+            train_scores.append(train_score[0][metric.name])
+            avg_train_score += train_score[0][metric.name]
 
             test_score = dummy_model.evaluate(test_ds, [metric], transformers)
-            test_scores.append(test_score[metric.name])
-            avg_test_score += test_score[metric.name]
+            test_scores.append(test_score[0][metric.name])
+            avg_test_score += test_score[0][metric.name]
 
-            if test_score[metric.name] > test_score_best_model:
-                test_score_best_model = test_score[metric.name]
-                train_score_best_model = train_score[metric.name]
+            if test_score[0][metric.name] > test_score_best_model:
+                test_score_best_model = test_score[0][metric.name]
+                train_score_best_model = train_score[0][metric.name]
                 best_model = dummy_model
 
         return best_model, train_score_best_model, test_score_best_model, train_scores, test_scores, avg_train_score / folds, avg_test_score / folds

@@ -3,10 +3,10 @@ from typing import Sequence
 import numpy as np
 from sklearn.base import BaseEstimator
 
-from deepmol.models._utils import save_to_disk
+from deepmol.models._utils import save_to_disk, _get_splitter
 from deepmol.models.models import Model
 from deepmol.datasets import Dataset
-from deepmol.splitters.splitters import RandomSplitter, SingletaskStratifiedSplitter
+from deepmol.splitters.splitters import Splitter
 from deepmol.metrics.metrics import Metric
 
 from deepmol.utils.utils import load_from_disk
@@ -127,6 +127,7 @@ class SklearnModel(Model):
     def cross_validate(self,
                        dataset: Dataset,
                        metric: Metric,
+                       splitter: Splitter = None,
                        folds: int = 3):
         """
         Performs cross-validation on a dataset.
@@ -137,6 +138,8 @@ class SklearnModel(Model):
             Dataset to perform cross-validation on.
         metric: Metric
             Metric to evaluate model performance.
+        splitter: Splitter
+            Splitter to use for cross-validation.
         folds: int
             Number of folds to use for cross-validation.
 
@@ -147,20 +150,10 @@ class SklearnModel(Model):
             score of the best model, the fourth is the test scores of all models, the fifth is the average train scores
             of all folds and the sixth is the average test score of all folds.
         """
-        # TODO: add option to choose between splitters
-        if dataset.mode == 'classification':
-            splitter = SingletaskStratifiedSplitter()
-            datasets = splitter.k_fold_split(dataset, folds)
-        elif dataset.mode == 'regression':
-            splitter = RandomSplitter()
-            datasets = splitter.k_fold_split(dataset, folds)
-        else:
-            try:
-                splitter = SingletaskStratifiedSplitter()
-                datasets = splitter.k_fold_split(dataset, folds)
-            except Exception as e:
-                splitter = RandomSplitter()
-                datasets = splitter.k_fold_split(dataset, folds)
+        if splitter is None:
+            splitter = _get_splitter(dataset)
+
+        datasets = splitter.k_fold_split(dataset, folds)
 
         train_scores = []
         train_score_best_model = 0
@@ -177,11 +170,11 @@ class SklearnModel(Model):
 
             dummy_model.fit(train_ds)
 
-            train_score = dummy_model.evaluate(train_ds, metric)[0]
+            train_score = dummy_model.evaluate(train_ds, [metric])[0]
             train_scores.append(train_score[metric.name])
             avg_train_score += train_score[metric.name]
 
-            test_score = dummy_model.evaluate(test_ds, metric)[0]
+            test_score = dummy_model.evaluate(test_ds, [metric])[0]
             test_scores.append(test_score[metric.name])
             avg_test_score += test_score[metric.name]
 

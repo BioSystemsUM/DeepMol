@@ -21,48 +21,53 @@ class TestRDKitFingerprints(FeaturizerTestCase, TestCase):
         # test Atom Pair fingerprints (without NaN generation)
         dataset_rows_number = len(self.mock_dataset.mols)
         AtomPairFingerprint().featurize(self.mock_dataset)
+        with self.assertRaises(AttributeError):
+            self.mock_dataset._X
+        d = AtomPairFingerprint().featurize(self.mock_dataset)
+        self.assertEqual(dataset_rows_number, d._X.shape[0])
+        AtomPairFingerprint().featurize(self.mock_dataset, inplace=True)
         self.assertEqual(dataset_rows_number, self.mock_dataset._X.shape[0])
 
-        MorganFingerprint().featurize(self.mock_dataset)
+        MorganFingerprint().featurize(self.mock_dataset, inplace=True)
         self.assertEqual(dataset_rows_number, self.mock_dataset._X.shape[0])
 
-        MACCSkeysFingerprint().featurize(self.mock_dataset)
+        MACCSkeysFingerprint().featurize(self.mock_dataset, inplace=True)
         self.assertEqual(dataset_rows_number, self.mock_dataset._X.shape[0])
 
-        LayeredFingerprint().featurize(self.mock_dataset)
+        LayeredFingerprint().featurize(self.mock_dataset, inplace=True)
         self.assertEqual(dataset_rows_number, self.mock_dataset._X.shape[0])
 
-        RDKFingerprint().featurize(self.mock_dataset)
+        RDKFingerprint().featurize(self.mock_dataset, inplace=True)
         self.assertEqual(dataset_rows_number, self.mock_dataset._X.shape[0])
 
-        AtomPairFingerprintCallbackHash().featurize(self.mock_dataset)
+        AtomPairFingerprintCallbackHash().featurize(self.mock_dataset, inplace=True)
         self.assertEqual(dataset_rows_number, self.mock_dataset._X.shape[0])
 
     def test_featurize_with_nan(self):
         dataset_rows_number = len(self.mock_dataset_with_invalid.mols) - 1  # one mol has invalid smiles
 
         dataset = copy(self.mock_dataset_with_invalid)
-        AtomPairFingerprint(n_jobs=1).featurize(dataset)
+        AtomPairFingerprint(n_jobs=1).featurize(dataset, inplace=True)
         self.assertEqual(dataset_rows_number, dataset._X.shape[0])
 
         dataset = copy(self.mock_dataset_with_invalid)
-        MorganFingerprint().featurize(dataset)
+        MorganFingerprint().featurize(dataset, inplace=True)
         self.assertEqual(dataset_rows_number, dataset._X.shape[0])
 
         dataset = copy(self.mock_dataset_with_invalid)
-        MACCSkeysFingerprint().featurize(dataset)
+        MACCSkeysFingerprint().featurize(dataset, inplace=True)
         self.assertEqual(dataset_rows_number, dataset._X.shape[0])
 
         dataset = copy(self.mock_dataset_with_invalid)
-        LayeredFingerprint().featurize(dataset)
+        LayeredFingerprint().featurize(dataset, inplace=True)
         self.assertEqual(dataset_rows_number, dataset._X.shape[0])
 
         dataset = copy(self.mock_dataset_with_invalid)
-        RDKFingerprint().featurize(dataset)
+        RDKFingerprint().featurize(dataset, inplace=True)
         self.assertEqual(dataset_rows_number, dataset._X.shape[0])
 
         dataset = copy(self.mock_dataset_with_invalid)
-        AtomPairFingerprintCallbackHash().featurize(dataset)
+        AtomPairFingerprintCallbackHash().featurize(dataset, inplace=True)
         self.assertEqual(dataset_rows_number, dataset._X.shape[0])
 
     def test_units_of_fingerprints(self):
@@ -86,8 +91,8 @@ class TestRDKitFingerprints(FeaturizerTestCase, TestCase):
         molecule = dataset.mols[0]
         morgan_fingerprint = MorganFingerprint()
         morgan_fingerprint.draw_bit(molecule, 1,
-                                                file_path=os.path.join(TEST_DIR, "data",
-                                                                       'test_morgan_fingerprint_draw_bit.svg'))
+                                    file_path=os.path.join(TEST_DIR, "data",
+                                                           'test_morgan_fingerprint_draw_bit.svg'))
 
         self.assertTrue(os.path.exists(os.path.join(TEST_DIR, "data", 'test_morgan_fingerprint_draw_bit.svg')))
         os.remove(os.path.join(TEST_DIR, "data", 'test_morgan_fingerprint_draw_bit.svg'))
@@ -98,19 +103,20 @@ class TestRDKitFingerprints(FeaturizerTestCase, TestCase):
         dataset = copy(self.mock_dataset)
         molecule = dataset.mols[0]
         morgan_fingerprint = MorganFingerprint()
-        morgan_fingerprint.draw_bits(molecule, [1, 114, 227], file_path=os.path.join(TEST_DIR,
-                                                                                                 "data",
-                                                                                                 'test_morgan_fingerprint_draw_bit.svg'))
+        morgan_fingerprint.draw_bits(molecule, [1, 114, 227],
+                                     file_path=os.path.join(TEST_DIR,
+                                                            "data",
+                                                            'test_morgan_fingerprint_draw_bit.svg'))
         self.assertTrue(os.path.exists(os.path.join(TEST_DIR, "data", 'test_morgan_fingerprint_draw_bit.svg')))
 
         morgan_fingerprint.draw_bits(molecule, "ON", file_path=os.path.join(TEST_DIR,
-                                                                                        "data",
-                                                                                        'test_morgan_fingerprint_draw_bit.svg'))
+                                                                            "data",
+                                                                            'test_morgan_fingerprint_draw_bit.svg'))
         self.assertTrue(os.path.exists(os.path.join(TEST_DIR, "data", 'test_morgan_fingerprint_draw_bit.svg')))
 
         morgan_fingerprint.draw_bits(molecule, 1, file_path=os.path.join(TEST_DIR,
-                                                                                     "data",
-                                                                                     'test_morgan_fingerprint_draw_bit.svg'))
+                                                                         "data",
+                                                                         'test_morgan_fingerprint_draw_bit.svg'))
         self.assertTrue(os.path.exists(os.path.join(TEST_DIR, "data", 'test_morgan_fingerprint_draw_bit.svg')))
         os.remove(os.path.join(TEST_DIR, "data", 'test_morgan_fingerprint_draw_bit.svg'))
 
@@ -174,7 +180,7 @@ class TestRDKitFingerprints(FeaturizerTestCase, TestCase):
         molecule = dataset.mols[0]
         rdk_fingerprints = RDKFingerprint()
         rdk_fingerprints.draw_bits(molecule, [56, 61, 137], file_path=os.path.join(TEST_DIR, "data",
-                                                                                            "maccs_keys_fingerprints.svg"))
+                                                                                   "maccs_keys_fingerprints.svg"))
 
         self.assertTrue(os.path.exists(os.path.join(TEST_DIR, "data", "maccs_keys_fingerprints.svg")))
         os.remove(os.path.join(TEST_DIR, "data", "maccs_keys_fingerprints.svg"))

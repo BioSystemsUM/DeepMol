@@ -14,11 +14,11 @@ class TestKMeans(UnsupervisedBaseTestCase, TestCase):
     def validate_kmeans(self, n_clusters: Union[str, int] = 'elbow'):
         dataset = copy(self.dataset)
         kmeans = KMeans(n_clusters=n_clusters)
-        components_df = kmeans.run_unsupervised(dataset)
+        components_df = kmeans.run(dataset)
         if n_clusters == 'elbow':
             n_clusters = 1
-        self.assertEqual(components_df.X.shape, (dataset.X.shape[0], n_clusters))
-        kmeans.plot(components_df.X, path='test_components.png')
+        self.assertEqual(components_df._X.shape, (dataset.X.shape[0], n_clusters))
+        kmeans.plot(components_df._X, path='test_components.png')
 
     @patch.object(Figure, 'show')
     def test_run_unsupervised(self, mock_show):

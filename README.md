@@ -188,7 +188,7 @@ Seq2Seq and transformer-based are in  development and will be added soon.
 from deepmol.compound_featurization import MorganFingerprint
 
 # Compute morgan fingerprints for molecules in the previous loaded dataset
-MorganFingerprint(radius=2, size=1024).featurize(dataset)
+MorganFingerprint(radius=2, size=1024).featurize(dataset, inplace=True)
 # view the computed features (dataset.X)
 dataset.X
 ```
@@ -212,7 +212,7 @@ importance weights.
 from deepmol.feature_selection import LowVarianceFS
 
 # Feature Selection to remove features with low variance across molecules
-LowVarianceFS(0.15).select_features(dataset)
+LowVarianceFS(0.15).select_features(dataset, inplace=True)
 
 # print shape of the dataset to see difference in the X shape (fewer features)
 dataset.get_shape()
@@ -229,7 +229,7 @@ KMeans and UMAP.
 from deepmol.unsupervised import UMAP
 
 ump = UMAP()
-umap_df = ump.run_unsupervised(dataset)
+umap_df = ump.run(dataset)
 ump.plot(umap_df.X, path='umap_output.png')
 ```
 

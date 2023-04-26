@@ -39,7 +39,7 @@ class TestMultitaskDataset(MultitaskBaseTestCase, TestCase):
         md = copy(self.multitask_dataset)
         # replace np.nan in y by 0
         md._y = np.nan_to_num(md.y)
-        ConvMolFeat().featurize(md)
+        ConvMolFeat().featurize(md, inplace=True)
         train, test = RandomSplitter().train_test_split(md, frac_train=0.8, seed=123)
         graph = GraphConvModel(n_tasks=md.n_tasks)
         model_graph = DeepChemModel(graph)
@@ -64,7 +64,7 @@ class TestMultitaskDataset(MultitaskBaseTestCase, TestCase):
         md.label_names = md.label_names[:3]
         # replace np.nan in y by 0
         md._y = np.nan_to_num(md.y)
-        MorganFingerprint(radius=2, size=1024).featurize(md)
+        MorganFingerprint(radius=2, size=1024).featurize(md, inplace=True)
         train, test = RandomSplitter().train_test_split(md, frac_train=0.8, seed=123)
         mt_model = basic_multitask_dnn(input_shape=(1024,),
                                        task_names=md.label_names,

@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import numpy as np
 import umap
 
@@ -45,7 +47,7 @@ class UMAP(UnsupervisedLearn):
         else:
             self.umap = umap.UMAP(**kwargs)
 
-    def _run_unsupervised(self, dataset: Dataset, **kwargs) -> SmilesDataset:
+    def _run_unsupervised(self, dataset: Dataset, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
         """
         Compute cluster centers and predict cluster index for each sample.
 
@@ -58,20 +60,15 @@ class UMAP(UnsupervisedLearn):
 
         Returns
         -------
-        SmilesDataset
-            The dataset with the new features.
+        x_new : np.ndarray
+            The new features.
+        feature_names : np.ndarray
+            The names of the new features.
         """
         self.dataset = dataset
         x_new = self.umap.fit_transform(dataset.X)
-        feature_names = [f'UMAP_{i}' for i in range(x_new.shape[1])]
-        return SmilesDataset(smiles=dataset.smiles,
-                             mols=dataset.mols,
-                             X=x_new,
-                             y=dataset.y,
-                             ids=dataset.ids,
-                             feature_names=feature_names,
-                             label_names=dataset.label_names,
-                             mode=dataset.mode)
+        feature_names = np.array([f'UMAP_{i}' for i in range(x_new.shape[1])])
+        return x_new, feature_names
 
     def plot(self, x_new: np.ndarray, path: str = None, **kwargs) -> None:
         """

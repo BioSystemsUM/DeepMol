@@ -4,6 +4,7 @@ import joblib
 import numpy as np
 
 from deepmol.datasets import Dataset
+from deepmol.utils.decorators import copy_on_write_decorator
 
 
 class BaseScaler(ABC):
@@ -63,7 +64,8 @@ class BaseScaler(ABC):
             The scaler object.
         """
 
-    def fit_transform(self, dataset: Dataset, columns: list = None) -> None:
+    @copy_on_write_decorator
+    def fit_transform(self, dataset: Dataset, columns: list = None) -> Dataset:
         """
         Fits and transforms the dataset.
 
@@ -78,6 +80,7 @@ class BaseScaler(ABC):
             res = self._fit_transform(dataset.X[:, columns])
             # TODO: due to X being a property, the "set" method must choose so that it could behave as a numpy array
             dataset.X[:, columns] = res
+            return dataset
         except Exception as e:
             raise Exception(f"It was not possible to scale the data. Error: {e}")
 
@@ -90,7 +93,8 @@ class BaseScaler(ABC):
             The dataset to be fitted and transformed.
         """
 
-    def fit(self, dataset: Dataset, columns: list = None) -> None:
+    @copy_on_write_decorator
+    def fit(self, dataset: Dataset, columns: list = None) -> Dataset:
         """
         Fits the dataset.
 
@@ -103,7 +107,7 @@ class BaseScaler(ABC):
             columns = [i for i in range(dataset.X.shape[1])]
         try:
             self._fit(dataset.X[:, columns])
-
+            return dataset
         except:
             raise Exception("It was not possible to scale the data")
 
@@ -116,7 +120,8 @@ class BaseScaler(ABC):
             The dataset to be fitted.
         """
 
-    def transform(self, dataset: Dataset, columns: list = None) -> None:
+    @copy_on_write_decorator
+    def transform(self, dataset: Dataset, columns: list = None) -> Dataset:
         """
         Transforms the dataset.
 
@@ -130,7 +135,7 @@ class BaseScaler(ABC):
         try:
             res = self._transform(dataset.X[:, columns])
             dataset.X[:, columns] = res
-
+            return dataset
         except:
             raise Exception("It was not possible to scale the data")
 

@@ -8,6 +8,7 @@ from deepmol.datasets import Dataset
 from deepmol.loggers.logger import Logger
 from deepmol.parallelism.multiprocessing import JoblibMultiprocessing
 from deepmol.scalers import BaseScaler
+from deepmol.utils.decorators import copy_on_write_decorator
 from deepmol.utils.errors import PreConditionViolationException
 from deepmol.utils.utils import canonicalize_mol_object
 
@@ -68,6 +69,7 @@ class MolecularFeaturizer(ABC):
             remove_mol = True
             return np.array([]), remove_mol
 
+    @copy_on_write_decorator
     def featurize(self,
                   dataset: Dataset,
                   scaler: BaseScaler = None,

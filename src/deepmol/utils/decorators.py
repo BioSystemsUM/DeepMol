@@ -18,7 +18,6 @@ def inplace_decorator(method: callable) -> callable:
             return None
         else:
             result = self.__copy__()
-            kwargs["inplace"] = True
             method(result, *args, **kwargs)
-            return result if result is not None else self
+            return result
     return inplace_method

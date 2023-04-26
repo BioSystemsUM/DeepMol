@@ -20,6 +20,5 @@ def inplace_decorator(method: callable) -> callable:
             result = self.__copy__()
             kwargs["inplace"] = True
             method(result, *args, **kwargs)
-            self.__dict__.update(result.__dict__)
-            return self
+            return result if result is not None else self
     return inplace_method

@@ -13,17 +13,17 @@ class TestPCA(UnsupervisedBaseTestCase, TestCase):
     def validate_pca_classification(self, n_components):
         dataset = copy(self.dataset)
         pca = PCA(n_components=n_components)
-        components_df = pca.run_unsupervised(dataset)
-        self.assertEqual(components_df.X.shape, (dataset.X.shape[0], n_components))
-        pca.plot(components_df.X, path='test_components.png')
+        components_df = pca.run(dataset)
+        self.assertEqual(components_df._X.shape, (dataset.X.shape[0], n_components))
+        pca.plot(components_df._X, path='test_components.png')
         pca.plot_explained_variance(path='test_explained_variance.png')
 
     def validate_pca_regression(self, n_components):
         dataset = copy(self.regression_dataset)
         pca = PCA(n_components=n_components)
-        components_df = pca.run_unsupervised(dataset)
-        self.assertEqual(components_df.X.shape, (dataset.X.shape[0], n_components))
-        pca.plot(components_df.X, path='test_components.png')
+        components_df = pca.run(dataset)
+        self.assertEqual(components_df._X.shape, (dataset.X.shape[0], n_components))
+        pca.plot(components_df._X, path='test_components.png')
         pca.plot_explained_variance(path='test_explained_variance.png')
 
     @patch.object(Figure, 'show')

@@ -59,7 +59,7 @@ ds = LowVarianceFS(0.15).featureSelection(ds)
 ds.get_shape()
 print(len(np.where(ds.y==0)[0]), len(np.where(ds.y==1)[0]))
 
-pca = PCA().run_unsupervised(ds)
+pca = PCA().run(ds)
 
 
 splitter = SingletaskStratifiedSplitter()

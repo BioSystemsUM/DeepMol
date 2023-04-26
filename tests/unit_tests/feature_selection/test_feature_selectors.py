@@ -40,7 +40,7 @@ class TestFeatureSelectors(TestCase):
             df.feature_names = df.feature_names[arg]
 
         self.features_dataset.select_features_by_index.side_effect = side_effect
-        feature_selector(**kwargs).select_features(df)
+        feature_selector(**kwargs).select_features(df, inplace=True)
         self.assertLessEqual(len(self.features_dataset.feature_names), len(df.feature_names))
         self.assertLessEqual(self.features_dataset.X.shape[1], df.X.shape[1])
 

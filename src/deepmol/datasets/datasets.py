@@ -751,7 +751,7 @@ class SmilesDataset(Dataset):
                 warnings.warn('The dataset contains NaNs. Molecules with NaNs will be ignored.')
             unique, index = np.unique(self.X, return_index=True, axis=0)
             ids = self.ids[index]
-            self.select(ids, axis=0)
+            self.select(ids, axis=0, inplace=True)
 
     @inplace_decorator
     def remove_elements(self, ids: List[str]) -> None:
@@ -767,7 +767,7 @@ class SmilesDataset(Dataset):
         if len(ids) != 0:
             all_indexes = self.ids
             indexes_to_keep = list(set(all_indexes) - set(ids))
-            self.select(indexes_to_keep)
+            self.select(indexes_to_keep, inplace=True)
 
     @inplace_decorator
     def remove_elements_by_index(self, indexes: List[int]) -> None:
@@ -782,7 +782,7 @@ class SmilesDataset(Dataset):
         """
         if len(indexes) > 0:
             indexes = self._ids[indexes]
-            self.remove_elements(indexes)
+            self.remove_elements(indexes, inplace=True)
 
     @inplace_decorator
     def select_features_by_index(self, indexes: List[int]) -> None:
@@ -796,7 +796,7 @@ class SmilesDataset(Dataset):
             If True, the dataset will be modified in place.
         """
         if len(indexes) != 0:
-            self.select(indexes, axis=1)
+            self.select(indexes, axis=1, inplace=True)
             self.clear_cached_properties()
 
     @inplace_decorator
@@ -813,7 +813,7 @@ class SmilesDataset(Dataset):
         if len(names) != 0:
             # Get the indexes of the features to select
             indexes = [i for i, name in enumerate(self._feature_names) if name in names]
-            self.select(indexes, axis=1)
+            self.select(indexes, axis=1, inplace=True)
             self.clear_cached_properties()
 
     @inplace_decorator
@@ -836,15 +836,15 @@ class SmilesDataset(Dataset):
             else:
                 indexes = np.where(pd.isna(self._X).any(axis=1))[0]
             # rows with at least one NaN
-            self.remove_elements_by_index(indexes)
+            self.remove_elements_by_index(indexes, inplace=True)
         elif axis == 1:
             if len(self._X.shape) == 1:
                 indexes = np.where(np.isnan(self._X))[0]
-                self.remove_elements_by_index(indexes)
+                self.remove_elements_by_index(indexes, inplace=True)
             else:
                 # rows with all NaNs
                 indexes = np.where(np.isnan(self._X).all(axis=1))[0]
-                self.remove_elements_by_index(indexes)
+                self.remove_elements_by_index(indexes, inplace=True)
                 # columns with at least one NaN
                 columns = list(set(np.where(np.isnan(self._X).any(axis=0))[0]))
                 self._X = np.delete(self._X, columns, axis=1)

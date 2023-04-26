@@ -7,6 +7,7 @@ from rdkit.Chem import Mol
 from deepmol.datasets import Dataset
 from deepmol.loggers.logger import Logger
 from deepmol.parallelism.multiprocessing import JoblibMultiprocessing
+from deepmol.utils.decorators import copy_on_write_decorator
 from deepmol.utils.utils import canonicalize_mol_object, mol_to_smiles
 
 
@@ -53,6 +54,7 @@ class MolecularStandardizer(ABC):
         except Exception:
             return mol, mol_to_smiles(mol, canonical=True)
 
+    @copy_on_write_decorator
     def standardize(self, dataset: Dataset) -> Dataset:
         """
         Standardizes a dataset of molecules.

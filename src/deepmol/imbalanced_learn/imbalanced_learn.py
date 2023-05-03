@@ -14,9 +14,7 @@ from deepmol.imbalanced_learn._utils import _get_new_ids
 class ImbalancedLearn(object):
     """
     Class for dealing with imbalanced datasets.
-
     A ImbalancedLearn sampler receives a Dataset object and performs over/under sampling.
-
     Subclasses need to implement a _sample method to perform over/under sampling.
     """
 
@@ -34,12 +32,10 @@ class ImbalancedLearn(object):
     def sample(self, dataset: Dataset) -> Dataset:
         """
         Sample the dataset according to the sampling strategy.
-
         Parameters
         ----------
         dataset: Dataset
             Dataset to sample.
-
         Returns
         -------
         dataset: Dataset
@@ -58,7 +54,6 @@ class ImbalancedLearn(object):
     def _sample(self) -> (np.ndarray, np.ndarray, np.ndarray):
         """
         Perform over/under sampling.
-
         Returns
         -------
         features: np.ndarray
@@ -77,10 +72,8 @@ class ImbalancedLearn(object):
 class RandomOverSampler(ImbalancedLearn):
     """
     Class to perform naive random over-sampling.
-
     Wrapper around ImbalancedLearn RandomOverSampler
     (https://imbalanced-learn.readthedocs.io/en/stable/generated/imblearn.over_sampling.RandomOverSampler.html)
-
     Object to over-sample the minority class(es) by picking samples at random with replacement.
     """
 
@@ -89,15 +82,12 @@ class RandomOverSampler(ImbalancedLearn):
                  random_state: Union[int, RandomState] = None) -> None:
         """
         Initialize the RandomOverSampler.
-
         Parameters
         ----------
         sampling_strategy: Union[float, str, dict, callable]
             Sampling information to resample the data set.
-
             When float, it corresponds to the desired ratio of the number of samples in the minority class over
             the number of samples in the majority class after resampling.
-
             When str, specify the class targeted by the resampling. The number of samples in the different classes
             will be equalized. Possible choices are:
                 'minority': resample only the minority class;
@@ -105,15 +95,12 @@ class RandomOverSampler(ImbalancedLearn):
                 'not majority': resample all classes but the majority class;
                 'all': resample all classes;
                 'auto': equivalent to 'not majority'.
-
             When dict, the keys correspond to the targeted classes. The values correspond to the desired number of
             samples for each targeted class.
-
             When callable, function taking y and returns a dict. The keys correspond to the targeted classes.
             The values correspond to the desired number of samples for each class.
         random_state: Union[int, RandomState]
             Control the randomization of the algorithm.
-
             If int, random_state is the seed used by the random number generator;
             If RandomState instance, random_state is the random number generator;
             If None, the random number generator is the RandomState instance used by np.random.
@@ -127,14 +114,12 @@ class RandomOverSampler(ImbalancedLearn):
         """
         Returns new ids for the resampled dataset. If the sample is artificial, the id is prefixed with "ib_", followed
         by the original id.
-
         Parameters
         ----------
         ids: np.ndarray
             Original ids.
         idx: np.ndarray
             Indexes of the resampled dataset.
-
         Returns
         -------
         new_ids: np.ndarray
@@ -155,7 +140,6 @@ class RandomOverSampler(ImbalancedLearn):
     def _sample(self) -> (np.ndarray, np.ndarray, np.ndarray):
         """
         Compute the over-sampling.
-
         Returns
         -------
         x: np.ndarray
@@ -175,7 +159,6 @@ class RandomOverSampler(ImbalancedLearn):
 class SMOTE(ImbalancedLearn):
     """
     Class to perform Synthetic Minority Oversampling Technique (SMOTE) over-sampling.
-
     Wrapper around ImbalancedLearn SMOTE
     (https://imbalanced-learn.org/stable/generated/imblearn.over_sampling.SMOTE.html)
     """
@@ -187,15 +170,12 @@ class SMOTE(ImbalancedLearn):
                  n_jobs: int = None) -> None:
         """
         Initialize the SMOTE.
-
         Parameters
         ----------
         sampling_strategy: Union[float, str, dict, callable]
             Sampling information to resample the data set.
-
             When float, it corresponds to the desired ratio of the number of samples in the minority class over
             the number of samples in the majority class after resampling.
-
             When str, specify the class targeted by the resampling. The number of samples in the different classes
             will be equalized. Possible choices are:
                 'minority': resample only the minority class;
@@ -203,19 +183,14 @@ class SMOTE(ImbalancedLearn):
                 'not majority': resample all classes but the majority class;
                 'all': resample all classes;
                 'auto': equivalent to 'not majority'.
-
             When dict, the keys correspond to the targeted classes. The values correspond to the desired number of
             samples for each targeted class.
-
             When callable, function taking y and returns a dict. The keys correspond to the targeted classes.
             The values correspond to the desired number of samples for each class.
         random_state: Union[int, RandomState]
             Control the randomization of the algorithm.
-
             If int, random_state is the seed used by the random number generator;
-
             If RandomState instance, random_state is the random number generator;
-
             If None, the random number generator is the RandomState instance used by np.random.
         k_neighbors: int
             Number of nearest neighbours to used to construct synthetic samples.
@@ -232,7 +207,6 @@ class SMOTE(ImbalancedLearn):
     def _sample(self) -> (np.ndarray, np.ndarray, np.ndarray):
         """
         Compute the over-sampling.
-
         Returns
         -------
         x: np.ndarray
@@ -259,10 +233,8 @@ class SMOTE(ImbalancedLearn):
 class ClusterCentroids(ImbalancedLearn):
     """
     Class to perform ClusterCentroids under-sampling.
-
     Wrapper around ImbalancedLearn ClusterCentroids
     (https://imbalanced-learn.org/stable/generated/imblearn.under_sampling.ClusterCentroids.html)
-
     Perform under-sampling by generating centroids based on clustering.
     """
 
@@ -273,15 +245,12 @@ class ClusterCentroids(ImbalancedLearn):
                  voting: str = 'auto') -> None:
         """
         Initialize the ClusterCentroids.
-
         Parameters
         ----------
         sampling_strategy: Union[float, str, dict, callable]
             Sampling information to resample the data set.
-
             When float, it corresponds to the desired ratio of the number of samples in the minority class over
             the number of samples in the majority class after resampling.
-
             When str, specify the class targeted by the resampling. The number of samples in the different classes
             will be equalized. Possible choices are:
                 'minority': resample only the minority class;
@@ -289,29 +258,21 @@ class ClusterCentroids(ImbalancedLearn):
                 'not majority': resample all classes but the majority class;
                 'all': resample all classes;
                 'auto': equivalent to 'not majority'.
-
             When dict, the keys correspond to the targeted classes. The values correspond to the desired number of
             samples for each targeted class.
-
             When callable, function taking y and returns a dict. The keys correspond to the targeted classes.
             The values correspond to the desired number of samples for each class.
         random_state: Union[int, RandomState]
             Control the randomization of the algorithm.
-
             If int, random_state is the seed used by the random number generator;
-
             If RandomState instance, random_state is the random number generator;
-
             If None, the random number generator is the RandomState instance used by np.random.
         estimator: object, default=KMeans()
             Pass a sklearn.cluster.KMeans estimator.
         voting: str
             Voting strategy to generate the new samples:
-
             If 'hard', the nearest-neighbors of the centroids found using the clustering algorithm will be used.
-
             If 'soft', the centroids found by the clustering algorithm will be used.
-
             If 'auto', if the input is sparse, it will default on 'hard' otherwise, 'soft' will be used.
         """
         super().__init__()
@@ -323,7 +284,6 @@ class ClusterCentroids(ImbalancedLearn):
     def _sample(self) -> (np.ndarray, np.ndarray, np.ndarray):
         """
         Compute the under-sampling.
-
         Returns
         -------
         x: np.ndarray
@@ -345,10 +305,8 @@ class ClusterCentroids(ImbalancedLearn):
 class RandomUnderSampler(ImbalancedLearn):
     """
     Class to perform RandomUnderSampler under-sampling.
-
     Wrapper around ImbalancedLearn RandomUnderSampler
     (https://imbalanced-learn.org/stable/generated/imblearn.under_sampling.RandomUnderSampler.html)
-
     Under-sample the majority class(es) by randomly picking samples with or without replacement.
     """
 
@@ -358,15 +316,12 @@ class RandomUnderSampler(ImbalancedLearn):
                  replacement: bool = False) -> None:
         """
         Initialize the RandomUnderSampler.
-
         Parameters
         ----------
         sampling_strategy: Union[float, str, dict, callable]
             Sampling information to resample the data set.
-
             When float, it corresponds to the desired ratio of the number of samples in the minority class over
             the number of samples in the majority class after resampling.
-
             When str, specify the class targeted by the resampling. The number of samples in the different classes
             will be equalized. Possible choices are:
                 'minority': resample only the minority class;
@@ -374,19 +329,14 @@ class RandomUnderSampler(ImbalancedLearn):
                 'not majority': resample all classes but the majority class;
                 'all': resample all classes;
                 'auto': equivalent to 'not majority'.
-
             When dict, the keys correspond to the targeted classes. The values correspond to the desired number of
             samples for each targeted class.
-
             When callable, function taking y and returns a dict. The keys correspond to the targeted classes.
             The values correspond to the desired number of samples for each class.
         random_state: Union[int, RandomState]
             Control the randomization of the algorithm.
-
             If int, random_state is the seed used by the random number generator;
-
             If RandomState instance, random_state is the random number generator;
-
             If None, the random number generator is the RandomState instance used by np.random.
         replacement: bool
             Whether the sample is with or without replacement.
@@ -399,7 +349,6 @@ class RandomUnderSampler(ImbalancedLearn):
     def _sample(self) -> (np.ndarray, np.ndarray, np.ndarray):
         """
         Compute the under-sampling.
-
         Returns
         -------
         x: np.ndarray
@@ -425,10 +374,8 @@ class RandomUnderSampler(ImbalancedLearn):
 class SMOTEENN(ImbalancedLearn):
     """
     Class to perform SMOTEENN over and under-sampling.
-
     Wrapper around ImbalancedLearn SMOTEENN
     (https://imbalanced-learn.org/stable/generated/imblearn.combine.SMOTEENN.html)
-
     Over-sampling using SMOTE and cleaning using ENN.
     Combine over and under-sampling using SMOTE and Edited Nearest Neighbours.
     """
@@ -441,15 +388,12 @@ class SMOTEENN(ImbalancedLearn):
                  n_jobs: int = None) -> None:
         """
         Initialize the SMOTEENN.
-
         Parameters
         ----------
         sampling_strategy: Union[float, str, dict, callable]
             Sampling information to resample the data set.
-
             When float, it corresponds to the desired ratio of the number of samples in the minority class over
             the number of samples in the majority class after resampling.
-
             When str, specify the class targeted by the resampling. The number of samples in the different classes
             will be equalized. Possible choices are:
                 'minority': resample only the minority class;
@@ -457,19 +401,14 @@ class SMOTEENN(ImbalancedLearn):
                 'not majority': resample all classes but the majority class;
                 'all': resample all classes;
                 'auto': equivalent to 'not majority'.
-
             When dict, the keys correspond to the targeted classes. The values correspond to the desired number of
             samples for each targeted class.
-
             When callable, function taking y and returns a dict. The keys correspond to the targeted classes.
             The values correspond to the desired number of samples for each class.
         random_state: Union[int, RandomState]
             Control the randomization of the algorithm.
-
             If int, random_state is the seed used by the random number generator;
-
             If RandomState instance, random_state is the random number generator;
-
             If None, the random number generator is the RandomState instance used by np.random.
         smote: callable
             The imblearn.over_sampling.SMOTE object to use. If not given, a imblearn.over_sampling.SMOTE object
@@ -491,7 +430,6 @@ class SMOTEENN(ImbalancedLearn):
     def _sample(self) -> (np.ndarray, np.ndarray, np.ndarray):
         """
         Compute the under-sampling and over-sampling.
-
         Returns
         -------
         x: np.ndarray
@@ -514,10 +452,8 @@ class SMOTEENN(ImbalancedLearn):
 class SMOTETomek(ImbalancedLearn):
     """
     Class to perform SMOTETomek over and under-sampling.
-
     Wrapper around ImbalancedLearn SMOTETomek
     (https://imbalanced-learn.org/stable/generated/imblearn.combine.SMOTETomek.html)
-
     Over-sampling using SMOTE and cleaning using Tomek links.
     Combine over- and under-sampling using SMOTE and Tomek links.
     """
@@ -530,15 +466,12 @@ class SMOTETomek(ImbalancedLearn):
                  n_jobs: int = None) -> None:
         """
         Initialize the SMOTETomek.
-
         Parameters
         ----------
         sampling_strategy: Union[float, str, dict, callable]
             Sampling information to resample the data set.
-
             When float, it corresponds to the desired ratio of the number of samples in the minority class over
             the number of samples in the majority class after resampling.
-
             When str, specify the class targeted by the resampling. The number of samples in the different classes
             will be equalized. Possible choices are:
                 'minority': resample only the minority class;
@@ -546,19 +479,14 @@ class SMOTETomek(ImbalancedLearn):
                 'not majority': resample all classes but the majority class;
                 'all': resample all classes;
                 'auto': equivalent to 'not majority'.
-
             When dict, the keys correspond to the targeted classes. The values correspond to the desired number of
             samples for each targeted class.
-
             When callable, function taking y and returns a dict. The keys correspond to the targeted classes.
             The values correspond to the desired number of samples for each class.
         random_state: Union[int, RandomState]
             Control the randomization of the algorithm.
-
             If int, random_state is the seed used by the random number generator;
-
             If RandomState instance, random_state is the random number generator;
-
             If None, the random number generator is the RandomState instance used by np.random.
         smote: callable
             The imblearn.over_sampling.SMOTE object to use. If not given, a imblearn.over_sampling.SMOTE object
@@ -580,7 +508,6 @@ class SMOTETomek(ImbalancedLearn):
     def _sample(self) -> (np.ndarray, np.ndarray, np.ndarray):
         """
         Compute the under-sampling and over-sampling.
-
         Returns
         -------
         x: np.ndarray

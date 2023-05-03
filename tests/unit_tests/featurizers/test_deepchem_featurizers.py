@@ -11,7 +11,7 @@ from tests.unit_tests.featurizers.test_featurizers import FeaturizerTestCase
 class TestDeepChemFeaturizers(FeaturizerTestCase, TestCase):
 
     def validate_featurizer(self, featurizer, df, n_valid, **kwargs):
-        featurizer(**kwargs).featurize(df)
+        featurizer(**kwargs).featurize(df, inplace=True)
         self.assertEqual(len(df._X), n_valid)
 
     def test_featurize(self):

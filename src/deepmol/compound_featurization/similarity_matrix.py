@@ -5,6 +5,7 @@ import numpy as np
 from deepmol.compound_featurization._utils import calc_morgan_fingerprints, calc_similarity
 from deepmol.datasets import Dataset
 from deepmol.parallelism.multiprocessing import JoblibMultiprocessing
+from deepmol.utils.decorators import modify_object_inplace_decorator
 
 
 class TanimotoSimilarityMatrix:
@@ -46,6 +47,7 @@ class TanimotoSimilarityMatrix:
         """
         return calc_similarity(i, j, self.fps)
 
+    @modify_object_inplace_decorator
     def featurize(self,
                   dataset: Dataset,
                   **kwargs

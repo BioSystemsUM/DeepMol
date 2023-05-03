@@ -7,7 +7,7 @@ from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.feature_selection import VarianceThreshold, chi2, SelectKBest, SelectPercentile, RFECV, SelectFromModel
 
 from deepmol.datasets import Dataset
-from deepmol.utils.decorators import copy_on_write_decorator
+from deepmol.utils.decorators import modify_object_inplace_decorator
 
 
 class BaseFeatureSelector(ABC):
@@ -26,7 +26,7 @@ class BaseFeatureSelector(ABC):
         if self.__class__ == BaseFeatureSelector:
             raise Exception('Abstract class BaseFeatureSelector should not be instantiated')
 
-    @copy_on_write_decorator
+    @modify_object_inplace_decorator
     def select_features(self, dataset: Dataset):
         """
         Perform feature selection for the molecules present in the dataset.

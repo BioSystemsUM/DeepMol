@@ -24,9 +24,9 @@ class TestShap(TestCase):
                            shard_size=5,
                            mode='regression')
         self.regression_dataset = loader.create_dataset(sep=",")
-        TwoDimensionDescriptors().featurize(self.regression_dataset)
+        TwoDimensionDescriptors().featurize(self.regression_dataset, inplace=True)
         # to speed up tests
-        self.regression_dataset.select_features_by_name(self.regression_dataset.feature_names[:5])
+        self.regression_dataset.select_features_by_name(self.regression_dataset.feature_names[:5], inplace=True)
         self.rf_model = SklearnModel(RandomForestRegressor())
         self.rf_model.fit(self.regression_dataset)
         self.linear_model = SklearnModel(LinearRegression())
@@ -39,8 +39,8 @@ class TestShap(TestCase):
                            shard_size=5,
                            mode='classification')
         self.classification_dataset = loader.create_dataset(sep=",")
-        TwoDimensionDescriptors().featurize(self.classification_dataset)
-        self.classification_dataset.select_features_by_name(self.classification_dataset.feature_names[:5])
+        TwoDimensionDescriptors().featurize(self.classification_dataset, inplace=True)
+        self.classification_dataset.select_features_by_name(self.classification_dataset.feature_names[:5], inplace=True)
         self.class_rf_model = SklearnModel(RandomForestClassifier())
         self.class_rf_model.fit(self.classification_dataset)
 

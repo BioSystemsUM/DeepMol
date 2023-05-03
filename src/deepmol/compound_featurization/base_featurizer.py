@@ -104,7 +104,7 @@ class MolecularFeaturizer(ABC):
         features, remove_mols = zip(*features)
 
         remove_mols_list = np.array(remove_mols)
-        dataset.remove_elements(dataset.ids[remove_mols_list])
+        dataset.remove_elements(dataset.ids[remove_mols_list], inplace=True)
 
         features = np.array(features)
         features = features[~remove_mols_list]
@@ -119,15 +119,15 @@ class MolecularFeaturizer(ABC):
         dataset._X = features
         dataset.feature_names = self.feature_names
 
-        dataset.remove_nan(remove_nans_axis)
+        dataset.remove_nan(remove_nans_axis, inplace=True)
 
         if scaler and path_to_save_scaler:
             # transform data
-            scaler.fit_transform(dataset)
+            scaler.fit_transform(dataset, inplace=True)
             scaler.save(path_to_save_scaler)
 
         elif scaler:
-            scaler.transform(dataset)
+            scaler.transform(dataset, inplace=True)
 
         return dataset
 

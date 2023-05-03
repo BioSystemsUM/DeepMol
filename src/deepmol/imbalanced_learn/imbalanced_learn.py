@@ -7,7 +7,7 @@ from numpy.random import RandomState
 from sklearn.cluster import KMeans
 
 from deepmol.datasets import Dataset
-from deepmol.utils.decorators import copy_on_write_decorator
+from deepmol.utils.decorators import modify_object_inplace_decorator
 
 
 class ImbalancedLearn(object):
@@ -29,7 +29,7 @@ class ImbalancedLearn(object):
         self.features = None
         self.y = None
 
-    @copy_on_write_decorator
+    @modify_object_inplace_decorator
     def sample(self, train_dataset: Dataset):
         """
         Sample the dataset.

@@ -12,7 +12,7 @@ from deepmol.compound_featurization import MolecularFeaturizer
 from deepmol.compound_featurization._utils import get_conformers, get_dictionary_from_smiles
 from deepmol.datasets import Dataset
 from deepmol.loggers.logger import Logger
-from deepmol.utils.decorators import copy_on_write_decorator
+from deepmol.utils.decorators import modify_object_inplace_decorator
 from deepmol.utils.utils import mol_to_smiles
 
 
@@ -538,7 +538,7 @@ class SmilesSeqFeat:
         self.feature_names = ['smiles_seq_feat']
         self.logger = Logger()
 
-    @copy_on_write_decorator
+    @modify_object_inplace_decorator
     def featurize(self, dataset: Dataset) -> Dataset:
         """
         Featurizes a single molecule.

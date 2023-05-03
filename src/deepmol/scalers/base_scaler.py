@@ -4,7 +4,7 @@ import joblib
 import numpy as np
 
 from deepmol.datasets import Dataset
-from deepmol.utils.decorators import copy_on_write_decorator
+from deepmol.utils.decorators import modify_object_inplace_decorator
 
 
 class BaseScaler(ABC):
@@ -64,7 +64,7 @@ class BaseScaler(ABC):
             The scaler object.
         """
 
-    @copy_on_write_decorator
+    @modify_object_inplace_decorator
     def fit_transform(self, dataset: Dataset, columns: list = None) -> Dataset:
         """
         Fits and transforms the dataset.
@@ -93,7 +93,7 @@ class BaseScaler(ABC):
             The dataset to be fitted and transformed.
         """
 
-    @copy_on_write_decorator
+    @modify_object_inplace_decorator
     def fit(self, dataset: Dataset, columns: list = None) -> Dataset:
         """
         Fits the dataset.
@@ -120,7 +120,7 @@ class BaseScaler(ABC):
             The dataset to be fitted.
         """
 
-    @copy_on_write_decorator
+    @modify_object_inplace_decorator
     def transform(self, dataset: Dataset, columns: list = None) -> Dataset:
         """
         Transforms the dataset.

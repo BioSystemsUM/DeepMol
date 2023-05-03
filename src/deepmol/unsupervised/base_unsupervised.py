@@ -12,7 +12,7 @@ from kneed import KneeLocator
 from sklearn import cluster, decomposition, manifold
 
 from deepmol.loggers.logger import Logger
-from deepmol.utils.decorators import copy_on_write_decorator
+from deepmol.utils.decorators import modify_object_inplace_decorator
 
 
 class UnsupervisedLearn(ABC):
@@ -30,7 +30,7 @@ class UnsupervisedLearn(ABC):
         """
         self.logger = Logger()
 
-    @copy_on_write_decorator
+    @modify_object_inplace_decorator
     def run(self, dataset: Dataset, **kwargs) -> Dataset:
         """
         Run unsupervised learning.

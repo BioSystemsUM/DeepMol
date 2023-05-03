@@ -45,39 +45,45 @@ def inplace_decorator(method: callable) -> Union[callable, None]:
     return inplace_method
 
 
-def copy_on_write_decorator(method: callable) -> Union[callable, None]:
+def modify_object_inplace_decorator(method: callable) -> Union[callable, None]:
     """
-    Decorator to make a method copy-on-write.
+    Decorator to create a lazy copy-on-write version of a method.
+
+    This decorator performs modifications of an object that is received by the class, either inplace or on a copy of the
+    object, depending on the value of the `inplace` parameter.
+
+
+    This applies inplace
 
     Parameters
     ----------
     method: callable
-        Method to decorate.
+        The method to decorate.
 
     Returns
     -------
-    new_func: callable
-        Decorated method.
+    modify_object_wrapper: callable
+        The decorated method.
     """
-    def new_func(self, other_object, inplace=False, **kwargs):
+    def modify_object_wrapper(self, other_object, inplace=False, **kwargs):
         """
-        Method to make copy-on-write.
+        Method that modifies an input object inplace or on a copy.
 
         Parameters
         ----------
         self: object
-            the class instance object
+            The class instance object.
         other_object: object
-            Object to apply the method to.
+            The object to apply the method to.
         inplace: bool
-            Whether to apply the method inplace.
+            Whether to apply the method in place.
         kwargs: dict
             Keyword arguments to pass to the method.
 
         Returns
         -------
         new_object: object
-            New object.
+            The new object.
         """
         if inplace:
             # modify the other_object in-place
@@ -88,4 +94,4 @@ def copy_on_write_decorator(method: callable) -> Union[callable, None]:
             new_object = other_object.__copy__()
             method(self, new_object, **kwargs)
             return new_object
-    return new_func
+    return modify_object_wrapper

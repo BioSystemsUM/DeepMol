@@ -1,8 +1,9 @@
 import os
 import pickle
-from typing import Any, Union
+from typing import Any
 
 import joblib
+import numpy as np
 
 from deepmol.datasets import Dataset
 from deepmol.splitters.splitters import Splitter, SingletaskStratifiedSplitter, RandomSplitter
@@ -59,11 +60,6 @@ def load_model_from_disk(filename: str) -> Any:
 def _get_splitter(dataset: Dataset) -> Splitter:
     """
     Returns a splitter for a dataset.
-
-    Parameters
-    ----------
-    dataset: Dataset
-        The dataset to get the splitter for.
     """
     if dataset.mode == 'classification' and dataset.n_tasks == 1:
         splitter = SingletaskStratifiedSplitter()
@@ -72,28 +68,3 @@ def _get_splitter(dataset: Dataset) -> Splitter:
     else:
         splitter = RandomSplitter()
     return splitter
-
-
-def _save_keras_model(file_path: str,
-                      model: Union['deepchem.models.KerasModel', 'deepmol.models.keras_model.KerasModel'],
-                      model_builder: callable = None):
-    """
-    Saves a keras model to disk.
-
-    Parameters
-    ----------
-    file_path: str
-        The path to save the model to.
-    model: KerasModel
-        The keras model.
-    model_builder: callable
-        The model builder.
-    """
-    os.makedirs(file_path, exist_ok=True)
-    if model_builder is not None:
-        file_path_model_builder = os.path.join(file_path, 'model_builder.pkl')
-        save_to_disk(model_builder, file_path_model_builder)
-    # write model in h5 format
-    model_file_path = os.path.join(file_path, 'model.h5')
-    model.save(model_file_path)
-

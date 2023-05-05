@@ -3,6 +3,7 @@ from deepmol.models.models import Model
 from deepmol.models.sklearn_models import SklearnModel
 from deepmol.metrics.metrics import Metric
 from deepmol.splitters.splitters import Splitter
+from typing import Sequence
 import numpy as np
 from deepmol.datasets import Dataset
 from tensorflow.keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
@@ -57,6 +58,7 @@ class KerasModel(Model):
         self.loss = loss
         self.optimizer = optimizer
         self.learning_rate = learning_rate
+        self.model_type = 'keras'
         self.batch_size = batch_size
         self.epochs = epochs
         self.model_builder = model_builder
@@ -70,13 +72,6 @@ class KerasModel(Model):
                                         **kwargs)
         else:
             self.model = model_builder
-
-    @property
-    def model_type(self):
-        """
-        Returns the type of the model.
-        """
-        return 'keras'
 
     def fit(self, dataset: Dataset, **kwargs) -> None:
         """
@@ -121,13 +116,13 @@ class KerasModel(Model):
             self.logger.info(str(type(self.model)))
             return self.model.predict(dataset.X.astype('float32'))
 
-    def predict_on_batch(self, dataset: Dataset) -> np.ndarray:
+    def predict_on_batch(self, X: Dataset) -> np.ndarray:
         """
         Makes predictions on batch of data.
 
         Parameters
         ----------
-        dataset: Dataset
+        X: Dataset
           Dataset to make prediction on.
 
         Returns
@@ -135,27 +130,21 @@ class KerasModel(Model):
         np.ndarray
             numpy array of predictions.
         """
-        return super(KerasModel, self).predict(dataset)
+        return super(KerasModel, self).predict(X)
 
-    def fit_on_batch(self, dataset: Dataset) -> None:
+    def fit_on_batch(self, X: Sequence, y: Sequence):
         """
         Fits model on batch of data.
+        """
 
-        Parameters
-        ----------
-        dataset: Dataset
-          Dataset to fit model on.
+    def load(self) -> None:
+        """
+        Reloads the model from disk.
         """
 
     def save(self) -> None:
         """
         Saves the model to disk.
-        """
-
-    @classmethod
-    def load(cls, model_dir: str) -> 'KerasModel':
-        """
-        Loads the model from disk.
         """
 
     def get_task_type(self) -> str:

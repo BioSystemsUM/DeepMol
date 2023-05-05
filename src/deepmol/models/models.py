@@ -1,11 +1,9 @@
 import os
 import shutil
 import tempfile
-from abc import ABC
-from typing import List, Union, Tuple, Dict
+from abc import abstractmethod
+from typing import List, Sequence, Union, Tuple, Dict
 import numpy as np
-
-from deepmol.base import Predictor
 from deepmol.datasets import Dataset
 from deepmol.evaluator.evaluator import Evaluator
 from deepmol.loggers.logger import Logger
@@ -14,12 +12,12 @@ from deepmol.metrics.metrics import Metric
 from sklearn.base import BaseEstimator
 
 
-class Model(BaseEstimator, Predictor, ABC):
+class Model(BaseEstimator):
     """
     Abstract base class for ML/DL models.
     """
 
-    def __init__(self, model: BaseEstimator = None, model_dir: str = None, **kwargs) -> None:
+    def __init__(self, model: BaseEstimator = None, model_path: str = None, **kwargs) -> None:
         """
         Abstract class for all models.
         This is an abstact class and should not be invoked directly.
@@ -28,7 +26,7 @@ class Model(BaseEstimator, Predictor, ABC):
         ----------
         model: BaseEstimator
             Wrapper around ScikitLearn/Keras/Tensorflow/DeepChem model object.
-        model_dir: str
+        model_path: str
             Path to directory where model will be stored. If not specified, model will be stored in a temporary
             directory.
         """
@@ -37,18 +35,16 @@ class Model(BaseEstimator, Predictor, ABC):
                 "This constructor is for an abstract class and should never be called directly. Can only call from "
                 "subclass constructors.")
 
-        super().__init__()
-
         self.model_dir_is_temp = False
 
-        if model_dir is not None:
-            if not os.path.exists(model_dir):
-                os.makedirs(model_dir)
+        if model_path is not None:
+            if not os.path.exists(model_path):
+                os.makedirs(model_path)
         else:
-            model_dir = tempfile.mkdtemp()
+            model_path = tempfile.mkdtemp()
             self.model_dir_is_temp = True
 
-        self._model_dir = model_dir
+        self.model_dir = model_path
         self.model = model
         self.model_class = model.__class__
 
@@ -61,29 +57,41 @@ class Model(BaseEstimator, Predictor, ABC):
         if 'model_dir_is_temp' in dir(self) and self.model_dir_is_temp:
             shutil.rmtree(self.model_dir)
 
-    def fit_on_batch(self, dataset: Dataset) -> None:
+    def fit_on_batch(self, X: Sequence, y: Sequence):
         """
         Perform a single step of training.
 
         Parameters
         ----------
-        dataset: Dataset
-            Dataset to train on.
+        X: np.ndarray
+            the inputs for the batch
+        y: np.ndarray
+            the labels for the batch
         """
 
-    def predict_on_batch(self, dataset: Dataset) -> np.ndarray:
+    def predict_on_batch(self, X: Sequence):
         """
         Makes predictions on given batch of new data.
 
         Parameters
         ----------
-        dataset: Dataset
-            Dataset to make predictions on.
+        X: np.ndarray
+            array of features
         """
-
-    def reload(self) -> None:
+    @classmethod
+    def load(cls, file_path: str = None) -> 'Model':
         """
         Reload trained model from disk.
+
+        Parameters
+        ----------
+        file_path: str
+            Path to file where model is stored.
+
+        Returns
+        -------
+        Model
+            Model object.
         """
 
     @staticmethod
@@ -120,7 +128,18 @@ class Model(BaseEstimator, Predictor, ABC):
         """
         return os.path.join(model_dir, "model_params.joblib")
 
-    def _fit(self, dataset: Dataset):
+    def save(self, file_path: str = None) -> None:
+        """
+        Function for saving models.
+        Each subclass is responsible for overriding this method.
+
+        Parameters
+        ----------
+        file_path: str
+            Path to file where model should be saved.
+        """
+
+    def fit(self, dataset: Dataset):
         """
         Fits a model on data in a Dataset object.
 
@@ -155,19 +174,7 @@ class Model(BaseEstimator, Predictor, ABC):
         return y_pred
 
     def predict_proba(self, dataset: Dataset) -> np.ndarray:
-        """
-        Uses self to make predictions on provided Dataset object.
 
-        Parameters
-        ----------
-        dataset: Dataset
-            Dataset to make prediction on
-
-        Returns
-        -------
-        np.ndarray
-            A numpy array of predictions.
-        """
         y_pred = self.model.predict_proba(dataset.X)
         return y_pred
 

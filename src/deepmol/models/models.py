@@ -1,6 +1,7 @@
 import os
 import shutil
 import tempfile
+from abc import abstractmethod
 from typing import List, Sequence, Union, Tuple, Dict
 import numpy as np
 from deepmol.datasets import Dataset
@@ -43,7 +44,7 @@ class Model(BaseEstimator):
             model_path = tempfile.mkdtemp()
             self.model_dir_is_temp = True
 
-        self.model_path = model_path
+        self.model_dir = model_path
         self.model = model
         self.model_class = model.__class__
 
@@ -54,7 +55,7 @@ class Model(BaseEstimator):
         Delete model directory if it was created by this object.
         """
         if 'model_dir_is_temp' in dir(self) and self.model_dir_is_temp:
-            shutil.rmtree(self.model_path)
+            shutil.rmtree(self.model_dir)
 
     def fit_on_batch(self, X: Sequence, y: Sequence):
         """
@@ -78,14 +79,14 @@ class Model(BaseEstimator):
             array of features
         """
     @classmethod
-    def load(cls, folder_path: str) -> 'Model':
+    def load(cls, file_path: str = None) -> 'Model':
         """
         Reload trained model from disk.
 
         Parameters
         ----------
-        folder_path: str
-            Path to folder where model is stored.
+        file_path: str
+            Path to file where model is stored.
 
         Returns
         -------
@@ -108,7 +109,7 @@ class Model(BaseEstimator):
         str
             Path to model file.
         """
-        return os.path.join(model_dir, "model.pkl")
+        return os.path.join(model_dir, "model.joblib")
 
     @staticmethod
     def get_params_filename(model_dir: str) -> str:

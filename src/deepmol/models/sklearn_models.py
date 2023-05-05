@@ -1,14 +1,15 @@
-import os
 from typing import Sequence
 
 import numpy as np
 from sklearn.base import BaseEstimator
 
-from deepmol.models._utils import save_to_disk, _get_splitter, load_from_disk
+from deepmol.models._utils import save_to_disk, _get_splitter, load_model_from_disk
 from deepmol.models.models import Model
 from deepmol.datasets import Dataset
 from deepmol.splitters.splitters import Splitter
 from deepmol.metrics.metrics import Metric
+
+from deepmol.utils.utils import load_from_disk
 
 from sklearn.base import clone
 
@@ -37,7 +38,6 @@ class SklearnModel(Model):
         """
         super().__init__(model, model_path, **kwargs)
         self.mode = mode
-        self.parameters_to_save = {'mode': self.mode}
         self.model_type = 'sklearn'
 
     def fit_on_batch(self, X: Sequence, y: Sequence):
@@ -112,39 +112,30 @@ class SklearnModel(Model):
         """
         return super(SklearnModel, self).predict(dataset)
 
-    def save(self, folder_path: str = None):
+    def save(self, file_path: str = None):
         """
         Saves scikit-learn model to disk using joblib, numpy or pickle.
         Supported extensions: .joblib, .pkl, .npy
 
         Parameters
         ----------
-        folder_path: str
-            Folder path to save model to.
+        file_path: str
+            Path to save model to.
         """
-        if folder_path is None:
-            model_path = self.get_model_filename(self.model_path)
-        else:
-            if "." in folder_path:
-                raise ValueError("folder_path should be a folder, not a file")
-            os.makedirs(folder_path, exist_ok=True)
-            model_path = self.get_model_filename(folder_path)
+        if file_path is None:
+            file_path = self.get_model_filename(self.model_dir)
 
-        save_to_disk(self.model, model_path)
-
-        # change file path to keep the extension but add _params
-        parameters_file_path = model_path.split('.')[0] + '_params.' + model_path.split('.')[1]
-        save_to_disk(self.parameters_to_save, parameters_file_path)
+        save_to_disk(self.model, file_path)
 
     @classmethod
-    def load(cls, folder_path: str, **kwargs) -> 'SklearnModel':
+    def load(cls, model_path: str = None) -> 'SklearnModel':
         """
         Loads scikit-learn model from joblib or pickle file on disk.
         Supported extensions: .joblib, .pkl
 
         Parameters
         ----------
-        folder_path: str
+        model_path: str
             Path to model file.
 
         Returns
@@ -152,14 +143,8 @@ class SklearnModel(Model):
         SklearnModel
             The loaded scikit-learn model.
         """
-        if "." in folder_path:
-            raise ValueError("model_path should be a folder, not a file")
-        model_path = cls.get_model_filename(folder_path)
-        model = load_from_disk(model_path)
-        # change file path to keep the extension but add _params
-        parameters_file_path = model_path.split('.')[0] + '_params.' + model_path.split('.')[1]
-        params = load_from_disk(parameters_file_path)
-        instance = cls(model=model, model_path=model_path, **params)
+        model = load_model_from_disk(model_path)
+        instance = cls(model=model, model_path=model_path)
         return instance
 
     def cross_validate(self,

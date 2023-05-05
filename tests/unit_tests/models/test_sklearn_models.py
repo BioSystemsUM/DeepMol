@@ -1,3 +1,5 @@
+import os
+import shutil
 from unittest import TestCase
 
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, GradientBoostingRegressor
@@ -138,3 +140,40 @@ class TestSklearnModel(ModelsTestCase, TestCase):
         self.assertEqual(len(test_scores), 3)
         self.assertIsInstance(avg_train_score, float)
         self.assertIsInstance(avg_test_score, float)
+
+    def test_save_model(self):
+        rf = RandomForestClassifier()
+        model = SklearnModel(model=rf)
+        model.fit(self.binary_dataset)
+        model.save("test_model.pkl")
+        self.assertTrue(os.path.exists("test_model.pkl"))
+        os.remove("test_model.pkl")
+
+        model.save("test_model.joblib")
+        self.assertTrue(os.path.exists("test_model.joblib"))
+        os.remove("test_model.joblib")
+
+    def test_load_model(self):
+        rf = RandomForestClassifier()
+        model = SklearnModel(model=rf)
+        model.fit(self.binary_dataset)
+        model.save("test_model.pkl")
+        model.save("test_model.joblib")
+
+        model = SklearnModel.load("test_model.pkl")
+        y_test = model.predict(self.binary_dataset_test)
+        self.assertEqual(len(y_test), len(self.binary_dataset_test.y))
+        self.assertIsInstance(model, SklearnModel)
+        os.remove("test_model.pkl")
+
+        model = SklearnModel.load("test_model.joblib")
+        self.assertIsInstance(model, SklearnModel)
+        y_test = model.predict(self.binary_dataset_test)
+        self.assertEqual(len(y_test), len(self.binary_dataset_test.y))
+        os.remove("test_model.joblib")
+
+
+
+
+
+

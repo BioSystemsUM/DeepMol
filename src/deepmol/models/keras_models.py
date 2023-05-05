@@ -137,7 +137,7 @@ class KerasModel(Model):
         Fits model on batch of data.
         """
 
-    def reload(self) -> None:
+    def load(self) -> None:
         """
         Reloads the model from disk.
         """

@@ -1,3 +1,4 @@
+import pickle
 from typing import Callable
 from unittest import TestCase
 

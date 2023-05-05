@@ -1,6 +1,7 @@
 import os
 import shutil
 import tempfile
+from abc import abstractmethod
 from typing import List, Sequence, Union, Tuple, Dict
 import numpy as np
 from deepmol.datasets import Dataset
@@ -16,7 +17,7 @@ class Model(BaseEstimator):
     Abstract base class for ML/DL models.
     """
 
-    def __init__(self, model: BaseEstimator = None, model_dir: str = None, **kwargs) -> None:
+    def __init__(self, model: BaseEstimator = None, model_path: str = None, **kwargs) -> None:
         """
         Abstract class for all models.
         This is an abstact class and should not be invoked directly.
@@ -25,7 +26,7 @@ class Model(BaseEstimator):
         ----------
         model: BaseEstimator
             Wrapper around ScikitLearn/Keras/Tensorflow/DeepChem model object.
-        model_dir: str
+        model_path: str
             Path to directory where model will be stored. If not specified, model will be stored in a temporary
             directory.
         """
@@ -36,14 +37,14 @@ class Model(BaseEstimator):
 
         self.model_dir_is_temp = False
 
-        if model_dir is not None:
-            if not os.path.exists(model_dir):
-                os.makedirs(model_dir)
+        if model_path is not None:
+            if not os.path.exists(model_path):
+                os.makedirs(model_path)
         else:
-            model_dir = tempfile.mkdtemp()
+            model_path = tempfile.mkdtemp()
             self.model_dir_is_temp = True
 
-        self.model_dir = model_dir
+        self.model_dir = model_path
         self.model = model
         self.model_class = model.__class__
 
@@ -77,10 +78,20 @@ class Model(BaseEstimator):
         X: np.ndarray
             array of features
         """
-
-    def reload(self) -> None:
+    @classmethod
+    def load(cls, file_path: str = None) -> 'Model':
         """
         Reload trained model from disk.
+
+        Parameters
+        ----------
+        file_path: str
+            Path to file where model is stored.
+
+        Returns
+        -------
+        Model
+            Model object.
         """
 
     @staticmethod
@@ -117,12 +128,16 @@ class Model(BaseEstimator):
         """
         return os.path.join(model_dir, "model_params.joblib")
 
-    def save(self) -> None:
+    def save(self, file_path: str = None) -> None:
         """
         Function for saving models.
         Each subclass is responsible for overriding this method.
+
+        Parameters
+        ----------
+        file_path: str
+            Path to file where model should be saved.
         """
-        ("Each class model must implement its own save method.")
 
     def fit(self, dataset: Dataset):
         """

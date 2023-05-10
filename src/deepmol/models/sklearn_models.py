@@ -9,8 +9,6 @@ from deepmol.datasets import Dataset
 from deepmol.splitters.splitters import Splitter
 from deepmol.metrics.metrics import Metric
 
-from deepmol.utils.utils import load_from_disk
-
 from sklearn.base import clone
 
 
@@ -128,7 +126,7 @@ class SklearnModel(Model):
         save_to_disk(self.model, file_path)
 
     @classmethod
-    def load(cls, model_path: str = None) -> 'SklearnModel':
+    def load(cls, model_path: str, **kwargs) -> 'SklearnModel':
         """
         Loads scikit-learn model from joblib or pickle file on disk.
         Supported extensions: .joblib, .pkl

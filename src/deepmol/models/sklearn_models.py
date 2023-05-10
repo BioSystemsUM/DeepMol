@@ -7,8 +7,6 @@ from deepmol.datasets import Dataset
 from deepmol.splitters.splitters import Splitter
 from deepmol.metrics.metrics import Metric
 
-from deepmol.utils.utils import load_from_disk
-
 from sklearn.base import clone
 
 

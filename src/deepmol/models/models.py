@@ -79,7 +79,7 @@ class Model(BaseEstimator):
             array of features
         """
     @classmethod
-    def load(cls, file_path: str = None) -> 'Model':
+    def load(cls, file_path: str, **kwargs) -> 'Model':
         """
         Reload trained model from disk.
 

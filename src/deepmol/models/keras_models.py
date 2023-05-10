@@ -1,4 +1,8 @@
-from deepmol.models._utils import _get_splitter
+import os
+
+import keras
+
+from deepmol.models._utils import _get_splitter, save_to_disk, load_model_from_disk
 from deepmol.models.models import Model
 from deepmol.models.sklearn_models import SklearnModel
 from deepmol.metrics.metrics import Metric
@@ -111,7 +115,8 @@ class KerasModel(Model):
         """
         try:
             return self.model.predict_proba(dataset.X.astype('float32'))
-        except AttributeError:
+        except AttributeError as e:
+            self.logger.error(e)
             self.logger.info(str(self.model))
             self.logger.info(str(type(self.model)))
             return self.model.predict(dataset.X.astype('float32'))
@@ -137,15 +142,57 @@ class KerasModel(Model):
         Fits model on batch of data.
         """
 
-    def load(self) -> None:
+    @classmethod
+    def load(cls, file_path: str, **kwargs) -> 'KerasModel':
         """
         Reloads the model from disk.
-        """
 
-    def save(self) -> None:
+        Parameters
+        ----------
+        file_path: str
+            The path to load the model from.
+
+        Returns
+        -------
+        KerasModel
+            The loaded model.
+        """
+        file_path_model_builder = os.path.join(file_path, 'model_builder.pkl')
+        model_builder = load_model_from_disk(file_path_model_builder)
+        file_path_model = os.path.join(file_path, 'model.h5')
+        model = keras.models.load_model(file_path_model)
+        keras_model_class = cls(model_builder=model_builder, **kwargs)
+        keras_model_class.model.model = model
+        return keras_model_class
+
+    def save(self, file_path: str = None) -> None:
         """
         Saves the model to disk.
+
+        Parameters
+        ----------
+        file_path: str
+            The path to save the model to.
         """
+        if file_path is None:
+            if self.model_dir is None:
+                raise ValueError('No model directory specified.')
+            else:
+                # write self in pickle format
+                file_path = os.path.join(self.model_dir, 'model_builder.pkl')
+                save_to_disk(self.model_builder, file_path)
+                # write model in h5 format
+                file_path = os.path.join(self.model_dir, 'model.h5')
+                self.model.model.save(file_path)
+        else:
+            # write self in pickle format
+            if not os.path.exists(file_path):
+                os.makedirs(file_path, exist_ok=True)
+            file_path_model_builder = os.path.join(file_path, 'model_builder.pkl')
+            save_to_disk(self.model_builder, file_path_model_builder)
+            # write model in h5 format
+            file_path = os.path.join(file_path, 'model.h5')
+            self.model.model.save(file_path)
 
     def get_task_type(self) -> str:
         """

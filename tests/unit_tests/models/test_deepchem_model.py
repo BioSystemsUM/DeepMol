@@ -1,4 +1,5 @@
 import os
+from shutil import rmtree
 from unittest import TestCase
 from unittest.mock import MagicMock
 
@@ -8,7 +9,6 @@ from deepchem.models import GraphConvModel, TextCNNModel, GCNModel
 from rdkit.Chem import MolFromSmiles
 from sklearn.metrics import f1_score
 
-from deepmol.compound_featurization import MolGraphConvFeat
 from deepmol.datasets import SmilesDataset
 from deepmol.metrics.metrics_functions import roc_auc_score, precision_score, accuracy_score, confusion_matrix
 
@@ -171,19 +171,27 @@ class TestDeepChemModel(ModelsTestCase, TestCase):
                        residual=True, batchnorm=False, predictor_hidden_feats=64,
                        dropout=0.25, predictor_dropout=0.25,
                        learning_rate=1e-3,
-                       batch_size=20, mode="classification")
+                       batch_size=20, mode="classification", epochs=10)
 
         model = DeepChemModel(gcn)
         model.fit(self.binary_dataset)
         test_predict = model.predict(self.binary_dataset)
+        metrics = [Metric(f1_score, average='micro'), Metric(precision_score, average='micro')]
+
+        evaluation = model.evaluate(self.binary_dataset, metrics)
         model.save("test_model")
         new_gcn = GCNModel(n_tasks=1, graph_conv_layers=[32, 32], activation=None,
                            residual=True, batchnorm=False, predictor_hidden_feats=64,
                            dropout=0.25, predictor_dropout=0.25,
                            learning_rate=1e-3,
-                           batch_size=20, mode="classification")
+                           batch_size=20, mode="classification", epochs=10)
         new_model = DeepChemModel(new_gcn)
         new_model.load("test_model")
         new_predict = new_model.predict(self.binary_dataset)
+        new_evaluation = new_model.evaluate(self.binary_dataset, metrics)
         for i in range(len(test_predict)):
             self.assertEqual(test_predict[i, 0], new_predict[i, 0])
+
+        self.assertEqual(evaluation, new_evaluation)
+
+        rmtree("test_model")

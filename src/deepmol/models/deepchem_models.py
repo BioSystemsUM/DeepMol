@@ -11,9 +11,8 @@ from deepchem.models import Model as BaseDeepChemModel
 from deepchem.data import NumpyDataset
 import deepchem as dc
 
-from deepmol.models._utils import save_to_disk, _get_splitter, _save_keras_model
+from deepmol.models._utils import _get_splitter
 from deepmol.splitters.splitters import Splitter
-from deepmol.utils.utils import load_from_disk
 
 
 def generate_sequences(epochs: int, train_smiles: List[Union[str, int]]):
@@ -183,12 +182,6 @@ class DeepChemModel(BaseDeepChemModel):
 
         res = self.model.predict(new_dataset, transformers)
 
-        # if isinstance(self.model, (GATModel,GCNModel,AttentiveFPModel,LCNNModel)):
-        #     return res
-        # elif len(res.shape) == 2:
-        #     new_res = np.squeeze(res)
-        # else:
-        #     new_res = np.reshape(res,(res.shape[0],res.shape[2]))
         if isinstance(self.model, TorchModel) and self.model.model.mode == 'classification':
             return res
         else:
@@ -221,7 +214,7 @@ class DeepChemModel(BaseDeepChemModel):
             if isinstance(self.model, KerasModel):
                 self.model.model.save_weights(os.path.join(file_path, 'model_weights'))
             elif isinstance(self.model, TorchModel):
-                self.model.save_checkpoint()
+                self.model.save_checkpoint(max_checkpoints_to_keep=1, model_dir=file_path)
 
     def load(self, file_path: str = None):
         """
@@ -235,7 +228,7 @@ class DeepChemModel(BaseDeepChemModel):
                 self.model.model.load_weights(os.path.join(file_path, 'model_weights'))
                 return self
             elif isinstance(self.model, TorchModel):
-                self.model.get_checkpoints()
+                self.model.restore(model_dir=file_path)
 
     def cross_validate(self,
                        dataset: Dataset,

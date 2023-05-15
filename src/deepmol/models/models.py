@@ -44,7 +44,7 @@ class Model(BaseEstimator):
             model_path = tempfile.mkdtemp()
             self.model_dir_is_temp = True
 
-        self.model_dir = model_path
+        self.model_path = model_path
         self.model = model
         self.model_class = model.__class__
 

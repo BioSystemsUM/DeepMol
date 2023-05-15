@@ -1,5 +1,4 @@
 import shutil
-from copy import copy
 from unittest import TestCase
 
 from sklearn.metrics import roc_auc_score, precision_score, classification_report, accuracy_score, confusion_matrix

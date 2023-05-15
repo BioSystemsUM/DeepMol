@@ -204,11 +204,15 @@ class DeepChemModel(BaseDeepChemModel):
 
     def save(self, file_path: str = None):
         """
-        Saves deepchem model to disk using joblib.
+        Saves deepchem model to disk.
+
+        Parameters
+        ----------
+        file_path: str
+            Path to the file where the model will be stored.
         """
         if file_path is None:
-            if self.model_dir is None:
-                raise ValueError('No model directory specified.')
+            raise ValueError("DeepChemModel can not be saved to disk without specifying a file_path.")
         else:
             # write self in pickle format
             if isinstance(self.model, KerasModel):
@@ -218,10 +222,15 @@ class DeepChemModel(BaseDeepChemModel):
 
     def load(self, file_path: str = None):
         """
-        Loads deepchem model from joblib file on disk.
+        Loads deepchem model from disk.
+
+        Parameters
+        ----------
+        file_path: str
+            Path to the file where the model is stored.
         """
         if file_path is None:
-            raise ValueError('No model directory specified.')
+            raise ValueError("DeepChemModel can not be loaded from disk without specifying a file_path.")
         else:
             # load self from pickle format
             if isinstance(self.model, KerasModel):

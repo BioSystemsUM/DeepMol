@@ -195,3 +195,10 @@ class TestDeepChemModel(ModelsTestCase, TestCase):
         self.assertEqual(evaluation, new_evaluation)
 
         rmtree("test_model")
+
+        with self.assertRaises(ValueError):
+            model.save()
+        with self.assertRaises(ValueError):
+            new_model.load()
+
+

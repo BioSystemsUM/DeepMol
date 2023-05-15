@@ -1,3 +1,4 @@
+import os
 from typing import List, Sequence, Union
 import numpy as np
 
@@ -5,12 +6,12 @@ from deepmol.evaluator import Evaluator
 from deepmol.metrics.metrics import Metric
 from deepmol.datasets import Dataset
 from deepchem.models.torch_models import TorchModel
-from deepchem.models import SeqToSeq, WGAN
+from deepchem.models import SeqToSeq, WGAN, KerasModel
 from deepchem.models import Model as BaseDeepChemModel
 from deepchem.data import NumpyDataset
 import deepchem as dc
 
-from deepmol.models._utils import save_to_disk, _get_splitter
+from deepmol.models._utils import save_to_disk, _get_splitter, _save_keras_model
 from deepmol.splitters.splitters import Splitter
 from deepmol.utils.utils import load_from_disk
 
@@ -82,13 +83,6 @@ class DeepChemModel(BaseDeepChemModel):
         else:
             self.epochs = 30
 
-    @property
-    def model_type(self):
-        """
-        Returns the type of the model.
-        """
-        return 'deepchem'
-
     def fit_on_batch(self, X: Sequence, y: Sequence, w: Sequence):
         """
         Fits the model on a batch of data.
@@ -134,11 +128,20 @@ class DeepChemModel(BaseDeepChemModel):
         """
         # TODO: better way to validate model.mode and dataset.mode
         if dataset.mode != 'multitask':
-            if self.model.model.mode != dataset.mode:
-                raise ValueError(f"The model mode and the dataset mode must be the same. "
-                                 f"Got model mode: {self.model.model.mode} and dataset mode: {dataset.mode}")
+            if hasattr(self.model, 'mode'):
+                model_mode = self.model.mode
+                if model_mode != dataset.mode:
+                    raise ValueError(f"The model mode and the dataset mode must be the same. "
+                                     f"Got model mode: {model_mode} and dataset mode: {dataset.mode}")
+            else:
+                model_mode = self.model.model.mode
+                if model_mode != dataset.mode:
+                    raise ValueError(f"The model mode and the dataset mode must be the same. "
+                                     f"Got model mode: {model_mode} and dataset mode: {dataset.mode}")
+        else:
+            model_mode = dataset.mode
         # Afraid of model.fit not recognizes the input dataset as a deepchem.data.datasets.Dataset
-        if isinstance(self.model, TorchModel) and self.model.model.mode == 'regression':
+        if isinstance(self.model, TorchModel) and model_mode == 'regression':
             y = np.expand_dims(dataset.y, axis=-1)  # need to do this so that the loss is calculated correctly
         else:
             y = dataset.y
@@ -206,33 +209,33 @@ class DeepChemModel(BaseDeepChemModel):
         """
         return super(DeepChemModel, self).predict(dataset)
 
-    def save(self):
+    def save(self, file_path: str = None):
         """
         Saves deepchem model to disk using joblib.
         """
-        save_to_disk(self.model, self.get_model_filename(self.model_dir))
+        if file_path is None:
+            if self.model_dir is None:
+                raise ValueError('No model directory specified.')
+        else:
+            # write self in pickle format
+            if isinstance(self.model, KerasModel):
+                self.model.model.save_weights(os.path.join(file_path, 'model_weights'))
+            elif isinstance(self.model, TorchModel):
+                self.model.save_checkpoint()
 
-    @classmethod
-    def load(cls, model_dir: str) -> 'DeepChemModel':
-        """
-        Loads scikit-learn model from disk.
-
-        Parameters
-        ----------
-        model_dir: str
-            Directory where model is stored.
-
-        Returns
-        -------
-        DeepChemModel
-            The loaded deepchem model.
-        """
-
-    def reload(self):
+    def load(self, file_path: str = None):
         """
         Loads deepchem model from joblib file on disk.
         """
-        self.model = load_from_disk(self.get_model_filename(self.model_dir))
+        if file_path is None:
+            raise ValueError('No model directory specified.')
+        else:
+            # load self from pickle format
+            if isinstance(self.model, KerasModel):
+                self.model.model.load_weights(os.path.join(file_path, 'model_weights'))
+                return self
+            elif isinstance(self.model, TorchModel):
+                self.model.get_checkpoints()
 
     def cross_validate(self,
                        dataset: Dataset,

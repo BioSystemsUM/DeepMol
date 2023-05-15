@@ -2,7 +2,7 @@ import os
 
 import keras
 
-from deepmol.models._utils import _get_splitter, save_to_disk, load_model_from_disk
+from deepmol.models._utils import _get_splitter, save_to_disk, load_model_from_disk, _save_keras_model
 from deepmol.models.models import Model
 from deepmol.models.sklearn_models import SklearnModel
 from deepmol.metrics.metrics import Metric
@@ -179,20 +179,10 @@ class KerasModel(Model):
                 raise ValueError('No model directory specified.')
             else:
                 # write self in pickle format
-                file_path = os.path.join(self.model_dir, 'model_builder.pkl')
-                save_to_disk(self.model_builder, file_path)
-                # write model in h5 format
-                file_path = os.path.join(self.model_dir, 'model.h5')
-                self.model.model.save(file_path)
+                _save_keras_model(self.model_dir, self.model.model, self.model_builder)
         else:
             # write self in pickle format
-            if not os.path.exists(file_path):
-                os.makedirs(file_path, exist_ok=True)
-            file_path_model_builder = os.path.join(file_path, 'model_builder.pkl')
-            save_to_disk(self.model_builder, file_path_model_builder)
-            # write model in h5 format
-            file_path = os.path.join(file_path, 'model.h5')
-            self.model.model.save(file_path)
+            _save_keras_model(file_path, self.model.model, self.model_builder)
 
     def get_task_type(self) -> str:
         """

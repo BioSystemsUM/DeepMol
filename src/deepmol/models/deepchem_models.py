@@ -205,6 +205,22 @@ class DeepChemModel(BaseDeepChemModel):
         """
         save_to_disk(self.model, self.get_model_filename(self.model_dir))
 
+    @classmethod
+    def load(cls, model_dir: str) -> 'DeepChemModel':
+        """
+        Loads scikit-learn model from disk.
+
+        Parameters
+        ----------
+        model_dir: str
+            Directory where model is stored.
+
+        Returns
+        -------
+        DeepChemModel
+            The loaded deepchem model.
+        """
+
     def reload(self):
         """
         Loads deepchem model from joblib file on disk.

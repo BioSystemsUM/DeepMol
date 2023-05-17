@@ -3,7 +3,6 @@ from deepmol.models.models import Model
 from deepmol.models.sklearn_models import SklearnModel
 from deepmol.metrics.metrics import Metric
 from deepmol.splitters.splitters import Splitter
-from typing import Sequence
 import numpy as np
 from deepmol.datasets import Dataset
 from tensorflow.keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
@@ -116,13 +115,13 @@ class KerasModel(Model):
             self.logger.info(str(type(self.model)))
             return self.model.predict(dataset.X.astype('float32'))
 
-    def predict_on_batch(self, X: Dataset) -> np.ndarray:
+    def predict_on_batch(self, dataset: Dataset) -> np.ndarray:
         """
         Makes predictions on batch of data.
 
         Parameters
         ----------
-        X: Dataset
+        dataset: Dataset
           Dataset to make prediction on.
 
         Returns
@@ -130,21 +129,27 @@ class KerasModel(Model):
         np.ndarray
             numpy array of predictions.
         """
-        return super(KerasModel, self).predict(X)
+        return super(KerasModel, self).predict(dataset)
 
-    def fit_on_batch(self, X: Sequence, y: Sequence):
+    def fit_on_batch(self, dataset: Dataset) -> None:
         """
         Fits model on batch of data.
-        """
 
-    def reload(self) -> None:
-        """
-        Reloads the model from disk.
+        Parameters
+        ----------
+        dataset: Dataset
+          Dataset to fit model on.
         """
 
     def save(self) -> None:
         """
         Saves the model to disk.
+        """
+
+    @classmethod
+    def load(cls, model_dir: str) -> 'KerasModel':
+        """
+        Loads the model from disk.
         """
 
     def get_task_type(self) -> str:

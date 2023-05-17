@@ -1,5 +1,3 @@
-from typing import Sequence
-
 import numpy as np
 from sklearn.base import BaseEstimator
 
@@ -40,9 +38,14 @@ class SklearnModel(Model):
         self.mode = mode
         self.model_type = 'sklearn'
 
-    def fit_on_batch(self, X: Sequence, y: Sequence):
+    def fit_on_batch(self, dataset: Dataset) -> None:
         """
         Fits model on batch of data.
+
+        Parameters
+        ----------
+        dataset: Dataset
+          Dataset to train on.
         """
 
     def get_task_type(self) -> str:
@@ -55,7 +58,7 @@ class SklearnModel(Model):
         Returns the number of tasks.
         """
 
-    def fit(self, dataset: Dataset) -> None:
+    def _fit(self, dataset: Dataset) -> None:
         """
         Fits scikit-learn model to data.
 
@@ -117,6 +120,22 @@ class SklearnModel(Model):
         Saves scikit-learn model to disk using joblib.
         """
         save_to_disk(self.model, self.get_model_filename(self.model_dir))
+
+    @classmethod
+    def load(cls, model_dir: str) -> 'SklearnModel':
+        """
+        Loads scikit-learn model from disk.
+
+        Parameters
+        ----------
+        model_dir: str
+            Directory where model is stored.
+
+        Returns
+        -------
+        SklearnModel
+            The loaded scikit-learn model.
+        """
 
     def reload(self):
         """

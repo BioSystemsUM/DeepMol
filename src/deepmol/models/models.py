@@ -1,8 +1,10 @@
 import os
 import shutil
 import tempfile
-from typing import List, Sequence, Union, Tuple, Dict
+from typing import List, Union, Tuple, Dict
 import numpy as np
+
+from deepmol.base import Predictor
 from deepmol.datasets import Dataset
 from deepmol.evaluator.evaluator import Evaluator
 from deepmol.loggers.logger import Logger
@@ -11,7 +13,7 @@ from deepmol.metrics.metrics import Metric
 from sklearn.base import BaseEstimator
 
 
-class Model(BaseEstimator):
+class Model(BaseEstimator, Predictor):
     """
     Abstract base class for ML/DL models.
     """
@@ -33,6 +35,8 @@ class Model(BaseEstimator):
             raise ValueError(
                 "This constructor is for an abstract class and should never be called directly. Can only call from "
                 "subclass constructors.")
+
+        super().__init__()
 
         self.model_dir_is_temp = False
 
@@ -56,26 +60,24 @@ class Model(BaseEstimator):
         if 'model_dir_is_temp' in dir(self) and self.model_dir_is_temp:
             shutil.rmtree(self.model_dir)
 
-    def fit_on_batch(self, X: Sequence, y: Sequence):
+    def fit_on_batch(self, dataset: Dataset) -> None:
         """
         Perform a single step of training.
 
         Parameters
         ----------
-        X: np.ndarray
-            the inputs for the batch
-        y: np.ndarray
-            the labels for the batch
+        dataset: Dataset
+            Dataset to train on.
         """
 
-    def predict_on_batch(self, X: Sequence):
+    def predict_on_batch(self, dataset: Dataset) -> np.ndarray:
         """
         Makes predictions on given batch of new data.
 
         Parameters
         ----------
-        X: np.ndarray
-            array of features
+        dataset: Dataset
+            Dataset to make predictions on.
         """
 
     def reload(self) -> None:
@@ -117,14 +119,7 @@ class Model(BaseEstimator):
         """
         return os.path.join(model_dir, "model_params.joblib")
 
-    def save(self) -> None:
-        """
-        Function for saving models.
-        Each subclass is responsible for overriding this method.
-        """
-        ("Each class model must implement its own save method.")
-
-    def fit(self, dataset: Dataset):
+    def _fit(self, dataset: Dataset):
         """
         Fits a model on data in a Dataset object.
 
@@ -159,7 +154,19 @@ class Model(BaseEstimator):
         return y_pred
 
     def predict_proba(self, dataset: Dataset) -> np.ndarray:
+        """
+        Uses self to make predictions on provided Dataset object.
 
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to make prediction on
+
+        Returns
+        -------
+        np.ndarray
+            A numpy array of predictions.
+        """
         y_pred = self.model.predict_proba(dataset.X)
         return y_pred
 
@@ -201,3 +208,27 @@ class Model(BaseEstimator):
         """
         Get number of tasks.
         """
+
+    @property
+    def model_dir(self):
+        """
+        Path to directory where model will be stored.
+
+        Returns
+        -------
+        str
+            Path to model directory.
+        """
+        return self._model_dir
+
+    @model_dir.setter
+    def model_dir(self, value):
+        """
+        Set path to directory where model will be stored.
+
+        Parameters
+        ----------
+        value: str
+            Path to model directory.
+        """
+        self._model_dir = value

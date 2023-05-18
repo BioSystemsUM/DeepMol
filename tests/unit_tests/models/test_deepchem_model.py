@@ -35,7 +35,6 @@ class TestDeepChemModel(ModelsTestCase, TestCase):
         with open('test_save.pkl', 'rb') as f:
             graph_loaded = pickle.load(f)
 
-
     def test_fit_predict_evaluate(self):
         ds_train = self.binary_dataset
         ds_train.X = ConvMolFeaturizer().featurize([MolFromSmiles('CCC')] * 100)
@@ -108,13 +107,15 @@ class TestDeepChemModel(ModelsTestCase, TestCase):
         ds_test.X = ConvMolFeaturizer().featurize([MolFromSmiles('CCC')] * 10)
 
         graph = GraphConvModel(n_tasks=ds_train.n_tasks, mode='classification')
-        model_graph = DeepChemModel(graph)
+        model_graph = DeepChemModel(graph, n_tasks=ds_train.n_tasks, epochs=3)
 
         model_graph.fit(ds_train)
         test_preds = model_graph.predict(ds_test)
 
         model_graph.save("test_model")
         model_graph_loaded = DeepChemModel.load("test_model")
+        self.assertEqual(model_graph.n_tasks, ds_train.n_tasks)
+        self.assertEqual(model_graph.epochs, 3)
         new_predictions = model_graph_loaded.predict(ds_test)
         for i in range(len(test_preds)):
             self.assertEqual(test_preds[i, 0, 0], new_predictions[i, 0, 0])
@@ -192,13 +193,7 @@ class TestDeepChemModel(ModelsTestCase, TestCase):
 
         evaluation = model.evaluate(self.binary_dataset, metrics)
         model.save("test_model")
-        new_gcn = GCNModel(n_tasks=1, graph_conv_layers=[32, 32], activation=None,
-                           residual=True, batchnorm=False, predictor_hidden_feats=64,
-                           dropout=0.25, predictor_dropout=0.25,
-                           learning_rate=1e-3,
-                           batch_size=20, mode="classification", epochs=10)
-        new_model = DeepChemModel(new_gcn)
-        new_model.load("test_model")
+        new_model = DeepChemModel.load("test_model")
         new_predict = new_model.predict(self.binary_dataset)
         new_evaluation = new_model.evaluate(self.binary_dataset, metrics)
         for i in range(len(test_predict)):
@@ -206,11 +201,21 @@ class TestDeepChemModel(ModelsTestCase, TestCase):
 
         self.assertEqual(evaluation, new_evaluation)
 
-        rmtree("test_model")
+    def test_save_without_model_dir(self):
+        self.binary_dataset.X = MolGraphConvFeaturizer().featurize([MolFromSmiles('CCC')] * 100)
 
-        with self.assertRaises(ValueError):
-            model.save()
-        with self.assertRaises(ValueError):
-            new_model.load()
+        gcn = GCNModel(n_tasks=1, graph_conv_layers=[32, 32], activation=None,
+                       residual=True, batchnorm=False, predictor_hidden_feats=64,
+                       dropout=0.25, predictor_dropout=0.25,
+                       learning_rate=1e-3,
+                       batch_size=20, mode="classification", epochs=10)
+
+        model = DeepChemModel(gcn, model_dir="test_model")
+        model.fit(self.binary_dataset)
+        model.save()
+        model = DeepChemModel.load("test_model")
+        model.predict(self.binary_dataset)
+        self.assertTrue(os.path.exists("test_model"))
+
 
 

@@ -1,8 +1,11 @@
 import os
+import pickle
+from copy import deepcopy, copy
 from shutil import rmtree
 from unittest import TestCase
 from unittest.mock import MagicMock
 
+import dill
 import numpy as np
 from deepchem.feat import ConvMolFeaturizer, MolGraphConvFeaturizer
 from deepchem.models import GraphConvModel, TextCNNModel, GCNModel
@@ -14,13 +17,24 @@ from deepmol.metrics.metrics_functions import roc_auc_score, precision_score, ac
 
 from deepmol.metrics import Metric
 from deepmol.models import DeepChemModel
+from deepmol.models._utils import save_to_disk
 from deepmol.splitters import RandomSplitter
+from deepmol.utils.utils import load_from_disk
 from unit_tests.models.test_models import ModelsTestCase
 
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 
 class TestDeepChemModel(ModelsTestCase, TestCase):
+
+    def test_save_(self):
+        graph = GraphConvModel(n_tasks=2, mode='classification')
+
+        with open('test_save.pkl', 'wb') as f:
+            dill.dump(graph, f)
+        with open('test_save.pkl', 'rb') as f:
+            graph_loaded = pickle.load(f)
+
 
     def test_fit_predict_evaluate(self):
         ds_train = self.binary_dataset
@@ -100,9 +114,7 @@ class TestDeepChemModel(ModelsTestCase, TestCase):
         test_preds = model_graph.predict(ds_test)
 
         model_graph.save("test_model")
-        new_graph = GraphConvModel(n_tasks=ds_train.n_tasks, mode='classification')
-        new_model_graph = DeepChemModel(new_graph)
-        model_graph_loaded = new_model_graph.load("test_model")
+        model_graph_loaded = DeepChemModel.load("test_model")
         new_predictions = model_graph_loaded.predict(ds_test)
         for i in range(len(test_preds)):
             self.assertEqual(test_preds[i, 0, 0], new_predictions[i, 0, 0])

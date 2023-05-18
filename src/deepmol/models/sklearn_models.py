@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.base import BaseEstimator
 
-from deepmol.models._utils import save_to_disk, _get_splitter
+from deepmol.models._utils import save_to_disk, _get_splitter, load_model_from_disk
 from deepmol.models.models import Model
 from deepmol.datasets import Dataset
 from deepmol.splitters.splitters import Splitter
@@ -36,7 +36,13 @@ class SklearnModel(Model):
         """
         super().__init__(model, model_dir, **kwargs)
         self.mode = mode
-        self.model_type = 'sklearn'
+
+    @property
+    def model_type(self):
+        """
+        Returns the type of the model.
+        """
+        return 'sklearn'
 
     def fit_on_batch(self, dataset: Dataset) -> None:
         """
@@ -115,27 +121,40 @@ class SklearnModel(Model):
         """
         return super(SklearnModel, self).predict(dataset)
 
-    def save(self):
+    def save(self, file_path: str = None):
         """
-        Saves scikit-learn model to disk using joblib.
-        """
-        save_to_disk(self.model, self.get_model_filename(self.model_dir))
-
-    @classmethod
-    def load(cls, model_dir: str) -> 'SklearnModel':
-        """
-        Loads scikit-learn model from disk.
+        Saves scikit-learn model to disk using joblib, numpy or pickle.
+        Supported extensions: .joblib, .pkl, .npy
 
         Parameters
         ----------
-        model_dir: str
-            Directory where model is stored.
+        file_path: str
+            Path to save model to.
+        """
+        if file_path is None:
+            file_path = self.get_model_filename(self.model_dir)
+
+        save_to_disk(self.model, file_path)
+
+    @classmethod
+    def load(cls, model_path: str, **kwargs) -> 'SklearnModel':
+        """
+        Loads scikit-learn model from joblib or pickle file on disk.
+        Supported extensions: .joblib, .pkl
+
+        Parameters
+        ----------
+        model_path: str
+            Path to model file.
 
         Returns
         -------
         SklearnModel
             The loaded scikit-learn model.
         """
+        model = load_model_from_disk(model_path)
+        instance = cls(model=model, model_dir=model_path)
+        return instance
 
     def reload(self):
         """

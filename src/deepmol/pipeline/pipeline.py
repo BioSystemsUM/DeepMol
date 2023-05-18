@@ -1,3 +1,4 @@
+import json
 import os
 from datetime import datetime
 from typing import List, Tuple, Union, Dict
@@ -7,6 +8,7 @@ import numpy as np
 from deepmol.base import Transformer, Predictor
 from deepmol.datasets import Dataset
 from deepmol.metrics import Metric
+from deepmol.pipeline._utils import _get_predictor_instance
 
 
 class Pipeline(Transformer):
@@ -34,7 +36,6 @@ class Pipeline(Transformer):
         self.steps = steps
         self.path = path
 
-    @property
     def is_fitted(self) -> bool:
         """
         Whether the pipeline is fitted.
@@ -44,7 +45,7 @@ class Pipeline(Transformer):
         is_fitted: bool
             Whether the pipeline is fitted.
         """
-        return all([step[1].is_fitted for step in self.steps])
+        return all([step[1].is_fitted() for step in self.steps])
 
     def is_prediction_pipeline(self) -> bool:
         """
@@ -86,9 +87,6 @@ class Pipeline(Transformer):
 
         if not os.path.exists(self.path):
             os.makedirs(self.path)
-
-        if self.is_prediction_pipeline():
-            self.steps[-1][1].model_dir = self.path
 
     def fit(self, dataset_train: Dataset) -> 'Pipeline':
         """
@@ -226,16 +224,85 @@ class Pipeline(Transformer):
 
     def save(self):
         """
-        Save the pipeline to disk.
+        Save the pipeline to disk (transformers and predictor).
+        The sequence of transformers is saved in a config file. The transformers and predictor are saved in separate
+        files. Transformers are saved as pickle files, while the predictor is saved using its own save method.
         """
         self._set_paths()
-        for name, transformer in self.steps[:-1]:
-            transformer.to_pickle(self.path)
+        steps_to_save = {}
+        for i, (name, transformer) in enumerate(self.steps[:-1]):
+            transformer_path = os.path.join(self.path, f'{name}.pkl')
+            transformer.to_pickle(transformer_path)
+            steps_to_save[i] = {'name': name, 'type': 'transformer', 'path': transformer_path}
+
         if self.is_prediction_pipeline():
-            self.steps[-1][1].save()
+            # TODO: make model_dir mandatory or something by default
+            predictor_path = os.path.join(self.path, f'{self.steps[-1][1].model_dir}')
+            self.steps[-1][1].save(predictor_path)
+            steps_to_save[len(self.steps) - 1] = {'name': self.steps[-1][0],
+                                                  'type': 'predictor',
+                                                  'model_type': self.steps[-1][1].model_type,
+                                                  'is_fitted': self.steps[-1][1].is_fitted(),
+                                                  'path': predictor_path}
         else:
-            self.steps[-1][1].to_pickle(self.path)
+            transformer_path = os.path.join(self.path, f'{self.steps[-1][0]}.pkl')
+            self.steps[-1][1].to_pickle(transformer_path)
+            steps_to_save[len(self.steps) - 1] = {'name': self.steps[-1][0],
+                                                  'type': 'transformer',
+                                                  'is_fitted': self.steps[-1][1].is_fitted(),
+                                                  'path': transformer_path}
+        # Save config
+        config_path = os.path.join(self.path, 'config.json')
+        with open(config_path, 'w') as f:
+            json.dump(steps_to_save, f)
+
+        pipeline_info = {'path': self.path}
+        pipeline_path = os.path.join(self.path, 'pipeline.json')
+        with open(pipeline_path, 'w') as f:
+            json.dump(pipeline_info, f)
 
     @classmethod
     def load(cls, path: str) -> 'Pipeline':
-        pass
+        """
+        Load the pipeline from disk.
+        The sequence of transformers is loaded from a config file. The transformers and predictor are loaded from
+        separate files. Transformers are loaded from pickle files, while the predictor is loaded using its own load
+        method.
+
+        Parameters
+        ----------
+        path: str
+            Path to the directory where the pipeline is saved.
+
+        Returns
+        -------
+        pipeline: Pipeline
+            Loaded pipeline.
+        """
+        # load config
+        config_path = os.path.join(path, 'config.json')
+        with open(config_path, 'r') as f:
+            config = json.load(f)
+        config = sorted(config.items(), key=lambda x: x[0])
+
+        state_path = os.path.join(path, 'pipeline.json')
+        with open(state_path, 'r') as f:
+            state = json.load(f)
+
+        steps = []
+        for _, step in config:
+            step_name = step['name']
+            step_path = step['path']
+            step_is_fitted = step['is_fitted']
+            if step['type'] == 'transformer':
+                transformer = Transformer.from_pickle(step_path)
+                transformer._is_fitted = step_is_fitted
+                steps.append((step_name, transformer))
+            elif step['type'] == 'predictor':
+                predictor = _get_predictor_instance(step['model_type']).load(step_path)
+                predictor._is_fitted = step_is_fitted
+                steps.append((step_name, predictor))
+            else:
+                raise ValueError(f'Unknown step type {step["type"]}.')
+        instance = cls(steps=steps, path=state['path'])
+        return instance

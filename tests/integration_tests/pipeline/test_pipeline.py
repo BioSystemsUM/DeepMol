@@ -25,8 +25,14 @@ class TestPipeline(TestCase):
 
     def test_predictor_pipeline(self):
         rf = RandomForestClassifier()
-        model = SklearnModel(model=rf)
+        model = SklearnModel(model=rf, model_dir='model.pkl')
         pipeline = Pipeline(steps=[('model', model)])
+
+        pipeline.save()
+
+        pipeline2 = Pipeline.load(pipeline.path)
+        self.assertFalse(pipeline2.is_fitted())
+
         pipeline.fit_transform(self.dataset)
         predictions = pipeline.predict(self.dataset)
         self.assertEqual(len(predictions), len(self.dataset))
@@ -36,4 +42,5 @@ class TestPipeline(TestCase):
 
         pipeline.save()
 
-        pipeline2 = Pipeline.load(pipeline.path)
+        pipeline3 = Pipeline.load(pipeline.path)
+        self.assertTrue(pipeline3.is_fitted())

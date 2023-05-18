@@ -22,3 +22,4 @@ plotly==5.13.1
 cached_property==1.5.2
 numpy==1.23.5
 dgllife==0.3.2
+dill==0.3.6

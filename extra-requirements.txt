@@ -6,6 +6,7 @@ pillow==8.4.0: preprocessing, deep_learning, machine_learning, test
 h5py==3.7.0: preprocessing, deep_learning, machine_learning, test
 cached_property==1.5.2: preprocessing, deep_learning, machine_learning, test
 numpy==1.23.5: preprocessing, deep_learning, machine_learning, test
+dill==0.3.6: preprocessing, deep_learning, machine_learning, test
 shap==0.41.0: deep_learning, machine_learning
 gensim==4.2.0: preprocessing
 imblearn: preprocessing

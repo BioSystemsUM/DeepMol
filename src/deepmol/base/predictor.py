@@ -18,7 +18,8 @@ class Predictor:
         """
         Initializes the predictor.
         """
-        self.is_fitted_ = False
+        self._model_dir = None
+        self._is_fitted = False
 
     @property
     def model_dir(self) -> str:
@@ -30,7 +31,31 @@ class Predictor:
         str
             Directory where the model is stored.
         """
-        return self.model_dir
+        return self._model_dir
+
+    @model_dir.setter
+    def model_dir(self, model_dir: str) -> None:
+        """
+        Sets the directory where the model will be stored.
+
+        Parameters
+        ----------
+        model_dir: str
+            Directory where the model will be stored.
+        """
+        self._model_dir = model_dir
+
+    @property
+    def model_type(self) -> str:
+        """
+        Type of model.
+
+        Returns
+        -------
+        str
+            Type of model.
+        """
+        return self.model_type
 
     def fit(self, dataset: Dataset) -> 'Predictor':
         """
@@ -47,7 +72,7 @@ class Predictor:
             self
         """
         self._fit(dataset)
-        self.is_fitted_ = True
+        self._is_fitted = True
         return self
 
     @abstractmethod
@@ -70,7 +95,7 @@ class Predictor:
         bool
             True if the predictor is fitted, False otherwise.
         """
-        return hasattr(self, 'is_fitted_') and self.is_fitted_
+        return hasattr(self, '_is_fitted') and self._is_fitted
 
     @abstractmethod
     def predict(self, dataset: Dataset) -> np.ndarray:
@@ -123,9 +148,14 @@ class Predictor:
         """
 
     @abstractmethod
-    def save(self):
+    def save(self, model_path: str):
         """
         Saves the predictor to disk.
+
+        Parameters
+        ----------
+        model_path: str
+            Path where the predictor will be stored.
         """
 
     @classmethod

@@ -57,7 +57,6 @@ class KerasModel(Model):
         self.loss = loss
         self.optimizer = optimizer
         self.learning_rate = learning_rate
-        self.model_type = 'keras'
         self.batch_size = batch_size
         self.epochs = epochs
         self.model_builder = model_builder
@@ -71,6 +70,13 @@ class KerasModel(Model):
                                         **kwargs)
         else:
             self.model = model_builder
+
+    @property
+    def model_type(self):
+        """
+        Returns the type of the model.
+        """
+        return 'keras'
 
     def fit(self, dataset: Dataset, **kwargs) -> None:
         """

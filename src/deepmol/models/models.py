@@ -1,6 +1,7 @@
 import os
 import shutil
 import tempfile
+from abc import ABC
 from typing import List, Union, Tuple, Dict
 import numpy as np
 
@@ -13,7 +14,7 @@ from deepmol.metrics.metrics import Metric
 from sklearn.base import BaseEstimator
 
 
-class Model(BaseEstimator, Predictor):
+class Model(BaseEstimator, Predictor, ABC):
     """
     Abstract base class for ML/DL models.
     """
@@ -47,7 +48,7 @@ class Model(BaseEstimator, Predictor):
             model_dir = tempfile.mkdtemp()
             self.model_dir_is_temp = True
 
-        self.model_dir = model_dir
+        self._model_dir = model_dir
         self.model = model
         self.model_class = model.__class__
 
@@ -208,27 +209,3 @@ class Model(BaseEstimator, Predictor):
         """
         Get number of tasks.
         """
-
-    @property
-    def model_dir(self):
-        """
-        Path to directory where model will be stored.
-
-        Returns
-        -------
-        str
-            Path to model directory.
-        """
-        return self._model_dir
-
-    @model_dir.setter
-    def model_dir(self, value):
-        """
-        Set path to directory where model will be stored.
-
-        Parameters
-        ----------
-        value: str
-            Path to model directory.
-        """
-        self._model_dir = value

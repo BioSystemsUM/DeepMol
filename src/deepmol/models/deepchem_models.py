@@ -1,4 +1,6 @@
 import os
+import shutil
+import tempfile
 from typing import List, Sequence, Union
 import numpy as np
 
@@ -11,9 +13,8 @@ from deepchem.models import Model as BaseDeepChemModel
 from deepchem.data import NumpyDataset
 import deepchem as dc
 
-from deepmol.models._utils import save_to_disk, _get_splitter, _save_keras_model
+from deepmol.models._utils import _get_splitter, save_to_disk, load_from_disk
 from deepmol.splitters.splitters import Splitter
-from deepmol.utils.utils import load_from_disk
 
 
 def generate_sequences(epochs: int, train_smiles: List[Union[str, int]]):
@@ -44,6 +45,8 @@ class DeepChemModel(BaseDeepChemModel):
     `Dataset` objects and evaluated with the metrics in Metrics.
     """
 
+    model: BaseDeepChemModel
+
     def __init__(self,
                  model: BaseDeepChemModel,
                  model_dir: str = None,
@@ -60,12 +63,23 @@ class DeepChemModel(BaseDeepChemModel):
         kwargs:
           additional arguments to be passed to the model.
         """
-        if 'model_instance' in kwargs:
+        # create a temporary file
+        temp_file = tempfile.NamedTemporaryFile(suffix='.pkl', delete=False)
+
+        # Get the path of the temporary file
+        self.model_path_saved = temp_file.name
+
+        save_to_disk(model, self.model_path_saved)
+        self.model_instance = None
+        if 'model_instance' in kwargs and kwargs['model_instance'] is not None:
             self.model_instance = kwargs['model_instance']
             if model is not None:
                 raise ValueError("Can not use both model and model_instance argument at the same time.")
 
             model = self.model_instance
+
+        if model_dir is None:
+            model_dir = tempfile.mkdtemp()
 
         super(DeepChemModel, self).__init__(model, model_dir, **kwargs)
         if 'use_weights' in kwargs:
@@ -82,6 +96,13 @@ class DeepChemModel(BaseDeepChemModel):
             self.epochs = kwargs['epochs']
         else:
             self.epochs = 30
+
+        self.parameters_to_be_saved = {
+            'use_weights': self.use_weights,
+            'n_tasks': self.n_tasks,
+            'epochs': self.epochs,
+            'model_instance': self.model_instance
+        }
 
     def fit_on_batch(self, X: Sequence, y: Sequence, w: Sequence):
         """
@@ -183,12 +204,6 @@ class DeepChemModel(BaseDeepChemModel):
 
         res = self.model.predict(new_dataset, transformers)
 
-        # if isinstance(self.model, (GATModel,GCNModel,AttentiveFPModel,LCNNModel)):
-        #     return res
-        # elif len(res.shape) == 2:
-        #     new_res = np.squeeze(res)
-        # else:
-        #     new_res = np.reshape(res,(res.shape[0],res.shape[2]))
         if isinstance(self.model, TorchModel) and self.model.model.mode == 'classification':
             return res
         else:
@@ -209,33 +224,55 @@ class DeepChemModel(BaseDeepChemModel):
         """
         return super(DeepChemModel, self).predict(dataset)
 
-    def save(self, file_path: str = None):
+    def save(self, folder_path: str = None):
         """
-        Saves deepchem model to disk using joblib.
-        """
-        if file_path is None:
-            if self.model_dir is None:
-                raise ValueError('No model directory specified.')
-        else:
-            # write self in pickle format
-            if isinstance(self.model, KerasModel):
-                self.model.model.save_weights(os.path.join(file_path, 'model_weights'))
-            elif isinstance(self.model, TorchModel):
-                self.model.save_checkpoint()
+        Saves deepchem model to disk.
 
-    def load(self, file_path: str = None):
+        Parameters
+        ----------
+        folder_path: str
+            Path to the file where the model will be stored.
         """
-        Loads deepchem model from joblib file on disk.
-        """
-        if file_path is None:
-            raise ValueError('No model directory specified.')
+        if folder_path is None:
+            if self.model_dir is None:
+                raise ValueError("Please specify folder_path or model_dir")
+            folder_path = self.model_dir
         else:
-            # load self from pickle format
-            if isinstance(self.model, KerasModel):
-                self.model.model.load_weights(os.path.join(file_path, 'model_weights'))
-                return self
-            elif isinstance(self.model, TorchModel):
-                self.model.get_checkpoints()
+            os.makedirs(folder_path, exist_ok=True)
+
+        # move file
+        shutil.copy(self.model_path_saved, os.path.join(folder_path, 'model.pkl'))
+
+        save_to_disk(self.parameters_to_be_saved, os.path.join(folder_path, "model_parameters.pkl"))
+
+        # write self in pickle format
+        if isinstance(self.model, KerasModel):
+            self.model.model.save_weights(os.path.join(folder_path, 'model_weights'))
+        elif isinstance(self.model, TorchModel):
+            self.model.save_checkpoint(max_checkpoints_to_keep=1, model_dir=folder_path)
+        else:
+            raise ValueError(f"DeepChemModel does not support saving model of type {type(self.model)}")
+
+    @classmethod
+    def load(cls, folder_path: str):
+        """
+        Loads deepchem model from disk.
+
+        Parameters
+        ----------
+        folder_path: str
+            Path to the file where the model is stored.
+        """
+        model = load_from_disk(os.path.join(folder_path, "model.pkl"))
+        model_parameters = load_from_disk(os.path.join(folder_path, "model_parameters.pkl"))
+        deepchem_model = cls(model=model, model_dir=folder_path, **model_parameters)
+        # load self from pickle format
+        if isinstance(model, KerasModel):
+            deepchem_model.model.model.load_weights(os.path.join(folder_path, 'model_weights'))
+            return deepchem_model
+        else:
+            deepchem_model.model.restore(model_dir=folder_path)
+            return deepchem_model
 
     def cross_validate(self,
                        dataset: Dataset,

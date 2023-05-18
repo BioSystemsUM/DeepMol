@@ -55,7 +55,7 @@ class Model(BaseEstimator):
         Delete model directory if it was created by this object.
         """
         if 'model_dir_is_temp' in dir(self) and self.model_dir_is_temp:
-            shutil.rmtree(self.model_dir)
+            shutil.rmtree(self.model_path)
 
     def fit_on_batch(self, X: Sequence, y: Sequence):
         """
@@ -79,14 +79,14 @@ class Model(BaseEstimator):
             array of features
         """
     @classmethod
-    def load(cls, file_path: str, **kwargs) -> 'Model':
+    def load(cls, folder_path: str) -> 'Model':
         """
         Reload trained model from disk.
 
         Parameters
         ----------
-        file_path: str
-            Path to file where model is stored.
+        folder_path: str
+            Path to folder where model is stored.
 
         Returns
         -------
@@ -109,7 +109,7 @@ class Model(BaseEstimator):
         str
             Path to model file.
         """
-        return os.path.join(model_dir, "model.joblib")
+        return os.path.join(model_dir, "model.pkl")
 
     @staticmethod
     def get_params_filename(model_dir: str) -> str:

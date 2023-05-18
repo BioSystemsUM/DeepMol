@@ -1,4 +1,6 @@
 import os
+import shutil
+from copy import deepcopy, copy
 from typing import List, Sequence, Union
 import numpy as np
 
@@ -11,7 +13,7 @@ from deepchem.models import Model as BaseDeepChemModel
 from deepchem.data import NumpyDataset
 import deepchem as dc
 
-from deepmol.models._utils import _get_splitter
+from deepmol.models._utils import _get_splitter, save_to_disk, load_from_disk
 from deepmol.splitters.splitters import Splitter
 
 
@@ -59,6 +61,8 @@ class DeepChemModel(BaseDeepChemModel):
         kwargs:
           additional arguments to be passed to the model.
         """
+        self.model_path_saved = "model_temp.pkl"
+        save_to_disk(model, self.model_path_saved)
         if 'model_instance' in kwargs:
             self.model_instance = kwargs['model_instance']
             if model is not None:
@@ -202,46 +206,51 @@ class DeepChemModel(BaseDeepChemModel):
         """
         return super(DeepChemModel, self).predict(dataset)
 
-    def save(self, file_path: str = None):
+    def save(self, folder_path: str = None):
         """
         Saves deepchem model to disk.
 
         Parameters
         ----------
-        file_path: str
+        folder_path: str
             Path to the file where the model will be stored.
         """
-        if file_path is None:
-            raise ValueError("DeepChemModel can not be saved to disk without specifying a file_path.")
+        if folder_path is None:
+            folder_path = self.model_dir
         else:
-            # write self in pickle format
-            if isinstance(self.model, KerasModel):
-                self.model.model.save_weights(os.path.join(file_path, 'model_weights'))
-            elif isinstance(self.model, TorchModel):
-                self.model.save_checkpoint(max_checkpoints_to_keep=1, model_dir=file_path)
-            else:
-                raise ValueError(f"DeepChemModel does not support saving model of type {type(self.model)}")
+            os.makedirs(folder_path, exist_ok=True)
 
-    def load(self, file_path: str = None):
+        # move file
+        shutil.move(self.model_path_saved, os.path.join(folder_path, 'model.pkl'))
+
+        # write self in pickle format
+        if isinstance(self.model, KerasModel):
+            self.model.model.save_weights(os.path.join(folder_path, 'model_weights'))
+        elif isinstance(self.model, TorchModel):
+            self.model.save_checkpoint(max_checkpoints_to_keep=1, model_dir=folder_path)
+        else:
+            raise ValueError(f"DeepChemModel does not support saving model of type {type(self.model)}")
+
+    @classmethod
+    def load(cls, folder_path: str):
         """
         Loads deepchem model from disk.
 
         Parameters
         ----------
-        file_path: str
+        folder_path: str
             Path to the file where the model is stored.
         """
-        if file_path is None:
-            raise ValueError("DeepChemModel can not be loaded from disk without specifying a file_path.")
+        model = load_from_disk(os.path.join(folder_path, "model.pkl"))
+        deepchem_model = cls(model=model, model_dir=folder_path)
+        # load self from pickle format
+        if isinstance(deepchem_model.model, KerasModel):
+            deepchem_model.model.model.load_weights(os.path.join(folder_path, 'model_weights'))
+            return deepchem_model
+        elif isinstance(deepchem_model.model, TorchModel):
+            deepchem_model.model.restore(model_dir=folder_path)
         else:
-            # load self from pickle format
-            if isinstance(self.model, KerasModel):
-                self.model.model.load_weights(os.path.join(file_path, 'model_weights'))
-                return self
-            elif isinstance(self.model, TorchModel):
-                self.model.restore(model_dir=file_path)
-            else:
-                raise ValueError(f"DeepChemModel does not support loading model of type {type(self.model)}")
+            raise ValueError(f"DeepChemModel does not support loading model of type {type(model)}")
 
     def cross_validate(self,
                        dataset: Dataset,

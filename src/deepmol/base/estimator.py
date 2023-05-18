@@ -14,7 +14,7 @@ class Estimator(Serializer):
         """
         Initialize the estimator.
         """
-        self.is_fitted_ = False
+        self._is_fitted = False
 
     def fit(self, dataset: Dataset) -> 'Estimator':
         """
@@ -31,7 +31,7 @@ class Estimator(Serializer):
             The fitted estimator.
         """
         self._fit(dataset)
-        self.is_fitted_ = True
+        self._is_fitted = True
         return self
 
     @abstractmethod
@@ -51,7 +51,6 @@ class Estimator(Serializer):
             The fitted estimator.
         """
 
-    @property
     def is_fitted(self) -> bool:
         """
         Whether the estimator is fitted.
@@ -61,4 +60,4 @@ class Estimator(Serializer):
         is_fitted: bool
             Whether the estimator is fitted.
         """
-        return hasattr(self, 'is_fitted_') and self.is_fitted_
+        return hasattr(self, '_is_fitted') and self._is_fitted

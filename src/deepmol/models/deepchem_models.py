@@ -270,11 +270,9 @@ class DeepChemModel(BaseDeepChemModel):
         if isinstance(model, KerasModel):
             deepchem_model.model.model.load_weights(os.path.join(folder_path, 'model_weights'))
             return deepchem_model
-        elif isinstance(model, TorchModel):
+        else:
             deepchem_model.model.restore(model_dir=folder_path)
             return deepchem_model
-        else:
-            raise ValueError(f"DeepChemModel does not support loading model of type {type(model)}")
 
     def cross_validate(self,
                        dataset: Dataset,

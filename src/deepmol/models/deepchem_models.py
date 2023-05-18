@@ -82,6 +82,13 @@ class DeepChemModel(BaseDeepChemModel):
         else:
             self.epochs = 30
 
+    @property
+    def model_type(self):
+        """
+        Returns the type of the model.
+        """
+        return 'deepchem'
+
     def fit_on_batch(self, X: Sequence, y: Sequence, w: Sequence):
         """
         Fits the model on a batch of data.

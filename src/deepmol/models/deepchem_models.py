@@ -219,6 +219,8 @@ class DeepChemModel(BaseDeepChemModel):
                 self.model.model.save_weights(os.path.join(file_path, 'model_weights'))
             elif isinstance(self.model, TorchModel):
                 self.model.save_checkpoint(max_checkpoints_to_keep=1, model_dir=file_path)
+            else:
+                raise ValueError(f"DeepChemModel does not support saving model of type {type(self.model)}")
 
     def load(self, file_path: str = None):
         """
@@ -238,6 +240,8 @@ class DeepChemModel(BaseDeepChemModel):
                 return self
             elif isinstance(self.model, TorchModel):
                 self.model.restore(model_dir=file_path)
+            else:
+                raise ValueError(f"DeepChemModel does not support loading model of type {type(self.model)}")
 
     def cross_validate(self,
                        dataset: Dataset,

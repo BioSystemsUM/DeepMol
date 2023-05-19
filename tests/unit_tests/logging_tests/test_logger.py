@@ -49,9 +49,13 @@ class TestLogger(TestCase):
 
     def test_pickling(self):
         import pickle
-        pickle.dumps(self.logger)
-        self.logger = pickle.loads(pickle.dumps(self.logger))
-        self.logger.info("Test")
+        with open("test.pickle", "wb") as f:
+            pickle.dump(self.logger, f)
+        with open("test.pickle", "rb") as f:
+            logger = pickle.load(f)
+
+        logger.info("Test")
+        os.remove("test.pickle")
 
     def test_warning(self):
         self.logger.warning("Test")

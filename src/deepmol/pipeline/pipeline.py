@@ -233,7 +233,10 @@ class Pipeline(Transformer):
         for i, (name, transformer) in enumerate(self.steps[:-1]):
             transformer_path = os.path.join(self.path, f'{name}.pkl')
             transformer.to_pickle(transformer_path)
-            steps_to_save[i] = {'name': name, 'type': 'transformer', 'path': transformer_path}
+            steps_to_save[i] = {'name': name,
+                                'type': 'transformer',
+                                'is_fitted': transformer.is_fitted(),
+                                'path': transformer_path}
 
         if self.is_prediction_pipeline():
             # TODO: make model_dir mandatory or something by default

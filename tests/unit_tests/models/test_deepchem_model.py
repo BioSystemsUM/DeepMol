@@ -152,14 +152,13 @@ class TestDeepChemModel(ModelsTestCase, TestCase):
 
         char_dict, length = TextCNNModel.build_char_dict(self.binary_dataset)
         cnn_model = TextCNNModel(n_tasks=1, char_dict=char_dict, seq_length=length)
+        # cnn_model.model.save("test_model", save_format='tf')
         model = DeepChemModel(cnn_model)
         model.fit(self.binary_dataset)
         test_predict = model.predict(self.binary_dataset)
         model.save("test_model")
 
-        new_cnn_model = TextCNNModel(n_tasks=1, char_dict=char_dict, seq_length=length)
-        new_model = DeepChemModel(new_cnn_model)
-        new_model_loaded = new_model.load("test_model")
+        new_model_loaded = DeepChemModel.load("test_model")
         new_predict = new_model_loaded.predict(self.binary_dataset)
         for i in range(len(test_predict)):
             self.assertEqual(test_predict[i], new_predict[i])

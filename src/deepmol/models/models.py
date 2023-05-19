@@ -1,7 +1,6 @@
 import os
 import shutil
 import tempfile
-from abc import abstractmethod
 from typing import List, Sequence, Union, Tuple, Dict
 import numpy as np
 from deepmol.datasets import Dataset

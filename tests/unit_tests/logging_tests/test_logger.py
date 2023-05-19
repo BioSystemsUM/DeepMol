@@ -2,6 +2,7 @@ import logging
 import os
 from unittest import TestCase
 
+from deepmol.compound_featurization import MorganFingerprint, AtomPairFingerprint, LayeredFingerprint
 from deepmol.loggers.logger import Logger
 from tests import TEST_DIR
 
@@ -48,13 +49,9 @@ class TestLogger(TestCase):
 
     def test_pickling(self):
         import pickle
-        with open("test.pickle", "wb") as f:
-            pickle.dump(self.logger, f)
-        with open("test.pickle", "rb") as f:
-            logger = pickle.load(f)
-
-        logger.info("Test")
-        os.remove("test.pickle")
+        pickle.dumps(self.logger)
+        self.logger = pickle.loads(pickle.dumps(self.logger))
+        self.logger.info("Test")
 
     def test_warning(self):
         self.logger.warning("Test")

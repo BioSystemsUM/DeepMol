@@ -1,13 +1,8 @@
 import os
-import pickle
-from copy import deepcopy, copy
-from shutil import rmtree
 from unittest import TestCase
 from unittest.mock import MagicMock
 
-import dill
 import numpy as np
-import tensorflow
 from deepchem.feat import ConvMolFeaturizer, MolGraphConvFeaturizer
 from deepchem.models import GraphConvModel, TextCNNModel, GCNModel
 from deepchem.models.layers import DTNNEmbedding, Highway
@@ -19,9 +14,7 @@ from deepmol.metrics.metrics_functions import roc_auc_score, precision_score, ac
 
 from deepmol.metrics import Metric
 from deepmol.models import DeepChemModel
-from deepmol.models._utils import save_to_disk
 from deepmol.splitters import RandomSplitter
-from deepmol.utils.utils import load_from_disk
 from unit_tests.models.test_models import ModelsTestCase
 
 os.environ["CUDA_VISIBLE_DEVICES"] = ""

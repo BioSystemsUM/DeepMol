@@ -98,7 +98,7 @@ class DeepChemModel(BaseDeepChemModel):
         else:
             self.epochs = 30
 
-        self.parameters_to_be_saved = {
+        self.parameters_to_save = {
             'use_weights': self.use_weights,
             'n_tasks': self.n_tasks,
             'epochs': self.epochs,
@@ -244,7 +244,7 @@ class DeepChemModel(BaseDeepChemModel):
         # move file
         shutil.copy(self.model_path_saved, os.path.join(folder_path, 'model.pkl'))
 
-        save_to_disk(self.parameters_to_be_saved, os.path.join(folder_path, "model_parameters.pkl"))
+        save_to_disk(self.parameters_to_save, os.path.join(folder_path, "model_parameters.pkl"))
 
         # write self in pickle format
         if isinstance(self.model, KerasModel):
@@ -263,6 +263,10 @@ class DeepChemModel(BaseDeepChemModel):
         ----------
         folder_path: str
             Path to the file where the model is stored.
+        kwargs: Dict
+            Additional parameters.
+            custom_objects: Dict
+                Dictionary of custom objects to be passed to `tensorflow.keras.utils.custom_object_scope`.
         """
         try:
             model = load_from_disk(os.path.join(folder_path, "model.pkl"))

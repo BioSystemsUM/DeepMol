@@ -63,7 +63,6 @@ class MolecularFeaturizer(ABC):
                 smiles = MolToSmiles(mol)
             else:
                 smiles = None
-            self.logger = Logger()
             self.logger.error(f"Failed to featurize {smiles}. Appending empty array")
             self.logger.error("Exception message: {}".format(e))
             remove_mol = True

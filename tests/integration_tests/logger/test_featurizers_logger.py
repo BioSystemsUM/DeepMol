@@ -10,6 +10,8 @@ from tests import TEST_DIR
 class TestLoggerFeaturizer(TestLogger):
 
     def test_featurizers_disable_enable_logging(self):
+        if os.path.exists(os.path.join(TEST_DIR, "test2.log")):
+            os.remove(os.path.join(TEST_DIR, "test2.log"))
         Logger.disable()
         self.logger.set_file_path(os.path.join(TEST_DIR, "test2.log"))
         MorganFingerprint().featurize(self.big_dataset_to_test)

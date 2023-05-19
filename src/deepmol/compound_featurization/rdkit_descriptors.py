@@ -2,6 +2,7 @@ import inspect
 import sys
 import traceback
 import warnings
+from abc import ABC
 from typing import Union, List
 
 import numpy as np
@@ -436,7 +437,7 @@ class TwoDimensionDescriptors(MolecularFeaturizer):
         return descriptors
 
 
-class ThreeDimensionDescriptor(MolecularFeaturizer):
+class ThreeDimensionDescriptor(MolecularFeaturizer, ABC):
     """
     Class to generate three-dimensional descriptors.
     """
@@ -506,9 +507,6 @@ class ThreeDimensionDescriptor(MolecularFeaturizer):
 
         fp = np.asarray(fp, dtype=np.float32)
         return fp
-
-    def _featurize(self, mol: Mol):
-        raise NotImplementedError
 
 
 class All3DDescriptors(MolecularFeaturizer):
@@ -652,7 +650,7 @@ class PlaneOfBestFit(ThreeDimensionDescriptor):
         """
         super().__init__(mandatory_generation_of_conformers)
         self.descriptor_function = rdMolDescriptors.CalcPBF
-        self.feature_names = ['PBF']
+        self.feature_names = self.feature_names = ['PBF']
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """

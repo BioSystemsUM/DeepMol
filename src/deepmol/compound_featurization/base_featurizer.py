@@ -4,6 +4,7 @@ from typing import Tuple
 import numpy as np
 from rdkit.Chem import Mol, MolToSmiles
 
+from deepmol.base import Transformer
 from deepmol.datasets import Dataset
 from deepmol.loggers.logger import Logger
 from deepmol.parallelism.multiprocessing import JoblibMultiprocessing
@@ -13,7 +14,7 @@ from deepmol.utils.errors import PreConditionViolationException
 from deepmol.utils.utils import canonicalize_mol_object
 
 
-class MolecularFeaturizer(ABC):
+class MolecularFeaturizer(ABC, Transformer):
     """
     Abstract class for calculating a set of features for a molecule.
     A `MolecularFeaturizer` uses SMILES strings or RDKit molecule objects to represent molecules.
@@ -30,6 +31,7 @@ class MolecularFeaturizer(ABC):
         n_jobs: int
             The number of jobs to run in parallel in the featurization.
         """
+        super().__init__()
         self.n_jobs = n_jobs
         self.feature_names = None
         self.logger = Logger()
@@ -133,3 +135,37 @@ class MolecularFeaturizer(ABC):
     @abstractmethod
     def _featurize(self, mol: Mol):
         raise NotImplementedError
+
+    def _transform(self, dataset: Dataset) -> Dataset:
+        """
+        Calculate features for molecules. This method is called by the transform method of the Transformer class.
+        To be used by pipeline.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The dataset containing the molecules to featurize in dataset.mols.
+
+        Returns
+        -------
+        dataset: Dataset
+            The input Dataset containing a featurized representation of the molecules in Dataset.X.
+        """
+        return self.featurize(dataset)
+
+    def _fit(self, dataset: Dataset) -> 'MolecularFeaturizer':
+        """
+        Fit the featurizer. This method is called by the fit method of the Transformer class.
+        To be used by pipeline.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The dataset containing the molecules to featurize in dataset.mols.
+
+        Returns
+        -------
+        self: MolecularFeaturizer
+            The fitted featurizer.
+        """
+        return self

@@ -1,10 +1,7 @@
 from typing import Tuple
 
-import joblib
-import numpy as np
 from sklearn import preprocessing
 
-from deepmol.datasets import Dataset
 from deepmol.scalers.base_scaler import BaseScaler
 
 
@@ -13,7 +10,7 @@ class StandardScaler(BaseScaler):
     Standardize features by removing the mean and scaling to unit variance.
     """
 
-    def __init__(self, copy: bool = True, with_mean: bool = True, with_std: bool = True):
+    def __init__(self, copy: bool = True, with_mean: bool = True, with_std: bool = True, columns: list = None) -> None:
         """
         Constructor for the StandardScaler class.
 
@@ -25,107 +22,16 @@ class StandardScaler(BaseScaler):
             If True, center the data before scaling.
         with_std: bool
             If True, scale the data to unit variance (or equivalently, unit standard deviation).
+        columns: list
+            The columns to be scaled.
         """
-        super().__init__()
         self.copy = copy
         self.with_mean = with_mean
         self.with_std = with_std
-        self.scaler_object = preprocessing.StandardScaler(copy=self.copy,
-                                                          with_mean=self.with_mean,
-                                                          with_std=self.with_std)
-
-    @property
-    def scaler_object(self):
-        """
-        Returns the scaler object.
-
-        Returns
-        -------
-        object:
-            The scaler object.
-        """
-        return self._scaler_object
-
-    @scaler_object.setter
-    def scaler_object(self, value: object):
-        """
-        Sets the scaler object.
-
-        Parameters
-        ----------
-        value: object
-            The scaler object.
-        """
-        self._scaler_object = value
-
-    def load(self, file_path: str):
-        """
-        Loads the scaler object from a file.
-
-        Parameters
-        ----------
-        file_path: str
-            The path to the file where the scaler object is saved.
-        """
-        self.scaler_object = joblib.load(file_path)
-
-    def _fit_transform(self, X: np.ndarray):
-        """
-        Fit to data, then transform it.
-
-        Parameters
-        ----------
-        X: np.ndarray
-            The data to fit and transform.
-
-        Returns
-        -------
-        np.ndarray:
-            The transformed data.
-        """
-        return self.scaler_object.fit_transform(X)
-
-    def _fit(self, X: np.ndarray):
-        """
-        Fit to data.
-
-        Parameters
-        ----------
-        X: np.ndarray
-            The data to fit.
-
-        Returns
-        -------
-        object:
-            The fitted scaler object.
-        """
-        return self.scaler_object.fit(X)
-
-    def _transform(self, X: np.ndarray):
-        """
-        Transform data.
-
-        Parameters
-        ----------
-        X: np.ndarray
-            The data to transform.
-
-        Returns
-        -------
-        np.ndarray:
-            The transformed data.
-        """
-        return self.scaler_object.transform(X)
-
-    def partial_fit(self, dataset: Dataset) -> None:
-        """
-        Fits the scaler object to the dataset.
-
-        Parameters
-        ----------
-        dataset: Dataset
-            The dataset to fit the scaler object.
-        """
+        self._scaler_object = preprocessing.StandardScaler(copy=self.copy,
+                                                           with_mean=self.with_mean,
+                                                           with_std=self.with_std)
+        super().__init__(scaler=self._scaler_object, columns=columns)
 
 
 class MinMaxScaler(BaseScaler):
@@ -133,7 +39,11 @@ class MinMaxScaler(BaseScaler):
     Transform features by scaling each feature to a given range.
     """
 
-    def __init__(self, feature_range: Tuple[int, int] = (0, 1), copy: bool = True, clip: bool = False):
+    def __init__(self,
+                 feature_range: Tuple[int, int] = (0, 1),
+                 copy: bool = True,
+                 clip: bool = False,
+                 columns: list = None) -> None:
         """
         Constructor for the MinMaxScaler class.
 
@@ -145,106 +55,16 @@ class MinMaxScaler(BaseScaler):
             If False, try to avoid a copy and do inplace scaling instead.
         clip: bool
             If True, clip the values to the feature_range.
+        columns: list
+            The columns to be scaled.
         """
-        super().__init__()
         self.copy = copy
         self.feature_range = feature_range
         self.clip = clip
         self._scaler_object = preprocessing.MinMaxScaler(copy=self.copy,
                                                          feature_range=self.feature_range,
                                                          clip=self.clip)
-
-    @property
-    def scaler_object(self):
-        """
-        Returns the scaler object.
-
-        Returns
-        -------
-        object:
-            The scaler object.
-        """
-        return self._scaler_object
-
-    @scaler_object.setter
-    def scaler_object(self, value: object):
-        """
-        Sets the scaler object.
-
-        Parameters
-        ----------
-        value: object
-            The scaler object.
-        """
-        self._scaler_object = value
-
-    def load(self, file_path: str):
-        """
-        Loads the scaler object from a file.
-
-        Parameters
-        ----------
-        file_path: str
-            The path to the file where the scaler object is saved.
-        """
-        self.scaler_object = joblib.load(file_path)
-
-    def _fit_transform(self, X: np.ndarray):
-        """
-        Fit to data, then transform it.
-
-        Parameters
-        ----------
-        X: np.ndarray
-            The data to fit and transform.
-
-        Returns
-        -------
-        np.ndarray
-            The transformed data.
-        """
-        return self.scaler_object.fit_transform(X)
-
-    def _fit(self, X: np.ndarray):
-        """
-        Fit to data.
-
-        Parameters
-        ----------
-        X: np.ndarray
-            The data to fit.
-
-        Returns
-        -------
-        object:
-            The fitted scaler object.
-        """
-        return self.scaler_object.fit(X)
-
-    def _transform(self, X: np.ndarray):
-        """
-        Transform data.
-
-        Parameters
-        ----------
-        X: np.ndarray
-
-        Returns
-        -------
-        np.ndarray:
-            The transformed data.
-        """
-        return self.scaler_object.transform(X)
-
-    def partial_fit(self, dataset: Dataset) -> None:
-        """
-        Fits the scaler object to the dataset.
-
-        Parameters
-        ----------
-        dataset: Dataset
-            The dataset to fit the scaler object.
-        """
+        super().__init__(scaler=self._scaler_object, columns=columns)
 
 
 class MaxAbsScaler(BaseScaler):
@@ -252,7 +72,7 @@ class MaxAbsScaler(BaseScaler):
     Scale each feature by its maximum absolute value.
     """
 
-    def __init__(self, copy: bool = True):
+    def __init__(self, copy: bool = True, columns: list = None) -> None:
         """
         Constructor for the MaxAbsScaler class.
 
@@ -261,102 +81,9 @@ class MaxAbsScaler(BaseScaler):
         copy: bool
             If False, try to avoid a copy and do inplace scaling instead.
         """
-        super().__init__()
         self.copy = copy
         self._scaler_object = preprocessing.MaxAbsScaler(copy=self.copy)
-
-    @property
-    def scaler_object(self):
-        """
-        Returns the scaler object.
-
-        Returns
-        -------
-        object:
-            The scaler object.
-        """
-        return self._scaler_object
-
-    @scaler_object.setter
-    def scaler_object(self, value: object):
-        """
-        Sets the scaler object.
-
-        Parameters
-        ----------
-        value: object
-            The scaler object.
-        """
-        self._scaler_object = value
-
-    def load(self, file_path: str):
-        """
-        Loads the scaler object from a file.
-
-        Parameters
-        ----------
-        file_path: str
-            The path to the file where the scaler object is saved.
-        """
-        self.scaler_object = joblib.load(file_path)
-
-    def _fit_transform(self, X: np.ndarray):
-        """
-        Fit to data, then transform it.
-
-        Parameters
-        ----------
-        X: np.ndarray
-            The data to fit and transform.
-
-        Returns
-        -------
-        np.ndarray:
-            The transformed data.
-        """
-        return self.scaler_object.fit_transform(X)
-
-    def _fit(self, X: np.ndarray):
-        """
-        Fit to data.
-
-        Parameters
-        ----------
-        X: np.ndarray
-            The data to fit.
-
-        Returns
-        -------
-        object:
-            The fitted scaler object.
-        """
-        return self.scaler_object.fit(X)
-
-    def _transform(self, X: np.ndarray):
-        """
-        Transform data.
-
-        Parameters
-        ----------
-        X: np.ndarray
-            The data to transform.
-
-        Returns
-        -------
-        np.ndarray:
-            The transformed data.
-        """
-        return self.scaler_object.transform(X)
-
-    def partial_fit(self, dataset: Dataset) -> None:
-        """
-        Fits the scaler object to the dataset.
-
-        Parameters
-        ----------
-        dataset: Dataset
-            The dataset to fit the scaler object.
-        """
+        super().__init__(scaler=self._scaler_object, columns=columns)
 
 
 class RobustScaler(BaseScaler):
@@ -369,7 +96,8 @@ class RobustScaler(BaseScaler):
                  with_scaling: bool = True,
                  quantile_range: Tuple[float, float] = (25.0, 75.0),
                  copy: bool = True,
-                 unit_variance: bool = False):
+                 unit_variance: bool = False,
+                 columns: list = None) -> None:
         """
         Constructor for the RobustScaler class.
 
@@ -385,8 +113,9 @@ class RobustScaler(BaseScaler):
             If False, try to avoid a copy and do inplace scaling instead.
         unit_variance: bool
             If True, scale the data to unit variance.
+        columns: list
+            The columns to be scaled.
         """
-        super().__init__()
         self.copy = copy
         self.with_centering = with_centering
         self.with_scaling = with_scaling
@@ -397,99 +126,7 @@ class RobustScaler(BaseScaler):
                                                          quantile_range=self.quantile_range,
                                                          copy=self.copy,
                                                          unit_variance=self.unit_variance)
-
-    @property
-    def scaler_object(self):
-        """
-        Returns the scaler object.
-
-        Returns
-        -------
-        object:
-            The scaler object.
-        """
-        return self._scaler_object
-
-    @scaler_object.setter
-    def scaler_object(self, value: object):
-        """
-        Sets the scaler object.
-
-        Parameters
-        ----------
-        value: object
-            The scaler object.
-        """
-        self._scaler_object = value
-
-    def load(self, file_path: str):
-        """
-        Loads the scaler object from a file.
-
-        Parameters
-        ----------
-        file_path: str
-            The path to the file where the scaler object is saved.
-        """
-        self.scaler_object = joblib.load(file_path)
-
-    def _fit_transform(self, X: np.ndarray):
-        """
-        Fit to data, then transform it.
-
-        Parameters
-        ----------
-        X: np.ndarray
-            The data to fit and transform.
-
-        Returns
-        -------
-        np.ndarray:
-            The transformed data.
-        """
-        return self.scaler_object.fit_transform(X)
-
-    def _fit(self, X: np.ndarray):
-        """
-        Fit to data.
-
-        Parameters
-        ----------
-        X: np.ndarray
-            The data to fit.
-
-        Returns
-        -------
-        object:
-            The fitted scaler object.
-        """
-        return self.scaler_object.fit(X)
-
-    def _transform(self, X: np.ndarray):
-        """
-        Transform data.
-
-        Parameters
-        ----------
-        X: np.ndarray
-            The data to transform.
-
-        Returns
-        -------
-        np.ndarray:
-            The transformed data.
-        """
-        return self.scaler_object.transform(X)
-
-    def partial_fit(self, dataset: Dataset) -> None:
-        """
-        Fits the scaler object to the dataset.
-
-        Parameters
-        ----------
-        dataset: Dataset
-            The dataset to fit the scaler object.
-        """
+        super().__init__(scaler=self._scaler_object, columns=columns)
 
 
 class PolynomialFeatures(BaseScaler):
@@ -497,7 +134,12 @@ class PolynomialFeatures(BaseScaler):
     Generate polynomial and interaction features.
     """
 
-    def __init__(self, degree: int = 2, interaction_only: bool = False, include_bias: bool = True, order: str = 'C'):
+    def __init__(self,
+                 degree: int = 2,
+                 interaction_only: bool = False,
+                 include_bias: bool = True,
+                 order: str = 'C',
+                 columns: list = None) -> None:
         """
         Constructor for the PolynomialFeatures class.
 
@@ -512,8 +154,9 @@ class PolynomialFeatures(BaseScaler):
         order: str
             C or F. Order of output array in the dense case. 'F' order is faster to compute, but may slow down
             subsequent estimators.
+        columns: list
+            The columns to be scaled.
         """
-        super().__init__()
         self.degree = degree
         self.interaction_only = interaction_only
         self.include_bias = include_bias
@@ -522,99 +165,7 @@ class PolynomialFeatures(BaseScaler):
                                                                interaction_only=self.interaction_only,
                                                                include_bias=self.include_bias,
                                                                order=self.order)
-
-    @property
-    def scaler_object(self):
-        """
-        Returns the scaler object.
-
-        Returns
-        -------
-        object:
-            The scaler object.
-        """
-        return self._scaler_object
-
-    @scaler_object.setter
-    def scaler_object(self, value: object):
-        """
-        Sets the scaler object.
-
-        Parameters
-        ----------
-        value: object
-            The scaler object.
-        """
-        self._scaler_object = value
-
-    def load(self, file_path: str):
-        """
-        Loads the scaler object from a file.
-
-        Parameters
-        ----------
-        file_path: str
-            The path to the file where the scaler object is saved.
-        """
-        self.scaler_object = joblib.load(file_path)
-
-    def _fit_transform(self, X: np.ndarray):
-        """
-        Fit to data, then transform it.
-
-        Parameters
-        ----------
-        X: np.ndarray
-            The data to fit and transform.
-
-        Returns
-        -------
-        np.ndarray:
-            The transformed data.
-        """
-        return self.scaler_object.fit_transform(X)
-
-    def _fit(self, X: np.ndarray):
-        """
-        Fit to data.
-
-        Parameters
-        ----------
-        X: np.ndarray
-            The data to fit.
-
-        Returns
-        -------
-        object:
-            The fitted scaler object.
-        """
-        return self.scaler_object.fit(X)
-
-    def _transform(self, X: np.ndarray):
-        """
-        Transform data.
-
-        Parameters
-        ----------
-        X: np.ndarray
-            The data to transform.
-
-        Returns
-        -------
-        np.ndarray:
-            The transformed data.
-        """
-        return self.scaler_object.transform(X)
-
-    def partial_fit(self, dataset: Dataset) -> None:
-        """
-        Fits the scaler object to the dataset.
-
-        Parameters
-        ----------
-        dataset: Dataset
-            The dataset to fit the scaler object.
-        """
+        super().__init__(scaler=self._scaler_object, columns=columns)
 
 
 class Normalizer(BaseScaler):
@@ -622,7 +173,7 @@ class Normalizer(BaseScaler):
     Normalize samples individually to unit norm.
     """
 
-    def __init__(self, norm: str = 'l2', copy: bool = True):
+    def __init__(self, norm: str = 'l2', copy: bool = True, columns: list = None) -> None:
         """
         Constructor for the Normalizer class.
 
@@ -633,103 +184,10 @@ class Normalizer(BaseScaler):
         copy: bool
             If False, try to avoid a copy and do inplace scaling instead.
         """
-        super().__init__()
         self.norm = norm
         self.copy = copy
         self._scaler_object = preprocessing.Normalizer(norm=self.norm, copy=self.copy)
-
-    @property
-    def scaler_object(self):
-        """
-        Returns the scaler object.
-
-        Returns
-        -------
-        object:
-            The scaler object.
-        """
-        return self._scaler_object
-
-    @scaler_object.setter
-    def scaler_object(self, value: object):
-        """
-        Sets the scaler object.
-
-        Parameters
-        ----------
-        value: object
-            The scaler object.
-        """
-        self._scaler_object = value
-
-    def load(self, file_path: str):
-        """
-        Loads the scaler object from a file.
-
-        Parameters
-        ----------
-        file_path: str
-            The path to the file where the scaler object is saved.
-        """
-        self.scaler_object = joblib.load(file_path)
-
-    def _fit_transform(self, X: np.ndarray):
-        """
-        Fit to data, then transform it.
-
-        Parameters
-        ----------
-        X: np.ndarray
-            The data to fit and transform.
-
-        Returns
-        -------
-        np.ndarray:
-            The transformed data.
-        """
-        return self.scaler_object.fit_transform(X)
-
-    def _fit(self, X: np.ndarray):
-        """
-        Fit to data.
-
-        Parameters
-        ----------
-        X: np.ndarray
-            The data to fit.
-
-        Returns
-        -------
-        object:
-            The fitted scaler object.
-        """
-        return self.scaler_object.fit(X)
-
-    def _transform(self, X: np.ndarray):
-        """
-        Transform data.
-
-        Parameters
-        ----------
-        X: np.ndarray
-            The data to transform.
-
-        Returns
-        -------
-        np.ndarray:
-            The transformed data.
-        """
-        return self.scaler_object.transform(X)
-
-    def partial_fit(self, dataset: Dataset) -> None:
-        """
-        Fits the scaler object to the dataset.
-
-        Parameters
-        ----------
-        dataset: Dataset
-            The dataset to fit the scaler object.
-        """
+        super().__init__(scaler=self._scaler_object, columns=columns)
 
 
 class Binarizer(BaseScaler):
@@ -737,7 +195,7 @@ class Binarizer(BaseScaler):
     Binarize data (set feature values to 0 or 1) according to a threshold.
     """
 
-    def __init__(self, threshold: float = 0.0, copy: bool = True):
+    def __init__(self, threshold: float = 0.0, copy: bool = True, columns: list = None) -> None:
         """
         Constructor for the Binarizer class.
 
@@ -748,103 +206,10 @@ class Binarizer(BaseScaler):
         copy: bool
             If False, try to avoid a copy and do inplace scaling instead.
         """
-        super().__init__()
         self.threshold = threshold
         self.copy = copy
         self._scaler_object = preprocessing.Binarizer(threshold=self.threshold, copy=self.copy)
-
-    @property
-    def scaler_object(self):
-        """
-        Returns the scaler object.
-
-        Returns
-        -------
-        object:
-            The scaler object.
-        """
-        return self._scaler_object
-
-    @scaler_object.setter
-    def scaler_object(self, value: object):
-        """
-        Sets the scaler object.
-
-        Parameters
-        ----------
-        value: object
-            The scaler object.
-        """
-        self._scaler_object = value
-
-    def load(self, file_path: str):
-        """
-        Loads the scaler object from a file.
-
-        Parameters
-        ----------
-        file_path: str
-            The path to the file where the scaler object is saved.
-        """
-        self.scaler_object = joblib.load(file_path)
-
-    def _fit_transform(self, X: np.ndarray):
-        """
-        Fit to data, then transform it.
-
-        Parameters
-        ----------
-        X: np.ndarray
-            The data to fit and transform.
-
-        Returns
-        -------
-        np.ndarray:
-            The transformed data.
-        """
-        return self.scaler_object.fit_transform(X)
-
-    def _fit(self, X: np.ndarray):
-        """
-        Fit to data.
-
-        Parameters
-        ----------
-        X: np.ndarray
-            The data to fit.
-
-        Returns
-        -------
-        object:
-            The fitted scaler object.
-        """
-        return self.scaler_object.fit(X)
-
-    def _transform(self, X: np.ndarray):
-        """
-        Transform data.
-
-        Parameters
-        ----------
-        X: np.ndarray
-            The data to transform.
-
-        Returns
-        -------
-        np.ndarray:
-            The transformed data.
-        """
-        return self.scaler_object.transform(X)
-
-    def partial_fit(self, dataset: Dataset) -> None:
-        """
-        Fits the scaler object to the dataset.
-
-        Parameters
-        ----------
-        dataset: Dataset
-            The dataset to fit the scaler object.
-        """
+        super().__init__(scaler=self._scaler_object, columns=columns)
 
 
 class KernelCenterer(BaseScaler):
@@ -852,105 +217,17 @@ class KernelCenterer(BaseScaler):
     Center a kernel matrix.
     """
 
-    def __init__(self):
+    def __init__(self, columns: list = None) -> None:
         """
         Constructor for the KernelCenterer class.
+
+        Parameters
+        ----------
+        columns: list
+            The columns to be scaled.
         """
-        super().__init__()
         self._scaler_object = preprocessing.KernelCenterer()
-
-    @property
-    def scaler_object(self):
-        """
-        Returns the scaler object.
-
-        Returns
-        -------
-        object:
-            The scaler object.
-        """
-        return self._scaler_object
-
-    @scaler_object.setter
-    def scaler_object(self, value: object):
-        """
-        Sets the scaler object.
-
-        Parameters
-        ----------
-        value: object
-            The scaler object.
-        """
-        self._scaler_object = value
-
-    def load(self, file_path: str):
-        """
-        Loads the scaler object from a file.
-
-        Parameters
-        ----------
-        file_path: str
-            The path to the file where the scaler object is saved.
-        """
-        self.scaler_object = joblib.load(file_path)
-
-    def _fit_transform(self, X: np.ndarray):
-        """
-        Fit to data, then transform it.
-
-        Parameters
-        ----------
-        X: np.ndarray
-            The data to fit and transform.
-
-        Returns
-        -------
-        np.ndarray:
-            The transformed data.
-        """
-        return self.scaler_object.fit_transform(X)
-
-    def _fit(self, X: np.ndarray):
-        """
-        Fit to data.
-
-        Parameters
-        ----------
-        X: np.ndarray
-            The data to fit.
-
-        Returns
-        -------
-        object:
-            The fitted scaler object.
-        """
-        return self.scaler_object.fit(X)
-
-    def _transform(self, X: np.ndarray):
-        """
-        Transform data.
-
-        Parameters
-        ----------
-        X: np.ndarray
-            The data to transform.
-
-        Returns
-        -------
-        np.ndarray:
-            The transformed data.
-        """
-        return self.scaler_object.transform(X)
-
-    def partial_fit(self, dataset: Dataset) -> None:
-        """
-        Fits the scaler object to the dataset.
-
-        Parameters
-        ----------
-        dataset: Dataset
-            The dataset to fit the scaler object.
-        """
+        super().__init__(scaler=self._scaler_object, columns=columns)
 
 
 class QuantileTransformer(BaseScaler):
@@ -964,7 +241,8 @@ class QuantileTransformer(BaseScaler):
                  ignore_implicit_zeros: bool = False,
                  subsample: int = int(1e5),
                  random_state: int = None,
-                 copy: bool = True):
+                 copy: bool = True,
+                 columns: list = None) -> None:
         """
         Constructor for the QuantileTransformer class.
 
@@ -984,8 +262,9 @@ class QuantileTransformer(BaseScaler):
             Pseudo-random number generator state used for random sampling.
         copy: bool
             If False, try to avoid a copy and do inplace scaling instead.
+        columns: list
+            The columns to be scaled.
         """
-        super().__init__()
         self.n_quantiles = n_quantiles
         self.output_distribution = output_distribution
         self.ignore_implicit_zeros = ignore_implicit_zeros
@@ -997,99 +276,7 @@ class QuantileTransformer(BaseScaler):
                                                                 ignore_implicit_zeros=self.ignore_implicit_zeros,
                                                                 subsample=self.subsample,
                                                                 random_state=self.random_state, copy=self.copy)
-
-    @property
-    def scaler_object(self):
-        """
-        Returns the scaler object.
-
-        Returns
-        -------
-        object:
-            The scaler object.
-        """
-        return self._scaler_object
-
-    @scaler_object.setter
-    def scaler_object(self, value: object):
-        """
-        Sets the scaler object.
-
-        Parameters
-        ----------
-        value: object
-            The scaler object.
-        """
-        self._scaler_object = value
-
-    def load(self, file_path: str):
-        """
-        Loads the scaler object from a file.
-
-        Parameters
-        ----------
-        file_path: str
-            The path to the file where the scaler object is saved.
-        """
-        self.scaler_object = joblib.load(file_path)
-
-    def _fit_transform(self, X: np.ndarray):
-        """
-        Fit to data, then transform it.
-
-        Parameters
-        ----------
-        X: np.ndarray
-            The data to fit and transform.
-
-        Returns
-        -------
-        np.ndarray:
-            The transformed data.
-        """
-        return self.scaler_object.fit_transform(X)
-
-    def _fit(self, X: np.ndarray):
-        """
-        Fit to data.
-
-        Parameters
-        ----------
-        X: np.ndarray
-            The data to fit.
-
-        Returns
-        -------
-        object:
-            The fitted scaler object.
-        """
-        return self.scaler_object.fit(X)
-
-    def _transform(self, X: np.ndarray):
-        """
-        Transform data.
-
-        Parameters
-        ----------
-        X: np.ndarray
-            The data to transform.
-
-        Returns
-        -------
-        np.ndarray:
-            The transformed data.
-        """
-        return self.scaler_object.transform(X)
-
-    def partial_fit(self, dataset: Dataset) -> None:
-        """
-        Fits the scaler object to the dataset.
-
-        Parameters
-        ----------
-        dataset: Dataset
-            The dataset to fit the scaler object.
-        """
+        super().__init__(scaler=self._scaler_object, columns=columns)
 
 
 class PowerTransformer(BaseScaler):
@@ -1097,7 +284,11 @@ class PowerTransformer(BaseScaler):
     Apply a power transform featurewise to make data more Gaussian-like.
     """
 
-    def __init__(self, method: str = 'yeo-johnson', standardize: bool = True, copy: bool = True):
+    def __init__(self,
+                 method: str = 'yeo-johnson',
+                 standardize: bool = True,
+                 copy: bool = True,
+                 columns: list = None) -> None:
         """
         Constructor for the PowerTransformer class.
 
@@ -1111,102 +302,11 @@ class PowerTransformer(BaseScaler):
             Set to True to apply zero mean, unit variance normalization to the transformed output.
         copy: bool
             If False, try to avoid a copy and do inplace scaling instead.
+        columns: list
+            The columns to be scaled.
         """
-        super().__init__()
         self.method = method
         self.standardize = standardize
         self.copy = copy
         self._scaler_object = preprocessing.PowerTransformer(copy=self.copy)
-
-    @property
-    def scaler_object(self):
-        """
-        Returns the scaler object.
-
-        Returns
-        -------
-        object:
-            The scaler object.
-        """
-        return self._scaler_object
-
-    @scaler_object.setter
-    def scaler_object(self, value: object):
-        """
-        Sets the scaler object.
-
-        Parameters
-        ----------
-        value: object
-            The scaler object.
-        """
-        self._scaler_object = value
-
-    def load(self, file_path: str):
-        """
-        Loads the scaler object from a file.
-
-        Parameters
-        ----------
-        file_path: str
-            The path to the file where the scaler object is saved.
-        """
-        self.scaler_object = joblib.load(file_path)
-
-    def _fit_transform(self, X: np.ndarray):
-        """
-        Fit to data, then transform it.
-
-        Parameters
-        ----------
-        X: np.ndarray
-            The data to fit and transform.
-
-        Returns
-        -------
-        np.ndarray:
-            The transformed data.
-        """
-        return self.scaler_object.fit_transform(X)
-
-    def _fit(self, X: np.ndarray):
-        """
-        Fit to data.
-
-        Parameters
-        ----------
-        X: np.ndarray
-            The data to fit.
-
-        Returns
-        -------
-        object:
-            The fitted scaler object.
-        """
-        return self.scaler_object.fit(X)
-
-    def _transform(self, X: np.ndarray):
-        """
-        Transform data.
-
-        Parameters
-        ----------
-        X: np.ndarray
-            The data to transform.
-
-        Returns
-        -------
-        np.ndarray:
-            The transformed data.
-        """
-        return self.scaler_object.transform(X)
-
-    def partial_fit(self, dataset: Dataset) -> None:
-        """
-        Fits the scaler object to the dataset.
-
-        Parameters
-        ----------
-        dataset: Dataset
-            The dataset to fit the scaler object.
-        """
+        super().__init__(scaler=self._scaler_object, columns=columns)

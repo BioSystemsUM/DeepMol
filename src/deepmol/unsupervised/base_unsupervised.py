@@ -497,7 +497,7 @@ class KMeans(UnsupervisedLearn):
         self.k_means = None
         self.kwargs = kwargs
 
-    def _get_kmeans_instance(self, dataset: Dataset) -> None:
+    def _get_kmeans_instance(self, dataset: Dataset, **kwargs) -> None:
         """
         Return the KMeans instance.
 
@@ -505,11 +505,13 @@ class KMeans(UnsupervisedLearn):
         ----------
         dataset: Dataset
             Dataset to cluster.
+        kwargs:
+            Additional keyword arguments to pass to the elbow method.
         """
         if 'n_clusters' not in self.kwargs or self.kwargs['n_clusters'] == 'elbow':
             self.kwargs['n_clusters'] = 'elbow'
             self.logger.info('Using elbow method to determine number of clusters.')
-            n_clusters = self._elbow(**self.kwargs)
+            n_clusters = self._elbow(dataset, **kwargs)
             self.kwargs['n_clusters'] = n_clusters
 
         self.k_means = cluster.KMeans(**self.kwargs)
@@ -534,7 +536,7 @@ class KMeans(UnsupervisedLearn):
         """
         self.dataset = dataset
 
-        self._get_kmeans_instance(dataset)
+        self._get_kmeans_instance(dataset, **kwargs)
 
         x_new = self.k_means.fit_transform(dataset.X)
         feature_names = np.array([f"cluster_{i}" for i in range(x_new.shape[1])])
@@ -641,6 +643,7 @@ class KMeans(UnsupervisedLearn):
         self: KMeans
             The fitted model.
         """
+        # Using fit does not allow to pass additional arguments to the elbow method
         self._get_kmeans_instance(dataset)
         self.k_means.fit(dataset.X)
         return self

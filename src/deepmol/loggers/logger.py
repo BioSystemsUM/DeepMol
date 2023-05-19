@@ -228,4 +228,13 @@ class Logger(metaclass=SingletonMeta):
             The dictionary to set the state of the logger.
 
         """
+        d['logger'] = logging.getLogger(d['file_path'])
+
+        d['console_handler'] = logging.StreamHandler(sys.stdout)
+        d['console_handler'].setFormatter(d['formatter'])
+        d['file_handler'] = TimedRotatingFileHandler(d['file_path'], when='midnight')
+        d['file_handler'].setFormatter(d['formatter'])
+        d['logger'].addHandler(d['file_handler'])
+        d['logger'].addHandler(d['console_handler'])
+        d['logger'].setLevel(d['level'])
         self.__dict__.update(d)

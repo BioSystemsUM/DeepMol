@@ -3,6 +3,7 @@ import shutil
 import tempfile
 from typing import List, Sequence, Union
 import numpy as np
+import tensorflow
 
 from deepmol.evaluator import Evaluator
 from deepmol.metrics.metrics import Metric
@@ -254,7 +255,7 @@ class DeepChemModel(BaseDeepChemModel):
             raise ValueError(f"DeepChemModel does not support saving model of type {type(self.model)}")
 
     @classmethod
-    def load(cls, folder_path: str):
+    def load(cls, folder_path: str, **kwargs):
         """
         Loads deepchem model from disk.
 
@@ -263,7 +264,15 @@ class DeepChemModel(BaseDeepChemModel):
         folder_path: str
             Path to the file where the model is stored.
         """
-        model = load_from_disk(os.path.join(folder_path, "model.pkl"))
+        try:
+            model = load_from_disk(os.path.join(folder_path, "model.pkl"))
+        except ValueError as e:
+            if 'custom_objects' in kwargs:
+                with tensorflow.keras.utils.custom_object_scope(kwargs['custom_objects']):
+                    model = load_from_disk(os.path.join(folder_path, "model.pkl"))
+            else:
+                raise e
+
         model_parameters = load_from_disk(os.path.join(folder_path, "model_parameters.pkl"))
         deepchem_model = cls(model=model, model_dir=folder_path, **model_parameters)
         # load self from pickle format

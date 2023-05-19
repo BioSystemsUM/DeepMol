@@ -3,7 +3,6 @@ from unittest import TestCase
 from unittest.mock import MagicMock
 
 import numpy as np
-import tensorflow
 from deepchem.feat import ConvMolFeaturizer, MolGraphConvFeaturizer
 from deepchem.models import GraphConvModel, TextCNNModel, GCNModel
 from deepchem.models.layers import DTNNEmbedding, Highway

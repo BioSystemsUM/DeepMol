@@ -69,12 +69,12 @@ class KerasModel(Model):
         self.verbose = verbose
 
         self.parameters_to_save = {'mode': self.mode,
-                                      'loss': self.loss,
-                                      'optimizer': self.optimizer,
-                                      'learning_rate': self.learning_rate,
-                                      'batch_size': self.batch_size,
-                                      'epochs': self.epochs,
-                                      'verbose': self.verbose,
+                                   'loss': self.loss,
+                                   'optimizer': self.optimizer,
+                                   'learning_rate': self.learning_rate,
+                                   'batch_size': self.batch_size,
+                                   'epochs': self.epochs,
+                                   'verbose': self.verbose,
                                    **kwargs}
 
         if mode == 'classification':

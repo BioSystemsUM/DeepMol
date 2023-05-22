@@ -1,18 +1,21 @@
+import os
+import shutil
+import tempfile
 from typing import List, Sequence, Union
 import numpy as np
+import tensorflow
 
 from deepmol.evaluator import Evaluator
 from deepmol.metrics.metrics import Metric
 from deepmol.datasets import Dataset
 from deepchem.models.torch_models import TorchModel
-from deepchem.models import SeqToSeq, WGAN
+from deepchem.models import SeqToSeq, WGAN, KerasModel
 from deepchem.models import Model as BaseDeepChemModel
 from deepchem.data import NumpyDataset
 import deepchem as dc
 
-from deepmol.models._utils import save_to_disk, _get_splitter
+from deepmol.models._utils import _get_splitter, save_to_disk, load_from_disk
 from deepmol.splitters.splitters import Splitter
-from deepmol.utils.utils import load_from_disk
 
 
 def generate_sequences(epochs: int, train_smiles: List[Union[str, int]]):
@@ -43,6 +46,8 @@ class DeepChemModel(BaseDeepChemModel):
     `Dataset` objects and evaluated with the metrics in Metrics.
     """
 
+    model: BaseDeepChemModel
+
     def __init__(self,
                  model: BaseDeepChemModel,
                  model_dir: str = None,
@@ -59,12 +64,23 @@ class DeepChemModel(BaseDeepChemModel):
         kwargs:
           additional arguments to be passed to the model.
         """
-        if 'model_instance' in kwargs:
+        # create a temporary file
+        temp_file = tempfile.NamedTemporaryFile(suffix='.pkl', delete=False)
+
+        # Get the path of the temporary file
+        self.model_path_saved = temp_file.name
+
+        save_to_disk(model, self.model_path_saved)
+        self.model_instance = None
+        if 'model_instance' in kwargs and kwargs['model_instance'] is not None:
             self.model_instance = kwargs['model_instance']
             if model is not None:
                 raise ValueError("Can not use both model and model_instance argument at the same time.")
 
             model = self.model_instance
+
+        if model_dir is None:
+            model_dir = tempfile.mkdtemp()
 
         super(DeepChemModel, self).__init__(model, model_dir, **kwargs)
         if 'use_weights' in kwargs:
@@ -81,6 +97,13 @@ class DeepChemModel(BaseDeepChemModel):
             self.epochs = kwargs['epochs']
         else:
             self.epochs = 30
+
+        self.parameters_to_save = {
+            'use_weights': self.use_weights,
+            'n_tasks': self.n_tasks,
+            'epochs': self.epochs,
+            'model_instance': self.model_instance
+        }
 
     def fit_on_batch(self, X: Sequence, y: Sequence, w: Sequence):
         """
@@ -127,11 +150,20 @@ class DeepChemModel(BaseDeepChemModel):
         """
         # TODO: better way to validate model.mode and dataset.mode
         if dataset.mode != 'multitask':
-            if self.model.model.mode != dataset.mode:
-                raise ValueError(f"The model mode and the dataset mode must be the same. "
-                                 f"Got model mode: {self.model.model.mode} and dataset mode: {dataset.mode}")
+            if hasattr(self.model, 'mode'):
+                model_mode = self.model.mode
+                if model_mode != dataset.mode:
+                    raise ValueError(f"The model mode and the dataset mode must be the same. "
+                                     f"Got model mode: {model_mode} and dataset mode: {dataset.mode}")
+            else:
+                model_mode = self.model.model.mode
+                if model_mode != dataset.mode:
+                    raise ValueError(f"The model mode and the dataset mode must be the same. "
+                                     f"Got model mode: {model_mode} and dataset mode: {dataset.mode}")
+        else:
+            model_mode = dataset.mode
         # Afraid of model.fit not recognizes the input dataset as a deepchem.data.datasets.Dataset
-        if isinstance(self.model, TorchModel) and self.model.model.mode == 'regression':
+        if isinstance(self.model, TorchModel) and model_mode == 'regression':
             y = np.expand_dims(dataset.y, axis=-1)  # need to do this so that the loss is calculated correctly
         else:
             y = dataset.y
@@ -173,12 +205,6 @@ class DeepChemModel(BaseDeepChemModel):
 
         res = self.model.predict(new_dataset, transformers)
 
-        # if isinstance(self.model, (GATModel,GCNModel,AttentiveFPModel,LCNNModel)):
-        #     return res
-        # elif len(res.shape) == 2:
-        #     new_res = np.squeeze(res)
-        # else:
-        #     new_res = np.reshape(res,(res.shape[0],res.shape[2]))
         if isinstance(self.model, TorchModel) and self.model.model.mode == 'classification':
             return res
         else:
@@ -199,17 +225,67 @@ class DeepChemModel(BaseDeepChemModel):
         """
         return super(DeepChemModel, self).predict(dataset)
 
-    def save(self):
+    def save(self, folder_path: str = None):
         """
-        Saves deepchem model to disk using joblib.
-        """
-        save_to_disk(self.model, self.get_model_filename(self.model_dir))
+        Saves deepchem model to disk.
 
-    def reload(self):
+        Parameters
+        ----------
+        folder_path: str
+            Path to the file where the model will be stored.
         """
-        Loads deepchem model from joblib file on disk.
+        if folder_path is None:
+            if self.model_dir is None:
+                raise ValueError("Please specify folder_path or model_dir")
+            folder_path = self.model_dir
+        else:
+            os.makedirs(folder_path, exist_ok=True)
+
+        # move file
+        shutil.copy(self.model_path_saved, os.path.join(folder_path, 'model.pkl'))
+
+        save_to_disk(self.parameters_to_save, os.path.join(folder_path, "model_parameters.pkl"))
+
+        # write self in pickle format
+        if isinstance(self.model, KerasModel):
+            self.model.model.save_weights(os.path.join(folder_path, 'model_weights'))
+        elif isinstance(self.model, TorchModel):
+            self.model.save_checkpoint(max_checkpoints_to_keep=1, model_dir=folder_path)
+        else:
+            raise ValueError(f"DeepChemModel does not support saving model of type {type(self.model)}")
+
+    @classmethod
+    def load(cls, folder_path: str, **kwargs):
         """
-        self.model = load_from_disk(self.get_model_filename(self.model_dir))
+        Loads deepchem model from disk.
+
+        Parameters
+        ----------
+        folder_path: str
+            Path to the file where the model is stored.
+        kwargs: Dict
+            Additional parameters.
+            custom_objects: Dict
+                Dictionary of custom objects to be passed to `tensorflow.keras.utils.custom_object_scope`.
+        """
+        try:
+            model = load_from_disk(os.path.join(folder_path, "model.pkl"))
+        except ValueError as e:
+            if 'custom_objects' in kwargs:
+                with tensorflow.keras.utils.custom_object_scope(kwargs['custom_objects']):
+                    model = load_from_disk(os.path.join(folder_path, "model.pkl"))
+            else:
+                raise e
+
+        model_parameters = load_from_disk(os.path.join(folder_path, "model_parameters.pkl"))
+        deepchem_model = cls(model=model, model_dir=folder_path, **model_parameters)
+        # load self from pickle format
+        if isinstance(model, KerasModel):
+            deepchem_model.model.model.load_weights(os.path.join(folder_path, 'model_weights'))
+            return deepchem_model
+        else:
+            deepchem_model.model.restore(model_dir=folder_path)
+            return deepchem_model
 
     def cross_validate(self,
                        dataset: Dataset,

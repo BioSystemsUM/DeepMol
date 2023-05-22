@@ -1,15 +1,14 @@
+import os
 from typing import Sequence
 
 import numpy as np
 from sklearn.base import BaseEstimator
 
-from deepmol.models._utils import save_to_disk, _get_splitter
+from deepmol.models._utils import save_to_disk, _get_splitter, load_from_disk
 from deepmol.models.models import Model
 from deepmol.datasets import Dataset
 from deepmol.splitters.splitters import Splitter
 from deepmol.metrics.metrics import Metric
-
-from deepmol.utils.utils import load_from_disk
 
 from sklearn.base import clone
 
@@ -21,7 +20,7 @@ class SklearnModel(Model):
     trained on `Dataset` objects and evaluated with the metrics in Metrics.
     """
 
-    def __init__(self, model: BaseEstimator, mode: str = None, model_dir: str = None, **kwargs):
+    def __init__(self, model: BaseEstimator, mode: str = None, model_path: str = None, **kwargs):
         """
         Initializes a `SklearnModel` object.
 
@@ -31,13 +30,14 @@ class SklearnModel(Model):
           The model instance which inherits a scikit-learn `BaseEstimator` Class.
         mode: str
             'classification' or 'regression'
-        model_dir: str
-          If specified the model will be stored in this directory. Else, a temporary directory will be used.
+        model_path: str
+          If specified the model will be stored in this path. Else, a temporary directory will be used.
         kwargs: dict
             Additional keyword arguments.
         """
-        super().__init__(model, model_dir, **kwargs)
+        super().__init__(model, model_path, **kwargs)
         self.mode = mode
+        self.parameters_to_save = {'mode': self.mode}
         self.model_type = 'sklearn'
 
     def fit_on_batch(self, X: Sequence, y: Sequence):
@@ -112,17 +112,55 @@ class SklearnModel(Model):
         """
         return super(SklearnModel, self).predict(dataset)
 
-    def save(self):
+    def save(self, folder_path: str = None):
         """
-        Saves scikit-learn model to disk using joblib.
-        """
-        save_to_disk(self.model, self.get_model_filename(self.model_dir))
+        Saves scikit-learn model to disk using joblib, numpy or pickle.
+        Supported extensions: .joblib, .pkl, .npy
 
-    def reload(self):
+        Parameters
+        ----------
+        folder_path: str
+            Folder path to save model to.
         """
-        Loads scikit-learn model from joblib file on disk.
+        if folder_path is None:
+            model_path = self.get_model_filename(self.model_path)
+        else:
+            if "." in folder_path:
+                raise ValueError("folder_path should be a folder, not a file")
+            os.makedirs(folder_path, exist_ok=True)
+            model_path = self.get_model_filename(folder_path)
+
+        save_to_disk(self.model, model_path)
+
+        # change file path to keep the extension but add _params
+        parameters_file_path = model_path.split('.')[0] + '_params.' + model_path.split('.')[1]
+        save_to_disk(self.parameters_to_save, parameters_file_path)
+
+    @classmethod
+    def load(cls, folder_path: str, **kwargs) -> 'SklearnModel':
         """
-        self.model = load_from_disk(self.get_model_filename(self.model_dir))
+        Loads scikit-learn model from joblib or pickle file on disk.
+        Supported extensions: .joblib, .pkl
+
+        Parameters
+        ----------
+        folder_path: str
+            Path to model file.
+
+        Returns
+        -------
+        SklearnModel
+            The loaded scikit-learn model.
+        """
+        if "." in folder_path:
+            raise ValueError("model_path should be a folder, not a file")
+        model_path = cls.get_model_filename(folder_path)
+        model = load_from_disk(model_path)
+        # change file path to keep the extension but add _params
+        parameters_file_path = model_path.split('.')[0] + '_params.' + model_path.split('.')[1]
+        params = load_from_disk(parameters_file_path)
+        instance = cls(model=model, model_path=model_path, **params)
+        return instance
 
     def cross_validate(self,
                        dataset: Dataset,

@@ -1,4 +1,8 @@
-from deepmol.models._utils import _get_splitter
+import os
+
+import keras
+
+from deepmol.models._utils import _get_splitter, load_from_disk, _save_keras_model
 from deepmol.models.models import Model
 from deepmol.models.sklearn_models import SklearnModel
 from deepmol.metrics.metrics import Metric
@@ -21,7 +25,7 @@ class KerasModel(Model):
     def __init__(self,
                  model_builder: callable,
                  mode: str = 'classification',
-                 model_dir: str = None,
+                 model_path: str = None,
                  loss: str = 'binary_crossentropy',
                  optimizer: str = 'adam',
                  learning_rate: float = 0.001,
@@ -38,7 +42,7 @@ class KerasModel(Model):
             A function that builds a keras model.
         mode: str
             The mode of the model. Can be either 'classification' or 'regression'.
-        model_dir: str
+        model_path: str
             The directory to save the model to.
         loss: str
             The loss function to use.
@@ -53,7 +57,7 @@ class KerasModel(Model):
         verbose: int
             The verbosity of the model.
         """
-        super().__init__(model_builder, model_dir, **kwargs)
+        super().__init__(model_builder, model_path, **kwargs)
         self.mode = mode
         self.loss = loss
         self.optimizer = optimizer
@@ -63,6 +67,15 @@ class KerasModel(Model):
         self.epochs = epochs
         self.model_builder = model_builder
         self.verbose = verbose
+
+        self.parameters_to_save = {'mode': self.mode,
+                                   'loss': self.loss,
+                                   'optimizer': self.optimizer,
+                                   'learning_rate': self.learning_rate,
+                                   'batch_size': self.batch_size,
+                                   'epochs': self.epochs,
+                                   'verbose': self.verbose,
+                                   **kwargs}
 
         if mode == 'classification':
             self.model = KerasClassifier(build_fn=model_builder, epochs=epochs, batch_size=batch_size,
@@ -111,7 +124,8 @@ class KerasModel(Model):
         """
         try:
             return self.model.predict_proba(dataset.X.astype('float32'))
-        except AttributeError:
+        except AttributeError as e:
+            self.logger.error(e)
             self.logger.info(str(self.model))
             self.logger.info(str(type(self.model)))
             return self.model.predict(dataset.X.astype('float32'))
@@ -137,15 +151,48 @@ class KerasModel(Model):
         Fits model on batch of data.
         """
 
-    def reload(self) -> None:
+    @classmethod
+    def load(cls, folder_path: str) -> 'KerasModel':
         """
         Reloads the model from disk.
-        """
 
-    def save(self) -> None:
+        Parameters
+        ----------
+        folder_path: str
+            The folder path to load the model from.
+
+        Returns
+        -------
+        KerasModel
+            The loaded model.
+        """
+        file_path_model_builder = os.path.join(folder_path, 'model_builder.pkl')
+        model_builder = load_from_disk(file_path_model_builder)
+        file_path_model = os.path.join(folder_path, 'model.h5')
+        model = keras.models.load_model(file_path_model)
+        model_parameters = load_from_disk(os.path.join(folder_path, 'model_parameters.pkl'))
+        keras_model_class = cls(model_builder=model_builder, **model_parameters)
+        keras_model_class.model.model = model
+        return keras_model_class
+
+    def save(self, file_path: str = None) -> None:
         """
         Saves the model to disk.
+
+        Parameters
+        ----------
+        file_path: str
+            The path to save the model to.
         """
+        if file_path is None:
+            if self.model_path is None:
+                raise ValueError('No model directory specified.')
+            else:
+                # write self in pickle format
+                _save_keras_model(self.model_path, self.model.model, self.parameters_to_save, self.model_builder)
+        else:
+            # write self in pickle format
+            _save_keras_model(file_path, self.model.model, self.parameters_to_save, self.model_builder)
 
     def get_task_type(self) -> str:
         """

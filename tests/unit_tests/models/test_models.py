@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from unittest.mock import MagicMock
 
 import numpy as np
+from rdkit.Chem import MolFromSmiles
 
 from deepmol.datasets import SmilesDataset
 from unit_tests._mock_utils import SmilesDatasetMagicMock
@@ -33,20 +34,24 @@ class ModelsTestCase(ABC):
         ids = np.array([str(i) for i in range(100)])
         ids_test = np.array([str(i) for i in range(100, 110)])
         # create binary classification dataset
+        smiles = ['CCC' * 50 for _ in range(100)]
+        mols = [MolFromSmiles(smi) for smi in smiles]
         self.binary_dataset = SmilesDatasetMagicMock(spec=SmilesDataset,
                                                      X=x,
                                                      y=y,
                                                      n_tasks=1,
                                                      label_names=['binary_label'],
                                                      mode='classification',
-                                                     ids=ids)
+                                                     ids=ids,
+                                                     smiles=smiles)
+        self.binary_dataset.mols = [MolFromSmiles(smi) for smi in smiles]
         self.binary_dataset.select_to_split.side_effect = lambda arg: MagicMock(spec=SmilesDataset,
-                                                                     X=x[arg],
-                                                                     y=y[arg],
-                                                                     n_tasks=1,
-                                                                     label_names=['binary_label'],
-                                                                     mode='classification',
-                                                                     ids=ids[arg])
+                                                                                X=x[arg],
+                                                                                y=y[arg],
+                                                                                n_tasks=1,
+                                                                                label_names=['binary_label'],
+                                                                                mode='classification',
+                                                                                ids=ids[arg])
         self.binary_dataset.__len__.return_value = 100
         self.binary_dataset_test = SmilesDatasetMagicMock(spec=SmilesDataset,
                                                           X=x_test,

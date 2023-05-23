@@ -1,5 +1,4 @@
 import shutil
-from copy import copy
 from unittest import TestCase
 
 from sklearn.metrics import roc_auc_score, precision_score, classification_report, accuracy_score, confusion_matrix
@@ -85,6 +84,8 @@ class TestKerasModel(ModelsTestCase, TestCase):
 
         model.save("test_model")
         loaded_model = KerasModel.load("test_model")
+        self.assertEqual(2, loaded_model.epochs)
+        self.assertEqual(50, loaded_model.model.sk_params["input_dim"])
         loaded_model_predictions = loaded_model.predict(self.binary_dataset_test)
         for i in range(len(first_predictions)):
             self.assertEqual(first_predictions[i][0], loaded_model_predictions[i][0])

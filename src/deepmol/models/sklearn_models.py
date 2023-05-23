@@ -1,9 +1,9 @@
-from typing import Sequence
+import os
 
 import numpy as np
 from sklearn.base import BaseEstimator
 
-from deepmol.models._utils import save_to_disk, _get_splitter, load_model_from_disk
+from deepmol.models._utils import save_to_disk, _get_splitter, load_from_disk
 from deepmol.models.models import Model
 from deepmol.datasets import Dataset
 from deepmol.splitters.splitters import Splitter
@@ -19,7 +19,7 @@ class SklearnModel(Model):
     trained on `Dataset` objects and evaluated with the metrics in Metrics.
     """
 
-    def __init__(self, model: BaseEstimator, mode: str = None, model_path: str = None, **kwargs):
+    def __init__(self, model: BaseEstimator, mode: str = None, model_dir: str = None, **kwargs):
         """
         Initializes a `SklearnModel` object.
 
@@ -29,18 +29,30 @@ class SklearnModel(Model):
           The model instance which inherits a scikit-learn `BaseEstimator` Class.
         mode: str
             'classification' or 'regression'
-        model_path: str
+        model_dir: str
           If specified the model will be stored in this path. Else, a temporary directory will be used.
         kwargs: dict
             Additional keyword arguments.
         """
-        super().__init__(model, model_path, **kwargs)
+        super().__init__(model, model_dir, **kwargs)
         self.mode = mode
-        self.model_type = 'sklearn'
+        self.parameters_to_save = {'mode': self.mode}
 
-    def fit_on_batch(self, X: Sequence, y: Sequence):
+    @property
+    def model_type(self):
+        """
+        Returns the type of the model.
+        """
+        return 'sklearn'
+
+    def fit_on_batch(self, dataset: Dataset) -> None:
         """
         Fits model on batch of data.
+
+        Parameters
+        ----------
+        dataset: Dataset
+          Dataset to train on.
         """
 
     def get_task_type(self) -> str:
@@ -53,7 +65,7 @@ class SklearnModel(Model):
         Returns the number of tasks.
         """
 
-    def fit(self, dataset: Dataset) -> None:
+    def _fit(self, dataset: Dataset) -> None:
         """
         Fits scikit-learn model to data.
 
@@ -110,30 +122,39 @@ class SklearnModel(Model):
         """
         return super(SklearnModel, self).predict(dataset)
 
-    def save(self, file_path: str = None):
+    def save(self, folder_path: str = None):
         """
         Saves scikit-learn model to disk using joblib, numpy or pickle.
         Supported extensions: .joblib, .pkl, .npy
 
         Parameters
         ----------
-        file_path: str
-            Path to save model to.
+        folder_path: str
+            Folder path to save model to.
         """
-        if file_path is None:
-            file_path = self.get_model_filename(self.model_dir)
+        if folder_path is None:
+            model_path = self.get_model_filename(self.model_dir)
+        else:
+            if "." in folder_path:
+                raise ValueError("folder_path should be a folder, not a file")
+            os.makedirs(folder_path, exist_ok=True)
+            model_path = self.get_model_filename(folder_path)
 
-        save_to_disk(self.model, file_path)
+        save_to_disk(self.model, model_path)
+
+        # change file path to keep the extension but add _params
+        parameters_file_path = model_path.split('.')[0] + '_params.' + model_path.split('.')[1]
+        save_to_disk(self.parameters_to_save, parameters_file_path)
 
     @classmethod
-    def load(cls, model_path: str, **kwargs) -> 'SklearnModel':
+    def load(cls, folder_path: str, **kwargs) -> 'SklearnModel':
         """
         Loads scikit-learn model from joblib or pickle file on disk.
         Supported extensions: .joblib, .pkl
 
         Parameters
         ----------
-        model_path: str
+        folder_path: str
             Path to model file.
 
         Returns
@@ -141,8 +162,14 @@ class SklearnModel(Model):
         SklearnModel
             The loaded scikit-learn model.
         """
-        model = load_model_from_disk(model_path)
-        instance = cls(model=model, model_path=model_path)
+        if "." in folder_path:
+            raise ValueError("model_path should be a folder, not a file")
+        model_path = cls.get_model_filename(folder_path)
+        model = load_from_disk(model_path)
+        # change file path to keep the extension but add _params
+        parameters_file_path = model_path.split('.')[0] + '_params.' + model_path.split('.')[1]
+        params = load_from_disk(parameters_file_path)
+        instance = cls(model=model, model_dir=model_path, **params)
         return instance
 
     def cross_validate(self,

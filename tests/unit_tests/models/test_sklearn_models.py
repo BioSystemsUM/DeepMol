@@ -143,37 +143,42 @@ class TestSklearnModel(ModelsTestCase, TestCase):
 
     def test_save_model(self):
         rf = RandomForestClassifier()
-        model = SklearnModel(model=rf)
+        model = SklearnModel(model=rf, mode="classification", model_dir="test_model")
         model.fit(self.binary_dataset)
-        model.save("test_model.pkl")
-        self.assertTrue(os.path.exists("test_model.pkl"))
-        os.remove("test_model.pkl")
+        model.save("test_model")
+        self.assertTrue(os.path.exists("test_model"))
+        shutil.rmtree("test_model")
 
-        model.save("test_model.joblib")
-        self.assertTrue(os.path.exists("test_model.joblib"))
-        os.remove("test_model.joblib")
+        self.assertEqual("classification", model.mode)
+
+        with self.assertRaises(ValueError):
+            model.save("test_model.params.pkl")
+
+        with self.assertRaises(ValueError):
+            model.save("test_model.params.joblib")
+
+        rf = RandomForestClassifier()
+        model = SklearnModel(model=rf, mode="classification", model_dir="test_model")
+        model.fit(self.binary_dataset)
+        model.save()
+        self.assertTrue(os.path.exists(os.path.join("test_model", "model.pkl")))
+
+        shutil.rmtree("test_model")
 
     def test_load_model(self):
         rf = RandomForestClassifier()
-        model = SklearnModel(model=rf)
+        model = SklearnModel(model=rf, mode="classification")
         model.fit(self.binary_dataset)
-        model.save("test_model.pkl")
-        model.save("test_model.joblib")
+        model.save("test_model")
+        predictions_1 = model.predict(self.binary_dataset_test)
 
-        model = SklearnModel.load("test_model.pkl")
-        y_test = model.predict(self.binary_dataset_test)
+        new_model = SklearnModel.load("test_model")
+        y_test = new_model.predict(self.binary_dataset_test)
         self.assertEqual(len(y_test), len(self.binary_dataset_test.y))
-        self.assertIsInstance(model, SklearnModel)
-        os.remove("test_model.pkl")
+        self.assertIsInstance(new_model, SklearnModel)
+        self.assertEqual("classification", new_model.mode)
 
-        model = SklearnModel.load("test_model.joblib")
-        self.assertIsInstance(model, SklearnModel)
-        y_test = model.predict(self.binary_dataset_test)
-        self.assertEqual(len(y_test), len(self.binary_dataset_test.y))
-        os.remove("test_model.joblib")
+        for i in range(len(y_test)):
+            self.assertEqual(y_test[i, 0], predictions_1[i, 0])
 
-
-
-
-
-
+        shutil.rmtree("test_model")

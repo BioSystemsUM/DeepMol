@@ -7,7 +7,6 @@ from deepmol.models.models import Model
 from deepmol.models.sklearn_models import SklearnModel
 from deepmol.metrics.metrics import Metric
 from deepmol.splitters.splitters import Splitter
-from typing import Sequence
 import numpy as np
 from deepmol.datasets import Dataset
 from tensorflow.keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
@@ -57,12 +56,10 @@ class KerasModel(Model):
         verbose: int
             The verbosity of the model.
         """
-        super().__init__(model_builder, model_path, **kwargs)
         self.mode = mode
         self.loss = loss
         self.optimizer = optimizer
         self.learning_rate = learning_rate
-        self.model_type = 'keras'
         self.batch_size = batch_size
         self.epochs = epochs
         self.model_builder = model_builder
@@ -86,7 +83,16 @@ class KerasModel(Model):
         else:
             self.model = model_builder
 
-    def fit(self, dataset: Dataset, **kwargs) -> None:
+        super().__init__(self.model, model_path, **kwargs)
+
+    @property
+    def model_type(self):
+        """
+        Returns the type of the model.
+        """
+        return 'keras'
+
+    def _fit(self, dataset: Dataset, **kwargs) -> None:
         """
         Fits keras model to data.
 
@@ -130,25 +136,30 @@ class KerasModel(Model):
             self.logger.info(str(type(self.model)))
             return self.model.predict(dataset.X.astype('float32'))
 
-    def predict_on_batch(self, X: Dataset) -> np.ndarray:
+    def predict_on_batch(self, dataset: Dataset) -> np.ndarray:
         """
         Makes predictions on batch of data.
 
         Parameters
         ----------
-        X: Dataset
-          Dataset to make prediction on.
+        dataset: Dataset
+            Dataset to make prediction on.
 
         Returns
         -------
         np.ndarray
             numpy array of predictions.
         """
-        return super(KerasModel, self).predict(X)
+        return super(KerasModel, self).predict(dataset)
 
-    def fit_on_batch(self, X: Sequence, y: Sequence):
+    def fit_on_batch(self, dataset: Dataset) -> None:
         """
         Fits model on batch of data.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to fit model on.
         """
 
     @classmethod
@@ -185,11 +196,11 @@ class KerasModel(Model):
             The path to save the model to.
         """
         if file_path is None:
-            if self.model_path is None:
+            if self.model_dir is None:
                 raise ValueError('No model directory specified.')
             else:
                 # write self in pickle format
-                _save_keras_model(self.model_path, self.model.model, self.parameters_to_save, self.model_builder)
+                _save_keras_model(self.model_dir, self.model.model, self.parameters_to_save, self.model_builder)
         else:
             # write self in pickle format
             _save_keras_model(file_path, self.model.model, self.parameters_to_save, self.model_builder)

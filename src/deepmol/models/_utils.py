@@ -2,6 +2,7 @@ import os
 import pickle
 from typing import Any, Union
 
+import dill
 import joblib
 
 from deepmol.datasets import Dataset
@@ -26,13 +27,18 @@ def save_to_disk(model: 'Model', filename: str, compress: int = 3):
     if filename.endswith('.joblib'):
         joblib.dump(model, filename, compress=compress)
     elif filename.endswith('.pkl'):
-        with open(filename, 'wb') as f:
-            pickle.dump(model, f, protocol=pickle.HIGHEST_PROTOCOL)
+        try:
+            with open(filename, 'wb') as f:
+                pickle.dump(model, f, protocol=pickle.HIGHEST_PROTOCOL)
+        except (TypeError, AttributeError):
+            # dump with dill
+            with open(filename, 'wb') as f:
+                dill.dump(model, f)
     else:
         raise ValueError("Filename with unsupported extension: %s" % filename)
 
 
-def load_model_from_disk(filename: str) -> Any:
+def load_from_disk(filename: str) -> Any:
     """
     Load model from file.
 
@@ -49,7 +55,11 @@ def load_model_from_disk(filename: str) -> Any:
     name = filename
     extension = os.path.splitext(name)[1]
     if extension == ".pkl":
-        return load_pickle_file(filename)
+        try:
+            return load_pickle_file(filename)
+        except (TypeError, AttributeError):
+            with open(filename, 'rb') as f:
+                return dill.load(f)
     elif extension == ".joblib":
         return joblib.load(filename)
     else:
@@ -76,6 +86,7 @@ def _get_splitter(dataset: Dataset) -> Splitter:
 
 def _save_keras_model(file_path: str,
                       model: Union['deepchem.models.KerasModel', 'deepmol.models.keras_model.KerasModel'],
+                      parameters_to_save: dict,
                       model_builder: callable = None):
     """
     Saves a keras model to disk.
@@ -86,6 +97,8 @@ def _save_keras_model(file_path: str,
         The path to save the model to.
     model: KerasModel
         The keras model.
+    parameters_to_save: dict
+        The parameters to save.
     model_builder: callable
         The model builder.
     """
@@ -96,4 +109,6 @@ def _save_keras_model(file_path: str,
     # write model in h5 format
     model_file_path = os.path.join(file_path, 'model.h5')
     model.save(model_file_path)
-
+    # write parameters in pickle format
+    file_path_parameters = os.path.join(file_path, 'model_parameters.pkl')
+    save_to_disk(parameters_to_save, file_path_parameters)

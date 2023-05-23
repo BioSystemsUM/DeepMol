@@ -30,7 +30,7 @@ class SklearnModel(Model):
         mode: str
             'classification' or 'regression'
         model_dir: str
-          If specified the model will be stored in this path. Else, a temporary directory will be used.
+          If specified the model will be stored in this directory. Else, a temporary directory will be used.
         kwargs: dict
             Additional keyword arguments.
         """

@@ -112,3 +112,5 @@ def _save_keras_model(file_path: str,
     # write parameters in pickle format
     file_path_parameters = os.path.join(file_path, 'model_parameters.pkl')
     save_to_disk(parameters_to_save, file_path_parameters)
+
+

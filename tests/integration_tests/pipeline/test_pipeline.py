@@ -3,19 +3,22 @@ import shutil
 from unittest import TestCase
 
 import numpy as np
+from deepchem.models import GraphConvModel
+from tensorflow.keras import Sequential
+from tensorflow.keras.layers import Dense
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.svm import SVC
 
-from deepmol.compound_featurization import MorganFingerprint
-from deepmol.feature_selection import LowVarianceFS
+from deepmol.compound_featurization import MorganFingerprint, LayeredFingerprint, ConvMolFeat
+from deepmol.feature_selection import LowVarianceFS, KbestFS
 from deepmol.loaders import CSVLoader
 from deepmol.metrics import Metric
-from deepmol.models import SklearnModel
+from deepmol.models import SklearnModel, KerasModel, DeepChemModel
 from deepmol.pipeline import Pipeline
-from deepmol.scalers import StandardScaler
-from deepmol.standardizer import BasicStandardizer
-from deepmol.unsupervised import PCA
+from deepmol.scalers import StandardScaler, MinMaxScaler
+from deepmol.standardizer import BasicStandardizer, ChEMBLStandardizer
+from deepmol.unsupervised import PCA, TSNE
 from tests import TEST_DIR
 
 
@@ -111,13 +114,17 @@ class TestPipeline(TestCase):
         feature_selector = feature_selector
         model = model
 
-        pipeline = Pipeline(steps=[('standardizer', standardizer),
-                                   ('featurizer', featurizer),
-                                   ('scaler', scaler),
-                                   ('feature_selector', feature_selector),
-                                   ('unsupervised', unsupervised),
-                                   ('model', model)],
-                            path='test_pipeline/')
+        steps = [('standardizer', standardizer),
+                 ('featurizer', featurizer),
+                 ('scaler', scaler),
+                 ('feature_selector', feature_selector),
+                 ('unsupervised', unsupervised),
+                 ('model', model)]
+
+        # pop steps that are None
+        steps = [step for step in steps if step[1] is not None]
+
+        pipeline = Pipeline(steps=steps, path='test_pipeline/')
 
         pipeline.fit_transform(self.dataset_smiles)
         predictions = pipeline.predict(self.dataset_smiles)
@@ -149,3 +156,27 @@ class TestPipeline(TestCase):
                                         feature_selector=LowVarianceFS(threshold=0.1),
                                         unsupervised=PCA(n_components=2),
                                         model=svc_model)
+
+        def basic_classification_model_builder(input_shape):
+            model = Sequential()
+            model.add(Dense(10, input_shape=input_shape, activation='relu'))
+            model.add(Dense(1, activation='sigmoid'))
+            model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+            return model
+
+        keras_model = KerasModel(model_builder=basic_classification_model_builder, epochs=2, input_shape=(1024,))
+        self.validate_complete_pipeline(standardizer=ChEMBLStandardizer(),
+                                        featurizer=LayeredFingerprint(fpSize=1024),
+                                        scaler=MinMaxScaler(feature_range=(0, 1)),
+                                        feature_selector=KbestFS(k=10),
+                                        unsupervised=None,
+                                        model=keras_model)
+
+        deepchem_model = GraphConvModel(n_tasks=1, mode='classification')
+        model_graph = DeepChemModel(deepchem_model)
+        self.validate_complete_pipeline(standardizer=ChEMBLStandardizer(),
+                                        featurizer=ConvMolFeat(),
+                                        scaler=None,
+                                        feature_selector=None,
+                                        unsupervised=None,
+                                        model=model_graph)

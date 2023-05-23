@@ -7,7 +7,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.svm import SVC
 
-from deepmol.compound_featurization import MorganFingerprint, MACCSkeysFingerprint
+from deepmol.compound_featurization import MorganFingerprint
 from deepmol.feature_selection import LowVarianceFS
 from deepmol.loaders import CSVLoader
 from deepmol.metrics import Metric
@@ -51,7 +51,7 @@ class TestPipeline(TestCase):
 
     def test_predictor_pipeline(self):
         rf = RandomForestClassifier()
-        model = SklearnModel(model=rf, model_dir='model.pkl')
+        model = SklearnModel(model=rf, model_dir='model')
         pipeline = Pipeline(steps=[('model', model)], path='test_predictor_pipeline/')
 
         pipeline.save()
@@ -82,7 +82,7 @@ class TestPipeline(TestCase):
     def test_pipeline(self):
         morgan = MorganFingerprint(size=1024)
         svc = SVC()
-        scv = SklearnModel(model=svc, model_dir='model.pkl')
+        scv = SklearnModel(model=svc, model_dir='model')
         pipeline = Pipeline(steps=[('featurizer', morgan), ('model', scv)], path='test_pipeline/')
 
         pipeline.fit_transform(self.dataset_smiles)
@@ -141,7 +141,7 @@ class TestPipeline(TestCase):
 
     def test_complete_pipeline(self):
         svc_model = SVC()
-        svc_model = SklearnModel(model=svc_model, model_dir='model_svc.pkl')
+        svc_model = SklearnModel(model=svc_model, model_dir='sklearn_model')
 
         self.validate_complete_pipeline(standardizer=BasicStandardizer(),
                                         featurizer=MorganFingerprint(size=1024),

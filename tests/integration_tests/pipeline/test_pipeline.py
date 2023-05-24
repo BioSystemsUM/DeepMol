@@ -18,7 +18,7 @@ from deepmol.models import SklearnModel, KerasModel, DeepChemModel
 from deepmol.pipeline import Pipeline
 from deepmol.scalers import StandardScaler, MinMaxScaler
 from deepmol.standardizer import BasicStandardizer, ChEMBLStandardizer
-from deepmol.unsupervised import PCA, TSNE
+from deepmol.unsupervised import PCA
 from tests import TEST_DIR
 
 

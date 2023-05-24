@@ -10,6 +10,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.svm import SVC
 
+from deepmol.base import PassThroughTransformer
 from deepmol.compound_featurization import MorganFingerprint, LayeredFingerprint, ConvMolFeat
 from deepmol.feature_selection import LowVarianceFS, KbestFS
 from deepmol.loaders import CSVLoader
@@ -176,7 +177,7 @@ class TestPipeline(TestCase):
         model_graph = DeepChemModel(deepchem_model)
         self.validate_complete_pipeline(standardizer=ChEMBLStandardizer(),
                                         featurizer=ConvMolFeat(),
-                                        scaler=None,
+                                        scaler=PassThroughTransformer(),
                                         feature_selector=None,
                                         unsupervised=None,
                                         model=model_graph)

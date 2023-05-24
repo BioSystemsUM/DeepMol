@@ -62,3 +62,41 @@ class Transformer(Estimator):
             The transformed dataset.
         """
         return self.fit(dataset).transform(dataset)
+
+
+class PassThroughTransformer(Transformer):
+    """
+    A transformer that does nothing.
+    """
+
+    def _fit(self, dataset: Dataset) -> 'Estimator':
+        """
+        Fit the transformer to the dataset.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The dataset to fit the transformer to.
+
+        Returns
+        -------
+        self: Estimator
+            The fitted transformer.
+        """
+        return self
+
+    def _transform(self, dataset: Dataset) -> Dataset:
+        """
+        Transform the dataset.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The dataset to transform.
+
+        Returns
+        -------
+        dataset: Dataset
+            The transformed dataset.
+        """
+        return dataset

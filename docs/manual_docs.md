@@ -14,6 +14,7 @@ Data Split <manual_docs/data_split>
 Supervised Learning <manual_docs/models>
 Feature Importance <manual_docs/feature_importance>
 Unbalanced Datasets <manual_docs/unbalanced_datasets>
+Pipeline <manual_docs/pipeline>
 About us <manual_docs/about_us>
 Related publications <manual_docs/publications>
 

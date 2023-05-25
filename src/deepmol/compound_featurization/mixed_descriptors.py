@@ -21,7 +21,7 @@ class MixedFeaturizer(MolecularFeaturizer):
         """
         super().__init__(**kwargs)
         self.featurizers = featurizers
-        self.feature_names = [name for featurizer in featurizers for name in featurizer.feature_names]
+        self.feature_names = [name for featurizer in self.featurizers for name in featurizer.feature_names]
 
     def _featurize(self, mol: Mol):
         """

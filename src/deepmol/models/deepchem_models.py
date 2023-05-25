@@ -5,6 +5,7 @@ from typing import List, Sequence, Union
 import numpy as np
 import tensorflow
 
+from deepmol.base import Predictor
 from deepmol.evaluator import Evaluator
 from deepmol.metrics.metrics import Metric
 from deepmol.datasets import Dataset
@@ -39,7 +40,7 @@ def generate_sequences(epochs: int, train_smiles: List[Union[str, int]]):
             yield smile, smile
 
 
-class DeepChemModel(BaseDeepChemModel):
+class DeepChemModel(BaseDeepChemModel, Predictor):
     """
     Wrapper class that wraps deepchem models.
     The `DeepChemModel` class provides a wrapper around deepchem models that allows deepchem models to be trained on
@@ -82,7 +83,10 @@ class DeepChemModel(BaseDeepChemModel):
         if model_dir is None:
             model_dir = tempfile.mkdtemp()
 
-        super(DeepChemModel, self).__init__(model, model_dir, **kwargs)
+        super().__init__(model=model, model_dir=model_dir, **kwargs)
+        super(Predictor, self).__init__()
+        self._model_dir = model_dir
+
         if 'use_weights' in kwargs:
             self.use_weights = kwargs['use_weights']
         else:
@@ -104,6 +108,24 @@ class DeepChemModel(BaseDeepChemModel):
             'epochs': self.epochs,
             'model_instance': self.model_instance
         }
+
+    @property
+    def model_type(self):
+        """
+        Returns the type of the model.
+        """
+        return 'deepchem'
+
+    def fit(self, dataset: Dataset):
+        """
+        Fits the model on a dataset.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The `Dataset` to train this model on.
+        """
+        Predictor.fit(self, dataset)
 
     def fit_on_batch(self, X: Sequence, y: Sequence, w: Sequence):
         """
@@ -139,7 +161,7 @@ class DeepChemModel(BaseDeepChemModel):
             The number of tasks of the model.
         """
 
-    def fit(self, dataset: Dataset) -> None:
+    def _fit(self, dataset: Dataset) -> None:
         """
         Fits DeepChemModel to data.
 
@@ -213,6 +235,29 @@ class DeepChemModel(BaseDeepChemModel):
             # commented code above
 
         return new_res
+
+    def predict_proba(self,
+                      dataset: Dataset,
+                      transformers: List[dc.trans.NormalizationTransformer] = None
+                      ) -> np.ndarray:
+        """
+        Makes predictions on dataset.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to make prediction on.
+
+        transformers: List[Transformer]
+            Transformers that the input data has been transformed by. The output
+            is passed through these transformers to undo the transformations.
+
+        Returns
+        -------
+        np.ndarray
+            The value is a return value of `predict` method of the DeepChem model.
+        """
+        return self.predict(dataset, transformers)
 
     def predict_on_batch(self, dataset: Dataset) -> np.ndarray:
         """

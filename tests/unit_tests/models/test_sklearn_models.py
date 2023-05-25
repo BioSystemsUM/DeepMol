@@ -143,7 +143,7 @@ class TestSklearnModel(ModelsTestCase, TestCase):
 
     def test_save_model(self):
         rf = RandomForestClassifier()
-        model = SklearnModel(model=rf, mode="classification", model_path="test_model")
+        model = SklearnModel(model=rf, mode="classification", model_dir="test_model")
         model.fit(self.binary_dataset)
         model.save("test_model")
         self.assertTrue(os.path.exists("test_model"))
@@ -158,7 +158,7 @@ class TestSklearnModel(ModelsTestCase, TestCase):
             model.save("test_model.params.joblib")
 
         rf = RandomForestClassifier()
-        model = SklearnModel(model=rf, mode="classification", model_path="test_model")
+        model = SklearnModel(model=rf, mode="classification", model_dir="test_model")
         model.fit(self.binary_dataset)
         model.save()
         self.assertTrue(os.path.exists(os.path.join("test_model", "model.pkl")))

@@ -73,8 +73,6 @@ class MolecularFeaturizer(ABC, Transformer):
     @modify_object_inplace_decorator
     def featurize(self,
                   dataset: Dataset,
-                  scaler: BaseScaler = None,
-                  path_to_save_scaler: str = None,
                   remove_nans_axis: int = 0
                   ) -> Dataset:
 
@@ -85,10 +83,6 @@ class MolecularFeaturizer(ABC, Transformer):
         ----------
         dataset: Dataset
             The dataset containing the molecules to featurize in dataset.mols.
-        scaler: BaseScaler
-            The scaler to use for scaling the generated features.
-        path_to_save_scaler: str
-            The path to save the scaler to.
         remove_nans_axis: int
             The axis to remove NaNs from. If None, no NaNs are removed.
 
@@ -121,15 +115,6 @@ class MolecularFeaturizer(ABC, Transformer):
         dataset.feature_names = self.feature_names
 
         dataset.remove_nan(remove_nans_axis, inplace=True)
-
-        if scaler and path_to_save_scaler:
-            # transform data
-            scaler.fit_transform(dataset, inplace=True)
-            scaler.save(path_to_save_scaler)
-
-        elif scaler:
-            scaler.transform(dataset, inplace=True)
-
         return dataset
 
     @abstractmethod

@@ -12,7 +12,7 @@ class TestOneHotEncoding(FeaturizerTestCase, TestCase):
         dataset = ohe._transform(mock_dataset)
         self.assertEqual(dataset_rows_number, dataset._X.shape[0])
 
-        reconstructed_dataset = ohe._inverse_transform(dataset)
+        reconstructed_dataset = ohe.inverse_transform(dataset)
         self.assertEqual(dataset_rows_number, reconstructed_dataset._X.shape[0])
         for i in range(dataset_rows_number):
             self.assertEqual(self.mock_dataset.smiles[i], reconstructed_dataset.smiles[i])

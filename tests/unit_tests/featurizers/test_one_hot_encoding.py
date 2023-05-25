@@ -8,8 +8,8 @@ class TestOneHotEncoding(FeaturizerTestCase, TestCase):
     def test_featurize(self):
         mock_dataset = self.mock_dataset.__copy__()
         dataset_rows_number = len(mock_dataset.mols)
-        ohe = SmilesOneHotEncoder()._fit(mock_dataset)
-        dataset = ohe._transform(mock_dataset)
+        ohe = SmilesOneHotEncoder().fit(mock_dataset)
+        dataset = ohe.transform(mock_dataset)
         self.assertEqual(dataset_rows_number, dataset._X.shape[0])
 
         reconstructed_dataset = ohe.inverse_transform(dataset)
@@ -20,8 +20,8 @@ class TestOneHotEncoding(FeaturizerTestCase, TestCase):
     def test_low_size(self):
         mock_dataset = self.mock_dataset.__copy__()
         dataset_rows_number = len(mock_dataset.mols)
-        ohe = SmilesOneHotEncoder(max_length=10)._fit(mock_dataset)
-        dataset = ohe._transform(mock_dataset)
+        ohe = SmilesOneHotEncoder(max_length=10).fit(mock_dataset)
+        dataset = ohe.transform(mock_dataset)
         self.assertEqual(dataset_rows_number, dataset._X.shape[0])
 
         # TODO: continue here

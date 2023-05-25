@@ -2,11 +2,12 @@ import multiprocessing
 
 import numpy as np
 
+from deepmol.base import Transformer
 from deepmol.datasets import Dataset
 from deepmol.compound_featurization._utils import _PERIODIC_TABLE_ELEMENTS, _AVAILABLE_ELEMENTS
 
 
-class SmilesOneHotEncoder:
+class SmilesOneHotEncoder(Transformer):
     """
     Encodes SMILES strings into a one-hot encoded matrix.
 

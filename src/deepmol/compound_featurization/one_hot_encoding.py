@@ -9,10 +9,10 @@ class SmilesOneHotEncoder:#(Transformer):
 
     def __init__(self, max_length: int = 120, **kwargs):
         #super().__init__()
-        self.max_length = max_length
+        self.max_length = max_length + 1 # +1 for the padding
         self._available_chars = _AVAILABLE_ELEMENTS
         self._chars_to_replace = {}
-        self.dictionary = None
+        self.dictionary = {"": 0}
 
     def _fit(self, dataset: Dataset) -> 'SmilesOneHotEncoder':
         self._parse_two_char_tokens(list(dataset.smiles))
@@ -25,13 +25,30 @@ class SmilesOneHotEncoder:#(Transformer):
         return dataset
 
     def _inverse_transform(self, dataset: Dataset) -> Dataset:
-        pass
+        smiles = []
+        for row in dataset._X:
+            smiles.append(self._decode(row))
+        dataset.smiles = np.array(smiles)
+        return dataset
 
     def _encode(self, smiles: str) -> np.ndarray:
         smiles_matrix = np.zeros((len(self.dictionary), self.max_length))
-        for index, char in enumerate(smiles):
+        # TODO: remove smiles with length > max_length or do one hot encoding of smiles[:self.max_length] ?
+        for index, char in enumerate(smiles[:self.max_length]):
             smiles_matrix[self.dictionary[char], index] = 1
         return smiles_matrix
+
+    def _decode(self, smiles_matrix: np.ndarray) -> str:
+        smiles = ''
+        for row in smiles_matrix.T:
+            char = list(self.dictionary.keys())[np.argmax(row)]
+            smiles += char
+            if char == '':
+                break
+        # replace back the two char tokens
+        for comb, repl in self._chars_to_replace.items():
+            smiles = smiles.replace(repl, comb)
+        return smiles
 
     def _parse_two_char_tokens(self, smiles: list) -> None:
         combinations = set()
@@ -44,15 +61,15 @@ class SmilesOneHotEncoder:#(Transformer):
         processed_smiles = self._replace_chars(list(dataset.smiles))
         max_size = len(max(processed_smiles, key=len))
         if max_size < self.max_length:
-            self.max_length = max_size
-        self.dictionary = {letter: idx for idx, letter in enumerate(set(''.join(processed_smiles)))}
+            self.max_length = max_size + 1  # +1 for the padding
+        self.dictionary.update({letter: idx for idx, letter in enumerate(set(''.join(processed_smiles)), start=1)})
 
     def _replace_chars(self, smiles: list) -> list:
         processed_smiles = []
         for smile in smiles:
             sm = smile
             for comb, repl in self._chars_to_replace.items():
-                sm.replace(comb, repl)
+                sm = sm.replace(comb, repl)
             processed_smiles.append(sm)
         return processed_smiles
 

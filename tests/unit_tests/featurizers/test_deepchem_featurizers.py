@@ -19,8 +19,8 @@ class TestDeepChemFeaturizers(FeaturizerTestCase, TestCase):
         valid = len(self.original_smiles)
         self.validate_featurizer(ConvMolFeat, df, valid)
         self.validate_featurizer(WeaveFeat, df, valid)
-        self.validate_featurizer(MolGanFeat, df, valid, max_atom_count=15)
-        self.validate_featurizer(MolGanFeat, df, valid-1, max_atom_count=9)  # 1 mol has more than 9 atoms
+        self.validate_featurizer(MolGanFeat, df, valid - 2, max_atom_count=15)  # 2 invalid mols
+        self.validate_featurizer(MolGanFeat, df, valid - 3, max_atom_count=9)  # 1 mol has more than 9 atoms + 2 invalid
         self.validate_featurizer(MolGraphConvFeat, df, valid)
         self.validate_featurizer(CoulombFeat, df, valid, max_atoms=100)
         self.validate_featurizer(CoulombEigFeat, df, valid, max_atoms=100)
@@ -33,7 +33,7 @@ class TestDeepChemFeaturizers(FeaturizerTestCase, TestCase):
         valid = len(self.original_smiles_with_invalid) - 1
         self.validate_featurizer(ConvMolFeat, df, valid, n_jobs=1)
         self.validate_featurizer(WeaveFeat, df, valid)
-        self.validate_featurizer(MolGanFeat, df, valid-1)   # 1 mol has more than 9 atoms
+        self.validate_featurizer(MolGanFeat, df, valid - 3)   # 1 mol has more than 9 atoms + 2 invalid
         self.validate_featurizer(MolGraphConvFeat, df, valid, n_jobs=-1)
         self.validate_featurizer(CoulombFeat, df, valid, max_atoms=100, seed=123, n_jobs=3)
         self.validate_featurizer(CoulombEigFeat, df, valid, max_atoms=100, seed=123, n_jobs=2)

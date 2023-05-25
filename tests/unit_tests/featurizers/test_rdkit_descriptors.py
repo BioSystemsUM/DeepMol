@@ -18,7 +18,7 @@ class Test2DDescriptors(FeaturizerTestCase, TestCase):
 
     def test_featurize(self):
         TwoDimensionDescriptors().featurize(self.mock_dataset, inplace=True)
-        self.assertEqual(5, self.mock_dataset._X.shape[0])
+        self.assertEqual(7, self.mock_dataset._X.shape[0])
 
     def test_featurize_with_nan(self):
         dataset_rows_number = len(self.mock_dataset_with_invalid.mols) - 1  # one mol has invalid smiles

@@ -4,6 +4,8 @@ Standardization is the process of converting a chemical structure to a standardi
 
 It is possible to standardize the loaded molecules using three option. Using a basic standardizer that only does sanitization (Kekulize, check valencies, set aromaticity, conjugation and hybridization). A more complex standardizer can be customized by choosing or not to perform specific tasks such as sanitization, remove isotope information, neutralize charges, remove stereochemistry and remove smaller fragments. Another possibility is to use the ChEMBL Standardizer.
 
+Standardizing molecules is important in machine learning pipelines because it helps to **ensure that the data is consistent and comparable across different samples**. In the context of molecular data, standardization typically involves removing salts and fragments and/or neutralizing charges.
+
 
 ```python
 from deepmol.datasets import SmilesDataset
@@ -42,7 +44,7 @@ display(SVG(svg))
 
 
     
-![svg](molecular_standardizers_files/molecular_standardizers_3_0.svg)
+![svg](molecular_standardizers_files/molecular_standardizers_4_0.svg)
     
 
 
@@ -84,7 +86,7 @@ display(SVG(svg))
 
 
     
-![svg](molecular_standardizers_files/molecular_standardizers_7_0.svg)
+![svg](molecular_standardizers_files/molecular_standardizers_8_0.svg)
     
 
 
@@ -138,7 +140,7 @@ display(SVG(svg))
 
 
     
-![svg](molecular_standardizers_files/molecular_standardizers_11_0.svg)
+![svg](molecular_standardizers_files/molecular_standardizers_12_0.svg)
     
 
 
@@ -178,6 +180,6 @@ display(SVG(svg))
 
 
     
-![svg](molecular_standardizers_files/molecular_standardizers_15_0.svg)
+![svg](molecular_standardizers_files/molecular_standardizers_16_0.svg)
     
 

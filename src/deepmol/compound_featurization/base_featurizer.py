@@ -8,7 +8,6 @@ from deepmol.base import Transformer
 from deepmol.datasets import Dataset
 from deepmol.loggers.logger import Logger
 from deepmol.parallelism.multiprocessing import JoblibMultiprocessing
-from deepmol.scalers import BaseScaler
 from deepmol.utils.decorators import modify_object_inplace_decorator
 from deepmol.utils.errors import PreConditionViolationException
 from deepmol.utils.utils import canonicalize_mol_object

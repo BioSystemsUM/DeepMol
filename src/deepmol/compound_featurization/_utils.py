@@ -1,3 +1,4 @@
+import string
 from typing import List, Dict, Tuple
 
 import numpy as np
@@ -8,6 +9,17 @@ from rdkit.Chem import Mol, AllChem, rdDepictor
 from rdkit.Chem.Draw import rdMolDraw2D
 
 from deepmol.loggers import Logger
+
+_PERIODIC_TABLE_ELEMENTS = [
+    "Ac", "Al", "Am", "Sb", "Ar", "As", "At", "Ba", "Bk", "Be", "Bi", "Bh", "B", "Br", "Cd", "Ca", "Cf", "C", "Ce",
+    "Cs", "Cl", "Cr", "Co", "Cn", "Cu", "Cm", "Ds", "Db", "Dy", "Es", "Er", "Eu", "Fm", "Fl", "F", "Fr", "Gd", "Ga",
+    "Ge", "Au", "Hf", "Hs", "He", "Ho", "H", "In", "I", "Ir", "Fe", "Kr", "La", "Lr", "Pb", "Li", "Lv", "Lu", "Mg",
+    "Mn", "Mt", "Md", "Hg", "Mo", "Mc", "Nd", "Ne", "Np", "Ni", "Nh", "Nb", "N", "No", "Og", "Os", "O", "Pd", "P",
+    "Pt", "Pu", "Po", "K", "Pr", "Pm", "Pa", "Ra", "Rn", "Re", "Rh", "Rg", "Rb", "Ru", "Rf", "Sm", "Sc", "Sg", "Se",
+    "Si", "Ag", "Na", "Sr", "S", "Ta", "Tc", "Te", "Ts", "Tb", "Tl", "Th", "Tm", "Sn", "Ti", "W", "U", "V", "Xe",
+    "Yb", "Y", "Zn", "Zr"]
+
+_AVAILABLE_ELEMENTS = set(string.ascii_letters) - set(_PERIODIC_TABLE_ELEMENTS)
 
 
 def find_maximum_number_atoms(molecules: List[Mol]) -> int:

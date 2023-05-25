@@ -14,6 +14,8 @@ from .similarity_matrix import TanimotoSimilarityMatrix
 
 from .mixed_descriptors import MixedFeaturizer
 
+from .one_hot_encoding import SmilesOneHotEncoder
+
 try:
     from .mol2vec import Mol2Vec
 except ImportError:

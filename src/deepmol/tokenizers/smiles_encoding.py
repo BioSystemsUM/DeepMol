@@ -1,15 +1,16 @@
-import multiprocessing
-
 import numpy as np
 
 from deepmol.base import Transformer
 from deepmol.datasets import Dataset
-from deepmol.compound_featurization._utils import _PERIODIC_TABLE_ELEMENTS, _AVAILABLE_ELEMENTS
+from deepmol.tokenizers import Tokenizer
+from deepmol.tokenizers._utils import _SMILES_TOKENS, _AVAILABLE_TOKENS
 
 
-class SmilesOneHotEncoder(Transformer):
+class SmilesCharacterLevelTokenizer(Transformer, Tokenizer):
     """
     Encodes SMILES strings into a one-hot encoded matrix.
+    The SmilesCharacterLevelTokenizer treats every character is the SMILES as a single token.
+    However, two-charater elements such Al and Br, Cl, etc. are treated as a single token.
 
     Parameters
     ----------
@@ -25,14 +26,14 @@ class SmilesOneHotEncoder(Transformer):
 
     Examples
     --------
-    >>> from deepmol.compound_featurization import SmilesOneHotEncoder
+    >>> from deepmol.tokenizers import SmilesCharacterLevelTokenizer
     >>> from deepmol.loaders import CSVLoader
     >>> data = loader = CSVLoader('data_path.csv', smiles_field='Smiles', labels_fields=['Class'])
     >>> dataset = loader.create_dataset(sep=";")
-    >>> ohe = SmilesOneHotEncoder().fit_transform(dataset)
+    >>> ohe = SmilesCharacterLevelTokenizer().fit_transform(dataset)
     """
 
-    def __init__(self, max_length: int = 120, n_jobs: int = -1):
+    def __init__(self, max_length: int = None, n_jobs: int = -1):
         """
         Initializes the featurizer.
 
@@ -43,12 +44,12 @@ class SmilesOneHotEncoder(Transformer):
         n_jobs: int
             The number of jobs to run in parallel in the featurization.
         """
-        super().__init__()
-        self.max_length = max_length + 1 # +1 for the padding
-        self._available_chars = _AVAILABLE_ELEMENTS
+        Transformer.__init__(self)
+        Tokenizer.__init__(self, n_jobs=n_jobs)
+        self.max_length = max_length + 1 if max_length is not None else None
+        self._available_chars = _AVAILABLE_TOKENS
         self._chars_to_replace = {}
-        self.dictionary = {"": 0}
-        self.n_jobs = n_jobs if n_jobs > 0 else multiprocessing.cpu_count()
+        self.dictionary = {}
 
     def featurize(self, dataset: Dataset) -> Dataset:
         """
@@ -65,9 +66,11 @@ class SmilesOneHotEncoder(Transformer):
         dataset: Dataset
             The featurized dataset.
         """
-        return self._fit(dataset)._transform(dataset)
+        if self.is_fitted():
+            return self.transform(dataset)
+        return self.fit_transform(dataset)
 
-    def _fit(self, dataset: Dataset) -> 'SmilesOneHotEncoder':
+    def _fit(self, dataset: Dataset) -> 'SmilesCharacterLevelTokenizer':
         """
         Fits the featurizer.
         Computes the dictionary mapping characters to integers.
@@ -79,7 +82,7 @@ class SmilesOneHotEncoder(Transformer):
 
         Returns
         -------
-        self: SmilesOneHotEncoder
+        self: SmilesCharacterLevelTokenizer
             The fitted featurizer.
         """
         self._parse_two_char_tokens(list(dataset.smiles))
@@ -124,7 +127,7 @@ class SmilesOneHotEncoder(Transformer):
         dataset.smiles = np.array(smiles)
         return dataset
 
-    def _encode(self, smiles: str) -> np.ndarray:
+    def encode(self, smiles: str) -> np.ndarray:
         """
         Encodes a SMILES string into a one-hot encoded matrix.
 
@@ -141,28 +144,14 @@ class SmilesOneHotEncoder(Transformer):
         smiles_matrix = np.zeros((len(self.dictionary), self.max_length))
         # TODO: remove smiles with length > max_length or do one hot encoding of smiles[:self.max_length] ?
         for index, char in enumerate(smiles[:self.max_length]):
+            if char not in self.dictionary.keys():
+                char = 'unk'
             smiles_matrix[self.dictionary[char], index] = 1
+        # fill the rest of the matrix with the padding token
+        smiles_matrix[self.dictionary[''], len(smiles):] = 1
         return smiles_matrix
 
-    def _encode_smiles_parallel(self, smiles_list: list) -> list:
-        """
-        Encodes a list of SMILES strings into a list of one-hot encoded matrices.
-
-        Parameters
-        ----------
-        smiles_list: list
-            The list of SMILES strings to encode.
-
-        Returns
-        -------
-        smiles_matrix_list: list
-            The list of one-hot encoded matrices.
-        """
-        with multiprocessing.Pool(processes=self.n_jobs) as pool:
-            encoded_smiles_list = pool.map(self._encode, smiles_list)
-        return encoded_smiles_list
-
-    def _decode(self, smiles_matrix: np.ndarray) -> str:
+    def decode(self, smiles_matrix: np.ndarray) -> str:
         """
         Decodes a one-hot encoded matrix into a SMILES string.
 
@@ -187,24 +176,6 @@ class SmilesOneHotEncoder(Transformer):
             smiles = smiles.replace(repl, comb)
         return smiles
 
-    def _decode_smiles_parallel(self, smiles_matrix_list: list) -> list:
-        """
-        Decodes a list of one-hot encoded matrices into a list of SMILES strings using multiprocessing.
-
-        Parameters
-        ----------
-        smiles_matrix_list: list
-            The list of one-hot encoded matrices to decode.
-
-        Returns
-        -------
-        smiles_list: list
-            The list of decoded SMILES strings.
-        """
-        with multiprocessing.Pool(processes=self.n_jobs) as pool:
-            decoded_smiles_list = pool.map(self._decode, smiles_matrix_list)
-        return decoded_smiles_list
-
     def _parse_two_char_tokens(self, smiles: list) -> None:
         """
         Parses the two-char tokens in the SMILES strings.
@@ -220,7 +191,7 @@ class SmilesOneHotEncoder(Transformer):
         for s in smiles:
             combinations.update(s[i:i + 2] for i in range(len(s) - 1) if s[i:i + 2].isalpha())
         self._chars_to_replace.update(
-            {comb: self._available_chars.pop() for comb in combinations if comb in _PERIODIC_TABLE_ELEMENTS})
+            {comb: self._available_chars.pop() for comb in combinations if comb in _SMILES_TOKENS})
 
     def _set_up_dictionary(self, dataset: Dataset) -> None:
         """
@@ -234,9 +205,11 @@ class SmilesOneHotEncoder(Transformer):
         """
         processed_smiles = self._replace_chars(list(dataset.smiles))
         max_size = len(max(processed_smiles, key=len))
-        if max_size < self.max_length:
+        if self.max_length is None or max_size < self.max_length:
             self.max_length = max_size + 1  # +1 for the padding
-        self.dictionary.update({letter: idx for idx, letter in enumerate(set(''.join(processed_smiles)), start=1)})
+        self.dictionary.update({letter: idx for idx, letter in enumerate(set(''.join(processed_smiles)))})
+        # add "" and 'unk' to the dictionary
+        self.dictionary.update({'': len(self.dictionary), 'unk': len(self.dictionary) + 1})
 
     def _replace_chars(self, smiles: list) -> list:
         """
@@ -260,3 +233,14 @@ class SmilesOneHotEncoder(Transformer):
             processed_smiles.append(sm)
         return processed_smiles
 
+    @property
+    def shape(self) -> tuple:
+        """
+        Returns the shape of the one-hot encoded matrix.
+
+        Returns
+        -------
+        shape: tuple
+            The shape of the one-hot encoded matrix.
+        """
+        return len(self.dictionary), self.max_length

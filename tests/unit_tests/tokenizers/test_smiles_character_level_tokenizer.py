@@ -36,7 +36,7 @@ class TestSmilesOneHotEncoder(FeaturizerTestCase, TestCase):
 
         reconstructed_dataset = ohe.inverse_transform(dataset)
         self.assertEqual(dataset_rows_number, reconstructed_dataset._X.shape[0])
-        for i in range(dataset_rows_number - 1): # last one has less than 10 characters
+        for i in range(dataset_rows_number - 1):  # last one has less than 10 characters
             self.assertFalse(self.mock_dataset.smiles[i] == reconstructed_dataset.smiles[i])
         self.assertEqual(self.mock_dataset.smiles[-1], reconstructed_dataset.smiles[-1])
 

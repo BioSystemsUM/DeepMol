@@ -21,7 +21,7 @@ class TestTokenizers(TestCase):
                            labels_fields=['Class'])
         self.dataset_smiles = loader.create_dataset(sep=";")
 
-        def classification_rnn_buider(input_shape):
+        def classification_rnn_builder(input_shape):
             # Define the model
             model = Sequential()
             model.add(LSTM(64, input_shape=input_shape))
@@ -30,7 +30,7 @@ class TestTokenizers(TestCase):
             model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
             return model
 
-        self.model_builder = classification_rnn_buider
+        self.model_builder = classification_rnn_builder
 
     def tearDown(self) -> None:
         # remove logs (files starting with 'deepmol.log')

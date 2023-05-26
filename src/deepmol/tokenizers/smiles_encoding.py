@@ -1,3 +1,6 @@
+import re
+from typing import List
+
 import numpy as np
 
 from deepmol.base import Transformer
@@ -6,7 +9,7 @@ from deepmol.tokenizers import Tokenizer
 from deepmol.tokenizers._utils import _SMILES_TOKENS, _AVAILABLE_TOKENS
 
 
-class SmilesCharacterLevelTokenizer(Transformer, Tokenizer):
+class SmilesOneHotEncoder(Transformer, Tokenizer):
     """
     Encodes SMILES strings into a one-hot encoded matrix.
     The SmilesCharacterLevelTokenizer treats every character is the SMILES as a single token.
@@ -26,14 +29,14 @@ class SmilesCharacterLevelTokenizer(Transformer, Tokenizer):
 
     Examples
     --------
-    >>> from deepmol.tokenizers import SmilesCharacterLevelTokenizer
+    >>> from deepmol.tokenizers import SmilesOneHotEncoder
     >>> from deepmol.loaders import CSVLoader
     >>> data = loader = CSVLoader('data_path.csv', smiles_field='Smiles', labels_fields=['Class'])
     >>> dataset = loader.create_dataset(sep=";")
-    >>> ohe = SmilesCharacterLevelTokenizer().fit_transform(dataset)
+    >>> ohe = SmilesOneHotEncoder().fit_transform(dataset)
     """
 
-    def __init__(self, max_length: int = None, n_jobs: int = -1):
+    def __init__(self, max_length: int = None, regex: bool = True, n_jobs: int = -1):
         """
         Initializes the featurizer.
 
@@ -41,13 +44,17 @@ class SmilesCharacterLevelTokenizer(Transformer, Tokenizer):
         ----------
         max_length: int
             The maximum length of the SMILES strings.
+        regex: bool
+            Whether to use regex to replace characters. Treats '[*]' as one token.
         n_jobs: int
             The number of jobs to run in parallel in the featurization.
         """
         Transformer.__init__(self)
         Tokenizer.__init__(self, n_jobs=n_jobs)
         self.max_length = max_length + 1 if max_length is not None else None
+        self.regex = regex
         self._available_chars = _AVAILABLE_TOKENS
+        self.processed_smiles = []
         self._chars_to_replace = {}
         self.dictionary = {}
 
@@ -70,7 +77,7 @@ class SmilesCharacterLevelTokenizer(Transformer, Tokenizer):
             return self.transform(dataset)
         return self.fit_transform(dataset)
 
-    def _fit(self, dataset: Dataset) -> 'SmilesCharacterLevelTokenizer':
+    def _fit(self, dataset: Dataset) -> 'SmilesOneHotEncoder':
         """
         Fits the featurizer.
         Computes the dictionary mapping characters to integers.
@@ -82,10 +89,14 @@ class SmilesCharacterLevelTokenizer(Transformer, Tokenizer):
 
         Returns
         -------
-        self: SmilesCharacterLevelTokenizer
+        self: SmilesOneHotEncoder
             The fitted featurizer.
         """
+        if self.regex:
+            self._parse_regex_tokens(list(dataset.smiles))
+            self.processed_smiles = self._replace_chars(list(dataset.smiles))
         self._parse_two_char_tokens(list(dataset.smiles))
+        self.processed_smiles = self._replace_chars(list(dataset.smiles))
         self._set_up_dictionary(dataset)
         return self
 
@@ -176,7 +187,7 @@ class SmilesCharacterLevelTokenizer(Transformer, Tokenizer):
             smiles = smiles.replace(repl, comb)
         return smiles
 
-    def _parse_two_char_tokens(self, smiles: list) -> None:
+    def _parse_two_char_tokens(self, smiles: List[str]) -> None:
         """
         Parses the two-char tokens in the SMILES strings.
         Replaces the two-char tokens with a single character (e.g. Br -> R). The replaced characters are added to the
@@ -184,7 +195,7 @@ class SmilesCharacterLevelTokenizer(Transformer, Tokenizer):
 
         Parameters
         ----------
-        smiles: list
+        smiles: List[str]
             The list of SMILES strings to parse.
         """
         combinations = set()
@@ -192,6 +203,16 @@ class SmilesCharacterLevelTokenizer(Transformer, Tokenizer):
             combinations.update(s[i:i + 2] for i in range(len(s) - 1) if s[i:i + 2].isalpha())
         self._chars_to_replace.update(
             {comb: self._available_chars.pop() for comb in combinations if comb in _SMILES_TOKENS})
+
+    def _parse_regex_tokens(self, smiles: List[str]) -> None:
+        regex = "(\[[^\[\]]{1,6}\])"
+        finds = []
+        for s in smiles:
+            char_list = re.split(regex, s)
+            for char in char_list:
+                if char.startswith('['):
+                    finds.append(char)
+        self._chars_to_replace.update({comb: self._available_chars.pop() for comb in set(finds)})
 
     def _set_up_dictionary(self, dataset: Dataset) -> None:
         """
@@ -203,26 +224,25 @@ class SmilesCharacterLevelTokenizer(Transformer, Tokenizer):
         dataset: Dataset
             The dataset to set up the dictionary on.
         """
-        processed_smiles = self._replace_chars(list(dataset.smiles))
-        max_size = len(max(processed_smiles, key=len))
+        max_size = len(max(self.processed_smiles, key=len))
         if self.max_length is None or max_size < self.max_length:
             self.max_length = max_size + 1  # +1 for the padding
-        self.dictionary.update({letter: idx for idx, letter in enumerate(set(''.join(processed_smiles)))})
+        self.dictionary.update({letter: idx for idx, letter in enumerate(set(''.join(self.processed_smiles)))})
         # add "" and 'unk' to the dictionary
         self.dictionary.update({'': len(self.dictionary), 'unk': len(self.dictionary) + 1})
 
-    def _replace_chars(self, smiles: list) -> list:
+    def _replace_chars(self, smiles: List[str]) -> List[str]:
         """
         Replaces the two-char tokens with a single character (e.g. Br -> R).
 
         Parameters
         ----------
-        smiles: list
+        smiles: : List[str]
             The list of SMILES strings to replace the characters on.
 
         Returns
         -------
-        processed_smiles: list
+        processed_smiles: : List[str]
             The list of SMILES strings with the replaced characters.
         """
         processed_smiles = []

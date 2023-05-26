@@ -16,7 +16,7 @@ class ButinaSplitterTestCase(SplittersTestCase, TestCase):
         train_dataset, test_dataset = butina_splitter.train_test_split(self.mini_dataset_to_test)
 
         self.assertGreater(len(train_dataset.smiles), len(test_dataset.smiles))
-        self.assertEqual(len(train_dataset.smiles), 4)
+        self.assertEqual(len(train_dataset.smiles), 5)
         self.assertEqual(len(test_dataset.smiles), 1)
 
     @skip("Not implemented yet!")

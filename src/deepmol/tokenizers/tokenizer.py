@@ -5,8 +5,21 @@ import numpy as np
 
 
 class Tokenizer(ABC):
+    """
+    An abstract class for tokenizers.
+    Tokenizers are used to encode and decode strings.
+    Child classes must implement the encode and decode methods and the shape property.
+    """
 
     def __init__(self, n_jobs=-1):
+        """
+        Initializes the tokenizer.
+
+        Parameters
+        ----------
+        n_jobs: int
+            The number of jobs to run in parallel in the featurization.
+        """
         self.n_jobs = n_jobs if n_jobs > 0 else multiprocessing.cpu_count()
 
     @abstractmethod

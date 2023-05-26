@@ -17,7 +17,7 @@ class ButinaSplitterTestCase(SplittersTestCase, TestCase):
 
         self.assertGreater(len(train_dataset.smiles), len(test_dataset.smiles))
         self.assertEqual(len(train_dataset.smiles), 5)
-        self.assertEqual(len(test_dataset.smiles), 1)
+        self.assertEqual(len(test_dataset.smiles), 2)
 
     @skip("Not implemented yet!")
     def test_k_fold_split(self):

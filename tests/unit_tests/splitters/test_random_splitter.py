@@ -16,7 +16,7 @@ class RandomSplitterTestCase(SplittersTestCase, TestCase):
         self.assertGreater(len(train_dataset.smiles), len(test_dataset.smiles))
         self.assertGreater(len(train_dataset.smiles), len(test_dataset.smiles))
         self.assertEqual(len(train_dataset.smiles), 5)
-        self.assertEqual(len(test_dataset.smiles), 1)
+        self.assertEqual(len(test_dataset.smiles), 2)
 
     def test_k_fold_split(self):
         random_splitter = RandomSplitter()

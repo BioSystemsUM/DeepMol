@@ -97,7 +97,7 @@ class SmilesOneHotEncoder(Transformer, Tokenizer):
             self.processed_smiles = self._replace_chars(list(dataset.smiles))
         self._parse_two_char_tokens(list(dataset.smiles))
         self.processed_smiles = self._replace_chars(list(dataset.smiles))
-        self._set_up_dictionary(dataset)
+        self._set_up_dictionary()
         return self
 
     def _transform(self, dataset: Dataset) -> Dataset:
@@ -205,6 +205,16 @@ class SmilesOneHotEncoder(Transformer, Tokenizer):
             {comb: self._available_chars.pop() for comb in combinations if comb in _SMILES_TOKENS})
 
     def _parse_regex_tokens(self, smiles: List[str]) -> None:
+        """
+        Parses the regex tokens in the SMILES strings.
+        Replaces the regex tokens with a single character (e.g. [C@@H] -> R). The replaced characters are added to the
+        dictionary. We make sure that the replaced characters are not in the SMILES strings.
+
+        Parameters
+        ----------
+        smiles: List[str]
+            The list of SMILES strings to parse.
+        """
         regex = "(\[[^\[\]]{1,6}\])"
         finds = []
         for s in smiles:
@@ -214,15 +224,10 @@ class SmilesOneHotEncoder(Transformer, Tokenizer):
                     finds.append(char)
         self._chars_to_replace.update({comb: self._available_chars.pop() for comb in set(finds)})
 
-    def _set_up_dictionary(self, dataset: Dataset) -> None:
+    def _set_up_dictionary(self) -> None:
         """
         Sets up the dictionary mapping characters to integers. The characters are the ones in the SMILES strings and
         the replaced characters from the two-char tokens.
-
-        Parameters
-        ----------
-        dataset: Dataset
-            The dataset to set up the dictionary on.
         """
         max_size = len(max(self.processed_smiles, key=len))
         if self.max_length is None or max_size < self.max_length:

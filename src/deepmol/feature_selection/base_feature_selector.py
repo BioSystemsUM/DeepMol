@@ -62,7 +62,7 @@ class BaseFeatureSelector(ABC, Transformer):
         dataset: Dataset
           Dataset containing the selected features and indexes of the features kept as 'self.features2keep'.
         """
-        dataset = dataset.select_features_by_index(list(self.features_to_keep))
+        dataset = dataset.select_features_by_index(list(self.features_to_keep), inplace=True)
         return dataset
 
     def _fit(self, dataset: Dataset) -> 'BaseFeatureSelector':
@@ -342,44 +342,26 @@ class BorutaAlgorithm(BaseFeatureSelector):
 
     def _fit(self, dataset: Dataset) -> 'BorutaAlgorithm':
         """
-        Fit the Boruta Algorithm.
+        Returns features and indexes of features to keep.
 
         Parameters
         ----------
         dataset: Dataset
-            Dataset to fit
+            Dataset to perform feature selection on
 
         Returns
         -------
-        self: BorutaAlgorithm
-            The fitted BorutaAlgorithm
+        features_to_keep: np.ndarray
+            Array containing the indexes of the features to keep.
         """
         fs = np.stack(dataset.X, axis=0)
         y = dataset.y
-        self.feature_selector.fit(fs, y)
-        return self
-
-    def _transform(self, dataset: Dataset) -> Dataset:
-        """
-        Transform the dataset using the selected features.
-
-        Parameters
-        ----------
-        dataset: Dataset
-            Dataset to transform
-
-        Returns
-        -------
-        transformed_dataset: Dataset
-            Transformed dataset
-        """
-        fs = np.stack(dataset.X, axis=0)
-        self.feature_selector.transform(fs, weak=self.support_weak)
-        support = [i for i, boolean in enumerate(self.feature_selector.support_) if boolean]
+        self.boruta.fit(fs, y)
+        self.boruta.transform(fs, weak=self.support_weak)
+        support = [i for i, boolean in enumerate(self.boruta.support_) if boolean]
         if self.support_weak:
-            weak_support = [i for i, boolean in enumerate(self.feature_selector.support_weak_) if boolean]
+            weak_support = [i for i, boolean in enumerate(self.boruta.support_weak_) if boolean]
             features_to_keep = list(set.union(set(support), set(weak_support)))
         else:
             features_to_keep = support
-        dataset.select_features_by_index(list(features_to_keep))
-        return dataset
+        return np.array(features_to_keep)

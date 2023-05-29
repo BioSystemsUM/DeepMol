@@ -27,7 +27,7 @@ class BaseFeatureSelector(ABC):
             raise Exception('Abstract class BaseFeatureSelector should not be instantiated')
 
     @modify_object_inplace_decorator
-    def select_features(self, dataset: Dataset):
+    def select_features(self, dataset: Dataset, inplace: bool = False) -> Union[Dataset, None]:
         """
         Perform feature selection for the molecules present in the dataset.
 
@@ -35,6 +35,8 @@ class BaseFeatureSelector(ABC):
         ----------
         dataset: Dataset
             Dataset to perform feature selection on
+        inplace: bool
+            Whether to perform the feature selection inplace or not.
 
         Returns
         -------
@@ -42,7 +44,7 @@ class BaseFeatureSelector(ABC):
           Dataset containing the selected features and indexes of the features kept as 'self.features2keep'.
         """
         features_to_keep = self._select_features(dataset)
-        dataset.select_features_by_index(list(features_to_keep))
+        dataset.select_features_by_index(list(features_to_keep), inplace=True)
         return dataset
 
     @abstractmethod

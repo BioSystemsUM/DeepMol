@@ -39,7 +39,7 @@ class BaseFeatureSelector(ABC, Transformer):
         dataset: Dataset
             Dataset to perform feature selection on
         inplace: bool
-            Whether to perform the feature selection in the received dataset or not.
+            Whether to perform the feature selection inplace or not.
 
         Returns
         -------

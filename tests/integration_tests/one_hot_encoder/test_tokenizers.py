@@ -4,14 +4,14 @@ from unittest import TestCase
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import LSTM, Dense
 
+from deepmol.compound_featurization import SmilesOneHotEncoder
 from deepmol.loaders import CSVLoader
 from deepmol.models import KerasModel
-from deepmol.tokenizers import SmilesOneHotEncoder
 
 from tests import TEST_DIR
 
 
-class TestTokenizers(TestCase):
+class TestOneHotEncoder(TestCase):
 
     def setUp(self) -> None:
         smiles_dataset_path = os.path.join(TEST_DIR, 'data')
@@ -39,23 +39,11 @@ class TestTokenizers(TestCase):
                 os.remove(f)
 
     def test_smiles_character_level_tokenizer(self):
-        tokenizer = SmilesOneHotEncoder(regex=False)
-        tokenized = tokenizer.fit_transform(self.dataset_smiles)
+        ohe = SmilesOneHotEncoder()
+        tokenized = ohe.fit_transform(self.dataset_smiles)
         self.assertEqual(len(tokenized), len(self.dataset_smiles))
 
-        rnn_model = KerasModel(model_builder=self.model_builder, input_shape=tokenizer.shape)
-
-        rnn_model.fit(tokenized)
-
-        predictions = rnn_model.predict(tokenized)
-        self.assertEqual(len(predictions), len(self.dataset_smiles))
-
-    def test_smiles_regex_tokenizer(self):
-        tokenizer = SmilesOneHotEncoder(regex=True)
-        tokenized = tokenizer.fit_transform(self.dataset_smiles)
-        self.assertEqual(len(tokenized), len(self.dataset_smiles))
-
-        rnn_model = KerasModel(model_builder=self.model_builder, input_shape=tokenizer.shape)
+        rnn_model = KerasModel(model_builder=self.model_builder, input_shape=ohe.shape)
 
         rnn_model.fit(tokenized)
 

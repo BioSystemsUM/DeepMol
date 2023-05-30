@@ -33,29 +33,6 @@ class Dataset(ABC):
             if isinstance(getattr(type(self), name), deepmol_cached_property):
                 vars(self).pop(name, None)
 
-    def __copy__(self):
-        """
-        Create a shallow copy of the dataset.
-        """
-        cls = self.__class__
-        result = cls.__new__(cls)
-        result.__dict__.update(self.__dict__)
-        result.logger = Logger()
-        return result
-
-    def __deepcopy__(self, memo):
-        """
-        Create a deep copy of the dataset.
-        """
-        cls = self.__class__
-        result = cls.__new__(cls)
-        memo[id(self)] = result
-        for k, v in self.__dict__.items():
-            setattr(result, k, deepcopy(v, memo))
-
-        result.logger = Logger()
-        return result
-
     @abstractmethod
     def __len__(self) -> int:
         """

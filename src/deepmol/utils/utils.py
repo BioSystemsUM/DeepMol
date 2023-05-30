@@ -11,6 +11,25 @@ from rdkit.Chem import Mol, rdmolfiles, rdmolops
 from rdkit import Chem
 
 
+def get_class(name: str) -> object:
+    """
+    Get a class from a string.
+
+    Parameters
+    ----------
+    name: str
+        A class name you want to get.
+
+    Returns
+    -------
+    object
+        A class object.
+    """
+    components = name.split(".")
+    mod = __import__(".".join(components[:-1]), fromlist=[components[-1]])
+    return getattr(mod, components[-1])
+
+
 def smiles_to_mol(smiles: str, **kwargs) -> Union[Mol, None]:
     """
     Convert SMILES to RDKit molecule object.

@@ -1,2 +1,2 @@
 from .tokenizer import Tokenizer
-from .smiles_encoding import SmilesOneHotEncoder
+from .atom_level_smiles_tokenizer import AtomLevelSmilesTokenizer

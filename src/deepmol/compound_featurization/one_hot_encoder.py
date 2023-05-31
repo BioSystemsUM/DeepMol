@@ -6,6 +6,7 @@ from deepmol.base import Transformer
 from deepmol.datasets import Dataset
 from deepmol.parallelism.multiprocessing import JoblibMultiprocessing
 from deepmol.tokenizers import AtomLevelSmilesTokenizer, Tokenizer
+from deepmol.utils.decorators import modify_object_inplace_decorator
 
 
 class SmilesOneHotEncoder(Transformer):
@@ -96,6 +97,7 @@ class SmilesOneHotEncoder(Transformer):
         dataset._X = np.array(one_hot)
         return dataset
 
+    @modify_object_inplace_decorator
     def featurize(self, dataset: Dataset) -> Dataset:
         """
         Featurizes a dataset (Fits and transforms).
@@ -171,13 +173,19 @@ class SmilesOneHotEncoder(Transformer):
         smiles: str
             The SMILES string.
         """
-        smiles = ''
+        smiles = []
+        stride = self.tokenizer.stride if hasattr(self.tokenizer, 'stride') else 1
+        tokenizer = self.tokenizer.atom_level_tokenizer \
+            if hasattr(self.tokenizer, 'atom_level_tokenizer') else self.tokenizer
+        tokens = []
         for row in smiles_matrix.T:
             char = list(self.dictionary.keys())[np.argmax(row)]
-            smiles += char
             if char == '':
                 break
-        return smiles
+            tokens = tokenizer._tokenize(char)
+            smiles.extend(tokens[:stride])
+        smiles.extend(tokens[stride:])
+        return "".join(smiles)
 
     @property
     def shape(self) -> tuple:

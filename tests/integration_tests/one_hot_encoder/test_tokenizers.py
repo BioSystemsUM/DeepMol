@@ -7,6 +7,7 @@ from tensorflow.keras.layers import LSTM, Dense
 from deepmol.compound_featurization import SmilesOneHotEncoder
 from deepmol.loaders import CSVLoader
 from deepmol.models import KerasModel
+from deepmol.tokenizers import KmerSmilesTokenizer
 
 from tests import TEST_DIR
 
@@ -40,6 +41,19 @@ class TestOneHotEncoder(TestCase):
 
     def test_smiles_character_level_tokenizer(self):
         ohe = SmilesOneHotEncoder()
+        tokenized = ohe.fit_transform(self.dataset_smiles)
+        self.assertEqual(len(tokenized), len(self.dataset_smiles))
+
+        rnn_model = KerasModel(model_builder=self.model_builder, input_shape=ohe.shape)
+
+        rnn_model.fit(tokenized)
+
+        predictions = rnn_model.predict(tokenized)
+        self.assertEqual(len(predictions), len(self.dataset_smiles))
+
+    def test_smiles_kmers_tokenizer(self):
+        tokenizer = KmerSmilesTokenizer()
+        ohe = SmilesOneHotEncoder(tokenizer=tokenizer)
         tokenized = ohe.fit_transform(self.dataset_smiles)
         self.assertEqual(len(tokenized), len(self.dataset_smiles))
 

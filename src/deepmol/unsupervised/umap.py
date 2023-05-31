@@ -92,10 +92,10 @@ class UMAP(UnsupervisedLearn):
 
         if x_new.shape[1] == 2:
             fig = px.scatter(x_new, x=0, y=1, color=y,
-                             labels={'0': 'PC 1', '1': 'PC 2', 'color': self.dataset.label_names[0]}, **kwargs)
+                             labels={'0': 'UMAP 1', '1': 'UMAP 2', 'color': self.dataset.label_names[0]}, **kwargs)
         elif x_new.shape[1] == 3:
             fig = px.scatter_3d(x_new, x=0, y=1, z=2, color=y,
-                                labels={'0': 'PC 1', '1': 'PC 2', '2': 'PC 3', 'color': self.dataset.label_names[0]})
+                                labels={'0': 'UMAP 1', '1': 'UMAP 2', '2': 'UMAP 3', 'color': self.dataset.label_names[0]})
         else:
             labels = {str(i): f"UMAP {i + 1}" for i in range(x_new.shape[1])}
             labels['color'] = self.dataset.label_names[0]

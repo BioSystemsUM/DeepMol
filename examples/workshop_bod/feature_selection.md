@@ -58,24 +58,8 @@ fs.select_features(d1, inplace=True)
 d1.get_shape() # our dataset only has 47 features (out of 2048) with a variability higher than 15%.
 ```
 
-    2023-05-29 15:55:04,339 — INFO — Mols_shape: (500,)
-    2023-05-29 15:55:04,339 — INFO — Mols_shape: (500,)
-    2023-05-29 15:55:04,339 — INFO — Mols_shape: (500,)
-    2023-05-29 15:55:04,339 — INFO — Mols_shape: (500,)
-    2023-05-29 15:55:04,341 — INFO — Features_shape: (500, 49)
-    2023-05-29 15:55:04,341 — INFO — Features_shape: (500, 49)
-    2023-05-29 15:55:04,341 — INFO — Features_shape: (500, 49)
-    2023-05-29 15:55:04,341 — INFO — Features_shape: (500, 49)
-    2023-05-29 15:55:04,342 — INFO — Labels_shape: (500,)
-    2023-05-29 15:55:04,342 — INFO — Labels_shape: (500,)
-    2023-05-29 15:55:04,342 — INFO — Labels_shape: (500,)
-    2023-05-29 15:55:04,342 — INFO — Labels_shape: (500,)
 
-
-
-
-
-    ((500,), (500, 49), (500,))
+    ((500,), (500, 51), (500,))
 
 
 
@@ -100,23 +84,6 @@ fs.select_features(d2, inplace=True)
 d2.get_shape() # as we can see only 250 feature were kept
 ```
 
-    2023-05-29 15:55:15,409 — INFO — Mols_shape: (500,)
-    2023-05-29 15:55:15,409 — INFO — Mols_shape: (500,)
-    2023-05-29 15:55:15,409 — INFO — Mols_shape: (500,)
-    2023-05-29 15:55:15,409 — INFO — Mols_shape: (500,)
-    2023-05-29 15:55:15,409 — INFO — Mols_shape: (500,)
-    2023-05-29 15:55:15,414 — INFO — Features_shape: (500, 250)
-    2023-05-29 15:55:15,414 — INFO — Features_shape: (500, 250)
-    2023-05-29 15:55:15,414 — INFO — Features_shape: (500, 250)
-    2023-05-29 15:55:15,414 — INFO — Features_shape: (500, 250)
-    2023-05-29 15:55:15,414 — INFO — Features_shape: (500, 250)
-    2023-05-29 15:55:15,416 — INFO — Labels_shape: (500,)
-    2023-05-29 15:55:15,416 — INFO — Labels_shape: (500,)
-    2023-05-29 15:55:15,416 — INFO — Labels_shape: (500,)
-    2023-05-29 15:55:15,416 — INFO — Labels_shape: (500,)
-    2023-05-29 15:55:15,416 — INFO — Labels_shape: (500,)
-
-
 
 
 
@@ -138,30 +105,8 @@ from deepmol.feature_selection import PercentilFS
 d3 = deepcopy(csv_dataset)
 fs = PercentilFS(percentil=10, score_func=chi2) # keep the 10 percent top predictive features
 fs.select_features(d3, inplace=True)
-d3.get_shape() # 10 percent of 2048 features --> 204 features were kept
+d3.get_shape() # 10 percent of 2048 features --> 205 features were kept
 ```
-
-    2023-05-29 15:55:26,547 — INFO — Mols_shape: (500,)
-    2023-05-29 15:55:26,547 — INFO — Mols_shape: (500,)
-    2023-05-29 15:55:26,547 — INFO — Mols_shape: (500,)
-    2023-05-29 15:55:26,547 — INFO — Mols_shape: (500,)
-    2023-05-29 15:55:26,547 — INFO — Mols_shape: (500,)
-    2023-05-29 15:55:26,547 — INFO — Mols_shape: (500,)
-    2023-05-29 15:55:26,549 — INFO — Features_shape: (500, 205)
-    2023-05-29 15:55:26,549 — INFO — Features_shape: (500, 205)
-    2023-05-29 15:55:26,549 — INFO — Features_shape: (500, 205)
-    2023-05-29 15:55:26,549 — INFO — Features_shape: (500, 205)
-    2023-05-29 15:55:26,549 — INFO — Features_shape: (500, 205)
-    2023-05-29 15:55:26,549 — INFO — Features_shape: (500, 205)
-    2023-05-29 15:55:26,551 — INFO — Labels_shape: (500,)
-    2023-05-29 15:55:26,551 — INFO — Labels_shape: (500,)
-    2023-05-29 15:55:26,551 — INFO — Labels_shape: (500,)
-    2023-05-29 15:55:26,551 — INFO — Labels_shape: (500,)
-    2023-05-29 15:55:26,551 — INFO — Labels_shape: (500,)
-    2023-05-29 15:55:26,551 — INFO — Labels_shape: (500,)
-
-
-
 
 
     ((500,), (500, 205), (500,))
@@ -195,32 +140,6 @@ fs.select_features(d4, inplace=True)
 d4.get_shape()
 ```
 
-    2023-05-29 15:56:20,221 — INFO — Mols_shape: (500,)
-    2023-05-29 15:56:20,221 — INFO — Mols_shape: (500,)
-    2023-05-29 15:56:20,221 — INFO — Mols_shape: (500,)
-    2023-05-29 15:56:20,221 — INFO — Mols_shape: (500,)
-    2023-05-29 15:56:20,221 — INFO — Mols_shape: (500,)
-    2023-05-29 15:56:20,221 — INFO — Mols_shape: (500,)
-    2023-05-29 15:56:20,221 — INFO — Mols_shape: (500,)
-    2023-05-29 15:56:20,224 — INFO — Features_shape: (500, 1158)
-    2023-05-29 15:56:20,224 — INFO — Features_shape: (500, 1158)
-    2023-05-29 15:56:20,224 — INFO — Features_shape: (500, 1158)
-    2023-05-29 15:56:20,224 — INFO — Features_shape: (500, 1158)
-    2023-05-29 15:56:20,224 — INFO — Features_shape: (500, 1158)
-    2023-05-29 15:56:20,224 — INFO — Features_shape: (500, 1158)
-    2023-05-29 15:56:20,224 — INFO — Features_shape: (500, 1158)
-    2023-05-29 15:56:20,226 — INFO — Labels_shape: (500,)
-    2023-05-29 15:56:20,226 — INFO — Labels_shape: (500,)
-    2023-05-29 15:56:20,226 — INFO — Labels_shape: (500,)
-    2023-05-29 15:56:20,226 — INFO — Labels_shape: (500,)
-    2023-05-29 15:56:20,226 — INFO — Labels_shape: (500,)
-    2023-05-29 15:56:20,226 — INFO — Labels_shape: (500,)
-    2023-05-29 15:56:20,226 — INFO — Labels_shape: (500,)
-
-
-
-
-
     ((500,), (500, 1158), (500,))
 
 
@@ -245,34 +164,6 @@ fs.select_features(d5, inplace=True)
 d5.get_shape()
 ```
 
-    2023-05-29 15:56:37,749 — INFO — Mols_shape: (500,)
-    2023-05-29 15:56:37,749 — INFO — Mols_shape: (500,)
-    2023-05-29 15:56:37,749 — INFO — Mols_shape: (500,)
-    2023-05-29 15:56:37,749 — INFO — Mols_shape: (500,)
-    2023-05-29 15:56:37,749 — INFO — Mols_shape: (500,)
-    2023-05-29 15:56:37,749 — INFO — Mols_shape: (500,)
-    2023-05-29 15:56:37,749 — INFO — Mols_shape: (500,)
-    2023-05-29 15:56:37,749 — INFO — Mols_shape: (500,)
-    2023-05-29 15:56:37,752 — INFO — Features_shape: (500, 286)
-    2023-05-29 15:56:37,752 — INFO — Features_shape: (500, 286)
-    2023-05-29 15:56:37,752 — INFO — Features_shape: (500, 286)
-    2023-05-29 15:56:37,752 — INFO — Features_shape: (500, 286)
-    2023-05-29 15:56:37,752 — INFO — Features_shape: (500, 286)
-    2023-05-29 15:56:37,752 — INFO — Features_shape: (500, 286)
-    2023-05-29 15:56:37,752 — INFO — Features_shape: (500, 286)
-    2023-05-29 15:56:37,752 — INFO — Features_shape: (500, 286)
-    2023-05-29 15:56:37,755 — INFO — Labels_shape: (500,)
-    2023-05-29 15:56:37,755 — INFO — Labels_shape: (500,)
-    2023-05-29 15:56:37,755 — INFO — Labels_shape: (500,)
-    2023-05-29 15:56:37,755 — INFO — Labels_shape: (500,)
-    2023-05-29 15:56:37,755 — INFO — Labels_shape: (500,)
-    2023-05-29 15:56:37,755 — INFO — Labels_shape: (500,)
-    2023-05-29 15:56:37,755 — INFO — Labels_shape: (500,)
-    2023-05-29 15:56:37,755 — INFO — Labels_shape: (500,)
-
-
-
-
 
     ((500,), (500, 286), (500,))
 
@@ -296,36 +187,6 @@ fs = BorutaAlgorithm(estimator=RandomForestClassifier(n_jobs=-1), # model to use
 fs.select_features(d6, inplace=True)
 d6.get_shape()
 ```
-
-    2023-05-29 15:58:13,196 — INFO — Mols_shape: (500,)
-    2023-05-29 15:58:13,196 — INFO — Mols_shape: (500,)
-    2023-05-29 15:58:13,196 — INFO — Mols_shape: (500,)
-    2023-05-29 15:58:13,196 — INFO — Mols_shape: (500,)
-    2023-05-29 15:58:13,196 — INFO — Mols_shape: (500,)
-    2023-05-29 15:58:13,196 — INFO — Mols_shape: (500,)
-    2023-05-29 15:58:13,196 — INFO — Mols_shape: (500,)
-    2023-05-29 15:58:13,196 — INFO — Mols_shape: (500,)
-    2023-05-29 15:58:13,196 — INFO — Mols_shape: (500,)
-    2023-05-29 15:58:13,199 — INFO — Features_shape: (500, 74)
-    2023-05-29 15:58:13,199 — INFO — Features_shape: (500, 74)
-    2023-05-29 15:58:13,199 — INFO — Features_shape: (500, 74)
-    2023-05-29 15:58:13,199 — INFO — Features_shape: (500, 74)
-    2023-05-29 15:58:13,199 — INFO — Features_shape: (500, 74)
-    2023-05-29 15:58:13,199 — INFO — Features_shape: (500, 74)
-    2023-05-29 15:58:13,199 — INFO — Features_shape: (500, 74)
-    2023-05-29 15:58:13,199 — INFO — Features_shape: (500, 74)
-    2023-05-29 15:58:13,199 — INFO — Features_shape: (500, 74)
-    2023-05-29 15:58:13,202 — INFO — Labels_shape: (500,)
-    2023-05-29 15:58:13,202 — INFO — Labels_shape: (500,)
-    2023-05-29 15:58:13,202 — INFO — Labels_shape: (500,)
-    2023-05-29 15:58:13,202 — INFO — Labels_shape: (500,)
-    2023-05-29 15:58:13,202 — INFO — Labels_shape: (500,)
-    2023-05-29 15:58:13,202 — INFO — Labels_shape: (500,)
-    2023-05-29 15:58:13,202 — INFO — Labels_shape: (500,)
-    2023-05-29 15:58:13,202 — INFO — Labels_shape: (500,)
-    2023-05-29 15:58:13,202 — INFO — Labels_shape: (500,)
-
-
 
 
 

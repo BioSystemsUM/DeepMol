@@ -23,6 +23,7 @@ class BaseFeatureSelector(ABC, Transformer):
         """
         Initialize the feature selector.
         """
+        self.inplace = None
         if self.__class__ == BaseFeatureSelector:
             raise Exception('Abstract class BaseFeatureSelector should not be instantiated')
         super().__init__()
@@ -38,6 +39,8 @@ class BaseFeatureSelector(ABC, Transformer):
         ----------
         dataset: Dataset
             Dataset to perform feature selection on
+        inplace: bool
+            Whether to perform the feature selection in the received dataset or not.
 
         Returns
         -------
@@ -60,7 +63,7 @@ class BaseFeatureSelector(ABC, Transformer):
         dataset: Dataset
           Dataset containing the selected features and indexes of the features kept as 'self.features2keep'.
         """
-        dataset.select_features_by_index(list(self.features_to_keep))
+        dataset.select_features_by_index(list(self.features_to_keep), inplace=True)
         return dataset
 
     def _fit(self, dataset: Dataset) -> 'BaseFeatureSelector':
@@ -219,7 +222,6 @@ class SelectFromModelFS(BaseFeatureSelector):
                  prefit: bool = False,
                  norm_order: int = 1,
                  max_features: int = None):
-
         """
         Initialize this SelectFromModelFS Feature Selector.
 

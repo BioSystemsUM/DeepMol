@@ -3,25 +3,12 @@ import warnings
 
 from deepmol.datasets import Dataset
 from deepmol.tokenizers import Tokenizer
+from deepmol.tokenizers._utils import _ATOM_LEVEL_SMILES_REGEX
 
 
 class AtomLevelSmilesTokenizer(Tokenizer):
     """
     A tokenizer that tokenizes SMILES strings at the atom level (based on the SMILES grammar (regex)).
-
-    Parameters
-    ----------
-    n_jobs: int
-        The number of jobs to run in parallel in the tokenization.
-
-    Attributes
-    ----------
-    _SMILES_REGEX: str
-        The regex used to tokenize SMILES strings.
-        The _SMILES_REGEX was taken from:
-            [1] Philippe Schwaller, Teodoro Laino, Théophile Gaudin, Peter Bolgar, Christopher A. Hunter, Costas Bekas,
-            and Alpha A. Lee ACS Central Science 2019 5 (9): Molecular Transformer: A Model for Uncertainty-Calibrated
-            Chemical Reaction Prediction 1572-1583 DOI: 10.1021/acscentsci.9b00576
 
     Examples
     --------
@@ -34,14 +21,18 @@ class AtomLevelSmilesTokenizer(Tokenizer):
     >>> tokenizer = AtomLevelSmilesTokenizer().fit(dataset)
     >>> tokens = tokenizer.tokenize(dataset)
     """
-    _SMILES_REGEX = "(\[[^\]]+]|Br?|Cl?|N|O|S|P|F|I|b|c|n|o|s|p|\(|\)|\.|=|#|-|\+|\\\\|\/|:|~|@|\?|>|\*|\$|\%[0-9]{2}|[0-9])"
 
     def __init__(self, n_jobs: int = -1):
         """
         Initializes the tokenizer.
+
+        Parameters
+        ----------
+        n_jobs: int
+            The number of jobs to run in parallel. -1 means using all processors.
         """
         super().__init__(n_jobs=n_jobs)
-        self._regex = self._SMILES_REGEX
+        self._regex = _ATOM_LEVEL_SMILES_REGEX
         self._compiled_regex = None
         self._vocabulary = None
         self._max_length = None

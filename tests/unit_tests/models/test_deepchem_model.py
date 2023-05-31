@@ -204,6 +204,3 @@ class TestDeepChemModel(ModelsTestCase, TestCase):
         model = DeepChemModel.load("test_model")
         model.predict(self.binary_dataset)
         self.assertTrue(os.path.exists("test_model"))
-
-
-

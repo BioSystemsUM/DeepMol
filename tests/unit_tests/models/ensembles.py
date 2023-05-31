@@ -21,7 +21,7 @@ class TestEnsembles(TestCase):
 
         dataset = os.path.join(self.data_path, "dataset_sweet_3d_balanced.sdf")
         loader = SDFLoader(dataset,
-                           labels_fields='_SWEET')
+                           labels_fields=['_SWEET'])
 
         self.binary_dataset = loader.create_dataset()
 

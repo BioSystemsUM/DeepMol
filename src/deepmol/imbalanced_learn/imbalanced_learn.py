@@ -1,5 +1,5 @@
 import uuid
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from typing import Union
 
 import numpy as np
@@ -11,7 +11,7 @@ from deepmol.datasets import Dataset
 from deepmol.imbalanced_learn._utils import _get_new_ids_smiles_mols
 
 
-class ImbalancedLearn(object):
+class ImbalancedLearn(ABC):
     """
     Class for dealing with imbalanced datasets.
     A ImbalancedLearn sampler receives a Dataset object and performs over/under sampling.

@@ -3,7 +3,7 @@ from typing import Tuple
 import numpy as np
 import umap
 
-from deepmol.datasets import Dataset, SmilesDataset
+from deepmol.datasets import Dataset
 from deepmol.unsupervised.base_unsupervised import UnsupervisedLearn
 import plotly.express as px
 
@@ -108,3 +108,38 @@ class UMAP(UnsupervisedLearn):
         fig.show()
         if path is not None:
             fig.write_image(path)
+
+    def _fit(self, dataset: Dataset) -> 'UMAP':
+        """
+        Fit the model with dataset.X.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The dataset to perform unsupervised learning.
+
+        Returns
+        -------
+        self: TSNE
+            The fitted model.
+        """
+        self.umap.fit(dataset.X)
+        return self
+
+    def _transform(self, dataset: Dataset) -> Dataset:
+        """
+        Apply dimensionality reduction on dataset.X.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The dataset to perform unsupervised learning.
+
+        Returns
+        -------
+        dataset: Dataset
+            The transformed dataset.
+        """
+        dataset._X = self.umap.transform(dataset.X)
+        dataset.feature_names = np.array([f'UMAP_{i}' for i in range(dataset.X.shape[1])])
+        return dataset

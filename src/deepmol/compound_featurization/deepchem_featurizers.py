@@ -8,6 +8,7 @@ from deepchem.feat.mol_graphs import ConvMol, WeaveMol
 from deepchem.utils import ConformerGenerator
 from rdkit.Chem import Mol
 
+from deepmol.base import Transformer
 from deepmol.compound_featurization import MolecularFeaturizer
 from deepmol.compound_featurization._utils import get_conformers, get_dictionary_from_smiles
 from deepmol.datasets import Dataset
@@ -507,7 +508,7 @@ class SmileImageFeat(MolecularFeaturizer):
         return feats
 
 
-class SmilesSeqFeat:
+class SmilesSeqFeat(Transformer):
     """
     Takes SMILES strings and turns into a sequence.
     Adapted from deepchem (https://deepchem.readthedocs.io/en/latest/api_reference/featurizers.html#smilestoseq).
@@ -532,6 +533,7 @@ class SmilesSeqFeat:
         pad_len: int
             Amount of padding to add on either side of the SMILES seq.
         """
+        super().__init__()
         self.char_to_idx = char_to_idx
         self.max_len = max_len
         self.pad_len = pad_len
@@ -589,3 +591,37 @@ class SmilesSeqFeat:
         dataset.remove_elements(indexes)
         dataset.X = np.asarray([np.asarray(feat, dtype=object) for feat in dataset.X])
         return dataset
+
+    def _fit(self, dataset: Dataset) -> 'SmilesSeqFeat':
+        """
+        Fit the featurizer. This method is called by the fit method of the Transformer class.
+        To be used by pipeline.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The dataset containing the molecules to featurize in dataset.mols.
+
+        Returns
+        -------
+        self: SmilesSeqFeat
+            The fitted featurizer.
+        """
+        return self
+
+    def _transform(self, dataset: Dataset) -> Dataset:
+        """
+        Transform the dataset. This method is called by the transform method of the Transformer class.
+        To be used by pipeline.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The dataset containing the molecules to featurize in dataset.mols.
+
+        Returns
+        -------
+        dataset: Dataset
+            The transformed dataset.
+        """
+        return self.featurize(dataset)

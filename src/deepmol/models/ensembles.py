@@ -3,13 +3,14 @@ from typing import List
 
 import numpy as np
 
+from deepmol.base import Predictor
 from deepmol.datasets import Dataset
 from deepmol.evaluator.evaluator import Evaluator
 from deepmol.metrics.metrics import Metric
 from deepmol.models.models import Model
 
 
-class Ensemble(ABC):
+class Ensemble(ABC, Predictor):
     """
     Abstract class for ensembles of models.
     """
@@ -23,6 +24,7 @@ class Ensemble(ABC):
         models: List[Model]
             List of models to be used in the ensemble.
         """
+        super().__init__()
         self.models = models
 
     def fit(self, dataset: Dataset):
@@ -66,9 +68,7 @@ class Ensemble(ABC):
             for each task separately.
         """
         evaluator = Evaluator(self, dataset)
-        return evaluator.compute_model_performance(metrics,
-                                                   per_task_metrics=per_task_metrics,
-                                                   n_classes=n_classes)
+        return evaluator.compute_model_performance(metrics, per_task_metrics=per_task_metrics)
 
 
 class VotingClassifier(Ensemble):

@@ -2,13 +2,19 @@ from typing import Tuple
 
 import numpy as np
 
+from deepmol.base import Transformer
 from deepmol.compound_featurization._utils import calc_morgan_fingerprints, calc_similarity
 from deepmol.datasets import Dataset
 from deepmol.parallelism.multiprocessing import JoblibMultiprocessing
 from deepmol.utils.decorators import modify_object_inplace_decorator
 
 
-class TanimotoSimilarityMatrix:
+class TanimotoSimilarityMatrix(Transformer):
+    """
+    Class to calculate Tanimoto similarity matrix for a dataset.
+
+    The similarity matrix is calculated using Morgan fingerprints.
+    """
 
     def __init__(self, n_molecules: int, n_jobs: int = -1) -> None:
         """
@@ -21,8 +27,10 @@ class TanimotoSimilarityMatrix:
         n_jobs: int
             Number of jobs to run in parallel.
         """
+        super().__init__()
+        self.n_molecules = n_molecules
         self.n_jobs = n_jobs
-        self.feature_names = [f"tanimoto_{i}" for i in range(n_molecules)]
+        self.feature_names = [f"tanimoto_{i}" for i in range(self.n_molecules)]
         self.fps = None
 
     def _calc_similarity(self, i, j) -> Tuple[int, int, float]:
@@ -85,3 +93,35 @@ class TanimotoSimilarityMatrix:
         dataset._X = features
         dataset.feature_names = self.feature_names
         return dataset
+
+    def _fit(self, dataset: Dataset) -> 'TanimotoSimilarityMatrix':
+        """
+        Fit the featurizer to a dataset.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The dataset to fit the featurizer to.
+
+        Returns
+        -------
+        self: Mol2Vec
+            The fitted featurizer.
+        """
+        return self
+
+    def _transform(self, dataset: Dataset) -> Dataset:
+        """
+        Transform a dataset.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The dataset to transform.
+
+        Returns
+        -------
+        dataset: Dataset
+            The transformed dataset.
+        """
+        return self.featurize(dataset)

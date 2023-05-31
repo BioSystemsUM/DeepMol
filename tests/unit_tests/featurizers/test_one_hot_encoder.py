@@ -3,6 +3,7 @@ from unittest import TestCase
 import numpy as np
 
 from deepmol.compound_featurization import SmilesOneHotEncoder
+from deepmol.tokenizers.kmer_smiles_tokenizer import KmerSmilesTokenizer
 from unit_tests.featurizers.test_featurizers import FeaturizerTestCase
 
 
@@ -39,3 +40,12 @@ class TestOneHotEncoder(FeaturizerTestCase, TestCase):
         self.assertEqual(ohe._X.shape, ohe2._X.shape)
         for i in range(dataset_rows_number):
             self.assertTrue(np.array_equal(ohe._X[i], ohe2._X[i]))
+
+    def test_one_hot_encoder_kmers(self):
+        mock_dataset = self.mock_dataset.__copy__()
+        ohe = SmilesOneHotEncoder(tokenizer=KmerSmilesTokenizer())
+        df = ohe.featurize(mock_dataset)
+        self.assertEqual(len(self.mock_dataset.smiles), df._X.shape[0])
+        reconstructed_smiles = ohe.inverse_transform(mock_dataset._X)
+        for i in range(len(self.mock_dataset.smiles)):
+            self.assertEqual(self.mock_dataset.smiles[i], reconstructed_smiles[i])

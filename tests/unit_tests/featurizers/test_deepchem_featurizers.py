@@ -3,7 +3,7 @@ from unittest import TestCase
 
 from deepmol.compound_featurization import WeaveFeat, ConvMolFeat, MolGraphConvFeat, CoulombFeat, CoulombEigFeat, \
     SmileImageFeat, SmilesSeqFeat
-from deepmol.compound_featurization.deepchem_featurizers import MolGanFeat
+from deepmol.compound_featurization.deepchem_featurizers import MolGanFeat, PagtnMolGraphFeat
 
 from tests.unit_tests.featurizers.test_featurizers import FeaturizerTestCase
 
@@ -26,6 +26,7 @@ class TestDeepChemFeaturizers(FeaturizerTestCase, TestCase):
         self.validate_featurizer(CoulombEigFeat, df, valid, max_atoms=100)
         self.validate_featurizer(SmileImageFeat, df, valid)
         self.validate_featurizer(SmilesSeqFeat, df, valid)
+        self.validate_featurizer(PagtnMolGraphFeat, df, valid, max_length=4, n_jobs=1)
 
     def test_featurize_with_nan(self):
         df = copy(self.mock_dataset_with_invalid)
@@ -38,3 +39,4 @@ class TestDeepChemFeaturizers(FeaturizerTestCase, TestCase):
         self.validate_featurizer(CoulombEigFeat, df, valid, max_atoms=100, seed=123, n_jobs=2)
         self.validate_featurizer(SmileImageFeat, df, valid, n_jobs=1)
         self.validate_featurizer(SmilesSeqFeat, df, valid)
+        self.validate_featurizer(PagtnMolGraphFeat, df, valid, max_length=4, n_jobs=1)

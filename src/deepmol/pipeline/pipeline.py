@@ -309,3 +309,7 @@ class Pipeline(Transformer):
                 raise ValueError(f'Unknown step type {step["type"]}.')
         instance = cls(steps=steps, path=state['path'])
         return instance
+
+    @classmethod
+    def from_pipeline_optimization(cls, hparams: dict) -> 'Pipeline':
+        return cls(steps=hparams['steps'], path=hparams['path'])

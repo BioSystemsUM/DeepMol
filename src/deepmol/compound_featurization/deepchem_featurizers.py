@@ -2,7 +2,7 @@ from typing import List, Dict, Any
 
 import numpy as np
 from deepchem.feat import ConvMolFeaturizer, WeaveFeaturizer, MolGraphConvFeaturizer, CoulombMatrix, CoulombMatrixEig, \
-    SmilesToImage, SmilesToSeq, MolGanFeaturizer, GraphMatrix
+    SmilesToImage, SmilesToSeq, MolGanFeaturizer, GraphMatrix, PagtnMolGraphFeaturizer
 from deepchem.feat.graph_data import GraphData
 from deepchem.feat.mol_graphs import ConvMol, WeaveMol
 from deepchem.utils import ConformerGenerator
@@ -80,6 +80,60 @@ class ConvMolFeat(MolecularFeaturizer):
             per_atom_fragmentation=self.per_atom_fragmentation).featurize([mol])
 
         assert feature[0].atom_features is not None
+        return feature[0]
+
+
+class PagtnMolGraphFeat(MolecularFeaturizer):
+    """
+    This class is a featuriser of PAGTN graph networks for molecules.
+
+    The featurization is based on `PAGTN model <https://arxiv.org/abs/1905.12712>`_. It is slightly more computationally
+    intensive than default Graph Convolution Featuriser, but it builds a Molecular Graph connecting all atom pairs
+    accounting for interactions of an atom with every other atom in the Molecule. According to the paper, interactions
+    between two pairs of atom are dependent on the relative distance between them and and hence, the function needs
+    to calculate the shortest path between them.
+
+    References
+    ----------
+        [1] Chen, Barzilay, Jaakkola "Path-Augmented Graph Transformer Network"
+        10.26434/chemrxiv.8214422.
+    """
+
+    def __init__(self,
+                 max_length: int = 5,
+                 **kwargs) -> None:
+        """
+        Parameters
+        ----------
+        max_length: int
+            Maximum distance up to which shortest paths must be considered.
+            Paths shorter than max_length will be padded and longer will be
+            truncated, default to ``5``.
+        kwargs:
+            Additional arguments for the base class.
+        """
+        super().__init__(**kwargs)
+        self.max_length = max_length
+        self.feature_names = ['pagtn_mol_graph_feat']
+
+    def _featurize(self, mol: Mol) -> GraphData:
+        """
+        Featurizes a single molecule.
+
+        Parameters
+        ----------
+        mol: Mol
+            Molecule to featurize.
+
+        Returns
+        -------
+        feature: GraphData
+            The GraphData features of the molecule.
+        """
+        # featurization process using DeepChem PagtnMolGraphFeaturizer
+        feature = PagtnMolGraphFeaturizer(max_length=self.max_length).featurize([mol])
+
+        assert feature[0].node_features is not None
         return feature[0]
 
 

@@ -24,7 +24,10 @@ class KerasModel(Model):
     def __init__(self,
                  model_builder: callable,
                  mode: str = 'classification',
-                 model_path: str = None,
+                 model_dir: str = None,
+                 loss: str = 'binary_crossentropy',
+                 optimizer: str = 'adam',
+                 learning_rate: float = 0.001,
                  epochs: int = 150,
                  batch_size: int = 10,
                  verbose: int = 0,
@@ -68,7 +71,7 @@ class KerasModel(Model):
         else:
             self.model = model_builder
 
-        super().__init__(self.model, model_path, **kwargs)
+        super().__init__(self.model, model_dir, **kwargs)
 
     @property
     def model_type(self):

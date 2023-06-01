@@ -10,6 +10,7 @@ from typing import Dict, Any, Tuple, List, Union
 
 import numpy as np
 from keras.wrappers.scikit_learn import KerasRegressor, KerasClassifier
+from sklearn.metrics import make_scorer
 from sklearn.model_selection import StratifiedKFold, KFold, RandomizedSearchCV, GridSearchCV
 
 from deepmol.datasets import Dataset
@@ -341,17 +342,19 @@ class HyperparameterOptimizerCV(HyperparameterOptimizer):
                                               maximize=maximize_metric, cv=cv, mode=self.mode, n_iter=n_iter_search,
                                               refit=refit, random_state=seed)
             else:
-                grid = RandomizedSearchCV(estimator=model, param_distributions=params_dict, scoring=metric.metric,
+                grid = RandomizedSearchCV(estimator=model, param_distributions=params_dict,
+                                          scoring=make_scorer(metric.metric),
                                           n_jobs=n_jobs, cv=cv, verbose=verbose, n_iter=n_iter_search, refit=refit,
-                                          random_state=seed)
+                                          random_state=seed, error_score='raise')
         else:
             if model_type == 'deepchem':
                 grid = DeepchemGridSearchCV(model_build_fn=model, param_grid=params_dict, scoring=metric,
                                             maximize=maximize_metric, cv=cv, mode=self.mode, refit=refit,
                                             random_state=seed)
             else:
-                grid = GridSearchCV(estimator=model, param_grid=params_dict, scoring=metric.metric, n_jobs=n_jobs,
-                                    cv=cv, verbose=verbose, refit=refit)
+                grid = GridSearchCV(estimator=model, param_grid=params_dict, scoring=make_scorer(metric.metric),
+                                    n_jobs=n_jobs,
+                                    cv=cv, verbose=verbose, refit=refit, error_score='raise')
 
         if model_type == 'deepchem':
             grid.fit(train_dataset)
@@ -359,13 +362,13 @@ class HyperparameterOptimizerCV(HyperparameterOptimizer):
         else:
             grid_result = grid.fit(train_dataset.X, train_dataset.y)
 
-        self.logger.info("\n \n Best %s: %f using %s" % (metric, grid_result.best_score_,
+        self.logger.info("\n \n Best %s: %f using %s" % (metric.metric, grid_result.best_score_,
                                                          grid_result.best_params_))
         means = grid_result.cv_results_['mean_test_score']
         stds = grid_result.cv_results_['std_test_score']
         params = grid_result.cv_results_['params']
         for mean, stdev, param in zip(means, stds, params):
-            self.logger.info("\n %s: %f (%f) with: %r \n" % (metric, mean, stdev, param))
+            self.logger.info("\n %s: %f (%f) with: %r \n" % (metric.metric, mean, stdev, param))
 
         if model_type == 'keras':
             best_model = KerasModel(self.model_builder, self.mode, **grid_result.best_params_)

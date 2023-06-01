@@ -16,7 +16,7 @@ from sklearn.model_selection import StratifiedKFold, KFold, RandomizedSearchCV, 
 from deepmol.datasets import Dataset
 from deepmol.loggers.logger import Logger
 from deepmol.metrics import Metric
-from deepmol.models import SklearnModel, KerasModel, DeepChemModel
+from deepmol.models import SklearnModel, KerasModel
 from deepmol.models.models import Model
 from deepmol.parameter_optimization._utils import _convert_hyperparam_dict_to_filename, validate_metrics
 from deepmol.parameter_optimization.deepchem_hyperparameter_optimization import DeepchemRandomSearchCV, \
@@ -198,14 +198,11 @@ class HyperparameterOptimizerValidation(HyperparameterOptimizer):
                                          model_dir=model_dir)
                     model.fit(train_dataset)
 
-                elif model_type == 'keras':
+                else:
                     model = KerasModel(model_builder=self.model_builder,
                                        mode=self.mode,
                                        model_dir=model_dir,
                                        **model_params)
-                    model.fit(train_dataset)
-                elif model_type == 'deepchem':
-                    model = self.model_builder(**model_params)
                     model.fit(train_dataset)
 
                 try:

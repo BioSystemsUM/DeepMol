@@ -77,12 +77,6 @@ dataset = CSVLoader("../data/CHEMBL217_reduced.csv", id_field="Original_Entry_ID
                     smiles_field="SMILES", labels_fields=["Activity_Flag"]).create_dataset()
 ```
 
-    2023-05-30 19:25:58,819 — ERROR — Molecule with smiles: ClC1=C(N2CCN(O)(CC2)=C/C=C/CNC(=O)C=3C=CC(=CC3)C4=NC=CC=C4)C=CC=C1Cl removed from dataset.
-    2023-05-30 19:25:58,829 — INFO — Assuming classification since there are less than 10 unique y values. If otherwise, explicitly set the mode to 'regression'!
-
-
-    [19:25:58] Explicit valence for atom # 6 N, 5, is greater than permitted
-
 
 # Splitters
 

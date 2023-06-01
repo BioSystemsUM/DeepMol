@@ -98,6 +98,7 @@ class HyperparameterOptimizerValidation(HyperparameterOptimizer):
     """
 
     def hyperparameter_search(self,
+                              model_type: str,
                               params_dict: Dict,
                               train_dataset: Dataset,
                               valid_dataset: Dataset,
@@ -115,6 +116,8 @@ class HyperparameterOptimizerValidation(HyperparameterOptimizer):
 
         Parameters
         ----------
+        model_type: str
+            The type of model to use. Can be 'keras' or 'sklearn'.
         params_dict: Dict
             Dictionary mapping hyperparameter names (strings) to lists of possible parameter values.
         train_dataset: Dataset
@@ -189,16 +192,17 @@ class HyperparameterOptimizerValidation(HyperparameterOptimizer):
                 else:
                     model_dir = tempfile.mkdtemp()
 
-                try:
+                if model_type == 'sklearn':
                     model = SklearnModel(model=self.model_builder(**model_params),
                                          mode=self.mode,
                                          model_dir=model_dir)
                     model.fit(train_dataset)
 
-                except Exception as e:
-                    model = KerasModel(model_builder=self.model_builder(**model_params),
+                else:
+                    model = KerasModel(model_builder=self.model_builder,
                                        mode=self.mode,
-                                       model_dir=model_dir)
+                                       model_dir=model_dir,
+                                       **model_params)
                     model.fit(train_dataset)
 
                 try:

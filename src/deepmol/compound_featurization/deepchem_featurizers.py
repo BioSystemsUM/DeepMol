@@ -1,10 +1,12 @@
 from typing import List, Dict, Any
 
 import numpy as np
+from deepchem.data import NumpyDataset
 from deepchem.feat import ConvMolFeaturizer, WeaveFeaturizer, MolGraphConvFeaturizer, CoulombMatrix, CoulombMatrixEig, \
     SmilesToImage, SmilesToSeq, MolGanFeaturizer, GraphMatrix, PagtnMolGraphFeaturizer
 from deepchem.feat.graph_data import GraphData
 from deepchem.feat.mol_graphs import ConvMol, WeaveMol
+from deepchem.trans import IRVTransformer
 from deepchem.utils import ConformerGenerator
 from rdkit.Chem import Mol
 
@@ -679,3 +681,28 @@ class SmilesSeqFeat(Transformer):
             The transformed dataset.
         """
         return self.featurize(dataset)
+
+
+class IRVFeat(Transformer):
+
+    def __init__(self, K, n_tasks, **kwargs):
+        super().__init__()
+        self.K = K
+        self.n_tasks = n_tasks
+        self.feature_names = ['irv_feat']
+
+    @modify_object_inplace_decorator
+    def featurize(self, dataset: Dataset) -> Dataset:
+        if dataset.X is None:
+            raise ValueError("Dataset must have X property set (calculated descriptors).")
+        dataset = NumpyDataset(X=dataset._X, y=dataset.y, ids=dataset.ids, n_tasks=self.n_tasks)
+        irv = IRVTransformer(K=self.K, n_tasks=self.n_tasks, dataset=dataset)
+        dataset = irv.transform(dataset)
+        return dataset
+
+    def _fit(self, dataset: Dataset) -> 'IRVFeat':
+        pass
+
+
+    def _transform(self, dataset: Dataset) -> Dataset:
+        pass

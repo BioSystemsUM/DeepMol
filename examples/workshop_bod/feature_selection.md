@@ -8,6 +8,7 @@ DeepMol supports many types of feature selection provided by scikit-learn includ
 
 
 ```python
+from deepmol.splitters import SingletaskStratifiedSplitter
 from deepmol.loaders import CSVLoader
 
 # Load data from CSV file
@@ -21,22 +22,17 @@ loader = CSVLoader(dataset_path='../data/example_data_with_features.csv',
 # create the dataset
 csv_dataset = loader.create_dataset(sep=',', header=0)
 csv_dataset.get_shape()
+splitter = SingletaskStratifiedSplitter()
+train_dataset, valid_dataset, test_dataset = splitter.train_valid_test_split(csv_dataset, frac_train=0.8, frac_valid=0.1, frac_test=0.1)
 ```
 
-    2023-05-29 15:54:52,861 — INFO — Assuming classification since there are less than 10 unique y values. If otherwise, explicitly set the mode to 'regression'!
-    2023-05-29 15:54:52,862 — INFO — Mols_shape: (500,)
-    2023-05-29 15:54:52,862 — INFO — Features_shape: (500, 2048)
-    2023-05-29 15:54:52,863 — INFO — Labels_shape: (500,)
+    2023-06-02 15:55:25,940 — INFO — Assuming classification since there are less than 10 unique y values. If otherwise, explicitly set the mode to 'regression'!
+    2023-06-02 15:55:25,940 — INFO — Mols_shape: (500,)
+    2023-06-02 15:55:25,941 — INFO — Features_shape: (500, 2048)
+    2023-06-02 15:55:25,941 — INFO — Labels_shape: (500,)
 
 
-
-
-
-    ((500,), (500, 2048), (500,))
-
-
-
-### Lets use the LowVarianceFS feature selector
+### Let's use the LowVarianceFS feature selector
 
 Low variance feature selection is a technique used to select features in a dataset that have little or no variability across the data. This method is based on the assumption that features with low variance have little impact on the model's predictive ability and can be safely removed.
 
@@ -48,18 +44,27 @@ from copy import deepcopy
 from deepmol.feature_selection import LowVarianceFS
 
 # make a copy of our dataset
-d1 = deepcopy(csv_dataset)
+train_dataset_low_variance_fs = deepcopy(train_dataset)
+test_dataset_low_variance_fs = deepcopy(test_dataset)
 
 # instantiate our feature selector
 fs = LowVarianceFS(threshold=0.15)
 # perform feature selection
-fs.select_features(d1, inplace=True)
-# see changes in the shape of the features
-d1.get_shape() # our dataset only has 47 features (out of 2048) with a variability higher than 15%.
+fs.fit_transform(train_dataset_low_variance_fs)
+fs.transform(test_dataset_low_variance_fs)
+
+train_dataset_low_variance_fs.get_shape()
+test_dataset_low_variance_fs.get_shape()
 ```
 
+    2023-06-02 15:55:26,049 — INFO — Mols_shape: (400,)
+    2023-06-02 15:55:26,050 — INFO — Features_shape: (400, 47)
+    2023-06-02 15:55:26,050 — INFO — Labels_shape: (400,)
+    2023-06-02 15:55:26,051 — INFO — Mols_shape: (50,)
+    2023-06-02 15:55:26,051 — INFO — Features_shape: (50, 47)
+    2023-06-02 15:55:26,052 — INFO — Labels_shape: (50,)
 
-    ((500,), (500, 51), (500,))
+    ((50,), (50, 47), (50,))
 
 
 
@@ -77,17 +82,27 @@ from sklearn.feature_selection import chi2
 from deepmol.feature_selection import KbestFS
 
 # make a copy of our dataset
-d2 = deepcopy(csv_dataset)
+train_dataset_kbest_fs = deepcopy(train_dataset)
+test_dataset_kbest_fs = deepcopy(test_dataset)
+
 fs = KbestFS(k=250, score_func=chi2) # the top k features with the highest predictive power will be kept
 # perform feature selection
-fs.select_features(d2, inplace=True)
-d2.get_shape() # as we can see only 250 feature were kept
+
+fs.fit_transform(train_dataset_kbest_fs)
+fs.transform(test_dataset_kbest_fs)
+
+train_dataset_kbest_fs.get_shape()
+test_dataset_kbest_fs.get_shape()
 ```
 
+    2023-06-02 15:55:26,154 — INFO — Mols_shape: (400,)
+    2023-06-02 15:55:26,154 — INFO — Features_shape: (400, 250)
+    2023-06-02 15:55:26,155 — INFO — Labels_shape: (400,)
+    2023-06-02 15:55:26,155 — INFO — Mols_shape: (50,)
+    2023-06-02 15:55:26,156 — INFO — Features_shape: (50, 250)
+    2023-06-02 15:55:26,156 — INFO — Labels_shape: (50,)
 
-
-
-    ((500,), (500, 250), (500,))
+    ((50,), (50, 250), (50,))
 
 
 
@@ -102,14 +117,25 @@ The main advantage of SelectPercentile over SelectKBest is that it adapts to dat
 from deepmol.feature_selection import PercentilFS
 
 # make a copy of our dataset
-d3 = deepcopy(csv_dataset)
+train_dataset_percentil_fs = deepcopy(train_dataset)
+test_dataset_percentil_fs = deepcopy(test_dataset)
+
 fs = PercentilFS(percentil=10, score_func=chi2) # keep the 10 percent top predictive features
-fs.select_features(d3, inplace=True)
-d3.get_shape() # 10 percent of 2048 features --> 205 features were kept
+fs.fit_transform(train_dataset_percentil_fs)
+fs.transform(test_dataset_percentil_fs)
+
+train_dataset_percentil_fs.get_shape()
+test_dataset_percentil_fs.get_shape()
 ```
 
+    2023-06-02 15:55:26,243 — INFO — Mols_shape: (400,)
+    2023-06-02 15:55:26,244 — INFO — Features_shape: (400, 204)
+    2023-06-02 15:55:26,245 — INFO — Labels_shape: (400,)
+    2023-06-02 15:55:26,245 — INFO — Mols_shape: (50,)
+    2023-06-02 15:55:26,245 — INFO — Features_shape: (50, 204)
+    2023-06-02 15:55:26,246 — INFO — Labels_shape: (50,)
 
-    ((500,), (500, 205), (500,))
+    ((50,), (50, 204), (50,))
 
 
 
@@ -126,21 +152,29 @@ The cross-validation (CV) component of RFECV involves dividing the dataset into 
 from sklearn.ensemble import RandomForestClassifier
 from deepmol.feature_selection import RFECVFS
 
-d4 = deepcopy(csv_dataset)
+train_dataset_RFECVFS = deepcopy(train_dataset)
+test_dataset_RFECVFS = deepcopy(test_dataset)
+
 fs = RFECVFS(estimator=RandomForestClassifier(n_jobs=-1), # model to use
              step=10, # number of features to remove at each step
              min_features_to_select=1024, # minimum number of feature to keep (it can have more than that but never less)
              cv=2, # number of folds in the cross validation
              verbose=3) # verbosity level
-fs.select_features(d4, inplace=True)
+
+fs.fit_transform(train_dataset_RFECVFS)
+fs.transform(test_dataset_RFECVFS)
+
+train_dataset_RFECVFS.get_shape()
+test_dataset_RFECVFS.get_shape()
 ```
+    2023-06-02 15:56:08,628 — INFO — Mols_shape: (400,)
+    2023-06-02 15:56:08,628 — INFO — Features_shape: (400, 1298)
+    2023-06-02 15:56:08,629 — INFO — Labels_shape: (400,)
+    2023-06-02 15:56:08,629 — INFO — Mols_shape: (50,)
+    2023-06-02 15:56:08,629 — INFO — Features_shape: (50, 1298)
+    2023-06-02 15:56:08,630 — INFO — Labels_shape: (50,)
 
-
-```python
-d4.get_shape()
-```
-
-    ((500,), (500, 1158), (500,))
+    ((50,), (50, 1298), (50,))
 
 
 
@@ -156,16 +190,27 @@ SelectFromModel then selects the top features based on a threshold value specifi
 ```python
 from deepmol.feature_selection import SelectFromModelFS
 
-d5 = deepcopy(csv_dataset)
+train_dataset_SelectFromModelFS = deepcopy(train_dataset)
+test_dataset_SelectFromModelFS = deepcopy(test_dataset)
+
 fs = SelectFromModelFS(estimator=RandomForestClassifier(n_jobs=-1), # model to use
                        threshold="mean") # Features whose importance is greater or equal are kept while the others are discarded. A percentil can also be used
                                          # In this case ("mean") will keep the features with importance higher than the mean and remove the others
-fs.select_features(d5, inplace=True)
-d5.get_shape()
+fs.fit_transform(train_dataset_SelectFromModelFS)
+fs.transform(test_dataset_SelectFromModelFS)
+
+train_dataset_SelectFromModelFS.get_shape()
+test_dataset_SelectFromModelFS.get_shape()
 ```
 
+    2023-06-02 15:56:08,840 — INFO — Mols_shape: (400,)
+    2023-06-02 15:56:08,840 — INFO — Features_shape: (400, 287)
+    2023-06-02 15:56:08,841 — INFO — Labels_shape: (400,)
+    2023-06-02 15:56:08,841 — INFO — Mols_shape: (50,)
+    2023-06-02 15:56:08,841 — INFO — Features_shape: (50, 287)
+    2023-06-02 15:56:08,842 — INFO — Labels_shape: (50,)
 
-    ((500,), (500, 286), (500,))
+    ((50,), (50, 287), (50,))
 
 
 
@@ -181,15 +226,26 @@ The advantage of Boruta is that it can capture complex relationships between fea
 ```python
 from deepmol.feature_selection import BorutaAlgorithm
 
-d6 = deepcopy(csv_dataset)
+train_dataset_boruta = deepcopy(train_dataset)
+test_dataset_boruta = deepcopy(test_dataset)
+
 fs = BorutaAlgorithm(estimator=RandomForestClassifier(n_jobs=-1), # model to use
                      task='classification') # classification or regression
-fs.select_features(d6, inplace=True)
-d6.get_shape()
+
+fs.fit_transform(train_dataset_boruta)
+fs.transform(test_dataset_boruta)
+
+train_dataset_boruta.get_shape()
+test_dataset_boruta.get_shape()
 ```
 
+    2023-06-02 15:57:39,787 — INFO — Mols_shape: (400,)
+    2023-06-02 15:57:39,787 — INFO — Features_shape: (400, 2048)
+    2023-06-02 15:57:39,788 — INFO — Labels_shape: (400,)
+    2023-06-02 15:57:39,788 — INFO — Mols_shape: (50,)
+    2023-06-02 15:57:39,789 — INFO — Features_shape: (50, 2048)
+    2023-06-02 15:57:39,789 — INFO — Labels_shape: (50,)
 
-
-    ((500,), (500, 74), (500,))
+    ((50,), (50, 2048), (50,))
 
 

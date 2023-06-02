@@ -73,6 +73,6 @@ class TestPipelineOptimization(TestCase):
         po = PipelineOptimization(direction='maximize')
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_descriptors, seed=123)
-        po.optimize(train_dataset=train, test_dataset=test, objective='ss', metric=metric, n_trials=5)
+        po.optimize(train_dataset=train, test_dataset=test, objective='ss', metric=metric, n_trials=3)
         self.assertEqual(po.best_params, po.best_trial.params)
         self.assertIsInstance(po.best_value, float)

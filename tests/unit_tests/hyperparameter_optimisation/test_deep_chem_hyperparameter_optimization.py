@@ -62,7 +62,6 @@ class TestDeepChemHyperparameterOptimization(ModelsTestCase, TestCase):
         self.assertTrue('confusion_matrix' in evaluate[0].keys())
         self.assertTrue('classification_report' in evaluate[0].keys())
 
-
     def test_fit_predict_evaluate_with_validation_set(self):
         from deepmol.compound_featurization import ConvMolFeat
 

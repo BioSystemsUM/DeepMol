@@ -1,165 +1,301 @@
-# Build, train and evaluate a model
+# Introducing Machine Learning models in DeepMol
 
-It is possible use pre-built models from Scikit-Learn and DeepChem or build new
-ones using keras layers. Wrappers for Scikit-Learn, Keras and DeepChem were 
-implemented allowing evaluation of the models under a common workspace.
+## Import packages
 
-## Scikit-Learn model example
-
-Models can be imported from scikit-learn and wrapped using the SKlearnModel
-module.
-
-Check this **[jupyter notebook](../../examples/notebooks/RandomForestTest.ipynb)** for a complete example!
 
 ```python
+from rdkit import RDLogger
+import logging
+import warnings
+from deepmol.loaders import SDFLoader
+from sklearn.metrics import roc_auc_score, accuracy_score
+from deepmol.metrics import Metric
+
+warnings.filterwarnings("ignore")
+logger = logging.getLogger()
+logger.setLevel(logging.CRITICAL)
+RDLogger.DisableLog('rdApp.*')
+```
+
+# Shallow learning models using Scikit-learn
+
+## Let's start by loading the data and splitting it into train and test sets
+
+
+```python
+from deepmol.splitters import RandomSplitter
+
+dataset = SDFLoader("../data/CHEMBL217_conformers.sdf", id_field="_ID", labels_fields=["_Class"]).create_dataset()
+random_splitter = RandomSplitter()
+train_dataset, test_dataset = random_splitter.train_test_split(dataset, frac_train=0.8)
+```
+
+    2023-06-01 13:38:42,546 — INFO — Assuming classification since there are less than 10 unique y values. If otherwise, explicitly set the mode to 'regression'!
+
+
+
+```python
+train_dataset.get_shape()
+```
+
+    ((13298,), None, (13298,))
+
+
+
+## Let's generate Morgan fingerprints from our data
+
+
+```python
+from deepmol.compound_featurization import MorganFingerprint
+
+MorganFingerprint(n_jobs=10).featurize(train_dataset, inplace=True)
+MorganFingerprint(n_jobs=10).featurize(test_dataset, inplace=True)
+```
+
+## Now that we have our data ready, let's train a Random Forest model
+
+
+```python
+from deepmol.models import SklearnModel
 from sklearn.ensemble import RandomForestClassifier
-from deepmol.models.sklearn_models import SklearnModel
 
-# Scikit-Learn Random Forest
 rf = RandomForestClassifier()
-# wrapper around scikit learn models
 model = SklearnModel(model=rf)
-# model training
 model.fit(train_dataset)
-
-from deepmol.metrics.metrics import Metric
-from deepmol.metrics.metrics_functions import roc_auc_score
-
-# cross validate model on the full dataset
-model.cross_validate(dataset, Metric(roc_auc_score), folds=3)
 ```
 
-![cross_validation_output](../imgs/cross_validation_output.png)
+## Now that we have our model trained, let's make some predictions
+
 
 ```python
-from sklearn.metrics import precision_score, accuracy_score, confusion_matrix, classification_report, \ 
-    roc_auc_score
-from deepmol.metrics.metrics import Metric
-
-#evaluate the model using different metrics
-metrics = [Metric(roc_auc_score), Metric(precision_score), Metric(accuracy_score), Metric(confusion_matrix), 
-           Metric(classification_report)]
-
-# evaluate the model on training data
-print('Training Dataset: ')
-train_score = model.evaluate(train_dataset, metrics)
-
-# evaluate the model on training data
-print('Validation Dataset: ')
-valid_score = model.evaluate(valid_dataset, metrics)
-
-# evaluate the model on training data
-print('Test Dataset: ')
-test_score = model.evaluate(test_dataset, metrics)
+model.predict(test_dataset)
 ```
 
-![evaluate_output](../imgs/evaluate_output.png)
 
-## Keras model example
 
-Example of how to build and wrap a keras model using the KerasModel module.
 
-Check this **[jupyter notebook](../../examples/notebooks/test_keras.ipynb)** for a complete example!
+    array([[0.8 , 0.2 ],
+           [1.  , 0.  ],
+           [0.  , 1.  ],
+           ...,
+           [0.01, 0.99],
+           [0.35, 0.65],
+           [0.  , 1.  ]])
+
+
+
+## And finally, let's evaluate our model according to some metrics
+
 
 ```python
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout
-from deepmol.metrics.metrics import Metric
-from deepmol.metrics.metrics_functions import roc_auc_score, precision_score, accuracy_score, \
-    confusion_matrix, classification_report
+model.evaluate(test_dataset, metrics=[Metric(metric=roc_auc_score), Metric(metric=accuracy_score)])
+```
+
+
+
+
+    ({'roc_auc_score': 0.9977580691051172, 'accuracy_score': 0.9828571428571429},
+     {})
+
+
+
+## DeepMol also allows you to save your models without any effort
+
+
+```python
+model.save("my_model")
+```
+
+## And load them back
+
+
+```python
+model = SklearnModel.load("my_model")
+model.evaluate(test_dataset, metrics=[Metric(metric=roc_auc_score), Metric(metric=accuracy_score)])
+```
+
+
+
+
+    ({'roc_auc_score': 0.9977580691051172, 'accuracy_score': 0.9828571428571429},
+     {})
+
+
+
+As you see in the previous example, DeepMol allows you to train and evaluate your models in a very simple way. You can also use any other model from Scikit-learn, such as SVMs, Logistic Regression, etc. You can also use any other featurization method from DeepMol, such as ECFP, GraphConv, etc. Moreover, saving and deploying your models never was so easy!
+
+# Deep learning models using Keras
+
+## Let's start by extracting some features from our data
+
+
+```python
+MorganFingerprint(n_jobs=10).featurize(train_dataset, inplace=True)
+MorganFingerprint(n_jobs=10).featurize(test_dataset, inplace=True)
+```
+
+## Now that we have our data ready, let's train a Deep Learning model
+In DeepMol we provide full flexibility to the user to define the architecture of the model. The only requirement is that the model must be defined as a function that takes as input the input dimension of the data and returns a compiled Keras model. The function can also take as input any other parameter that the user wants to tune. In this case, we will define a simple model with two hidden layers and a dropout layer.
+
+
+```python
+from keras.layers import Dense, Dropout
+from keras import Sequential
+
+def create_model(input_dim, optimizer='adam', dropout=0.5):
+    # create model
+    model = Sequential()
+    model.add(Dense(12, input_dim=input_dim, activation='relu'))
+    model.add(Dropout(dropout))
+    model.add(Dense(8, activation='relu'))
+    model.add(Dense(1, activation='sigmoid'))
+    # Compile model
+    model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+    return model
+
+```
+
+## Now that we implemented our model, we can train it
+
+
+```python
+from deepmol.models import KerasModel
 
 input_dim = train_dataset.X.shape[1]
+model = KerasModel(create_model, epochs = 5, verbose=1, optimizer='adam', input_dim=input_dim)
+model = model.fit(train_dataset)
+```
+
+    Epoch 1/5
+    1330/1330 [==============================] - 2s 791us/step - loss: 0.2303 - accuracy: 0.9257
+    Epoch 2/5
+    1330/1330 [==============================] - 1s 777us/step - loss: 0.0879 - accuracy: 0.9741
+    Epoch 3/5
+    1330/1330 [==============================] - 1s 797us/step - loss: 0.0636 - accuracy: 0.9812
+    Epoch 4/5
+    1330/1330 [==============================] - 1s 798us/step - loss: 0.0544 - accuracy: 0.9847
+    Epoch 5/5
+    1330/1330 [==============================] - 1s 790us/step - loss: 0.0469 - accuracy: 0.9868
 
 
-def create_model(optimizer='adam', dropout=0.5, input_dim=input_dim):
-  # create model
-  model = Sequential()
-  model.add(Dense(12, input_dim=input_dim, activation='relu'))
-  model.add(Dropout(dropout))
-  model.add(Dense(8, activation='relu'))
-  model.add(Dense(1, activation='sigmoid'))
-  # Compile model
-  model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
-  return model
 
-
-from deepmol.models.keras_models import KerasModel
-
-model = KerasModel(create_model, epochs=5, verbose=1, optimizer='adam')
-
-# train model
-model.fit(train_dataset)
-
-# make prediction on the test dataset with the model
+```python
 model.predict(test_dataset)
-
-# evaluate model using multiple metrics
-metrics = [Metric(roc_auc_score),
-           Metric(precision_score),
-           Metric(accuracy_score),
-           Metric(confusion_matrix),
-           Metric(classification_report)]
-
-print('Training set score:', model.evaluate(train_dataset, metrics))
-print('Test set score:', model.evaluate(test_dataset, metrics))
 ```
 
+    104/104 [==============================] - 0s 565us/step
 
-## DeepChem model example
+    array([[9.8671627e-01, 1.3283747e-02],
+           [1.0000000e+00, 4.9822679e-10],
+           [5.4292679e-03, 9.9457073e-01],
+           ...,
+           [5.3464174e-03, 9.9465358e-01],
+           [1.9562900e-02, 9.8043710e-01],
+           [6.4892769e-03, 9.9351072e-01]], dtype=float32)
 
-Using DeepChem models:
 
-Check this **[jupyter notebook](../../examples/notebooks/deepchem_test.ipynb)** for a complete example!
+
 
 ```python
-from deepmol.compound_featurization import WeaveFeat
-from deepchem.models import MPNNModel
-from deepmol.models.deepchem_models import DeepChemModel
-from deepmol.metrics.metrics import Metric
-from deepmol.splitters.splitters import SingletaskStratifiedSplitter
-from sklearn.metrics import roc_auc_score, precision_score, accuracy_score
-
-ds = WeaveFeat().featurize(dataset)
-splitter = SingletaskStratifiedSplitter()
-train_dataset, valid_dataset, test_dataset = splitter.train_valid_test_split(dataset=ds, frac_train=0.6, frac_valid=0.2,
-                                                                             frac_test=0.2)
-mpnn = MPNNModel(n_tasks=1, n_pair_feat=14, n_atom_feat=75, n_hidden=75, T=1, M=1, mode='classification')
-model_mpnn = DeepChemModel(mpnn)
-
-
-# Model training
-model_mpnn.fit(train_dataset)
-valid_preds = model_mpnn.predict(valid_dataset)
-test_preds = model_mpnn.predict(test_dataset)
-
-
-# Evaluation
-metrics = [Metric(roc_auc_score), Metric(precision_score), Metric(accuracy_score)]
-print('Training Dataset: ')
-train_score = model_mpnn.evaluate(train_dataset, metrics)
-print('Valid Dataset: ')
-valid_score = model_mpnn.evaluate(valid_dataset, metrics)
-print('Test Dataset: ')
-test_score = model_mpnn.evaluate(test_dataset, metrics)    
+model.evaluate(test_dataset, metrics=[Metric(metric=roc_auc_score), Metric(metric=accuracy_score)])
 ```
 
-## Hyperparameter Optimization
+    104/104 [==============================] - 0s 585us/step
 
-Grid and randomized hyperparameter optimization is provided using cross-validation
-or a held-out validation set.
+    ({'roc_auc_score': 0.9959412851927224, 'accuracy_score': 0.9795488721804512},
+     {})
+
+
+
 
 ```python
-from deepmol.parameter_optimization.hyperparameter_optimization import HyperparameterOptimizerValidation
-
-# Hyperparameter Optimization (using the above created keras model)
-optimizer = HyperparameterOptimizerValidation(create_model)
-
-params_dict = {'optimizer': ['adam', 'rmsprop'],
-               'dropout': [0.2, 0.4, 0.5]}
-
-best_model, best_hyperparams, all_results = optimizer.hyperparameter_search(params_dict, train_dataset,
-                                                                            valid_dataset, Metric(roc_auc_score))
-
-# Evaluate model
-best_model.evaluate(test_dataset, metrics)
+model.save("my_model")
 ```
+
+
+```python
+model = KerasModel.load("my_model")
+model.evaluate(test_dataset, metrics=[Metric(metric=roc_auc_score), Metric(metric=accuracy_score)])
+```
+
+    104/104 [==============================] - 0s 569us/step
+
+    ({'roc_auc_score': 0.9959412851927224, 'accuracy_score': 0.9795488721804512},
+     {})
+
+
+
+# Deep learning models using DeepChem models
+
+
+```python
+from deepmol.compound_featurization import ConvMolFeat
+
+ConvMolFeat(n_jobs=10).featurize(train_dataset, inplace=True)
+```
+
+
+```python
+ConvMolFeat(n_jobs=10).featurize(test_dataset, inplace=True)
+```
+
+
+```python
+from deepchem.models import GraphConvModel
+from deepmol.models import DeepChemModel
+
+model = DeepChemModel(model=GraphConvModel(graph_conv_layers=[32, 32], dense_layer_size=128, n_tasks=1), epochs=5, verbose=1)
+model.fit(train_dataset)
+```
+
+
+```python
+model.predict(test_dataset)
+```
+
+
+
+
+    array([[9.9915403e-01, 8.4594759e-04],
+           [9.9851429e-01, 1.4855991e-03],
+           [5.3278193e-02, 9.4672173e-01],
+           ...,
+           [4.0388817e-04, 9.9959618e-01],
+           [9.7295139e-03, 9.9027050e-01],
+           [2.3896188e-02, 9.7610384e-01]], dtype=float32)
+
+
+
+
+```python
+model.evaluate(test_dataset, metrics=[Metric(metric=roc_auc_score), Metric(metric=accuracy_score)])
+```
+
+
+
+
+    ({'roc_auc_score': 0.9941217864209249, 'accuracy_score': 0.9720300751879699},
+     {})
+
+
+
+
+```python
+model.save("my_model")
+```
+
+
+```python
+model = DeepChemModel.load("my_model")
+model.evaluate(test_dataset, metrics=[Metric(metric=roc_auc_score), Metric(metric=accuracy_score)])
+```
+
+
+
+
+    ({'roc_auc_score': 0.9941217864209249, 'accuracy_score': 0.9720300751879699},
+     {})
+
+
+
+

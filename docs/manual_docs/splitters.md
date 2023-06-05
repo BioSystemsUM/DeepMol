@@ -17,17 +17,17 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from deepmol.metrics import Metric
 import pandas as pd
+import numpy as np
+from rdkit import Chem, DataStructs
+from rdkit.Chem import AllChem
+from sklearn.manifold import TSNE
+import matplotlib.pyplot as plt
 ```
 
 ### Create function to generate t-SNE embeddings
 
 
 ```python
-import numpy as np
-from rdkit import Chem, DataStructs
-from rdkit.Chem import AllChem
-from sklearn.manifold import TSNE
-import matplotlib.pyplot as plt
 
 def generate_tsne_molecular_similarities(train_dataset, valid_dataset, test_dataset):
     # Create a function to compute molecular fingerprints

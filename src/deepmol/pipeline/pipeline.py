@@ -144,7 +144,7 @@ class Pipeline(Transformer):
         dataset: Dataset
             Transformed dataset.
         """
-        if self.is_prediction_pipeline:
+        if self.is_prediction_pipeline():
             steps = self.steps[:-1]
         else:
             steps = self.steps

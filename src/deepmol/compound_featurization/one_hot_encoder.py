@@ -94,6 +94,7 @@ class SmilesOneHotEncoder(Transformer):
         smiles = dataset.smiles
         multiprocessing_cls = JoblibMultiprocessing(process=self._one_hot_encode, n_jobs=self.n_jobs)
         one_hot = multiprocessing_cls.run(smiles)
+        dataset.clear_cached_properties()
         dataset._X = np.array(one_hot)
         return dataset
 

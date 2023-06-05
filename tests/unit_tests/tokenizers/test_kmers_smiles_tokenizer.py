@@ -1,3 +1,4 @@
+from copy import copy
 from unittest import TestCase
 
 from deepmol.tokenizers.kmer_smiles_tokenizer import KmerSmilesTokenizer
@@ -7,7 +8,7 @@ from unit_tests.featurizers.test_featurizers import FeaturizerTestCase
 class TestKmersSmilesTokenizer(FeaturizerTestCase, TestCase):
 
     def test_featurize(self):
-        mock_dataset = self.mock_dataset.__copy__()
+        mock_dataset = copy(self.mock_dataset)
         tokenizer = KmerSmilesTokenizer(size=3, stride=1, n_jobs=-1)
         with self.assertRaises(ValueError):
             tokenizer.tokenize(mock_dataset)
@@ -23,7 +24,7 @@ class TestKmersSmilesTokenizer(FeaturizerTestCase, TestCase):
             self.assertTrue(any(len(s) > 3 for s in mct))
 
     def test_size_stride(self):
-        mock_dataset = self.mock_dataset.__copy__()
+        mock_dataset = copy(self.mock_dataset)
         tokenizer = KmerSmilesTokenizer(size=4, stride=1, n_jobs=-1)
         with self.assertRaises(ValueError):
             tokenizer.tokenize(mock_dataset)
@@ -38,7 +39,7 @@ class TestKmersSmilesTokenizer(FeaturizerTestCase, TestCase):
             # assert that at least one string in mct has length > 4
             self.assertTrue(any(len(s) > 4 for s in mct))
 
-        mock_dataset2 = self.mock_dataset.__copy__()
+        mock_dataset2 = copy(self.mock_dataset)
         tokenizer2 = KmerSmilesTokenizer(size=4, stride=2, n_jobs=-1)
         with self.assertRaises(ValueError):
             tokenizer2.tokenize(mock_dataset2)

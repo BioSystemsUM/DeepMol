@@ -1,3 +1,4 @@
+from copy import copy
 from unittest import TestCase
 
 from deepmol.tokenizers import AtomLevelSmilesTokenizer
@@ -7,7 +8,7 @@ from unit_tests.featurizers.test_featurizers import FeaturizerTestCase
 class TestAtomLevelSmilesTokenizer(FeaturizerTestCase, TestCase):
 
     def test_featurize(self):
-        mock_dataset = self.mock_dataset.__copy__()
+        mock_dataset = copy(self.mock_dataset)
         tokenizer = AtomLevelSmilesTokenizer(n_jobs=-1)
         with self.assertRaises(ValueError):
             tokenizer.tokenize(mock_dataset)

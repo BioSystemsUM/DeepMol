@@ -4,6 +4,7 @@ from unittest import TestCase
 
 import numpy as np
 from deepchem.models import GraphConvModel
+from tensorflow.keras import Input
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Dense
 from sklearn.ensemble import RandomForestClassifier
@@ -160,12 +161,13 @@ class TestPipeline(TestCase):
 
         def basic_classification_model_builder(input_shape):
             model = Sequential()
-            model.add(Dense(10, input_shape=input_shape, activation='relu'))
+            model.add(Input(shape=input_shape))
+            model.add(Dense(10, activation='relu'))
             model.add(Dense(1, activation='sigmoid'))
             model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
             return model
 
-        keras_model = KerasModel(model_builder=basic_classification_model_builder, epochs=2, input_shape=(1024,))
+        keras_model = KerasModel(model_builder=basic_classification_model_builder, epochs=2, input_shape=(10,))
         self.validate_complete_pipeline(standardizer=ChEMBLStandardizer(),
                                         featurizer=LayeredFingerprint(fpSize=1024),
                                         scaler=MinMaxScaler(feature_range=(0, 1)),

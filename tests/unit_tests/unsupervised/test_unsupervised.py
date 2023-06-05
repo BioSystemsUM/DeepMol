@@ -31,7 +31,6 @@ class UnsupervisedBaseTestCase(ABC):
                                  ids=[str(i) for i in range(len(smiles))],
                                  label_names=['label'])
         self.dataset.X = x
-        self.dataset.__copy__.return_value = copy(self.dataset)
 
         dataset = os.path.join(TEST_DIR, "data", "PC-3.csv")
         pc3 = pd.read_csv(dataset, sep=',', nrows=250)
@@ -47,7 +46,6 @@ class UnsupervisedBaseTestCase(ABC):
                                             mode='regression',
                                             label_names=['pIC50'])
         self.regression_dataset.X = x
-        self.regression_dataset.__copy__.return_value = copy(self.regression_dataset)
 
     def tearDown(self) -> None:
         if os.path.exists('deepmol.log'):

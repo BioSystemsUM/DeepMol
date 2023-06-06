@@ -61,3 +61,26 @@ class TestDeepChemHyperparameterOptimization(ModelsTestCase, TestCase):
         self.assertTrue('accuracy_score' in evaluate[0].keys())
         self.assertTrue('confusion_matrix' in evaluate[0].keys())
         self.assertTrue('classification_report' in evaluate[0].keys())
+
+    def test_fit_predict_evaluate_with_validation_set(self):
+        from deepmol.compound_featurization import ConvMolFeat
+
+        self.binary_dataset.X = ConvMolFeaturizer().featurize([MolFromSmiles('CCC')] * 100)
+        from deepmol.parameter_optimization import HyperparameterOptimizerValidation
+
+        def graphconv_builder(graph_conv_layers, batch_size=256, epochs=5):
+            graph = GraphConvModel(n_tasks=1, graph_conv_layers=graph_conv_layers, batch_size=batch_size,
+                                   mode='classification')
+            return DeepChemModel(graph, epochs=epochs)
+
+        model_graph = HyperparameterOptimizerValidation(model_builder=graphconv_builder)
+
+        best_model, best_hyperparams, all_results = model_graph.hyperparameter_search(
+            train_dataset=self.binary_dataset,
+            valid_dataset=self.binary_dataset,
+            metric=Metric(accuracy_score),
+            maximize_metric=True,
+            n_iter_search=2,
+            params_dict={'graph_conv_layers': [[64, 64], [32, 32]]},
+            model_type="deepchem"
+        )

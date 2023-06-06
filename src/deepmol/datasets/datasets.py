@@ -33,29 +33,6 @@ class Dataset(ABC):
             if isinstance(getattr(type(self), name), deepmol_cached_property):
                 vars(self).pop(name, None)
 
-    def __copy__(self):
-        """
-        Create a shallow copy of the dataset.
-        """
-        cls = self.__class__
-        result = cls.__new__(cls)
-        result.__dict__.update(self.__dict__)
-        result.logger = Logger()
-        return result
-
-    def __deepcopy__(self, memo):
-        """
-        Create a deep copy of the dataset.
-        """
-        cls = self.__class__
-        result = cls.__new__(cls)
-        memo[id(self)] = result
-        for k, v in self.__dict__.items():
-            setattr(result, k, deepcopy(v, memo))
-
-        result.logger = Logger()
-        return result
-
     @abstractmethod
     def __len__(self) -> int:
         """
@@ -299,7 +276,7 @@ class Dataset(ABC):
         """
 
     @abstractmethod
-    def select_features_by_index(self, indexes: List[int]) -> None:
+    def select_features_by_index(self, indexes: List[int]) -> 'Dataset':
         """
         Select the features from the dataset.
         Parameters
@@ -590,9 +567,14 @@ class SmilesDataset(Dataset):
         if len(self._X.shape) == 1:
             if len(feature_names) != 1:
                 raise ValueError('The number of feature names must be equal to the number of features.')
-        else:
+        elif len(self._X.shape) == 2:
             if len(feature_names) != len(self._X[0]):
                 raise ValueError('The number of feature names must be equal to the number of features.')
+        elif len(self._X.shape) == 3:
+            if len(feature_names) != len(self._X[0][0]):
+                raise ValueError('The number of feature names must be equal to the number of features.')
+        else:
+            raise ValueError('The number of dimensions of X must be 1, 2 or 3.')
         if len(feature_names) != len(set(feature_names)):
             raise ValueError('The feature names must be unique.')
         self._feature_names = np.array([str(fn) for fn in feature_names])
@@ -785,7 +767,7 @@ class SmilesDataset(Dataset):
             self.remove_elements(indexes, inplace=True)
 
     @inplace_decorator
-    def select_features_by_index(self, indexes: List[int]) -> None:
+    def select_features_by_index(self, indexes: List[int]) -> 'SmilesDataset':
         """
         Select features with specific indexes from the dataset
         Parameters
@@ -798,6 +780,9 @@ class SmilesDataset(Dataset):
         if len(indexes) != 0:
             self.select(indexes, axis=1, inplace=True)
             self.clear_cached_properties()
+            return self
+        else:
+            raise ValueError('The list of indexes is empty.')
 
     @inplace_decorator
     def select_features_by_name(self, names: List[str]) -> None:

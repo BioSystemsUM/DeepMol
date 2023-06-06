@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Union
 
 
@@ -39,7 +40,7 @@ def inplace_decorator(method: callable) -> Union[callable, None]:
             method(self, *args, **kwargs)
             return None
         else:
-            result = self.__copy__()
+            result = deepcopy(self)
             method(result, *args, **kwargs)
             return result
     return inplace_method
@@ -91,7 +92,7 @@ def modify_object_inplace_decorator(method: callable) -> Union[callable, None]:
             return None
         else:
             # create a new copy of the other_object
-            new_object = other_object.__copy__()
+            new_object = deepcopy(other_object)
             method(self, new_object, **kwargs)
             return new_object
     return modify_object_wrapper

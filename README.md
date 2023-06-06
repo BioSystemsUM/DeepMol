@@ -16,6 +16,7 @@ operations on molecular data.
     - [Manually](#manually)
 - [Getting Started](#getting-started)
     - [Load dataset from csv](#load-a-dataset-from-a-csv)
+    - [Load dataset from sdf](#load-a-dataset-from-a-sdf)
     - [Compound Standardization](#compound-standardization)
     - [Compound Featurization](#compound-featurization)
     - [Feature Selection](#feature-selection)
@@ -25,6 +26,7 @@ operations on molecular data.
     - [Hyperparameter Optimization](#hyperparameter-optimization)
     - [Feature Importance (Shap Values)](#feature-importance-shap-values)
     - [Unbalanced Datasets](#unbalanced-datasets)
+    - [Pipelines](#pipeline)
 - [About Us](#about-us)
 - [Citing DeepMol](#citing-deepmol)
   - [Related Publications](#publications-using-deepmol)
@@ -118,11 +120,6 @@ pre-release version. New models and features will be added in the future.
 
 ### Load a dataset from a CSV
 
-For now, it is only possible to load data directly from CSV files. Modules to 
-load data from different file types and sources will be implemented in the 
-future. These include JSON, SDF and FASTA files and directly from our 
-databases.
-
 To load data from a CSV it's only required to provide the math and molecules 
 field name. Optionally, it is also possible to provide a field with some ids, 
 the labels fields, features fields, features to keep (useful for instance 
@@ -149,6 +146,27 @@ dataset.get_shape()
 ((1000,), None, (1000,))
 ```
 
+### Load a dataset from a SDF
+
+If you want to load a dataset from a SDF file with 3D structures, it is only required to provide
+the path to the file. Optionally, it is also possible to provide a field with some ids,
+the labels fields.
+
+```python
+from deepmol.loaders import SDFLoader
+
+# load a dataset from a SDF (required fields: dataset_path)
+loader = SDFLoader(dataset_path='../../data/train_dataset.sdf',
+                   id_field='ids',
+                   labels_fields=['y'],
+                   shard_size=1000,
+                   mode='auto')
+dataset = loader.create_dataset()
+dataset.get_shape()
+
+((1000,), None, (1000,))
+```
+
 ### Compound Standardization
 
 It is possible to standardize the loaded molecules using three option. Using
@@ -159,6 +177,8 @@ remove isotope information, neutralize charges, remove stereochemistry and remov
 smaller fragments. Another possibility is to use the ChEMBL Standardizer.
 
 ```python
+from deepmol.standardizer import BasicStandardizer, CustomStandardizer, ChEMBLStandardizer 
+
 # Option 1: Basic Standardizer
 standardizer = BasicStandardizer().standardize(dataset)
 
@@ -271,7 +291,7 @@ implemented allowing evaluation of the models under a common workspace.
 Models can be imported from scikit-learn and wrapped using the SKlearnModel
 module.
 
-Check this **[jupyter notebook](examples/notebooks/RandomForestTest.ipynb)** for a complete example!
+Check this **[jupyter notebook](examples/workshop_bod/featurization.ipynb)** for a complete example!
 
 ```python
 from sklearn.ensemble import RandomForestClassifier
@@ -288,10 +308,9 @@ from deepmol.metrics.metrics import Metric
 from deepmol.metrics.metrics_functions import roc_auc_score
 
 # cross validate model on the full dataset
-model.cross_validate(dataset, Metric(roc_auc_score), folds=3)
+best_model, train_score_best_model, test_score_best_model, \
+            train_scores, test_scores, average_train_score, average_test_score = model.cross_validate(dataset, Metric(roc_auc_score), folds=3)
 ```
-
-![cross_validation_output](docs/imgs/cross_validation_output.png)
 
 ```python
 from sklearn.metrics import precision_score, accuracy_score, confusion_matrix, classification_report
@@ -311,15 +330,23 @@ valid_score = model.evaluate(valid_dataset, metrics)
 # evaluate the model on training data
 print('Test Dataset: ')
 test_score = model.evaluate(test_dataset, metrics)
+model.save('my_model')
 ```
 
 ![evaluate_output](docs/imgs/evaluate_output.png)
+
+Loading and saving models was never so easy!
+
+```python
+model = SklearnModel.load('my_model')
+model.evaluate(test_dataset, metrics)
+```
 
 #### Keras model example
 
 Example of how to build and wrap a keras model using the KerasModel module.
 
-Check this **[jupyter notebook](examples/notebooks/test_keras.ipynb)** for a complete example!
+Check this **[jupyter notebook](examples/workshop_bod/models.ipynb)** for a complete example!
 
 ```python
 from tensorflow.keras.models import Sequential
@@ -360,14 +387,22 @@ metrics = [Metric(roc_auc_score),
 
 print('Training set score:', model.evaluate(train_dataset, metrics))
 print('Test set score:', model.evaluate(test_dataset, metrics))
+
+model.save('my_model')
 ```
 
+Loading and saving models was never so easy!
+
+```python
+model = KerasModel.load('my_model')
+model.evaluate(test_dataset, metrics)
+```
 
 #### DeepChem model example
 
 Using DeepChem models:
 
-Check this **[jupyter notebook](examples/notebooks/deepchem_test.ipynb)** for a complete example!
+Check this **[jupyter notebook](examples/workshop_bod/models.ipynb)** for a complete example!
 
 ```python
 from deepmol.compound_featurization import WeaveFeat
@@ -393,28 +428,70 @@ train_score = model_mpnn.evaluate(train_dataset, metrics)
 print('Valid Dataset: ')
 valid_score = model_mpnn.evaluate(valid_dataset, metrics)
 print('Test Dataset: ')
-test_score = model_mpnn.evaluate(test_dataset, metrics)    
+test_score = model_mpnn.evaluate(test_dataset, metrics)
+model_mpnn.save("my_model")
 ```
+Loading and saving models was never so easy!
+
+```python
+model = DeepChemModel.load('my_model')
+model.evaluate(test_dataset, metrics)
+```
+
 
 ### Hyperparameter Optimization
 
 Grid and randomized hyperparameter optimization is provided using cross-validation
-or a held-out validation set.
+or a held-out validation set. For a more detailed example check this 
+**[jupyter notebook](examples/workshop_bod/hyperparameter_optimization.ipynb)**.
 
 ```python
-from deepmol.parameter_optimization.hyperparameter_optimization import HyperparameterOptimizerValidation,
+from deepmol.parameter_optimization.hyperparameter_optimization import HyperparameterOptimizerValidation
 
-HyperparameterOptimizerCV
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.layers import Dropout
+from tensorflow import keras
+from tensorflow.keras import layers
 
-# Hyperparameter Optimization (using the above created keras model)
+def create_model(input_dim, optimizer='adam', dropout=0.5):
+    # create model
+    inputs = layers.Input(shape=input_dim)
+
+    # Define the shared layers
+    shared_layer_1 = layers.Dense(64, activation="relu")
+    dropout_1 = Dropout(dropout)
+    shared_layer_2 = layers.Dense(32, activation="relu")
+
+    # Define the shared layers for the inputs
+    x = shared_layer_1(inputs)
+    x = dropout_1(x)
+    x = shared_layer_2(x)
+
+    task_output = layers.Dense(1, activation="sigmoid")(x)
+
+    # Define the model that outputs the predictions for each task
+    model = keras.Model(inputs=inputs, outputs=task_output)
+    # Compile the model with different loss functions and metrics for each task
+    model.compile(
+        optimizer=optimizer, loss="binary_crossentropy", metrics=["accuracy"]
+    )
+    return model
+
 optimizer = HyperparameterOptimizerValidation(create_model)
+params_dict_dense = {
+                   "input_dim": [train_dataset.X.shape[1]],
+                   "dropout": [0.5, 0.6, 0.7],
+                   "optimizer": [Adam]
+                   }
 
-params_dict = {'optimizer': ['adam', 'rmsprop'],
-               'dropout': [0.2, 0.4, 0.5]}
-
-best_model, best_hyperparams, all_results = optimizer.hyperparameter_search(params_dict, train_dataset,
-                                                                            valid_dataset, Metric(roc_auc_score))
-
+best_dnn, best_hyperparams, all_results = optimizer.hyperparameter_search(train_dataset=train_dataset,
+                                                                          valid_dataset=valid_dataset,
+                                                                          metric=Metric(accuracy_score),
+                                                                          maximize_metric=True,
+                                                                          n_iter_search=2,
+                                                                          params_dict=params_dict_dense,
+                                                                          model_type="keras"
+                                                                          )
 print(best_hyperparams)
 print(best_model)
 
@@ -425,27 +502,30 @@ best_model.evaluate(test_dataset, metrics)
 ### Feature Importance (Shap Values)
 
 Explain the output of a machine learning model can be done using SHAP (SHapley 
-Additive exPlanations) package. The features that most influenced (positively or
+Additive exPlanations) package. For a more detailed description you can check out this **[jupyter notebook](examples/workshop_bod/model_explainability.ipynb)**.
+The features that most influenced (positively or
 negatively) a certain prediction can be calculated and visualized in different 
 ways:
 
 ```python
 from deepmol.feature_importance import ShapValues
 
-shap_calc = ShapValues(test_dataset, model)
-shap_calc.computePermutationShap()
+# compute shap values
+shap_calc = ShapValues()
+shap_calc.fit(train_dataset, model)
+shap_calc.beeswarm_plot()
 ```
 
 ![calc_shap_output](docs/imgs/calc_shap_output.png)
 
 ```python
-shap_calc.plotSampleExplanation(index=1, plot_type='waterfall')
+shap_calc.sample_explanation_plot(index=1, plot_type='waterfall')
 ```
 
 ![sample_explanation_output](docs/imgs/sample_explanation_output.png)
 
 ```python
-shap_calc.plotFeatureExplanation(index=115)
+shap_calc.feature_explanation_plot(1)
 ```
 
 ![feature_explanation_output](docs/imgs/feature_explanation_output.png)
@@ -460,7 +540,7 @@ for instance, the substructure in the molecule that most contributed to its
 classification as an active or inactive molecule against a receptor.
 
 ```python
-from deepmol.utils.utils import draw_MACCS_Pattern
+from deepmol.compound_featurization import MACCSkeysFingerprint
 
 patt_number = 54
 mol_number = 1
@@ -471,7 +551,9 @@ print('Prediction: ', prediction)
 print('Actual Value: ', actual_value)
 smi = test_dataset.mols[mol_number]
 
-draw_MACCS_Pattern(smi, patt_number)
+maccs_keys = MACCSkeysFingerprint()
+
+maccs_keys.draw_bit(smi, patt_number)
 ```
 
 ![draw_maccs_output](docs/imgs/draw_maccs_output.png)
@@ -481,7 +563,7 @@ draw_MACCS_Pattern(smi, patt_number)
 
 Multiple methods to deal with unbalanced datasets can be used to do oversampling,
 under-sampling or a mixture of both (Random, SMOTE, SMOTEENN, SMOTETomek and 
-ClusterCentroids).
+ClusterCentroids). For a more detailed example check this **[jupyter notebook](examples/workshop_bod/imbalanced_learn.ipynb)**.
 
 ```python
 from deepmol.imbalanced_learn.imbalanced_learn import SMOTEENN

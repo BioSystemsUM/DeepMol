@@ -1,4 +1,3 @@
-import pickle
 from typing import Callable
 from unittest import TestCase
 
@@ -25,7 +24,8 @@ class TestSklearnHyperparameterOptimization(ModelsTestCase, TestCase):
                                                                                   metric=Metric(accuracy_score),
                                                                                   maximize_metric=True,
                                                                                   n_iter_search=2,
-                                                                                  params_dict=params_dict_svc)
+                                                                                  params_dict=params_dict_svc,
+                                                                                  model_type="sklearn")
 
         # Evaluate model
         result = best_svm.evaluate(test_dataset, [Metric(accuracy_score)])
@@ -113,7 +113,8 @@ class TestSklearnHyperparameterOptimization(ModelsTestCase, TestCase):
                                                                                  metric=Metric(roc_auc_score),
                                                                                  maximize_metric=True,
                                                                                  n_iter_search=2,
-                                                                                 params_dict=params_dict_rf)
+                                                                                 params_dict=params_dict_rf,
+                                                                                 model_type="sklearn")
 
         best_model_name = _convert_hyperparam_dict_to_filename(best_hyperparams)
 

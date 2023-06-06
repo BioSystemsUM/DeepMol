@@ -567,9 +567,14 @@ class SmilesDataset(Dataset):
         if len(self._X.shape) == 1:
             if len(feature_names) != 1:
                 raise ValueError('The number of feature names must be equal to the number of features.')
-        else:
+        elif len(self._X.shape) == 2:
             if len(feature_names) != len(self._X[0]):
                 raise ValueError('The number of feature names must be equal to the number of features.')
+        elif len(self._X.shape) == 3:
+            if len(feature_names) != len(self._X[0][0]):
+                raise ValueError('The number of feature names must be equal to the number of features.')
+        else:
+            raise ValueError('The number of dimensions of X must be 1, 2 or 3.')
         if len(feature_names) != len(set(feature_names)):
             raise ValueError('The feature names must be unique.')
         self._feature_names = np.array([str(fn) for fn in feature_names])

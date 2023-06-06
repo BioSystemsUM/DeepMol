@@ -96,6 +96,7 @@ class SmilesOneHotEncoder(Transformer):
         one_hot = multiprocessing_cls.run(smiles)
         dataset.clear_cached_properties()
         dataset._X = np.array(one_hot)
+        dataset.feature_names = [f'one_hot_{i}' for i in range(self.max_length)]
         return dataset
 
     @modify_object_inplace_decorator

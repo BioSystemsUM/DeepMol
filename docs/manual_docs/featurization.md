@@ -58,11 +58,11 @@ dataset = CSVLoader("../data/CHEMBL217_reduced.csv", id_field="Original_Entry_ID
                     smiles_field="SMILES", labels_fields=["Activity_Flag"]).create_dataset()
 ```
 
-    2023-05-26 16:48:27,972 — ERROR — Molecule with smiles: ClC1=C(N2CCN(O)(CC2)=C/C=C/CNC(=O)C=3C=CC(=CC3)C4=NC=CC=C4)C=CC=C1Cl removed from dataset.
-    2023-05-26 16:48:27,983 — INFO — Assuming classification since there are less than 10 unique y values. If otherwise, explicitly set the mode to 'regression'!
+    2023-06-06 16:43:55,572 — ERROR — Molecule with smiles: ClC1=C(N2CCN(O)(CC2)=C/C=C/CNC(=O)C=3C=CC(=CC3)C4=NC=CC=C4)C=CC=C1Cl removed from dataset.
+    2023-06-06 16:43:55,574 — INFO — Assuming classification since there are less than 10 unique y values. If otherwise, explicitly set the mode to 'regression'!
 
 
-    [16:48:27] Explicit valence for atom # 6 N, 5, is greater than permitted
+    [16:43:55] Explicit valence for atom # 6 N, 5, is greater than permitted
 
 
 # Featurize the dataset
@@ -758,10 +758,6 @@ dataset.get_shape()
     2023-06-06 13:58:36,850 — INFO — Features_shape: (16623, 847)
     2023-06-06 13:58:36,850 — INFO — Labels_shape: (16623,)
 
-
-
-
-
     ((16623,), (16623, 847), (16623,))
 
 
@@ -919,3 +915,265 @@ Featurizer for MolGAN de-novo molecular generation [1]_. The default representat
 ```python
 MolGanFeat(n_jobs=10).featurize(dataset, inplace=True)
 ```
+
+## One hot encoding
+
+One hot encoding is a simple featurizer that takes a dataset of SMILES strings and converts them into a one-hot encoding of the characters in the SMILES strings. This featurizer is useful for converting SMILES strings into a format that can be used by models that require one-hot encodings of SMILES strings.
+
+Let's see how it works.
+
+
+```python
+from deepmol.compound_featurization import SmilesOneHotEncoder
+
+ohe = SmilesOneHotEncoder().fit(dataset)
+```
+
+
+```python
+ohe.transform(dataset)
+```
+
+
+
+
+    <deepmol.datasets.datasets.SmilesDataset at 0x7faa8bf2bf40>
+
+
+
+
+```python
+dataset.feature_names
+```
+
+
+
+
+    array(['one_hot_0', 'one_hot_1', 'one_hot_2', 'one_hot_3', 'one_hot_4',
+           'one_hot_5', 'one_hot_6', 'one_hot_7', 'one_hot_8', 'one_hot_9',
+           'one_hot_10', 'one_hot_11', 'one_hot_12', 'one_hot_13',
+           'one_hot_14', 'one_hot_15', 'one_hot_16', 'one_hot_17',
+           'one_hot_18', 'one_hot_19', 'one_hot_20', 'one_hot_21',
+           'one_hot_22', 'one_hot_23', 'one_hot_24', 'one_hot_25',
+           'one_hot_26', 'one_hot_27', 'one_hot_28', 'one_hot_29',
+           'one_hot_30', 'one_hot_31', 'one_hot_32', 'one_hot_33',
+           'one_hot_34', 'one_hot_35', 'one_hot_36', 'one_hot_37',
+           'one_hot_38', 'one_hot_39', 'one_hot_40', 'one_hot_41',
+           'one_hot_42', 'one_hot_43', 'one_hot_44', 'one_hot_45',
+           'one_hot_46', 'one_hot_47', 'one_hot_48', 'one_hot_49',
+           'one_hot_50', 'one_hot_51', 'one_hot_52', 'one_hot_53',
+           'one_hot_54', 'one_hot_55', 'one_hot_56', 'one_hot_57',
+           'one_hot_58', 'one_hot_59', 'one_hot_60', 'one_hot_61',
+           'one_hot_62', 'one_hot_63', 'one_hot_64', 'one_hot_65',
+           'one_hot_66', 'one_hot_67', 'one_hot_68', 'one_hot_69',
+           'one_hot_70', 'one_hot_71', 'one_hot_72', 'one_hot_73',
+           'one_hot_74', 'one_hot_75', 'one_hot_76', 'one_hot_77',
+           'one_hot_78', 'one_hot_79', 'one_hot_80', 'one_hot_81',
+           'one_hot_82', 'one_hot_83', 'one_hot_84', 'one_hot_85',
+           'one_hot_86', 'one_hot_87', 'one_hot_88', 'one_hot_89',
+           'one_hot_90', 'one_hot_91', 'one_hot_92', 'one_hot_93',
+           'one_hot_94', 'one_hot_95', 'one_hot_96', 'one_hot_97',
+           'one_hot_98', 'one_hot_99', 'one_hot_100', 'one_hot_101',
+           'one_hot_102', 'one_hot_103', 'one_hot_104', 'one_hot_105',
+           'one_hot_106', 'one_hot_107', 'one_hot_108', 'one_hot_109',
+           'one_hot_110', 'one_hot_111', 'one_hot_112', 'one_hot_113',
+           'one_hot_114', 'one_hot_115', 'one_hot_116', 'one_hot_117',
+           'one_hot_118', 'one_hot_119', 'one_hot_120', 'one_hot_121',
+           'one_hot_122', 'one_hot_123', 'one_hot_124', 'one_hot_125',
+           'one_hot_126', 'one_hot_127', 'one_hot_128', 'one_hot_129',
+           'one_hot_130', 'one_hot_131'], dtype='<U11')
+
+
+
+By default, the one hot encoder uses an atom-level tokenizer that splits SMILES strings into individual tokens associated with each atom and bond in the molecule.
+
+As you can see below, the vocabulary is composed of tokens associated with atoms in the molecule. The max_length is the maximum length of the SMILES tokens in the dataset.
+
+
+```python
+ohe.tokenizer.vocabulary
+```
+
+
+
+
+    ['[C@]',
+     '[N@+]',
+     '2',
+     '8',
+     '[11C]',
+     'Br',
+     '#',
+     '%10',
+     ')',
+     '=',
+     'C',
+     '4',
+     '[C@@H2]',
+     '9',
+     'O',
+     '6',
+     '[2H]',
+     'I',
+     '[CH2]',
+     'Cl',
+     '3',
+     '[C]',
+     '1',
+     '[N]',
+     'P',
+     '[C@@]',
+     '[C@@H]',
+     '[N+]',
+     '[18F]',
+     '[NH+]',
+     '7',
+     '\\',
+     '/',
+     '(',
+     '[11CH2]',
+     'N',
+     '[C@H]',
+     '5',
+     '[NH3+]',
+     '[11CH3]',
+     'S',
+     '[S+]',
+     'F']
+
+
+
+As you see below, the max_length is the maximum length of the SMILES tokens in the dataset.
+
+
+```python
+ohe.max_length
+```
+
+
+
+
+    132
+
+
+
+You can also use a k-mer tokenizer that splits SMILES strings into k-mers. This is useful for models that use k-mer encodings of SMILES strings.
+
+
+```python
+from deepmol.tokenizers import KmerSmilesTokenizer
+
+ohe = SmilesOneHotEncoder(tokenizer=KmerSmilesTokenizer(size=2, stride=1)).fit(dataset)
+```
+
+
+```python
+ohe.transform(dataset)
+```
+
+
+
+
+    <deepmol.datasets.datasets.SmilesDataset at 0x7faa8bf2bf40>
+
+
+
+
+```python
+dataset.feature_names
+```
+
+
+
+
+    array(['one_hot_0', 'one_hot_1', 'one_hot_2', 'one_hot_3', 'one_hot_4',
+           'one_hot_5', 'one_hot_6', 'one_hot_7', 'one_hot_8', 'one_hot_9',
+           'one_hot_10', 'one_hot_11', 'one_hot_12', 'one_hot_13',
+           'one_hot_14', 'one_hot_15', 'one_hot_16', 'one_hot_17',
+           'one_hot_18', 'one_hot_19', 'one_hot_20', 'one_hot_21',
+           'one_hot_22', 'one_hot_23', 'one_hot_24', 'one_hot_25',
+           'one_hot_26', 'one_hot_27', 'one_hot_28', 'one_hot_29',
+           'one_hot_30', 'one_hot_31', 'one_hot_32', 'one_hot_33',
+           'one_hot_34', 'one_hot_35', 'one_hot_36', 'one_hot_37',
+           'one_hot_38', 'one_hot_39', 'one_hot_40', 'one_hot_41',
+           'one_hot_42', 'one_hot_43', 'one_hot_44', 'one_hot_45',
+           'one_hot_46', 'one_hot_47', 'one_hot_48', 'one_hot_49',
+           'one_hot_50', 'one_hot_51', 'one_hot_52', 'one_hot_53',
+           'one_hot_54', 'one_hot_55', 'one_hot_56', 'one_hot_57',
+           'one_hot_58', 'one_hot_59', 'one_hot_60', 'one_hot_61',
+           'one_hot_62', 'one_hot_63', 'one_hot_64', 'one_hot_65',
+           'one_hot_66', 'one_hot_67', 'one_hot_68', 'one_hot_69',
+           'one_hot_70', 'one_hot_71', 'one_hot_72', 'one_hot_73',
+           'one_hot_74', 'one_hot_75', 'one_hot_76', 'one_hot_77',
+           'one_hot_78', 'one_hot_79', 'one_hot_80', 'one_hot_81',
+           'one_hot_82', 'one_hot_83', 'one_hot_84', 'one_hot_85',
+           'one_hot_86', 'one_hot_87', 'one_hot_88', 'one_hot_89',
+           'one_hot_90', 'one_hot_91', 'one_hot_92', 'one_hot_93',
+           'one_hot_94', 'one_hot_95', 'one_hot_96', 'one_hot_97',
+           'one_hot_98', 'one_hot_99', 'one_hot_100', 'one_hot_101',
+           'one_hot_102', 'one_hot_103', 'one_hot_104', 'one_hot_105',
+           'one_hot_106', 'one_hot_107', 'one_hot_108', 'one_hot_109',
+           'one_hot_110', 'one_hot_111', 'one_hot_112', 'one_hot_113',
+           'one_hot_114', 'one_hot_115', 'one_hot_116', 'one_hot_117',
+           'one_hot_118', 'one_hot_119', 'one_hot_120', 'one_hot_121',
+           'one_hot_122', 'one_hot_123', 'one_hot_124', 'one_hot_125',
+           'one_hot_126', 'one_hot_127', 'one_hot_128', 'one_hot_129',
+           'one_hot_130'], dtype='<U11')
+
+
+
+
+```python
+ohe.max_length
+```
+
+
+
+
+    131
+
+
+
+
+```python
+ohe.tokenizer.vocabulary
+```
+
+
+
+
+    {'#C',
+     '#N',
+     '#[C]',
+     '%10)',
+     '%10=',
+     '%10C',
+     '(#',
+     '(/',
+     '(=',
+     '(Br',
+     '(C',
+     '(Cl',
+     '(F',
+     '(I',
+     ...
+     '[N+]2',
+     '[N+]3',
+     '[N+]=',
+     '[N@+]2',
+     '[NH+](',
+     '[NH+]2',
+     '[NH+]4',
+     '[NH3+])',
+     '[N]=',
+     '[S+](',
+     '\\1',
+     '\\2',
+     '\\3',
+     '\\4',
+     '\\C',
+     '\\N',
+     '\\O',
+     '\\S'}
+
+

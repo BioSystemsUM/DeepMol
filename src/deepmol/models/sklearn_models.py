@@ -212,6 +212,8 @@ class SklearnModel(Model):
         avg_test_score = 0
         best_model = None
         split = 1
+
+        print("Computing K-fold cross validation")
         for train_ds, test_ds in datasets:
             split += 1
             dummy_model = clone(SklearnModel(model=self.model))
@@ -231,4 +233,5 @@ class SklearnModel(Model):
                 train_score_best_model = train_score[metric.name]
                 best_model = dummy_model
 
-        return best_model, train_score_best_model, test_score_best_model, train_scores, test_scores, avg_train_score / folds, avg_test_score / folds
+        return best_model, train_score_best_model, test_score_best_model, \
+            train_scores, test_scores, avg_train_score / folds, avg_test_score / folds

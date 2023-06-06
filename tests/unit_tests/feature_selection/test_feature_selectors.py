@@ -35,7 +35,7 @@ class TestFeatureSelectors(TestCase):
     def validate_feature_selector(self, feature_selector, **kwargs):
         df = copy.deepcopy(self.features_dataset)
 
-        def side_effect(arg, inplace=True):
+        def side_effect(arg):
             df.X = df.X[:, arg]
             df.feature_names = df.feature_names[arg]
 

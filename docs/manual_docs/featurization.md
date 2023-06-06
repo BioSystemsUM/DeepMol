@@ -21,20 +21,20 @@ DeepMol provides a number of featurization methods for generating features from 
 
 The following featurization methods are currently available in DeepMol:
    - MorganFingerprint
-   - AtomPairFingerprint
-   - LayeredFingerprint
-   - RDKFingerprint
-   - MACCSkeysFingerprint
-   - TwoDimensionDescriptors
-   - WeaveFeat
-   - CoulombFeat
-   - CoulombEigFeat
-   - ConvMolFeat
-   - MolGraphConvFeat
-   - SmileImageFeat
-   - SmilesSeqFeat
-   - MolGanFeat
-   - All3DDescriptors
+    - AtomPairFingerprint
+    - LayeredFingerprint
+    - RDKFingerprint
+    - MACCSkeysFingerprint
+    - TwoDimensionDescriptors
+    - WeaveFeat
+    - CoulombFeat
+    - CoulombEigFeat
+    - ConvMolFeat
+    - MolGraphConvFeat
+    - SmileImageFeat
+    - SmilesSeqFeat
+    - MolGanFeat
+    - All3DDescriptors
 
 # Import packages
 
@@ -50,8 +50,6 @@ from deepmol.compound_featurization import WeaveFeat, CoulombFeat, CoulombEigFea
 import numpy as np
 ```
 
-
-
 # Load the dataset
 
 
@@ -59,6 +57,12 @@ import numpy as np
 dataset = CSVLoader("../data/CHEMBL217_reduced.csv", id_field="Original_Entry_ID",
                     smiles_field="SMILES", labels_fields=["Activity_Flag"]).create_dataset()
 ```
+
+    2023-05-26 16:48:27,972 — ERROR — Molecule with smiles: ClC1=C(N2CCN(O)(CC2)=C/C=C/CNC(=O)C=3C=CC(=CC3)C4=NC=CC=C4)C=CC=C1Cl removed from dataset.
+    2023-05-26 16:48:27,983 — INFO — Assuming classification since there are less than 10 unique y values. If otherwise, explicitly set the mode to 'regression'!
+
+
+    [16:48:27] Explicit valence for atom # 6 N, 5, is greater than permitted
 
 
 # Featurize the dataset
@@ -555,8 +559,6 @@ If you rather want to read directly from a SDF file, you can use the SDFLoader c
 dataset = SDFLoader("../data/CHEMBL217_conformers.sdf", id_field="_ID", labels_fields=["_Class"]).create_dataset()
 ```
 
-## 3D descriptors
-
 ### In DeepMol, we only use RDKit 3D descriptors
 
 - **AutoCorr3D**: AutoCorr3D is a type of 3D descriptor that captures spatial autocorrelation patterns in a molecule. It quantifies the distribution and arrangement of properties within a three-dimensional grid overlaid on the molecule's structure.
@@ -737,6 +739,58 @@ dataset.feature_names
            'WHIM_113'], dtype='<U19')
 
 
+
+## In DeepMol, we also can use different featurizers for the same dataset, in case you want to use different featurizers at the same time.
+
+
+```python
+from deepmol.compound_featurization import MixedFeaturizer
+
+MixedFeaturizer(featurizers=[All3DDescriptors(mandatory_generation_of_conformers=False), TwoDimensionDescriptors()]).featurize(dataset, inplace=True)
+```
+
+
+```python
+dataset.get_shape()
+```
+
+    2023-06-06 13:58:36,849 — INFO — Mols_shape: (16623,)
+    2023-06-06 13:58:36,850 — INFO — Features_shape: (16623, 847)
+    2023-06-06 13:58:36,850 — INFO — Labels_shape: (16623,)
+
+
+
+
+
+    ((16623,), (16623, 847), (16623,))
+
+
+
+
+```python
+dataset.feature_names[0]
+```
+
+
+
+
+    'Asphericity'
+
+
+
+
+```python
+dataset.feature_names[-1]
+```
+
+
+
+
+    'fr_urea'
+
+
+
+As you see, the dataset has now 2D and 3D descriptors.
 
 ## DeepChem Featurization
 

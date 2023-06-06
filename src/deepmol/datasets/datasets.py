@@ -276,7 +276,7 @@ class Dataset(ABC):
         """
 
     @abstractmethod
-    def select_features_by_index(self, indexes: List[int]) -> None:
+    def select_features_by_index(self, indexes: List[int]) -> 'Dataset':
         """
         Select the features from the dataset.
         Parameters
@@ -762,7 +762,7 @@ class SmilesDataset(Dataset):
             self.remove_elements(indexes, inplace=True)
 
     @inplace_decorator
-    def select_features_by_index(self, indexes: List[int]) -> None:
+    def select_features_by_index(self, indexes: List[int]) -> 'SmilesDataset':
         """
         Select features with specific indexes from the dataset
         Parameters
@@ -775,6 +775,9 @@ class SmilesDataset(Dataset):
         if len(indexes) != 0:
             self.select(indexes, axis=1, inplace=True)
             self.clear_cached_properties()
+            return self
+        else:
+            raise ValueError('The list of indexes is empty.')
 
     @inplace_decorator
     def select_features_by_name(self, names: List[str]) -> None:

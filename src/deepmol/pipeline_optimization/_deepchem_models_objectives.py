@@ -142,7 +142,7 @@ def cnn_model_steps(trial: Trial,
 def multitask_classifier_model_steps(trial: Trial,
                                      model_dir: str = None,
                                      multitask_classifier_kwargs: dict = None,
-                                     deepchem_kwargs: dict = None) -> Tuple[str, Predictor]:
+                                     deepchem_kwargs: dict = None) -> List[Tuple[str, Predictor]]:
     # Classifier
     # 1D descriptors
     dropouts = trial.suggest_float('dropout', 0.0, 0.5, step=0.25)
@@ -151,13 +151,13 @@ def multitask_classifier_model_steps(trial: Trial,
     multitask_classifier_kwargs['layer_sizes'] = layer_sizes
     model = multitask_classifier_model(model_dir=model_dir, multitask_classifier_kwargs=multitask_classifier_kwargs,
                                        deepchem_kwargs=deepchem_kwargs)
-    return 'model', model
+    return [('model', model)]
 
 
 def multitask_irv_classifier_model_steps(trial: Trial,
                                          model_dir: str = None,
                                          multitask_irv_classifier_kwargs: dict = None,
-                                         deepchem_kwargs: dict = None) -> Tuple[str, Predictor]:
+                                         deepchem_kwargs: dict = None) -> List[Tuple[str, Predictor]]:
     # Classifier
     # 1D Descriptors
     K = trial.suggest_int('K', 5, 25, step=5)
@@ -165,13 +165,13 @@ def multitask_irv_classifier_model_steps(trial: Trial,
     model = multitask_irv_classifier_model(model_dir=model_dir,
                                            multitask_irv_classifier_kwargs=multitask_irv_classifier_kwargs,
                                            deepchem_kwargs=deepchem_kwargs)
-    return 'model', model
+    return [('model', model)]
 
 
 def progressive_multitask_classifier_model_steps(trial: Trial,
                                                  model_dir: str = None,
                                                  progressive_multitask_classifier_kwargs: dict = None,
-                                                 deepchem_kwargs: dict = None) -> Tuple[str, Predictor]:
+                                                 deepchem_kwargs: dict = None) -> List[Tuple[str, Predictor]]:
     # Classifier
     # 1D Descriptors
     dropouts = trial.suggest_float('dropout', 0.0, 0.5, step=0.25)
@@ -181,13 +181,13 @@ def progressive_multitask_classifier_model_steps(trial: Trial,
     model = progressive_multitask_classifier_model(model_dir=model_dir,
                                                    progressive_multitask_classifier_kwargs=progressive_multitask_classifier_kwargs,
                                                    deepchem_kwargs=deepchem_kwargs)
-    return 'model', model
+    return [('model', model)]
 
 
 def robust_multitask_classifier_model_steps(trial: Trial,
                                             model_dir: str = None,
                                             robust_multitask_classifier_kwargs: dict = None,
-                                            deepchem_kwargs: dict = None) -> Tuple[str, Predictor]:
+                                            deepchem_kwargs: dict = None) -> List[Tuple[str, Predictor]]:
     # Classifier
     # 1D Descriptors
     dropouts = trial.suggest_float('dropout', 0.0, 0.5, step=0.25)
@@ -199,11 +199,11 @@ def robust_multitask_classifier_model_steps(trial: Trial,
     model = robust_multitask_classifier_model(model_dir=model_dir,
                                               robust_multitask_classifier_kwargs=robust_multitask_classifier_kwargs,
                                               deepchem_kwargs=deepchem_kwargs)
-    return 'model', model
+    return [('model', model)]
 
 
 def sc_score_model_steps(trial: Trial, model_dir: str = None, sc_score_kwargs: dict = None,
-                         deepchem_kwargs: dict = None) -> Tuple[str, Predictor]:
+                         deepchem_kwargs: dict = None) -> List[Tuple[str, Predictor]]:
     # Classifier
     # 1D Descriptors
     dropouts = trial.suggest_float('dropout', 0.0, 0.5, step=0.25)
@@ -211,7 +211,7 @@ def sc_score_model_steps(trial: Trial, model_dir: str = None, sc_score_kwargs: d
     layer_sizes = trial.suggest_categorical('layer_sizes', [[100, 100, 100], [300, 300, 300], [500, 200, 100]])
     sc_score_kwargs['layer_sizes'] = layer_sizes
     model = sc_score_model(model_dir=model_dir, sc_score_kwargs=sc_score_kwargs, deepchem_kwargs=deepchem_kwargs)
-    return 'model', model
+    return [('model', model)]
 
 
 def chem_ception_model_steps(trial: Trial, model_dir: str = None, chem_ception_kwargs: dict = None,
@@ -276,14 +276,14 @@ def smiles_to_vec_model_steps(trial: Trial, model_dir: str = None, smiles_to_vec
 
 
 def text_cnn_model_steps(trial: Trial, model_dir: str = None, text_cnn_kwargs: dict = None,
-                         deepchem_kwargs: dict = None) -> Tuple[str, Predictor]:
+                         deepchem_kwargs: dict = None) -> List[Tuple[str, Predictor]]:
     # Classifier/ Regressor
     n_embedding = trial.suggest_categorical('n_embedding', [50, 75, 100])
     text_cnn_kwargs['n_embedding'] = n_embedding
     dropout = trial.suggest_float('dropout', 0.0, 0.5, step=0.25)
     text_cnn_kwargs['dropout'] = dropout
     model = text_cnn_model(model_dir=model_dir, text_cnn_kwargs=text_cnn_kwargs, deepchem_kwargs=deepchem_kwargs)
-    return 'model', model
+    return [('model', model)]
 
 
 def weave_model_steps(trial: Trial, model_dir: str = None, weave_kwargs: dict = None,
@@ -324,17 +324,17 @@ def mat_model_steps(trial: Trial, model_dir: str = None, mat_kwargs: dict = None
 def progressive_multitask_regressor_model_steps(trial: Trial,
                                                 model_dir: str = None,
                                                 progressive_multitask_regressor_kwargs: dict = None,
-                                                deepchem_kwargs: dict = None) -> Tuple[str, Predictor]:
+                                                deepchem_kwargs: dict = None) -> List[Tuple[str, Predictor]]:
     # Regressor
     # 1D Descriptors
     model = progressive_multitask_regressor_model(model_dir=model_dir,
                                                   progressive_multitask_regressor_kwargs=progressive_multitask_regressor_kwargs,
                                                   deepchem_kwargs=deepchem_kwargs)
-    return 'model', model
+    return [('model', model)]
 
 
 def multitask_regressor_model_steps(trial: Trial, model_dir: str = None, multitask_regressor_kwargs: dict = None,
-                                    deepchem_kwargs: dict = None) -> Tuple[str, Predictor]:
+                                    deepchem_kwargs: dict = None) -> List[Tuple[str, Predictor]]:
     # Regressor
     # 1D Descriptors
     dropouts = trial.suggest_float('dropout', 0.0, 0.5, step=0.25)
@@ -343,16 +343,16 @@ def multitask_regressor_model_steps(trial: Trial, model_dir: str = None, multita
     multitask_regressor_kwargs['layer_sizes'] = layer_sizes
     model = multitask_regressor_model(model_dir=model_dir, multitask_regressor_kwargs=multitask_regressor_kwargs,
                                       deepchem_kwargs=deepchem_kwargs)
-    return 'model', model
+    return [('model', model)]
 
 
 def robust_multitask_regressor_model_steps(trial: Trial,
                                            model_dir: str = None,
                                            robust_multitask_regressor_kwargs: dict = None,
-                                           deepchem_kwargs: dict = None) -> Tuple[str, Predictor]:
+                                           deepchem_kwargs: dict = None) -> List[Tuple[str, Predictor]]:
     # Regressor
     # 1D Descriptors
     model = robust_multitask_regressor_model(model_dir=model_dir,
                                              robust_multitask_regressor_kwargs=robust_multitask_regressor_kwargs,
                                              deepchem_kwargs=deepchem_kwargs)
-    return 'model', model
+    return [('model', model)]

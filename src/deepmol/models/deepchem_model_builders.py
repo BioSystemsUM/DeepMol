@@ -62,15 +62,6 @@ def megnet_model(model_dir: str = None, megnet_kwargs: dict = None, deepchem_kwa
     return DeepChemModel(model=model, model_dir=model_dir, **deepchem_kwargs)
 
 
-def mat_model(model_dir: str = None, mat_kwargs: dict = None, deepchem_kwargs: dict = None) -> DeepChemModel:
-    mat_kwargs = mat_kwargs or {}
-    deepchem_kwargs = deepchem_kwargs or {}
-    # Regressor
-    # MATFeaturizer
-    model = MATModel(**mat_kwargs)
-    return DeepChemModel(model=model, model_dir=model_dir, **deepchem_kwargs)
-
-
 def dmpnn_model(model_dir: str = None, dmpnn_kwargs: dict = None, deepchem_kwargs: dict = None) -> DeepChemModel:
     dmpnn_kwargs = dmpnn_kwargs or {}
     deepchem_kwargs = deepchem_kwargs or {}
@@ -165,14 +156,6 @@ def sc_score_model(model_dir: str = None, sc_score_kwargs: dict = None, deepchem
     return DeepChemModel(model=model, model_dir=model_dir, **deepchem_kwargs)
 
 
-def atomic_conv_model(model_dir: str = None, atomic_conv_kwargs: dict = None,
-                      deepchem_kwargs: dict = None) -> DeepChemModel:
-    # Classifier/ Regressor
-    # ComplexNeighborListFragmentAtomicCoordinates
-    model = AtomicConvModel(**atomic_conv_kwargs)
-    return DeepChemModel(model=model, model_dir=model_dir, **deepchem_kwargs)
-
-
 def chem_ception_model(model_dir: str = None, chem_ception_kwargs: dict = None,
                        deepchem_kwargs: dict = None) -> DeepChemModel:
     chem_ception_kwargs = chem_ception_kwargs or {}
@@ -220,6 +203,15 @@ def text_cnn_model(model_dir: str = None, text_cnn_kwargs: dict = None, deepchem
     return DeepChemModel(model=model, model_dir=model_dir, **deepchem_kwargs)
 
 
+def weave_model(model_dir: str = None, weave_kwargs: dict = None, deepchem_kwargs: dict = None) -> DeepChemModel:
+    weave_kwargs = weave_kwargs or {}
+    deepchem_kwargs = deepchem_kwargs or {}
+    # Classifier/ Regressor
+    # WeaveFeaturizer
+    model = WeaveModel(**weave_kwargs)
+    return DeepChemModel(model=model, model_dir=model_dir, **deepchem_kwargs)
+
+
 def dtnn_model(model_dir: str = None, dtnn_kwargs: dict = None, deepchem_kwargs: dict = None) -> DeepChemModel:
     dtnn_kwargs = dtnn_kwargs or {}
     deepchem_kwargs = deepchem_kwargs or {}
@@ -229,12 +221,12 @@ def dtnn_model(model_dir: str = None, dtnn_kwargs: dict = None, deepchem_kwargs:
     return DeepChemModel(model=model, model_dir=model_dir, **deepchem_kwargs)
 
 
-def weave_model(model_dir: str = None, weave_kwargs: dict = None, deepchem_kwargs: dict = None) -> DeepChemModel:
-    weave_kwargs = weave_kwargs or {}
+def mat_model(model_dir: str = None, mat_kwargs: dict = None, deepchem_kwargs: dict = None) -> DeepChemModel:
+    mat_kwargs = mat_kwargs or {}
     deepchem_kwargs = deepchem_kwargs or {}
-    # Classifier/ Regressor
-    # WeaveFeaturizer
-    model = WeaveModel(**weave_kwargs)
+    # Regressor
+    # MATFeaturizer
+    model = MATModel(**mat_kwargs)
     return DeepChemModel(model=model, model_dir=model_dir, **deepchem_kwargs)
 
 

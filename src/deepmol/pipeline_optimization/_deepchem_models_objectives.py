@@ -3,12 +3,13 @@ from typing import List, Tuple, Union
 from optuna import Trial
 
 from deepmol.base import Predictor, Transformer
-from deepmol.compound_featurization import MolGraphConvFeat, PagtnMolGraphFeat
+from deepmol.compound_featurization import MolGraphConvFeat, PagtnMolGraphFeat, SmileImageFeat, ConvMolFeat, \
+    DagTransformer, SmilesSeqFeat, WeaveFeat
 from deepmol.models.deepchem_model_builders import gat_model, gcn_model, attentivefp_model, pagtn_model, mpnn_model, \
     megnet_model, cnn_model, multitask_classifier_model, multitask_irv_classifier_model, multitask_regressor_model, \
     progressive_multitask_classifier_model, progressive_multitask_regressor_model, robust_multitask_classifier_model, \
-    robust_multitask_regressor_model, sc_score_model, atomic_conv_model, chem_ception_model, dag_model, \
-    graph_conv_model, smiles_to_vec_model, text_cnn_model, dtnn_model, weave_model, mat_model
+    robust_multitask_regressor_model, sc_score_model, chem_ception_model, dag_model, graph_conv_model, \
+    smiles_to_vec_model, text_cnn_model, dtnn_model, weave_model, mat_model
 
 
 # TODO: add support to gpu dgl (pip install  dgl -f https://data.dgl.ai/wheels/cu116/repo.html)
@@ -213,21 +214,14 @@ def sc_score_model_steps(trial: Trial, model_dir: str = None, sc_score_kwargs: d
     return 'model', model
 
 
-def atomic_conv_model_steps(trial: Trial, model_dir: str = None, atomic_conv_kwargs: dict = None,
-                            deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Transformer, Predictor]]]:
-    # Classifier/ Regressor
-    # ComplexNeighborListFragmentAtomicCoordinates
-    featurizer = None  # TODO: define featurizer # TODO: CONTINUE HERE
-    model = atomic_conv_model(model_dir=model_dir, atomic_conv_kwargs=atomic_conv_kwargs,
-                              deepchem_kwargs=deepchem_kwargs)
-    return [('featurizer', featurizer), ('model', model)]
-
-
 def chem_ception_model_steps(trial: Trial, model_dir: str = None, chem_ception_kwargs: dict = None,
                              deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Transformer, Predictor]]]:
     # Classifier/ Regressor
     # SmilesToImage
-    featurizer = None  # TODO: define featurizer
+    featurizer = SmileImageFeat()
+    chem_ception_kwargs['mode'] = 'classification'
+    base_filters = trial.suggest_categorical('base_filters', [8, 16, 32, 64])
+    chem_ception_kwargs['base_filters'] = base_filters
     model = chem_ception_model(model_dir=model_dir, chem_ception_kwargs=chem_ception_kwargs,
                                deepchem_kwargs=deepchem_kwargs)
     return [('featurizer', featurizer), ('model', model)]
@@ -237,16 +231,28 @@ def dag_model_steps(trial: Trial, model_dir: str = None, dag_kwargs: dict = None
                     deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Transformer, Predictor]]]:
     # Classifier/ Regressor
     # ConvMolFeaturizer
-    featurizer = None  # TODO: define featurizer
+    featurizer = ConvMolFeat()
+    layer_sizes = trial.suggest_categorical('layer_sizes', [[50], [100], [500], [200, 100]])
+    dag_kwargs['layer_sizes'] = layer_sizes
+    transformer = DagTransformer()
     model = dag_model(model_dir=model_dir, dag_kwargs=dag_kwargs, deepchem_kwargs=deepchem_kwargs)
-    return [('featurizer', featurizer), ('model', model)]
+    return [('featurizer', featurizer), ('transformer', transformer), ('model', model)]
 
 
 def graph_conv_model_steps(trial: Trial, model_dir: str = None, graph_conv_kwargs: dict = None,
                            deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Transformer, Predictor]]]:
     # Classifier/ Regressor
     # ConvMolFeaturizer
-    featurizer = None  # TODO: define featurizer
+    featurizer = ConvMolFeat()
+    graph_conv_layers = trial.suggest_categorical('graph_conv_layers', [[64, 64],
+                                                                        [128, 64],
+                                                                        [256, 128],
+                                                                        [256, 128, 64]])
+    graph_conv_kwargs['graph_conv_layers'] = graph_conv_layers
+    dense_layer_size = trial.suggest_categorical('dense_layer_size', [128, 256, 512])
+    graph_conv_kwargs['dense_layer_size'] = dense_layer_size
+    dropout = trial.suggest_float('dropout', 0.0, 0.5, step=0.25)
+    graph_conv_kwargs['dropout'] = dropout
     model = graph_conv_model(model_dir=model_dir, graph_conv_kwargs=graph_conv_kwargs, deepchem_kwargs=deepchem_kwargs)
     return [('featurizer', featurizer), ('model', model)]
 
@@ -255,25 +261,44 @@ def smiles_to_vec_model_steps(trial: Trial, model_dir: str = None, smiles_to_vec
                               deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Transformer, Predictor]]]:
     # Classifier/ Regressor
     # SmilesToSeq
-    featurizer = None  # TODO: define featurizer
+    featurizer = SmilesSeqFeat()
+    embedding_dim = trial.suggest_categorical('embedding_dim', [32, 64, 128])
+    smiles_to_vec_kwargs['embedding_dim'] = embedding_dim
+    filters = trial.suggest_categorical('filters', [32, 64, 128])
+    smiles_to_vec_kwargs['filters'] = filters
+    kernel_size = trial.suggest_categorical('kernel_size', [3, 5, 7])
+    smiles_to_vec_kwargs['kernel_size'] = kernel_size
+    strides = trial.suggest_categorical('strides', [1, 2, 3])
+    smiles_to_vec_kwargs['strides'] = strides
     model = smiles_to_vec_model(model_dir=model_dir, smiles_to_vec_kwargs=smiles_to_vec_kwargs,
                                 deepchem_kwargs=deepchem_kwargs)
     return [('featurizer', featurizer), ('model', model)]
 
 
 def text_cnn_model_steps(trial: Trial, model_dir: str = None, text_cnn_kwargs: dict = None,
-                         deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Transformer, Predictor]]]:
+                         deepchem_kwargs: dict = None) -> Tuple[str, Predictor]:
     # Classifier/ Regressor
-    featurizer = None  # TODO: define featurizer (or check if many are possible)
+    n_embedding = trial.suggest_categorical('n_embedding', [50, 75, 100])
+    text_cnn_kwargs['n_embedding'] = n_embedding
+    dropout = trial.suggest_float('dropout', 0.0, 0.5, step=0.25)
+    text_cnn_kwargs['dropout'] = dropout
     model = text_cnn_model(model_dir=model_dir, text_cnn_kwargs=text_cnn_kwargs, deepchem_kwargs=deepchem_kwargs)
-    return [('featurizer', featurizer), ('model', model)]
+    return 'model', model
 
 
 def weave_model_steps(trial: Trial, model_dir: str = None, weave_kwargs: dict = None,
                       deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Transformer, Predictor]]]:
     # Classifier/ Regressor
     # WeaveFeaturizer
-    featurizer = None  # TODO: define featurizer
+    featurizer = WeaveFeat()
+    n_hidden = trial.suggest_categorical('n_hidden', [50, 100, 200])
+    weave_kwargs['n_hidden'] = n_hidden
+    n_graph_feat = trial.suggest_categorical('n_graph_feat', [64, 128, 256])
+    weave_kwargs['n_graph_feat'] = n_graph_feat
+    n_weave = trial.suggest_categorical('n_weave', [1, 2, 3])
+    weave_kwargs['n_weave'] = n_weave
+    dropouts = trial.suggest_float('dropouts', 0.0, 0.5, step=0.25)
+    weave_kwargs['dropouts'] = dropouts
     model = weave_model(model_dir=model_dir, weave_kwargs=weave_kwargs, deepchem_kwargs=deepchem_kwargs)
     return [('featurizer', featurizer), ('model', model)]
 

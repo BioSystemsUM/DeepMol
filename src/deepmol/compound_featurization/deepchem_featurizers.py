@@ -6,7 +6,7 @@ from deepchem.feat import ConvMolFeaturizer, WeaveFeaturizer, MolGraphConvFeatur
     SmilesToImage, SmilesToSeq, MolGanFeaturizer, GraphMatrix, PagtnMolGraphFeaturizer
 from deepchem.feat.graph_data import GraphData
 from deepchem.feat.mol_graphs import ConvMol, WeaveMol
-from deepchem.trans import IRVTransformer
+from deepchem.trans import DAGTransformer as DAGTransformerDC
 from deepchem.utils import ConformerGenerator
 from rdkit.Chem import Mol
 
@@ -534,7 +534,7 @@ class SmileImageFeat(MolecularFeaturizer):
         self.res = res
         self.img_spec = img_spec
         self.embed = int(img_size * res / 2)
-        self.feature_names = ['smile_image_feat']
+        self.feature_names = [f'smile_image_feat_{i}' for i in range(img_size)]
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -633,7 +633,7 @@ class SmilesSeqFeat(Transformer):
             rdkit_mols = None
 
         # featurization process using DeepChem SmilesToSeq
-        dataset.X = SmilesToSeq(
+        dataset._X = SmilesToSeq(
             char_to_idx=self.char_to_idx,
             max_len=self.max_len,
             pad_len=self.pad_len).featurize(rdkit_mols)
@@ -645,7 +645,7 @@ class SmilesSeqFeat(Transformer):
                 indexes.append(i)
         # treat indexes with no featurization
         dataset.remove_elements(indexes)
-        dataset.X = np.asarray([np.asarray(feat, dtype=object) for feat in dataset.X])
+        dataset._X = np.asarray([np.asarray(feat, dtype=object) for feat in dataset.X])
         return dataset
 
     def _fit(self, dataset: Dataset) -> 'SmilesSeqFeat':
@@ -683,26 +683,66 @@ class SmilesSeqFeat(Transformer):
         return self.featurize(dataset)
 
 
-class IRVFeat(Transformer):
+class DagTransformer(Transformer):
+    """
+    Performs transform from ConvMol adjacency lists to DAG calculation orders
 
-    def __init__(self, K, n_tasks, **kwargs):
+    This transformer is used by `DAGModel` before training to transform its
+    inputs to the correct shape. This expansion turns a molecule with `n` atoms
+    into `n` DAGs, each with root at a different atom in the molecule.
+
+    Reference:
+    https://deepchem.readthedocs.io/en/latest/api_reference/transformers.html#dagtransformer
+    """
+
+    def __init__(self, max_atoms: int = 50) -> None:
+        """
+        Initialize this transformer.
+
+        Parameters
+        ----------
+        max_atoms: int
+            Maximum number of atoms in a molecule.
+        """
         super().__init__()
-        self.K = K
-        self.n_tasks = n_tasks
-        self.feature_names = ['irv_feat']
-
-    @modify_object_inplace_decorator
-    def featurize(self, dataset: Dataset) -> Dataset:
-        if dataset.X is None:
-            raise ValueError("Dataset must have X property set (calculated descriptors).")
-        dataset = NumpyDataset(X=dataset._X, y=dataset.y, ids=dataset.ids, n_tasks=self.n_tasks)
-        irv = IRVTransformer(K=self.K, n_tasks=self.n_tasks, dataset=dataset)
-        dataset = irv.transform(dataset)
-        return dataset
-
-    def _fit(self, dataset: Dataset) -> 'IRVFeat':
-        pass
-
+        self.max_atoms = max_atoms
+        self.feature_names = ['dag_transformer_feat']
 
     def _transform(self, dataset: Dataset) -> Dataset:
-        pass
+        """
+        Transform the dataset. This method is called by the transform method of the Transformer class.
+        Transforms ConvMolFeat features to DAG calculation orders.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to transform.
+
+        Returns
+        -------
+        dataset: Dataset
+            Transformed dataset.
+        """
+        if dataset.X is None:
+            raise ValueError("Dataset must have X property set (ConvMolFeat).")
+        dd = NumpyDataset(X=dataset._X, y=dataset.y, ids=dataset.ids, n_tasks=dataset.n_tasks)
+        dd = DAGTransformerDC(max_atoms=self.max_atoms).transform(dd)
+        dataset._X = dd.X
+        dataset.feature_names = self.feature_names
+        return dataset
+
+    def _fit(self, dataset: Dataset) -> 'DagTransformer':
+        """
+        Fit the featurizer. This method is called by the fit method of the Transformer class.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The dataset containing the molecules to featurize in dataset.mols.
+
+        Returns
+        -------
+        self: DagTransformer
+            The fitted featurizer.
+        """
+        return self

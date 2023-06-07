@@ -2,8 +2,7 @@ from copy import copy
 from unittest import TestCase
 
 from deepmol.compound_featurization import WeaveFeat, ConvMolFeat, MolGraphConvFeat, CoulombFeat, CoulombEigFeat, \
-    SmileImageFeat, SmilesSeqFeat
-from deepmol.compound_featurization.deepchem_featurizers import MolGanFeat, PagtnMolGraphFeat
+    SmileImageFeat, SmilesSeqFeat, MolGanFeat, PagtnMolGraphFeat
 
 from tests.unit_tests.featurizers.test_featurizers import FeaturizerTestCase
 

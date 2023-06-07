@@ -9,7 +9,6 @@ from sklearn.svm import SVC
 from deepmol.loaders import CSVLoader
 from deepmol.metrics import Metric
 from deepmol.models import SklearnModel
-from deepmol.pipeline import Pipeline
 from deepmol.pipeline_optimization import PipelineOptimization
 from deepmol.splitters import RandomSplitter
 
@@ -48,7 +47,7 @@ class TestPipelineOptimization(TestCase):
 
     def test_predictor_pipeline(self):
 
-        def objective(trial, train_dataset, test_dataset, metric):
+        def objective(trial):
             model = trial.suggest_categorical('model', ['RandomForestClassifier', 'SVC'])
             if model == 'RandomForestClassifier':
                 n_estimators = trial.suggest_int('model__n_estimators', 10, 100, step=10)
@@ -57,22 +56,34 @@ class TestPipelineOptimization(TestCase):
                 kernel = trial.suggest_categorical('model__kernel', ['linear', 'poly', 'rbf', 'sigmoid'])
                 model = SVC(kernel=kernel)
             model = SklearnModel(model=model, model_dir='model')
-            pipeline = Pipeline(steps=[('model', model)], path='test_predictor_pipeline/')
-            pipeline.fit(train_dataset)
-            score = pipeline.evaluate(test_dataset, [metric])[0][metric.name]
-            return score
+            steps = [('model', model)]
+            return steps
 
-        po = PipelineOptimization(direction='maximize')
+        po = PipelineOptimization(direction='maximize', study_name='test_predictor_pipeline')
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_descriptors, seed=123)
-        po.optimize(train_dataset=train, test_dataset=test, objective=objective, metric=metric, n_trials=5)
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps=objective, metric=metric, n_trials=5,
+                    save_top_n=3)
         self.assertEqual(po.best_params, po.best_trial.params)
         self.assertIsInstance(po.best_value, float)
 
+        self.assertEqual(len(po.trials), 5)
+        # assert that 3 pipelines were saved
+        self.assertEqual(len(os.listdir('test_predictor_pipeline')), 3)
+
     def test_preset(self):
-        po = PipelineOptimization(direction='maximize')
+        po = PipelineOptimization(direction='maximize', study_name='test_pipeline')
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_smiles, seed=123)
-        po.optimize(train_dataset=train, test_dataset=test, objective='ss', metric=metric, n_trials=3)
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps='ss', metric=metric, n_trials=3, data=train,
+                    save_top_n=2)
         self.assertEqual(po.best_params, po.best_trial.params)
         self.assertIsInstance(po.best_value, float)
+
+        self.assertEqual(len(po.trials), 3)
+        # assert that 2 pipelines were saved
+        self.assertEqual(len(os.listdir('test_pipeline')), 2)
+
+        best_pipeline = po.best_pipeline
+        new_predictions = best_pipeline.evaluate(test, [metric])[0][metric.name]
+        self.assertEqual(new_predictions, po.best_value)

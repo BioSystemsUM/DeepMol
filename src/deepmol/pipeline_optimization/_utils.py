@@ -2,10 +2,9 @@ from copy import deepcopy, copy
 
 from deepchem.models import TextCNNModel
 
-from deepmol.base import DatasetTransformer
+from deepmol.base import DatasetTransformer, PassThroughTransformer
 from deepmol.compound_featurization import SmilesSeqFeat
 from deepmol.datasets import Dataset
-from deepmol.metrics import Metric
 from deepmol.pipeline import Pipeline
 from deepmol.pipeline_optimization._deepchem_models_objectives import gat_model_steps, gcn_model_steps, \
     pagtn_model_steps, attentive_fp_model_steps, mpnn_model_steps, megnet_model_steps, cnn_model_steps, \
@@ -14,12 +13,8 @@ from deepmol.pipeline_optimization._deepchem_models_objectives import gat_model_
     chem_ception_model_steps, dag_model_steps, graph_conv_model_steps, smiles_to_vec_model_steps, text_cnn_model_steps, \
     weave_model_steps
 from deepmol.pipeline_optimization._featurizer_objectives import _get_featurizer
+from deepmol.pipeline_optimization._scaler_objectives import _get_scaler
 from deepmol.pipeline_optimization._standardizer_objectives import _get_standardizer
-
-# TODO: add more models
-_BASE_MODELS = []
-_RNN_MODELS = []
-_CNN_MODELS = []
 
 
 # TODO: How to deal with incompatible steps? (e.g. some deepchem featurizers only work with some deepchem models)
@@ -29,10 +24,9 @@ def _get_preset(preset: str) -> callable:
     return singletask_classification_objective
 
 
+# TODO: change trial choices names
 def singletask_classification_objective(trial,
-                                        train_dataset: Dataset,
-                                        test_dataset: Dataset,
-                                        metric: Metric) -> float:
+                                        data: Dataset) -> list:
     # TODO: "mpnn_model" is not working (DeepChem-> AttributeError: 'GraphData' object has no attribute 'get_num_atoms')
     # TODO: "megnet_model" is not working (error with torch_geometric (extra_requirement))
     # TODO: "cnn_model" is not working (raise PicklingError(
@@ -42,89 +36,111 @@ def singletask_classification_objective(trial,
     #  input has only 1 dims for '{{node strided_slice_1}} ...)
     # TODO: "sc_score_model" not working (Input 0 of layer "dense" is incompatible with the layer: expected axis -1 of
     #  input shape to have value 2048, but received input with shape (100, 1))
+    final_steps = [('standardizer', _get_standardizer(trial))]
     steps = trial.suggest_categorical("steps", ["gat_model", "gcn_model", "attentive_fp_model", "pagtn_model",
                                                 "multitask_classifier_model",
-                                                "robust_multitask_classifier_model", "chem_ception_model", "dag_model"
+                                                "robust_multitask_classifier_model", "chem_ception_model", "dag_model",
                                                 "graph_conv_model", "smiles_to_vec_model", "text_cnn_model",
                                                 "weave_model"])
     if steps == "gat_model":
         gat_kwargs = {'n_tasks': 1, 'mode': 'classification'}
-        steps = gat_model_steps(trial=trial, gat_kwargs=gat_kwargs)
+        steps_gat = gat_model_steps(trial=trial, gat_kwargs=gat_kwargs)
+        final_steps.extend(steps_gat)
     elif steps == "gcn_model":
         gcn_kwargs = {'n_tasks': 1, 'mode': 'classification'}
-        steps = gcn_model_steps(trial=trial, gcn_kwargs=gcn_kwargs)
+        steps_gcn = gcn_model_steps(trial=trial, gcn_kwargs=gcn_kwargs)
+        final_steps.extend(steps_gcn)
     elif steps == "attentive_fp_model":
         attentive_fp_kwargs = {'n_tasks': 1, 'mode': 'classification'}
-        steps = attentive_fp_model_steps(trial=trial, attentive_fp_kwargs=attentive_fp_kwargs)
+        steps_attentive = attentive_fp_model_steps(trial=trial, attentive_fp_kwargs=attentive_fp_kwargs)
+        final_steps.extend(steps_attentive)
     elif steps == "pagtn_model":
         patgn_kwargs = {'n_tasks': 1, 'mode': 'classification'}
-        steps = pagtn_model_steps(trial=trial, patgn_kwargs=patgn_kwargs)
+        steps_patgn = pagtn_model_steps(trial=trial, patgn_kwargs=patgn_kwargs)
+        final_steps.extend(steps_patgn)
     # elif steps == "mpnn_model":
     #     mpnn_kwargs = {'n_tasks': 1, 'mode': 'classification'}
-    #     steps = mpnn_model_steps(trial=trial, mpnn_kwargs=mpnn_kwargs)
+    #     steps_mpnn = mpnn_model_steps(trial=trial, mpnn_kwargs=mpnn_kwargs)
+    #     final_steps.extend(steps_mpnn)
     # elif steps == "megnet_model":
     #     megnet_kwargs = {'n_tasks': 1, 'mode': 'classification'}
-    #     steps = megnet_model_steps(trial=trial, megnet_kwargs=megnet_kwargs)
+    #     steps_megnet = megnet_model_steps(trial=trial, megnet_kwargs=megnet_kwargs)
+    #     final_steps.extend(steps_megnet)
     # elif steps == "cnn_model":
     #     n_features = 1024
     #     dims = 1
     #     featurizer = MorganFingerprint(size=1024)
     #     cnn_kwargs = {'n_tasks': 1, 'mode': 'classification', 'n_features': n_features, 'dims': dims}
-    #     steps = cnn_model_steps(trial=trial, n_features=n_features, dims=dims, cnn_kwargs=cnn_kwargs)
-    #     steps = (('featurizer', featurizer), steps[0])
+    #     steps_cnn = cnn_model_steps(trial=trial, n_features=n_features, dims=dims, cnn_kwargs=cnn_kwargs)
+    #     final_steps.extend(steps_cnn)
     elif steps == "multitask_classifier_model":
         featurizer = _get_featurizer(trial, '1D')
+        if featurizer == '2d_descriptors' or featurizer == '3d_descriptors':
+            scaler = _get_scaler(trial)
+        else:
+            scaler = PassThroughTransformer
         n_features = len(featurizer.feature_names)
         multitask_classifier_kwargs = {'n_tasks': 1, 'n_features': n_features}
         model_step = multitask_classifier_model_steps(trial=trial,
                                                       multitask_classifier_kwargs=multitask_classifier_kwargs)
-        steps = [('featurizer', featurizer), model_step]
+        featurizer = ('featurizer', featurizer)
+        scaler = ('scaler', scaler)
+        model = model_step[0]
+        final_steps.extend([featurizer, scaler, model])
     # elif steps == "multitask_irv_classifier_model":
     #     featurizer = _get_featurizer(trial, '1D')
     #     multitask_irv_classifier_kwargs = {'n_tasks': 1}
     #     model_step = multitask_irv_classifier_model_steps(trial=trial,
     #                                                       multitask_irv_classifier_kwargs=multitask_irv_classifier_kwargs)
-    #     steps = [('featurizer', featurizer), model_step]
+    #     featurizer = ('featurizer', featurizer)
+    #     final_steps.extend([featurizer, model_step[0])
     # elif steps == "progressive_multitask_classifier_model":
     #     featurizer = _get_featurizer(trial, '1D')
     #     n_features = len(featurizer.feature_names)
     #     progressive_multitask_classifier_kwargs = {'n_tasks': 1, 'n_features': n_features}
     #     model_step = progressive_multitask_classifier_model_steps(trial=trial,
     #                                                               progressive_multitask_classifier_kwargs=progressive_multitask_classifier_kwargs)
-    #     steps = [('featurizer', featurizer), model_step]
+    #     featurizer = ('featurizer', featurizer)
+    #     final_steps.extend([featurizer, model_step[0])
     elif steps == "robust_multitask_classifier_model":
         featurizer = _get_featurizer(trial, '1D')
         n_features = len(featurizer.feature_names)
         robust_multitask_classifier_kwargs = {'n_tasks': 1, 'n_features': n_features}
         model_step = robust_multitask_classifier_model_steps(trial=trial,
                                                              robust_multitask_classifier_kwargs=robust_multitask_classifier_kwargs)
-        steps = [('featurizer', featurizer), model_step]
+        featurizer = ('featurizer', featurizer)
+        final_steps.extend([featurizer, model_step[0]])
     # elif steps == "sc_score_model":
     #     featurizer = _get_featurizer(trial, '1D')
     #     n_features = len(featurizer.feature_names)
     #     sc_score_kwargs = {'n_features': n_features}
     #     model_step = sc_score_model_steps(trial=trial, sc_score_kwargs=sc_score_kwargs)
-    #     steps = [('featurizer', featurizer), model_step]
+    #     featurizer = ('featurizer', featurizer)
+    #     final_steps.extend([featurizer, model_step[0])
     elif steps == "chem_ception_model":
         chem_ception_kwargs = {'n_tasks': 1}
-        steps = chem_ception_model_steps(trial=trial, chem_ception_kwargs=chem_ception_kwargs)
+        steps_chem_ception = chem_ception_model_steps(trial=trial, chem_ception_kwargs=chem_ception_kwargs)
+        final_steps.extend(steps_chem_ception)
     elif steps == "dag_model":
         dag_kwargs = {'n_tasks': 1, 'mode': 'classification'}
-        steps = dag_model_steps(trial=trial, dag_kwargs=dag_kwargs)
+        steps_dag = dag_model_steps(trial=trial, dag_kwargs=dag_kwargs)
+        final_steps.extend(steps_dag)
     elif steps == "graph_conv_model":
         graph_conv_kwargs = {'n_tasks': 1, 'mode': 'classification'}
-        steps = graph_conv_model_steps(trial=trial, graph_conv_kwargs=graph_conv_kwargs)
+        steps_graph_conv = graph_conv_model_steps(trial=trial, graph_conv_kwargs=graph_conv_kwargs)
+        final_steps.extend(steps_graph_conv)
     elif steps == "smiles_to_vec_model":
         smiles_to_vec_kwargs = {'n_tasks': 1, 'mode': 'classification'}
-        dataset_copy = deepcopy(train_dataset)
+        dataset_copy = deepcopy(data)
         ssf = SmilesSeqFeat()
         ssf.fit_transform(dataset_copy)
         chat_to_idx = ssf.char_to_idx
         smiles_to_vec_kwargs['char_to_idx'] = chat_to_idx
-        steps = smiles_to_vec_model_steps(trial=trial, smiles_to_vec_kwargs=smiles_to_vec_kwargs)
+        steps_smiles_to_vec = smiles_to_vec_model_steps(trial=trial, smiles_to_vec_kwargs=smiles_to_vec_kwargs)
+        final_steps.extend(steps_smiles_to_vec)
     elif steps == "text_cnn_model":
         text_cnn_kwargs = {'n_tasks': 1, 'mode': 'classification'}
-        max_length = max([len(smile) for smile in train_dataset.smiles])
+        max_length = max([len(smile) for smile in data.smiles])
 
         def prepare_dataset_for_textcnn(dataset, pad_char='E'):
             padded_smiles = [smile.ljust(max_length, pad_char) for smile in dataset.smiles]
@@ -132,26 +148,22 @@ def singletask_classification_objective(trial,
             dataset._X = truncated_smiles
             dataset._ids = truncated_smiles
             return dataset
-        padded_train_smiles = prepare_dataset_for_textcnn(train_dataset).ids
-        fake_dataset = copy(train_dataset)
+        padded_train_smiles = prepare_dataset_for_textcnn(data).ids
+        fake_dataset = copy(data)
         fake_dataset._ids = padded_train_smiles
         char_dict, seq_length = TextCNNModel.build_char_dict(fake_dataset)
         text_cnn_kwargs['char_dict'] = char_dict
-        print(char_dict)
         text_cnn_kwargs['seq_length'] = seq_length
         padder = DatasetTransformer(prepare_dataset_for_textcnn)
-        steps = [('padder', padder), text_cnn_model_steps(trial=trial, text_cnn_kwargs=text_cnn_kwargs)]
+        final_steps.extend([('padder', padder), text_cnn_model_steps(trial=trial, text_cnn_kwargs=text_cnn_kwargs)])
     elif steps == "weave_model":
         weave_kwargs = {'n_tasks': 1, 'mode': 'classification'}
-        steps = weave_model_steps(trial=trial, weave_kwargs=weave_kwargs)
+        steps_weave = weave_model_steps(trial=trial, weave_kwargs=weave_kwargs)
+        final_steps.extend(steps_weave)
     else:
         raise ValueError("Unknown model: %s" % steps)
     print(trial.params)
-    pipeline = Pipeline(steps=steps)
-    pipeline.fit_transform(train_dataset)
-    score = pipeline.evaluate(test_dataset, [metric])[0][metric.name]
-    # TODO: save top pipelines (arg in main class)
-    return score
+    return final_steps
 
 
 def heavy_objective(trial, train_dataset, test_dataset, metric) -> callable:

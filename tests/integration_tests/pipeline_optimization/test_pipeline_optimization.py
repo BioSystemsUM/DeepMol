@@ -40,10 +40,10 @@ class TestPipelineOptimization(TestCase):
             shutil.rmtree('test_predictor_pipeline')
         if os.path.exists('test_pipeline'):
             shutil.rmtree('test_pipeline')
-        # remove logs (files starting with 'deepmol.log')
-        for f in os.listdir():
-            if f.startswith('deepmol.log'):
-                os.remove(f)
+        # remove logs (files with .log extension)
+        for file in os.listdir():
+            if file.endswith('.log'):
+                os.remove(file)
 
     def test_predictor_pipeline(self):
 

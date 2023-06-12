@@ -17,7 +17,7 @@ from deepmol.models.deepchem_model_builders import gat_model, gcn_model, attenti
 
 
 def gat_model_steps(trial: Trial,
-                    model_dir: str = None,
+                    model_dir: str = 'gat_model/',
                     gat_kwargs: dict = None,
                     deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Predictor, Transformer]]]:
     # Classifier/ Regressor
@@ -37,7 +37,7 @@ def gat_model_steps(trial: Trial,
 
 
 def gcn_model_steps(trial: Trial,
-                    model_dir: str = None,
+                    model_dir: str = 'gcn_model/',
                     gcn_kwargs: dict = None,
                     deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Predictor, Transformer]]]:
     # Classifier/ Regressor
@@ -57,7 +57,7 @@ def gcn_model_steps(trial: Trial,
 
 
 def attentive_fp_model_steps(trial: Trial,
-                             model_dir: str = None,
+                             model_dir: str = 'attentive_fp_model/',
                              attentive_fp_kwargs: dict = None,
                              deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Predictor, Transformer]]]:
     # Classifier/ Regressor
@@ -76,7 +76,7 @@ def attentive_fp_model_steps(trial: Trial,
 
 
 def pagtn_model_steps(trial: Trial,
-                      model_dir: str = None,
+                      model_dir: str = 'pagtn_model/',
                       patgn_kwargs: dict = None,
                       deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Predictor, Transformer]]]:
     # Classifier/ Regressor
@@ -94,7 +94,7 @@ def pagtn_model_steps(trial: Trial,
 
 
 def mpnn_model_steps(trial: Trial,
-                     model_dir: str = None,
+                     model_dir: str = 'mpnn_model/',
                      mpnn_kwargs: dict = None,
                      deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Predictor, Transformer]]]:
     # Classifier/ Regressor
@@ -109,7 +109,7 @@ def mpnn_model_steps(trial: Trial,
 
 
 def megnet_model_steps(trial: Trial,
-                       model_dir: str = None,
+                       model_dir: str = 'megnet_model/',
                        megnet_kwargs: dict = None,
                        deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Predictor, Transformer]]]:
     # TODO: add "pip install torch_geometric" to requirements.txt
@@ -124,7 +124,7 @@ def megnet_model_steps(trial: Trial,
 
 
 def cnn_model_steps(trial: Trial,
-                    model_dir: str = None,
+                    model_dir: str = 'cnn_model/',
                     cnn_kwargs: dict = None,
                     deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Predictor, Transformer]]]:
     # Classifier/ Regressor
@@ -140,7 +140,7 @@ def cnn_model_steps(trial: Trial,
 
 
 def multitask_classifier_model_steps(trial: Trial,
-                                     model_dir: str = None,
+                                     model_dir: str = 'multitask_classifier_model/',
                                      multitask_classifier_kwargs: dict = None,
                                      deepchem_kwargs: dict = None) -> List[Tuple[str, Predictor]]:
     # Classifier
@@ -155,7 +155,7 @@ def multitask_classifier_model_steps(trial: Trial,
 
 
 def multitask_irv_classifier_model_steps(trial: Trial,
-                                         model_dir: str = None,
+                                         model_dir: str = 'multitask_irv_classifier_model/',
                                          multitask_irv_classifier_kwargs: dict = None,
                                          deepchem_kwargs: dict = None) -> List[Tuple[str, Predictor]]:
     # Classifier
@@ -169,7 +169,7 @@ def multitask_irv_classifier_model_steps(trial: Trial,
 
 
 def progressive_multitask_classifier_model_steps(trial: Trial,
-                                                 model_dir: str = None,
+                                                 model_dir: str = 'progressive_multitask_classifier_model/',
                                                  progressive_multitask_classifier_kwargs: dict = None,
                                                  deepchem_kwargs: dict = None) -> List[Tuple[str, Predictor]]:
     # Classifier
@@ -185,7 +185,7 @@ def progressive_multitask_classifier_model_steps(trial: Trial,
 
 
 def robust_multitask_classifier_model_steps(trial: Trial,
-                                            model_dir: str = None,
+                                            model_dir: str = 'robust_multitask_classifier_model/',
                                             robust_multitask_classifier_kwargs: dict = None,
                                             deepchem_kwargs: dict = None) -> List[Tuple[str, Predictor]]:
     # Classifier
@@ -202,7 +202,7 @@ def robust_multitask_classifier_model_steps(trial: Trial,
     return [('model', model)]
 
 
-def sc_score_model_steps(trial: Trial, model_dir: str = None, sc_score_kwargs: dict = None,
+def sc_score_model_steps(trial: Trial, model_dir: str = 'sc_score_model/', sc_score_kwargs: dict = None,
                          deepchem_kwargs: dict = None) -> List[Tuple[str, Predictor]]:
     # Classifier
     # 1D Descriptors
@@ -214,7 +214,7 @@ def sc_score_model_steps(trial: Trial, model_dir: str = None, sc_score_kwargs: d
     return [('model', model)]
 
 
-def chem_ception_model_steps(trial: Trial, model_dir: str = None, chem_ception_kwargs: dict = None,
+def chem_ception_model_steps(trial: Trial, model_dir: str = 'chem_ception_model/', chem_ception_kwargs: dict = None,
                              deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Transformer, Predictor]]]:
     # Classifier/ Regressor
     # SmilesToImage
@@ -227,7 +227,7 @@ def chem_ception_model_steps(trial: Trial, model_dir: str = None, chem_ception_k
     return [('featurizer', featurizer), ('model', model)]
 
 
-def dag_model_steps(trial: Trial, model_dir: str = None, dag_kwargs: dict = None,
+def dag_model_steps(trial: Trial, model_dir: str = 'dag_model/', dag_kwargs: dict = None,
                     deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Transformer, Predictor]]]:
     # Classifier/ Regressor
     # ConvMolFeaturizer
@@ -239,15 +239,15 @@ def dag_model_steps(trial: Trial, model_dir: str = None, dag_kwargs: dict = None
     return [('featurizer', featurizer), ('transformer', transformer), ('model', model)]
 
 
-def graph_conv_model_steps(trial: Trial, model_dir: str = None, graph_conv_kwargs: dict = None,
+def graph_conv_model_steps(trial: Trial, model_dir: str = 'graph_conv_model/', graph_conv_kwargs: dict = None,
                            deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Transformer, Predictor]]]:
     # Classifier/ Regressor
     # ConvMolFeaturizer
     featurizer = ConvMolFeat()
-    graph_conv_layers = trial.suggest_categorical('graph_conv_layers', [[64, 64],
-                                                                        [128, 64],
-                                                                        [256, 128],
-                                                                        [256, 128, 64]])
+    graph_conv_layers = trial.suggest_categorical('graph_conv_layers_conv_model', [[64, 64],
+                                                                                   [128, 64],
+                                                                                   [256, 128],
+                                                                                   [256, 128, 64]])
     graph_conv_kwargs['graph_conv_layers'] = graph_conv_layers
     dense_layer_size = trial.suggest_categorical('dense_layer_size', [128, 256, 512])
     graph_conv_kwargs['dense_layer_size'] = dense_layer_size
@@ -257,7 +257,7 @@ def graph_conv_model_steps(trial: Trial, model_dir: str = None, graph_conv_kwarg
     return [('featurizer', featurizer), ('model', model)]
 
 
-def smiles_to_vec_model_steps(trial: Trial, model_dir: str = None, smiles_to_vec_kwargs: dict = None,
+def smiles_to_vec_model_steps(trial: Trial, model_dir: str = 'smiles_to_vec_model/', smiles_to_vec_kwargs: dict = None,
                               deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Transformer, Predictor]]]:
     # Classifier/ Regressor
     # SmilesToSeq
@@ -275,7 +275,7 @@ def smiles_to_vec_model_steps(trial: Trial, model_dir: str = None, smiles_to_vec
     return [('featurizer', featurizer), ('model', model)]
 
 
-def text_cnn_model_steps(trial: Trial, model_dir: str = None, text_cnn_kwargs: dict = None,
+def text_cnn_model_steps(trial: Trial, model_dir: str = 'text_cnn_model/', text_cnn_kwargs: dict = None,
                          deepchem_kwargs: dict = None) -> List[Tuple[str, Predictor]]:
     # Classifier/ Regressor
     n_embedding = trial.suggest_categorical('n_embedding', [50, 75, 100])
@@ -286,7 +286,7 @@ def text_cnn_model_steps(trial: Trial, model_dir: str = None, text_cnn_kwargs: d
     return [('model', model)]
 
 
-def weave_model_steps(trial: Trial, model_dir: str = None, weave_kwargs: dict = None,
+def weave_model_steps(trial: Trial, model_dir: str = 'weave_model/', weave_kwargs: dict = None,
                       deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Transformer, Predictor]]]:
     # Classifier/ Regressor
     # WeaveFeaturizer
@@ -303,7 +303,7 @@ def weave_model_steps(trial: Trial, model_dir: str = None, weave_kwargs: dict = 
     return [('featurizer', featurizer), ('model', model)]
 
 
-def dtnn_model_steps(trial: Trial, model_dir: str = None, dtnn_kwargs: dict = None,
+def dtnn_model_steps(trial: Trial, model_dir: str = 'dtnn_model/', dtnn_kwargs: dict = None,
                      deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Transformer, Predictor]]]:
     # Regressor
     # CoulombMatrix
@@ -312,7 +312,7 @@ def dtnn_model_steps(trial: Trial, model_dir: str = None, dtnn_kwargs: dict = No
     return [('featurizer', featurizer), ('model', model)]
 
 
-def mat_model_steps(trial: Trial, model_dir: str = None, mat_kwargs: dict = None,
+def mat_model_steps(trial: Trial, model_dir: str = 'mat_model/', mat_kwargs: dict = None,
                     deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Transformer, Predictor]]]:
     # Regressor
     # MATFeaturizer
@@ -322,7 +322,7 @@ def mat_model_steps(trial: Trial, model_dir: str = None, mat_kwargs: dict = None
 
 
 def progressive_multitask_regressor_model_steps(trial: Trial,
-                                                model_dir: str = None,
+                                                model_dir: str = 'progressive_multitask_regressor_model/',
                                                 progressive_multitask_regressor_kwargs: dict = None,
                                                 deepchem_kwargs: dict = None) -> List[Tuple[str, Predictor]]:
     # Regressor
@@ -333,7 +333,8 @@ def progressive_multitask_regressor_model_steps(trial: Trial,
     return [('model', model)]
 
 
-def multitask_regressor_model_steps(trial: Trial, model_dir: str = None, multitask_regressor_kwargs: dict = None,
+def multitask_regressor_model_steps(trial: Trial, model_dir: str = 'multitask_regressor_model/',
+                                    multitask_regressor_kwargs: dict = None,
                                     deepchem_kwargs: dict = None) -> List[Tuple[str, Predictor]]:
     # Regressor
     # 1D Descriptors
@@ -347,7 +348,7 @@ def multitask_regressor_model_steps(trial: Trial, model_dir: str = None, multita
 
 
 def robust_multitask_regressor_model_steps(trial: Trial,
-                                           model_dir: str = None,
+                                           model_dir: str = 'robust_multitask_regressor_model/',
                                            robust_multitask_regressor_kwargs: dict = None,
                                            deepchem_kwargs: dict = None) -> List[Tuple[str, Predictor]]:
     # Regressor

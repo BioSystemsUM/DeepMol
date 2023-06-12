@@ -4,12 +4,12 @@ from optuna import Trial
 
 from deepmol.base import Predictor, Transformer
 from deepmol.compound_featurization import MolGraphConvFeat, PagtnMolGraphFeat, SmileImageFeat, ConvMolFeat, \
-    DagTransformer, SmilesSeqFeat, WeaveFeat
+    DagTransformer, SmilesSeqFeat, WeaveFeat, DMPNNFeat
 from deepmol.models.deepchem_model_builders import gat_model, gcn_model, attentivefp_model, pagtn_model, mpnn_model, \
     megnet_model, cnn_model, multitask_classifier_model, multitask_irv_classifier_model, multitask_regressor_model, \
     progressive_multitask_classifier_model, progressive_multitask_regressor_model, robust_multitask_classifier_model, \
     robust_multitask_regressor_model, sc_score_model, chem_ception_model, dag_model, graph_conv_model, \
-    smiles_to_vec_model, text_cnn_model, dtnn_model, weave_model, mat_model
+    smiles_to_vec_model, text_cnn_model, dtnn_model, weave_model, mat_model, dmpnn_model
 
 
 # TODO: add support to gpu dgl (pip install  dgl -f https://data.dgl.ai/wheels/cu116/repo.html)
@@ -120,6 +120,17 @@ def megnet_model_steps(trial: Trial,
     n_blocks = trial.suggest_int('n_blocks', 1, 3)
     megnet_kwargs['n_blocks'] = n_blocks
     model = megnet_model(model_dir=model_dir, megnet_kwargs=megnet_kwargs, deepchem_kwargs=deepchem_kwargs)
+    return [('featurizer', featurizer), ('model', model)]
+
+
+def dmpnn_model_steps(trial: Trial,
+                      model_dir: str = 'dmpnn_model/',
+                      dmpnn_kwargs: dict = None,
+                      deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Predictor, Transformer]]]:
+    # Classifier/ Regressor
+    # DMPNNFeaturizer
+    featurizer = DMPNNFeat()
+    model = dmpnn_model(model_dir=model_dir, dmpnn_kwargs=dmpnn_kwargs, deepchem_kwargs=deepchem_kwargs)
     return [('featurizer', featurizer), ('model', model)]
 
 

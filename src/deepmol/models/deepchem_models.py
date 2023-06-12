@@ -1,4 +1,5 @@
 import os
+import pickle
 import shutil
 import tempfile
 from typing import List, Sequence, Union
@@ -52,6 +53,7 @@ class DeepChemModel(BaseDeepChemModel, Predictor):
     def __init__(self,
                  model: BaseDeepChemModel,
                  model_dir: str = None,
+                 custom_objects: dict = None,
                  **kwargs):
         """
         Initializes a DeepChemModel.
@@ -62,6 +64,8 @@ class DeepChemModel(BaseDeepChemModel, Predictor):
           The model instance which inherits a DeepChem `Model` Class.
         model_dir: str, optional (default None)
           If specified the model will be stored in this directory. Else, a temporary directory will be used.
+        custom_objects: dict, optional (default None)
+            Dictionary of custom objects to be passed to the model.
         kwargs:
           additional arguments to be passed to the model.
         """
@@ -101,6 +105,8 @@ class DeepChemModel(BaseDeepChemModel, Predictor):
             self.epochs = kwargs['epochs']
         else:
             self.epochs = 30
+
+        self.custom_objects = custom_objects
 
         self.parameters_to_save = {
             'use_weights': self.use_weights,
@@ -291,6 +297,10 @@ class DeepChemModel(BaseDeepChemModel, Predictor):
 
         save_to_disk(self.parameters_to_save, os.path.join(folder_path, "model_parameters.pkl"))
 
+        if self.custom_objects is not None:
+            with open(os.path.join(folder_path, 'custom_objects.pkl'), 'wb') as file:
+                pickle.dump(self.custom_objects, file)
+
         # write self in pickle format
         if isinstance(self.model, KerasModel):
             self.model.model.save_weights(os.path.join(folder_path, 'model_weights'))
@@ -318,6 +328,11 @@ class DeepChemModel(BaseDeepChemModel, Predictor):
         except ValueError as e:
             if 'custom_objects' in kwargs:
                 with tensorflow.keras.utils.custom_object_scope(kwargs['custom_objects']):
+                    model = load_from_disk(os.path.join(folder_path, "model.pkl"))
+            elif os.path.exists(os.path.join(folder_path, 'custom_objects.pkl')):
+                with open(os.path.join(folder_path, 'custom_objects.pkl'), 'rb') as file:
+                    custom_objects = pickle.load(file)
+                with tensorflow.keras.utils.custom_object_scope(custom_objects):
                     model = load_from_disk(os.path.join(folder_path, "model.pkl"))
             else:
                 raise e

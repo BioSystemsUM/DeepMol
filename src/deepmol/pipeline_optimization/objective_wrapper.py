@@ -1,5 +1,6 @@
 import os
 import shutil
+from copy import copy
 
 from optuna import Trial
 
@@ -54,35 +55,33 @@ class Objective:
         trial : optuna.trial.Trial
             Trial object that stores the hyperparameters.
         """
+        train_dataset = copy(self.train_dataset)
+        test_dataset = copy(self.test_dataset)
         trial_id = str(trial.number)
         path = os.path.join(self.save_dir, f'trial_{trial_id}')
         pipeline = Pipeline(steps=self.objective_steps(trial, **self.kwargs), path=path)
-        pipeline.fit(self.train_dataset)
-        score = pipeline.evaluate(self.test_dataset, [self.metric])[0][self.metric.name]
-        # save pipeline if score is in top n scores
-        if len(self.study.user_attrs['best_scores']) < self.save_top_n:
+        pipeline.fit(train_dataset)
+        score = pipeline.evaluate(test_dataset, [self.metric])[0][self.metric.name]
+
+        best_scores = self.study.user_attrs['best_scores']
+        min_score = min(best_scores.values()) if len(best_scores) > 0 else float('inf')
+        max_score = max(best_scores.values()) if len(best_scores) > 0 else float('-inf')
+        update_score = (self.direction == 'maximize' and score > min_score) or (
+                self.direction == 'minimize' and score < max_score)
+
+        if len(best_scores) < self.save_top_n or update_score:
             pipeline.save()
-            self.study.set_user_attr('best_scores', {**self.study.user_attrs['best_scores'], trial_id: score})
-        else:
-            if self.direction == 'maximize':
-                min_score = min(self.study.user_attrs['best_scores'].values())
-                min_score_id = [k for k, v in self.study.user_attrs['best_scores'].items() if v == min_score][0]
-                if score > min_score:
-                    pipeline.save()
-                    self.study.set_user_attr('best_scores', {**self.study.user_attrs['best_scores'], trial_id: score})
-                    new_scores = self.study.user_attrs['best_scores']
-                    del new_scores[min_score_id]
-                    self.study.set_user_attr('best_scores', {**new_scores})
+            best_scores.update({trial_id: score})
+
+            if len(best_scores) > self.save_top_n:
+                if self.direction == 'maximize':
+                    min_score_id = min(best_scores, key=best_scores.get)
+                    del best_scores[min_score_id]
                     shutil.rmtree(os.path.join(self.save_dir, f'trial_{min_score_id}'))
-            else:  # minimize
-                max_score = max(self.study.user_attrs['best_scores'].values())
-                max_score_id = [k for k, v in self.study.user_attrs['best_scores'].items() if v == max_score][0]
-                if score < max_score:
-                    pipeline.save()
-                    self.study.set_user_attr('best_scores',
-                                             {**self.study.user_attrs['best_scores'], trial_id: score})
-                    new_scores = self.study.user_attrs['best_scores']
-                    del new_scores[max_score_id]
-                    self.study.set_user_attr('best_scores', {**new_scores})
+                else:
+                    max_score_id = max(best_scores, key=best_scores.get)
+                    del best_scores[max_score_id]
                     shutil.rmtree(os.path.join(self.save_dir, f'trial_{max_score_id}'))
+
+        self.study.set_user_attr('best_scores', best_scores)
         return score

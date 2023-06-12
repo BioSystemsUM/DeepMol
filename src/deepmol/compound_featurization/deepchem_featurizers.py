@@ -3,7 +3,7 @@ from typing import List, Dict, Any
 import numpy as np
 from deepchem.data import NumpyDataset
 from deepchem.feat import ConvMolFeaturizer, WeaveFeaturizer, MolGraphConvFeaturizer, CoulombMatrix, CoulombMatrixEig, \
-    SmilesToImage, SmilesToSeq, MolGanFeaturizer, GraphMatrix, PagtnMolGraphFeaturizer
+    SmilesToImage, SmilesToSeq, MolGanFeaturizer, GraphMatrix, PagtnMolGraphFeaturizer, DMPNNFeaturizer
 from deepchem.feat.graph_data import GraphData
 from deepchem.feat.mol_graphs import ConvMol, WeaveMol
 from deepchem.trans import DAGTransformer as DAGTransformerDC
@@ -640,12 +640,12 @@ class SmilesSeqFeat(Transformer):
 
         # identify which rows did not get featurized
         indexes = []
-        for i, feat in enumerate(dataset.X):
+        for i, feat in enumerate(dataset._X):
             if len(feat) == 0:
                 indexes.append(i)
         # treat indexes with no featurization
-        dataset.remove_elements(indexes)
-        dataset._X = np.asarray([np.asarray(feat, dtype=object) for feat in dataset.X])
+        dataset.remove_elements(indexes, inplace=True)
+        dataset._X = np.asarray([np.asarray(feat, dtype=object) for feat in dataset._X if len(feat) > 0])
         return dataset
 
     def _fit(self, dataset: Dataset) -> 'SmilesSeqFeat':
@@ -746,3 +746,64 @@ class DagTransformer(Transformer):
             The fitted featurizer.
         """
         return self
+
+
+class DMPNNFeat(MolecularFeaturizer):
+    """
+    Featurizes molecules using DeepChem DMPNNFeaturizer.
+
+    This class is a featurizer for Directed Message Passing Neural Network (D-MPNN) implementation
+
+    The default node(atom) and edge(bond) representations are based on
+    `Analyzing Learned Molecular Representations for Property Prediction paper <https://arxiv.org/pdf/1904.01561.pdf>`_.
+
+    Reference:
+    https://deepchem.readthedocs.io/en/latest/api_reference/featurizers.html#dmpnnfeaturizer
+    """
+
+    def __init__(self,
+                 features_generators: List[str] = None,
+                 is_adding_hs: bool = False,
+                 use_original_atom_ranks: bool = False,
+                 **kwargs) -> None:
+        """
+        Initialize this featurizer.
+
+        Parameters
+        ----------
+        features_generators: List[str], default None
+            List of global feature generators to be used.
+        is_adding_hs: bool, default False
+            Whether to add Hs or not.
+        use_original_atom_ranks: bool, default False
+            Whether to use original atom mapping or canonical atom mapping.
+        kwargs: dict
+            Additional keyword arguments.
+        """
+        super().__init__(**kwargs)
+        self.features_generators = features_generators
+        self.is_adding_hs = is_adding_hs
+        self.use_original_atom_ranks = use_original_atom_ranks
+
+    def _featurize(self, mol: Mol) -> GraphData:
+        """
+        Featurizes a single molecule.
+
+        Parameters
+        ----------
+        mol: Mol
+            Molecule to featurize.
+
+        Returns
+        -------
+        feature: GraphData
+            The DMPNN features of the molecule.
+        """
+        # featurization process using DeepChem DMPNNFeaturizer
+        feature = DMPNNFeaturizer(features_generators=self.features_generators,
+                                  is_adding_hs=self.is_adding_hs,
+                                  use_original_atom_ranks=self.use_original_atom_ranks).featurize([mol])
+
+        assert feature[0].node_features is not None
+
+        return feature[0]

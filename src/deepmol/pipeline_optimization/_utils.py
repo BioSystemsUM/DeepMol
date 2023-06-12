@@ -36,10 +36,11 @@ def singletask_classification_objective(trial,
     #  input has only 1 dims for '{{node strided_slice_1}} ...)
     # TODO: "sc_score_model" not working (Input 0 of layer "dense" is incompatible with the layer: expected axis -1 of
     #  input shape to have value 2048, but received input with shape (100, 1))
+    # TODO: "robust_multitask_classifier_model" works well except when loading the model back in (probably related with
+    #  the custom_objects)
     final_steps = [('standardizer', _get_standardizer(trial))]
     steps = trial.suggest_categorical("steps", ["gat_model", "gcn_model", "attentive_fp_model", "pagtn_model",
-                                                "multitask_classifier_model",
-                                                "robust_multitask_classifier_model", "chem_ception_model", "dag_model",
+                                                "multitask_classifier_model", "chem_ception_model", "dag_model",
                                                 "graph_conv_model", "smiles_to_vec_model", "text_cnn_model",
                                                 "weave_model"])
     if steps == "gat_model":
@@ -78,7 +79,7 @@ def singletask_classification_objective(trial,
         if featurizer == '2d_descriptors' or featurizer == '3d_descriptors':
             scaler = _get_scaler(trial)
         else:
-            scaler = PassThroughTransformer
+            scaler = PassThroughTransformer()
         n_features = len(featurizer.feature_names)
         multitask_classifier_kwargs = {'n_tasks': 1, 'n_features': n_features}
         model_step = multitask_classifier_model_steps(trial=trial,
@@ -102,14 +103,14 @@ def singletask_classification_objective(trial,
     #                                                               progressive_multitask_classifier_kwargs=progressive_multitask_classifier_kwargs)
     #     featurizer = ('featurizer', featurizer)
     #     final_steps.extend([featurizer, model_step[0])
-    elif steps == "robust_multitask_classifier_model":
-        featurizer = _get_featurizer(trial, '1D')
-        n_features = len(featurizer.feature_names)
-        robust_multitask_classifier_kwargs = {'n_tasks': 1, 'n_features': n_features}
-        model_step = robust_multitask_classifier_model_steps(trial=trial,
-                                                             robust_multitask_classifier_kwargs=robust_multitask_classifier_kwargs)
-        featurizer = ('featurizer', featurizer)
-        final_steps.extend([featurizer, model_step[0]])
+    # elif steps == "robust_multitask_classifier_model":
+    #     featurizer = _get_featurizer(trial, '1D')
+    #     n_features = len(featurizer.feature_names)
+    #     robust_multitask_classifier_kwargs = {'n_tasks': 1, 'n_features': n_features}
+    #     model_step = robust_multitask_classifier_model_steps(trial=trial,
+    #                                                          robust_multitask_classifier_kwargs=robust_multitask_classifier_kwargs)
+    #     featurizer = ('featurizer', featurizer)
+    #     final_steps.extend([featurizer, model_step[0]])
     # elif steps == "sc_score_model":
     #     featurizer = _get_featurizer(trial, '1D')
     #     n_features = len(featurizer.feature_names)
@@ -141,21 +142,14 @@ def singletask_classification_objective(trial,
     elif steps == "text_cnn_model":
         text_cnn_kwargs = {'n_tasks': 1, 'mode': 'classification'}
         max_length = max([len(smile) for smile in data.smiles])
-
-        def prepare_dataset_for_textcnn(dataset, pad_char='E'):
-            padded_smiles = [smile.ljust(max_length, pad_char) for smile in dataset.smiles]
-            truncated_smiles = [smile[:max_length] for smile in padded_smiles]
-            dataset._X = truncated_smiles
-            dataset._ids = truncated_smiles
-            return dataset
-        padded_train_smiles = prepare_dataset_for_textcnn(data).ids
+        padded_train_smiles = prepare_dataset_for_textcnn(data, max_length).ids
         fake_dataset = copy(data)
         fake_dataset._ids = padded_train_smiles
         char_dict, seq_length = TextCNNModel.build_char_dict(fake_dataset)
         text_cnn_kwargs['char_dict'] = char_dict
         text_cnn_kwargs['seq_length'] = seq_length
-        padder = DatasetTransformer(prepare_dataset_for_textcnn)
-        final_steps.extend([('padder', padder), text_cnn_model_steps(trial=trial, text_cnn_kwargs=text_cnn_kwargs)])
+        padder = DatasetTransformer(prepare_dataset_for_textcnn, max_length=max_length)
+        final_steps.extend([('padder', padder), text_cnn_model_steps(trial=trial, text_cnn_kwargs=text_cnn_kwargs)[0]])
     elif steps == "weave_model":
         weave_kwargs = {'n_tasks': 1, 'mode': 'classification'}
         steps_weave = weave_model_steps(trial=trial, weave_kwargs=weave_kwargs)
@@ -183,3 +177,11 @@ def heavy_objective(trial, train_dataset, test_dataset, metric) -> callable:
     pipeline.fit_transform(train_dataset)
     score = pipeline.evaluate(test_dataset, metric)[0][metric.name]
     return score
+
+
+def prepare_dataset_for_textcnn(dataset, max_length=150, pad_char='E'):
+    padded_smiles = [smile.ljust(max_length, pad_char) for smile in dataset.smiles]
+    truncated_smiles = [smile[:max_length] for smile in padded_smiles]
+    dataset._X = truncated_smiles
+    dataset._ids = truncated_smiles
+    return dataset

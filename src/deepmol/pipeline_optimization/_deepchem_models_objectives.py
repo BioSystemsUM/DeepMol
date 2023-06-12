@@ -130,6 +130,12 @@ def dmpnn_model_steps(trial: Trial,
     # Classifier/ Regressor
     # DMPNNFeaturizer
     featurizer = DMPNNFeat()
+    fnn_layers = trial.suggest_int('fnn_layers', 1, 3)
+    dmpnn_kwargs['fnn_layers'] = fnn_layers
+    fnn_dropout_p = trial.suggest_float('fnn_dropout_p', 0.0, 0.5, step=0.25)
+    dmpnn_kwargs['fnn_dropout_p'] = fnn_dropout_p
+    depth = trial.suggest_int('depth', 2, 4)
+    dmpnn_kwargs['depth'] = depth
     model = dmpnn_model(model_dir=model_dir, dmpnn_kwargs=dmpnn_kwargs, deepchem_kwargs=deepchem_kwargs)
     return [('featurizer', featurizer), ('model', model)]
 

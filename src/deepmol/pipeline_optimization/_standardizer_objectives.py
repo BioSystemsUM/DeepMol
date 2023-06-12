@@ -12,7 +12,7 @@ _STANDARDIZERS = {"basic_standardizer": BasicStandardizer,
 def _get_standardizer(trial) -> Transformer:
     standardizer = trial.suggest_categorical("standardizer", list(_STANDARDIZERS.keys()))
     if standardizer == "custom_standardizer":
-        choice = trial.suggest_categorical("choice", ["simple_standardisation", "heavy_standardisation"])
+        choice = trial.suggest_categorical("standardization_type", ["simple_standardisation", "heavy_standardisation"])
         if choice == "simple_standardisation":
             params = simple_standardisation
         else:

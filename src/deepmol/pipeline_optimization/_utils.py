@@ -40,11 +40,10 @@ def classification_objective(trial,
     #  the custom_objects)
     n_tasks = data.n_tasks
     final_steps = [('standardizer', _get_standardizer(trial))]
-    # steps = trial.suggest_categorical("steps", ["gat_model", "gcn_model", "attentive_fp_model", "pagtn_model",
-    #                                             "multitask_classifier_model", "chem_ception_model", "dag_model",
-    #                                             "graph_conv_model", "smiles_to_vec_model", "text_cnn_model",
-    #                                             "weave_model", "dmpnn_model"])
-    steps = trial.suggest_categorical("steps", ["dmpnn_model_steps"])
+    steps = trial.suggest_categorical("steps", ["gat_model", "gcn_model", "attentive_fp_model", "pagtn_model",
+                                                "multitask_classifier_model", "chem_ception_model", "dag_model",
+                                                "graph_conv_model", "smiles_to_vec_model", "text_cnn_model",
+                                                "weave_model", "dmpnn_model"])
     if steps == "gat_model":
         gat_kwargs = {'n_tasks': n_tasks, 'mode': 'classification'}
         steps_gat = gat_model_steps(trial=trial, gat_kwargs=gat_kwargs)

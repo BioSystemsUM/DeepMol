@@ -784,6 +784,7 @@ class DMPNNFeat(MolecularFeaturizer):
         self.features_generators = features_generators
         self.is_adding_hs = is_adding_hs
         self.use_original_atom_ranks = use_original_atom_ranks
+        self.feature_names = ['dmpnn_feat']
 
     def _featurize(self, mol: Mol) -> GraphData:
         """

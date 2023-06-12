@@ -44,6 +44,10 @@ class TestPipelineOptimization(TestCase):
         for file in os.listdir():
             if file.endswith('.log'):
                 os.remove(file)
+        # remove model directories (ending with _model)
+        for file in os.listdir():
+            if file.endswith('_model'):
+                shutil.rmtree(file)
 
     def test_predictor_pipeline(self):
 

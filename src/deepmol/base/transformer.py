@@ -69,7 +69,7 @@ class PassThroughTransformer(Transformer):
     A transformer that does nothing.
     """
 
-    def _fit(self, dataset: Dataset) -> 'Estimator':
+    def _fit(self, dataset: Dataset) -> 'PassThroughTransformer':
         """
         Fit the transformer to the dataset.
 

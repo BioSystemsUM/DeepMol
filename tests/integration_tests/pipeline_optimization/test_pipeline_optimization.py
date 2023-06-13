@@ -3,7 +3,7 @@ import shutil
 from unittest import TestCase
 
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, mean_squared_error
 from sklearn.svm import SVC
 
 from deepmol.loaders import CSVLoader
@@ -25,15 +25,26 @@ class TestPipelineOptimization(TestCase):
                            smiles_field='mols',
                            id_field='ids',
                            labels_fields=['y'],
-                           features_fields=features)
+                           features_fields=features,
+                           mode='classification')
         self.dataset_descriptors = loader.create_dataset(sep=",")
 
         smiles_dataset_path = os.path.join(TEST_DIR, 'data')
         dataset_smiles = os.path.join(smiles_dataset_path, "balanced_mini_dataset.csv")
         loader = CSVLoader(dataset_smiles,
                            smiles_field='Smiles',
-                           labels_fields=['Class'])
+                           labels_fields=['Class'],
+                           mode='classification')
         self.dataset_smiles = loader.create_dataset(sep=";")
+
+        regression_dataset_path = os.path.join(TEST_DIR, 'data')
+        dataset_regression = os.path.join(regression_dataset_path, "PC-3.csv")
+        loader = CSVLoader(dataset_regression,
+                           smiles_field='smiles',
+                           labels_fields=['pIC50'],
+                           mode='regression',
+                           shard_size=100)
+        self.dataset_regression = loader.create_dataset(sep=",")
 
     def tearDown(self) -> None:
         if os.path.exists('test_predictor_pipeline'):
@@ -75,10 +86,27 @@ class TestPipelineOptimization(TestCase):
         # assert that 3 pipelines were saved
         self.assertEqual(len(os.listdir('test_predictor_pipeline')), 3)
 
-    def test_preset(self):
+    def test_classification_preset(self):
         po = PipelineOptimization(direction='maximize', study_name='test_pipeline')
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_smiles, seed=123)
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps='ss', metric=metric, n_trials=3, data=train,
+                    save_top_n=2)
+        self.assertEqual(po.best_params, po.best_trial.params)
+        self.assertIsInstance(po.best_value, float)
+
+        self.assertEqual(len(po.trials), 3)
+        # assert that 2 pipelines were saved
+        self.assertEqual(len(os.listdir('test_pipeline')), 2)
+
+        best_pipeline = po.best_pipeline
+        new_predictions = best_pipeline.evaluate(test, [metric])[0][metric.name]
+        self.assertEqual(new_predictions, po.best_value)
+
+    def test_regression_preset(self):
+        po = PipelineOptimization(direction='minimize', study_name='test_pipeline')
+        metric = Metric(mean_squared_error)
+        train, test = RandomSplitter().train_test_split(self.dataset_regression, seed=123)
         po.optimize(train_dataset=train, test_dataset=test, objective_steps='ss', metric=metric, n_trials=3, data=train,
                     save_top_n=2)
         self.assertEqual(po.best_params, po.best_trial.params)

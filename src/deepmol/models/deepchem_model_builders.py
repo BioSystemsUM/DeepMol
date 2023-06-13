@@ -128,6 +128,7 @@ def progressive_multitask_regressor_model(model_dir: str = 'progressive_multitas
     # CircularFingerprint RDKitDescriptors CoulombMatrixEig RdkitGridFeaturizer BindingPocketFeaturizer
     # ElementPropertyFingerprint
     model = ProgressiveMultitaskRegressor(**progressive_multitask_regressor_kwargs)
+    model.model.mode = 'regression'
     return DeepChemModel(model=model, model_dir=model_dir, **deepchem_kwargs)
 
 
@@ -153,7 +154,9 @@ def robust_multitask_regressor_model(model_dir: str = 'robust_multitask_regresso
     # CircularFingerprint RDKitDescriptors CoulombMatrixEig RdkitGridFeaturizer BindingPocketFeaturizer
     # ElementPropertyFingerprint
     model = RobustMultitaskRegressor(**robust_multitask_regressor_kwargs)
-    return DeepChemModel(model=model, model_dir=model_dir, **deepchem_kwargs)
+    model.model.mode = 'regression'
+    custom_objects = {'Stack': Stack}
+    return DeepChemModel(model=model, model_dir=model_dir, custom_objects=custom_objects, **deepchem_kwargs)
 
 
 def sc_score_model(model_dir: str = 'sc_score_model/',
@@ -246,6 +249,7 @@ def mat_model(model_dir: str = 'mat_model/', mat_kwargs: dict = None, deepchem_k
     # Regressor
     # MATFeaturizer
     model = MATModel(**mat_kwargs)
+    model.model.mode = 'regression'
     return DeepChemModel(model=model, model_dir=model_dir, **deepchem_kwargs)
 
 

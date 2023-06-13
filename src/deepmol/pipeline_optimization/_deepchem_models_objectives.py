@@ -4,7 +4,7 @@ from optuna import Trial
 
 from deepmol.base import Predictor, Transformer
 from deepmol.compound_featurization import MolGraphConvFeat, PagtnMolGraphFeat, SmileImageFeat, ConvMolFeat, \
-    DagTransformer, SmilesSeqFeat, WeaveFeat, DMPNNFeat
+    DagTransformer, SmilesSeqFeat, WeaveFeat, DMPNNFeat, MATFeat
 from deepmol.models.deepchem_model_builders import gat_model, gcn_model, attentivefp_model, pagtn_model, mpnn_model, \
     megnet_model, cnn_model, multitask_classifier_model, multitask_irv_classifier_model, multitask_regressor_model, \
     progressive_multitask_classifier_model, progressive_multitask_regressor_model, robust_multitask_classifier_model, \
@@ -77,19 +77,19 @@ def attentive_fp_model_steps(trial: Trial,
 
 def pagtn_model_steps(trial: Trial,
                       model_dir: str = 'pagtn_model/',
-                      patgn_kwargs: dict = None,
+                      pagtn_kwargs: dict = None,
                       deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Predictor, Transformer]]]:
     # Classifier/ Regressor
     # PagtnMolGraphFeaturizer
     featurizer = PagtnMolGraphFeat()
     # model
     num_layers = trial.suggest_int('num_layers', 2, 5)
-    patgn_kwargs['num_layers'] = num_layers
+    pagtn_kwargs['num_layers'] = num_layers
     num_heads = trial.suggest_int('num_heads', 1, 2)
-    patgn_kwargs['num_heads'] = num_heads
+    pagtn_kwargs['num_heads'] = num_heads
     dropout = trial.suggest_float('dropout', 0.0, 0.5, step=0.25)
-    patgn_kwargs['dropout'] = dropout
-    model = pagtn_model(model_dir=model_dir, patgn_kwargs=patgn_kwargs, deepchem_kwargs=deepchem_kwargs)
+    pagtn_kwargs['dropout'] = dropout
+    model = pagtn_model(model_dir=model_dir, patgn_kwargs=pagtn_kwargs, deepchem_kwargs=deepchem_kwargs)
     return [('featurizer', featurizer), ('model', model)]
 
 
@@ -236,7 +236,6 @@ def chem_ception_model_steps(trial: Trial, model_dir: str = 'chem_ception_model/
     # Classifier/ Regressor
     # SmilesToImage
     featurizer = SmileImageFeat()
-    chem_ception_kwargs['mode'] = 'classification'
     base_filters = trial.suggest_categorical('base_filters', [8, 16, 32, 64])
     chem_ception_kwargs['base_filters'] = base_filters
     model = chem_ception_model(model_dir=model_dir, chem_ception_kwargs=chem_ception_kwargs,
@@ -324,16 +323,37 @@ def dtnn_model_steps(trial: Trial, model_dir: str = 'dtnn_model/', dtnn_kwargs: 
                      deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Transformer, Predictor]]]:
     # Regressor
     # CoulombMatrix
-    featurizer = None  # TODO: define featurizer
+    n_embedding = trial.suggest_categorical('n_embedding', [50, 75, 100])
+    dtnn_kwargs['n_embedding'] = n_embedding
+    n_hidden = trial.suggest_categorical('n_hidden', [50, 100, 200])
+    dtnn_kwargs['n_hidden'] = n_hidden
+    dropout = trial.suggest_float('dropouts', 0.0, 0.5, step=0.25)
+    dtnn_kwargs['dropout'] = dropout
     model = dtnn_model(model_dir=model_dir, dtnn_kwargs=dtnn_kwargs, deepchem_kwargs=deepchem_kwargs)
-    return [('featurizer', featurizer), ('model', model)]
+    return [('model', model)]
 
 
 def mat_model_steps(trial: Trial, model_dir: str = 'mat_model/', mat_kwargs: dict = None,
                     deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Transformer, Predictor]]]:
     # Regressor
     # MATFeaturizer
-    featurizer = None  # TODO: define featurizer
+    featurizer = MATFeat()
+    n_encoders = trial.suggest_int('n_encoders', 4, 10, step=2)
+    mat_kwargs['n_encoders'] = n_encoders
+    sa_dropout_p = trial.suggest_float('sa_dropout_p', 0.0, 0.5, step=0.25)
+    mat_kwargs['sa_dropout_p'] = sa_dropout_p
+    n_layers = trial.suggest_int('n_layers', 1, 3)
+    mat_kwargs['n_layers'] = n_layers
+    ff_dropout_p = trial.suggest_float('ff_dropout_p', 0.0, 0.5, step=0.25)
+    mat_kwargs['ff_dropout_p'] = ff_dropout_p
+    encoder_dropout_p = trial.suggest_float('encoder_dropout_p', 0.0, 0.5, step=0.25)
+    mat_kwargs['encoder_dropout_p'] = encoder_dropout_p
+    embed_dropout_p = trial.suggest_float('embed_dropout_p', 0.0, 0.5, step=0.25)
+    mat_kwargs['embed_dropout_p'] = embed_dropout_p
+    gen_dropout_p = trial.suggest_float('gen_dropout_p', 0.0, 0.5, step=0.25)
+    mat_kwargs['gen_dropout_p'] = gen_dropout_p
+    gen_n_layers = trial.suggest_int('gen_n_layers', 1, 3)
+    mat_kwargs['gen_n_layers'] = gen_n_layers
     model = mat_model(model_dir=model_dir, mat_kwargs=mat_kwargs, deepchem_kwargs=deepchem_kwargs)
     return [('featurizer', featurizer), ('model', model)]
 
@@ -344,6 +364,10 @@ def progressive_multitask_regressor_model_steps(trial: Trial,
                                                 deepchem_kwargs: dict = None) -> List[Tuple[str, Predictor]]:
     # Regressor
     # 1D Descriptors
+    dropouts = trial.suggest_float('dropout', 0.0, 0.5, step=0.25)
+    progressive_multitask_regressor_kwargs['dropouts'] = dropouts
+    layer_sizes = trial.suggest_categorical('layer_sizes', [[50], [100], [500], [200, 100]])
+    progressive_multitask_regressor_kwargs['layer_sizes'] = layer_sizes
     model = progressive_multitask_regressor_model(model_dir=model_dir,
                                                   progressive_multitask_regressor_kwargs=progressive_multitask_regressor_kwargs,
                                                   deepchem_kwargs=deepchem_kwargs)
@@ -370,6 +394,12 @@ def robust_multitask_regressor_model_steps(trial: Trial,
                                            deepchem_kwargs: dict = None) -> List[Tuple[str, Predictor]]:
     # Regressor
     # 1D Descriptors
+    dropouts = trial.suggest_float('dropout', 0.0, 0.5, step=0.25)
+    robust_multitask_regressor_kwargs['dropouts'] = dropouts
+    layer_sizes = trial.suggest_categorical('layer_sizes', [[50], [100], [500], [200, 100]])
+    robust_multitask_regressor_kwargs['layer_sizes'] = layer_sizes
+    bypass_dropouts = trial.suggest_float('bypass_dropout', 0.0, 0.5, step=0.25)
+    robust_multitask_regressor_kwargs['bypass_dropouts'] = bypass_dropouts
     model = robust_multitask_regressor_model(model_dir=model_dir,
                                              robust_multitask_regressor_kwargs=robust_multitask_regressor_kwargs,
                                              deepchem_kwargs=deepchem_kwargs)

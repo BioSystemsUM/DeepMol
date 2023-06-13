@@ -3,9 +3,10 @@ from typing import List, Dict, Any
 import numpy as np
 from deepchem.data import NumpyDataset
 from deepchem.feat import ConvMolFeaturizer, WeaveFeaturizer, MolGraphConvFeaturizer, CoulombMatrix, CoulombMatrixEig, \
-    SmilesToImage, SmilesToSeq, MolGanFeaturizer, GraphMatrix, PagtnMolGraphFeaturizer, DMPNNFeaturizer
+    SmilesToImage, SmilesToSeq, MolGanFeaturizer, GraphMatrix, PagtnMolGraphFeaturizer, DMPNNFeaturizer, MATFeaturizer
 from deepchem.feat.graph_data import GraphData
 from deepchem.feat.mol_graphs import ConvMol, WeaveMol
+from deepchem.feat.molecule_featurizers.mat_featurizer import MATEncoding
 from deepchem.trans import DAGTransformer as DAGTransformerDC
 from deepchem.utils import ConformerGenerator
 from rdkit.Chem import Mol
@@ -804,6 +805,54 @@ class DMPNNFeat(MolecularFeaturizer):
         feature = DMPNNFeaturizer(features_generators=self.features_generators,
                                   is_adding_hs=self.is_adding_hs,
                                   use_original_atom_ranks=self.use_original_atom_ranks).featurize([mol])
+
+        assert feature[0].node_features is not None
+
+        return feature[0]
+
+
+class MATFeat(MolecularFeaturizer):
+    """
+    Featurizes molecules using DeepChem MATFeaturizer.
+
+    This class is a featurizer for Molecular Attribute Transformer (MAT) implementation
+    The returned value is a numpy array which consists of molecular graph descriptions:
+        - Node Features
+        - Adjacency Matrix
+        - Distance Matrix
+
+    Reference:
+    [1] https://deepchem.readthedocs.io/en/latest/api_reference/featurizers.html#matfeaturizer
+    [2] Lukasz Maziarka et al. “Molecule Attention Transformer`<https://arxiv.org/abs/2002.08264>`”
+    """
+
+    def __init__(self, **kwargs) -> None:
+        """
+        Initialize this featurizer.
+
+        Parameters
+        kwargs: dict
+            Additional keyword arguments.
+        """
+        super().__init__(**kwargs)
+        self.feature_names = ['mat_feat']
+
+    def _featurize(self, mol: Mol) -> MATEncoding:
+        """
+        Featurizes a single molecule.
+
+        Parameters
+        ----------
+        mol: Mol
+            Molecule to featurize.
+
+        Returns
+        -------
+        feature: GraphData
+            The MATEncoding features of the molecule.
+        """
+        # featurization process using DeepChem DMPNNFeaturizer
+        feature = MATFeaturizer().featurize([mol])
 
         assert feature[0].node_features is not None
 

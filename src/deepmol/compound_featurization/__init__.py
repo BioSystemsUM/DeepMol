@@ -21,7 +21,7 @@ except ImportError:
 
 try:
     from .deepchem_featurizers import WeaveFeat, CoulombFeat, CoulombEigFeat, ConvMolFeat, MolGraphConvFeat, \
-        SmileImageFeat, SmilesSeqFeat, MolGanFeat, PagtnMolGraphFeat, DagTransformer, DMPNNFeat
+        SmileImageFeat, SmilesSeqFeat, MolGanFeat, PagtnMolGraphFeat, DagTransformer, DMPNNFeat, MATFeat
 except ImportError:
     warnings.warn("DeepChem not available. Please install it to use it.")
 

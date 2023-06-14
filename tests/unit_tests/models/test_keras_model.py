@@ -5,6 +5,8 @@ from sklearn.metrics import roc_auc_score, precision_score, classification_repor
 
 from deepmol.metrics import Metric
 from deepmol.models import KerasModel
+from deepmol.models.keras_model_builders import keras_dense_model, keras_cnn_model, keras_tabular_transformer_model, \
+    keras_simple_rnn_model, keras_rnn_model, keras_bidirectional_rnn_model
 from unit_tests.models.test_models import ModelsTestCase
 
 from tensorflow.keras.models import Sequential
@@ -91,3 +93,47 @@ class TestKerasModel(ModelsTestCase, TestCase):
             self.assertEqual(first_predictions[i][0], loaded_model_predictions[i][0])
 
         shutil.rmtree("test_model")
+
+    def test_baseline_models(self):
+        model_kwargs = {'input_dim': 50}
+        keras_kwargs = {}
+        models = [keras_dense_model, keras_cnn_model, keras_tabular_transformer_model]
+        for f_model in models:
+            model = f_model(model_dir='test_model', model_kwargs=model_kwargs, keras_kwargs=keras_kwargs)
+
+            model.fit(self.binary_dataset)
+
+            first_predictions = model.predict(self.binary_dataset_test)
+
+            model.save("test_model")
+            loaded_model = KerasModel.load("test_model")
+            self.assertEqual(50, loaded_model.model.sk_params["input_dim"])
+            loaded_model_predictions = loaded_model.predict(self.binary_dataset_test)
+
+            for i in range(len(first_predictions)):
+                self.assertEqual(first_predictions[i][0], loaded_model_predictions[i][0])
+
+            shutil.rmtree("test_model")
+
+    def test_rnn_baseline_models(self):
+        model_kwargs = {}
+        keras_kwargs = {}
+        models = [keras_rnn_model, keras_simple_rnn_model, keras_bidirectional_rnn_model]
+        for f_model in models:
+            model = f_model(model_dir='test_model', model_kwargs=model_kwargs, keras_kwargs=keras_kwargs)
+
+            model.fit(self.one_hot_encoded_dataset)
+
+            first_predictions = model.predict(self.one_hot_encoded_dataset)
+
+            model.save("test_model")
+            loaded_model = KerasModel.load("test_model")
+
+            loaded_model_predictions = loaded_model.predict(self.one_hot_encoded_dataset)
+
+            for i in range(len(first_predictions)):
+                self.assertEqual(first_predictions[i][0], loaded_model_predictions[i][0])
+
+            shutil.rmtree("test_model")
+
+            model_kwargs = {'input_dim': (50, 10)}

@@ -24,7 +24,7 @@ class KerasModel(Model):
     def __init__(self,
                  model_builder: callable,
                  mode: str = 'classification',
-                 model_dir: str = None,
+                 model_path: str = None,
                  epochs: int = 150,
                  batch_size: int = 10,
                  verbose: int = 0,
@@ -68,7 +68,7 @@ class KerasModel(Model):
         else:
             self.model = model_builder
 
-        super().__init__(self.model, model_dir, **kwargs)
+        super().__init__(self.model, model_path, **kwargs)
 
     @property
     def model_type(self):

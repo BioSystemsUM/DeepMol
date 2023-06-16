@@ -12,21 +12,20 @@ from deepmol.pipeline_optimization._deepchem_models_objectives import gat_model_
     chem_ception_model_steps, dag_model_steps, graph_conv_model_steps, smiles_to_vec_model_steps, text_cnn_model_steps, \
     weave_model_steps, dmpnn_model_steps, progressive_multitask_regressor_model_steps, \
     robust_multitask_regressor_model_steps, dtnn_model_steps, mat_model_steps, multitask_regressor_model_steps
+from deepmol.pipeline_optimization._feature_selector_objectives import _get_feature_selector
 from deepmol.pipeline_optimization._featurizer_objectives import _get_featurizer
 from deepmol.pipeline_optimization._scaler_objectives import _get_scaler
+from deepmol.pipeline_optimization._sklearn_model_objective import _get_sk_model
 from deepmol.pipeline_optimization._standardizer_objectives import _get_standardizer
 
 
-# TODO: How to deal with incompatible steps? (e.g. some deepchem featurizers only work with some deepchem models)
-
-
 def _get_preset(preset: str) -> callable:
-    return preset_objective
+    return preset_sklearn_models
 
 
 # TODO: change trial choices names
-def preset_objective(trial,
-                     data: Dataset) -> list:
+def preset_deepchem_objective(trial,
+                              data: Dataset) -> list:
     # TODO: "mpnn_model" is not working (DeepChem-> AttributeError: 'GraphData' object has no attribute 'get_num_atoms')
     # TODO: "megnet_model" is not working (error with torch_geometric (extra_requirement))
     # TODO: "cnn_model" is not working (raise PicklingError(
@@ -78,7 +77,8 @@ def preset_objective(trial,
         final_steps.extend(steps_megnet)
     elif model_steps == "cnn_model":
         featurizer = _get_featurizer(trial, '1D')
-        if featurizer == '2d_descriptors' or featurizer == '3d_descriptors':
+        if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
+                featurizer.__class__.__name__ == 'All3DDescriptors':
             scaler = _get_scaler(trial)
         else:
             scaler = PassThroughTransformer()
@@ -92,7 +92,8 @@ def preset_objective(trial,
         final_steps.extend([featurizer, scaler, model])
     elif model_steps == "multitask_classifier_model":
         featurizer = _get_featurizer(trial, '1D')
-        if featurizer == '2d_descriptors' or featurizer == '3d_descriptors':
+        if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
+                featurizer.__class__.__name__ == 'All3DDescriptors':
             scaler = _get_scaler(trial)
         else:
             scaler = PassThroughTransformer()
@@ -177,7 +178,8 @@ def preset_objective(trial,
         final_steps.extend(steps_dmpnn)
     elif model_steps == "progressive_multitask_regressor_model":
         featurizer = _get_featurizer(trial, '1D')
-        if featurizer == '2d_descriptors' or featurizer == '3d_descriptors':
+        if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
+                featurizer.__class__.__name__ == 'All3DDescriptors':
             scaler = _get_scaler(trial)
         else:
             scaler = PassThroughTransformer()
@@ -190,7 +192,8 @@ def preset_objective(trial,
         final_steps.extend([featurizer, scaler, model_step[0]])
     elif model_steps == "robust_multitask_regressor_model":
         featurizer = _get_featurizer(trial, '1D')
-        if featurizer == '2d_descriptors' or featurizer == '3d_descriptors':
+        if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
+                featurizer.__class__.__name__ == 'All3DDescriptors':
             scaler = _get_scaler(trial)
         else:
             scaler = PassThroughTransformer()
@@ -213,7 +216,8 @@ def preset_objective(trial,
         final_steps.extend(mat_steps)
     elif model_steps == "multitask_regressor_model":
         featurizer = _get_featurizer(trial, '1D')
-        if featurizer == '2d_descriptors' or featurizer == '3d_descriptors':
+        if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
+                featurizer.__class__.__name__ == 'All3DDescriptors':
             scaler = _get_scaler(trial)
         else:
             scaler = PassThroughTransformer()
@@ -227,6 +231,24 @@ def preset_objective(trial,
         final_steps.extend([featurizer, scaler, model])
     else:
         raise ValueError("Unknown model: %s" % model_steps)
+    print(trial.params)
+    return final_steps
+
+
+def preset_sklearn_models(trial, data: Dataset) -> list:
+    n_tasks = data.n_tasks
+    mode = data.mode
+    print(mode)
+    featurizer = _get_featurizer(trial, '1D')
+    if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
+            featurizer.__class__.__name__ == 'All3DDescriptors':
+        scaler = _get_scaler(trial)
+    else:
+        scaler = PassThroughTransformer()
+    feature_selector = _get_feature_selector(trial, task_type=mode)
+    sk_model = _get_sk_model(trial, task_type=mode)
+    final_steps = [('standardizer', _get_standardizer(trial)), ('featurizer', featurizer), ('scaler', scaler),
+                   ('feature_selector', feature_selector), ('model', sk_model)]
     print(trial.params)
     return final_steps
 

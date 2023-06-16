@@ -40,6 +40,12 @@ class KerasModel(Model):
             The mode of the model. Can be either 'classification' or 'regression'.
         model_dir: str
             The directory to save the model to.
+        loss: str
+            The loss function to use.
+        optimizer: str
+            The optimizer to use.
+        learning_rate: float
+            The learning rate to use.
         epochs: int
             The number of epochs to train for.
         batch_size: int

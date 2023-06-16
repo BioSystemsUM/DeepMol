@@ -5,6 +5,7 @@ from deepchem.models import TextCNNModel
 from deepmol.base import DatasetTransformer, PassThroughTransformer
 from deepmol.compound_featurization import SmilesSeqFeat, CoulombFeat
 from deepmol.datasets import Dataset
+from deepmol.metrics import Metric
 from deepmol.pipeline_optimization._deepchem_models_objectives import gat_model_steps, gcn_model_steps, \
     pagtn_model_steps, attentive_fp_model_steps, mpnn_model_steps, megnet_model_steps, cnn_model_steps, \
     multitask_classifier_model_steps, multitask_irv_classifier_model_steps, \
@@ -14,13 +15,14 @@ from deepmol.pipeline_optimization._deepchem_models_objectives import gat_model_
     robust_multitask_regressor_model_steps, dtnn_model_steps, mat_model_steps, multitask_regressor_model_steps
 from deepmol.pipeline_optimization._feature_selector_objectives import _get_feature_selector
 from deepmol.pipeline_optimization._featurizer_objectives import _get_featurizer
+from deepmol.pipeline_optimization._keras_model_objectives import _get_keras_model
 from deepmol.pipeline_optimization._scaler_objectives import _get_scaler
-from deepmol.pipeline_optimization._sklearn_model_objective import _get_sk_model
+from deepmol.pipeline_optimization._sklearn_model_objectives import _get_sk_model
 from deepmol.pipeline_optimization._standardizer_objectives import _get_standardizer
 
 
-def _get_preset(preset: str) -> callable:
-    return preset_sklearn_models
+def _get_preset(preset: str, dataset: Dataset, metric: Metric) -> callable:
+    return preset_keras_models
 
 
 # TODO: change trial choices names
@@ -249,6 +251,24 @@ def preset_sklearn_models(trial, data: Dataset) -> list:
     sk_model = _get_sk_model(trial, task_type=mode)
     final_steps = [('standardizer', _get_standardizer(trial)), ('featurizer', featurizer), ('scaler', scaler),
                    ('feature_selector', feature_selector), ('model', sk_model)]
+    print(trial.params)
+    return final_steps
+
+
+def preset_keras_models(trial, data: Dataset) -> list:
+    n_tasks = data.n_tasks
+    mode = data.mode
+    featurizer = _get_featurizer(trial, '1D')
+    if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
+            featurizer.__class__.__name__ == 'All3DDescriptors':
+        scaler = _get_scaler(trial)
+    else:
+        scaler = PassThroughTransformer()
+    feature_selector = _get_feature_selector(trial, task_type=mode)
+    # TODO: adjust input size for one hot encoding etc
+    keras_model = _get_keras_model(trial, task_type=mode, input_shape=(len(featurizer.feature_names),))
+    final_steps = [('standardizer', _get_standardizer(trial)), ('featurizer', featurizer), ('scaler', scaler),
+                   ('feature_selector', feature_selector), ('model', keras_model)]
     print(trial.params)
     return final_steps
 

@@ -55,6 +55,7 @@ class Objective:
         trial : optuna.trial.Trial
             Trial object that stores the hyperparameters.
         """
+        # TODO: try except block to return inf or -inf if pipeline fails
         train_dataset = copy(self.train_dataset)
         test_dataset = copy(self.test_dataset)
         trial_id = str(trial.number)

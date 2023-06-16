@@ -71,36 +71,35 @@ def baseline_dense_model_builder(input_dim: int = 1024,
     return model
 
 
-def keras_dense_model(model_dir: str, model_kwargs: dict = None, keras_kwargs: dict = None) -> KerasModel:
+def keras_dense_model(model_dir: str = 'keras_model/', model_kwargs: dict = None,
+                      keras_kwargs: dict = None) -> KerasModel:
+    keras_kwargs = {} if keras_kwargs is None else keras_kwargs
     mode = 'classification' if 'mode' not in keras_kwargs else keras_kwargs['mode']
     model_path = model_dir
-    loss = 'binary_crossentropy' if 'loss' not in keras_kwargs else keras_kwargs['loss']
-    optimizer = 'adam' if 'optimizer' not in keras_kwargs else keras_kwargs['optimizer']
-    learning_rate = 0.001 if 'learning_rate' not in keras_kwargs else keras_kwargs['learning_rate']
     epochs = 150 if 'epochs' not in keras_kwargs else keras_kwargs['epochs']
     batch_size = 10 if 'batch_size' not in keras_kwargs else keras_kwargs['batch_size']
     verbose = 0 if 'verbose' not in keras_kwargs else keras_kwargs['verbose']
     model_kwargs = {} if model_kwargs is None else model_kwargs
-    return KerasModel(model_builder=baseline_dense_model_builder, mode=mode, model_path=model_path, loss=loss,
-                      optimizer=optimizer, learning_rate=learning_rate, epochs=epochs, batch_size=batch_size,
-                      verbose=verbose, **model_kwargs)
+    return KerasModel(model_builder=baseline_dense_model_builder, mode=mode, model_path=model_path, epochs=epochs,
+                      batch_size=batch_size, verbose=verbose, **model_kwargs)
 
 
-def make_cnn_model_builder(input_dim: int = 1024,
-                           g_noise: float = 0.05,
-                           n_conv_layers: int = 2,
-                           filters: List[int] = [8, 16],
-                           kernel_sizes: List[int] = [32, 32],
-                           strides: List[int] = [1, 1],
-                           activations: List[str] = 'relu',
-                           padding: str = 'same',
-                           dense_units: int = 128,
-                           dropout: float = 0.5,
-                           last_layer_units: int = 1,
-                           last_layer_activation: str = 'sigmoid',
-                           loss: str = 'binary_crossentropy',
-                           optimizer: str = 'adadelta',
-                           metrics: Union[str, List[str]] = 'accuracy'):
+def baseline_cnn_model_builder(input_dim: int = 1024,
+                               g_noise: float = 0.05,
+                               n_conv_layers: int = 2,
+                               filters: List[int] = [8, 16],
+                               kernel_sizes: List[int] = [32, 32],
+                               strides: List[int] = [1, 1],
+                               activations: List[str] = ['relu', 'relu'],
+                               padding: str = 'same',
+                               dense_units: int = 128,
+                               dense_activation: str = 'relu',
+                               dropout: float = 0.5,
+                               last_layer_units: int = 1,
+                               last_layer_activation: str = 'sigmoid',
+                               loss: str = 'binary_crossentropy',
+                               optimizer: str = 'adadelta',
+                               metrics: Union[str, List[str]] = 'accuracy'):
     """
     Builds a 1D convolutional neural network model.
 
@@ -150,25 +149,23 @@ def make_cnn_model_builder(input_dim: int = 1024,
         model.add(Conv1D(filters[i], kernel_sizes[i], activation=activations[i], strides=strides[i], padding=padding))
     model.add(Flatten())
     model.add(Dropout(dropout))
-    model.add(Dense(dense_units, activation=activations))
+    model.add(Dense(dense_units, activation=dense_activation))
     model.add(Dense(last_layer_units, activation=last_layer_activation))
     model.compile(loss=loss, optimizer=optimizer, metrics=metrics)
     return model
 
 
-def keras_cnn_model(model_dir: str, model_kwargs: dict = None, keras_kwargs: dict = None) -> KerasModel:
+def keras_cnn_model(model_dir: str = 'keras_model/', model_kwargs: dict = None,
+                    keras_kwargs: dict = None) -> KerasModel:
+    keras_kwargs = {} if keras_kwargs is None else keras_kwargs
     mode = 'classification' if 'mode' not in keras_kwargs else keras_kwargs['mode']
     model_path = model_dir
-    loss = 'binary_crossentropy' if 'loss' not in keras_kwargs else keras_kwargs['loss']
-    optimizer = 'adam' if 'optimizer' not in keras_kwargs else keras_kwargs['optimizer']
-    learning_rate = 0.001 if 'learning_rate' not in keras_kwargs else keras_kwargs['learning_rate']
     epochs = 150 if 'epochs' not in keras_kwargs else keras_kwargs['epochs']
     batch_size = 10 if 'batch_size' not in keras_kwargs else keras_kwargs['batch_size']
     verbose = 0 if 'verbose' not in keras_kwargs else keras_kwargs['verbose']
     model_kwargs = {} if model_kwargs is None else model_kwargs
-    return KerasModel(model_builder=baseline_dense_model_builder, mode=mode, model_path=model_path, loss=loss,
-                      optimizer=optimizer, learning_rate=learning_rate, epochs=epochs, batch_size=batch_size,
-                      verbose=verbose, **model_kwargs)
+    return KerasModel(model_builder=baseline_cnn_model_builder, mode=mode, model_path=model_path, epochs=epochs,
+                      batch_size=batch_size, verbose=verbose, **model_kwargs)
 
 
 def make_tabular_transformer_model_builder(input_dim: int, embedding_output_dim: int = 32, n_attention_layers: int = 2,
@@ -203,19 +200,17 @@ def make_tabular_transformer_model_builder(input_dim: int, embedding_output_dim:
     return model
 
 
-def keras_tabular_transformer_model(model_dir: str, model_kwargs: dict = None, keras_kwargs: dict = None) -> KerasModel:
+def keras_tabular_transformer_model(model_dir: str = 'keras_model/', model_kwargs: dict = None,
+                                    keras_kwargs: dict = None) -> KerasModel:
+    keras_kwargs = {} if keras_kwargs is None else keras_kwargs
     mode = 'classification' if 'mode' not in keras_kwargs else keras_kwargs['mode']
     model_path = model_dir
-    loss = 'binary_crossentropy' if 'loss' not in keras_kwargs else keras_kwargs['loss']
-    optimizer = 'adam' if 'optimizer' not in keras_kwargs else keras_kwargs['optimizer']
-    learning_rate = 0.001 if 'learning_rate' not in keras_kwargs else keras_kwargs['learning_rate']
     epochs = 150 if 'epochs' not in keras_kwargs else keras_kwargs['epochs']
     batch_size = 10 if 'batch_size' not in keras_kwargs else keras_kwargs['batch_size']
     verbose = 0 if 'verbose' not in keras_kwargs else keras_kwargs['verbose']
     model_kwargs = {} if model_kwargs is None else model_kwargs
-    return KerasModel(model_builder=make_tabular_transformer_model_builder, mode=mode, model_path=model_path, loss=loss,
-                      optimizer=optimizer, learning_rate=learning_rate, epochs=epochs, batch_size=batch_size,
-                      verbose=verbose, **model_kwargs)
+    return KerasModel(model_builder=make_tabular_transformer_model_builder, mode=mode, model_path=model_path,
+                      epochs=epochs, batch_size=batch_size, verbose=verbose, **model_kwargs)
 
 
 def make_simple_rnn_model_builder(input_dim: tuple, n_rnn_layers: int = 1, rnn_units: int = 64,
@@ -236,19 +231,17 @@ def make_simple_rnn_model_builder(input_dim: tuple, n_rnn_layers: int = 1, rnn_u
     return model
 
 
-def keras_simple_rnn_model(model_dir: str, model_kwargs: dict = None, keras_kwargs: dict = None) -> KerasModel:
+def keras_simple_rnn_model(model_dir: str = 'keras_model/', model_kwargs: dict = None,
+                           keras_kwargs: dict = None) -> KerasModel:
+    keras_kwargs = {} if keras_kwargs is None else keras_kwargs
     mode = 'classification' if 'mode' not in keras_kwargs else keras_kwargs['mode']
     model_path = model_dir
-    loss = 'binary_crossentropy' if 'loss' not in keras_kwargs else keras_kwargs['loss']
-    optimizer = 'adam' if 'optimizer' not in keras_kwargs else keras_kwargs['optimizer']
-    learning_rate = 0.001 if 'learning_rate' not in keras_kwargs else keras_kwargs['learning_rate']
     epochs = 150 if 'epochs' not in keras_kwargs else keras_kwargs['epochs']
     batch_size = 10 if 'batch_size' not in keras_kwargs else keras_kwargs['batch_size']
     verbose = 0 if 'verbose' not in keras_kwargs else keras_kwargs['verbose']
     model_kwargs = {} if model_kwargs is None else model_kwargs
-    return KerasModel(model_builder=make_simple_rnn_model_builder, mode=mode, model_path=model_path, loss=loss,
-                      optimizer=optimizer, learning_rate=learning_rate, epochs=epochs, batch_size=batch_size,
-                      verbose=verbose, **model_kwargs)
+    return KerasModel(model_builder=make_simple_rnn_model_builder, mode=mode, model_path=model_path, epochs=epochs,
+                      batch_size=batch_size, verbose=verbose, **model_kwargs)
 
 
 def make_rnn_model_builder(num_lstm_layers: int = 1, lstm_units: List[int] = [128], num_gru_layers: int = 1,
@@ -277,19 +270,17 @@ def make_rnn_model_builder(num_lstm_layers: int = 1, lstm_units: List[int] = [12
     return model
 
 
-def keras_rnn_model(model_dir: str, model_kwargs: dict = None, keras_kwargs: dict = None) -> KerasModel:
+def keras_rnn_model(model_dir: str = 'keras_model/', model_kwargs: dict = None,
+                    keras_kwargs: dict = None) -> KerasModel:
+    keras_kwargs = {} if keras_kwargs is None else keras_kwargs
     mode = 'classification' if 'mode' not in keras_kwargs else keras_kwargs['mode']
     model_path = model_dir
-    loss = 'binary_crossentropy' if 'loss' not in keras_kwargs else keras_kwargs['loss']
-    optimizer = 'adam' if 'optimizer' not in keras_kwargs else keras_kwargs['optimizer']
-    learning_rate = 0.001 if 'learning_rate' not in keras_kwargs else keras_kwargs['learning_rate']
     epochs = 150 if 'epochs' not in keras_kwargs else keras_kwargs['epochs']
     batch_size = 10 if 'batch_size' not in keras_kwargs else keras_kwargs['batch_size']
     verbose = 0 if 'verbose' not in keras_kwargs else keras_kwargs['verbose']
     model_kwargs = {} if model_kwargs is None else model_kwargs
-    return KerasModel(model_builder=make_rnn_model_builder, mode=mode, model_path=model_path, loss=loss,
-                      optimizer=optimizer, learning_rate=learning_rate, epochs=epochs, batch_size=batch_size,
-                      verbose=verbose, **model_kwargs)
+    return KerasModel(model_builder=make_rnn_model_builder, mode=mode, model_path=model_path, epochs=epochs,
+                      batch_size=batch_size, verbose=verbose, **model_kwargs)
 
 
 def make_bidirectional_rnn_model_builder(input_dim: tuple, num_lstm_layers: int = 1, lstm_units: List[int] = [128],
@@ -325,16 +316,14 @@ def make_bidirectional_rnn_model_builder(input_dim: tuple, num_lstm_layers: int 
     return model
 
 
-def keras_bidirectional_rnn_model(model_dir: str, model_kwargs: dict = None, keras_kwargs: dict = None) -> KerasModel:
+def keras_bidirectional_rnn_model(model_dir: str = 'keras_model/', model_kwargs: dict = None,
+                                  keras_kwargs: dict = None) -> KerasModel:
+    keras_kwargs = {} if keras_kwargs is None else keras_kwargs
     mode = 'classification' if 'mode' not in keras_kwargs else keras_kwargs['mode']
     model_path = model_dir
-    loss = 'binary_crossentropy' if 'loss' not in keras_kwargs else keras_kwargs['loss']
-    optimizer = 'adam' if 'optimizer' not in keras_kwargs else keras_kwargs['optimizer']
-    learning_rate = 0.001 if 'learning_rate' not in keras_kwargs else keras_kwargs['learning_rate']
     epochs = 150 if 'epochs' not in keras_kwargs else keras_kwargs['epochs']
     batch_size = 10 if 'batch_size' not in keras_kwargs else keras_kwargs['batch_size']
     verbose = 0 if 'verbose' not in keras_kwargs else keras_kwargs['verbose']
     model_kwargs = {} if model_kwargs is None else model_kwargs
-    return KerasModel(model_builder=make_bidirectional_rnn_model_builder, mode=mode, model_path=model_path, loss=loss,
-                      optimizer=optimizer, learning_rate=learning_rate, epochs=epochs, batch_size=batch_size,
-                      verbose=verbose, **model_kwargs)
+    return KerasModel(model_builder=make_bidirectional_rnn_model_builder, mode=mode, model_path=model_path,
+                      epochs=epochs, batch_size=batch_size, verbose=verbose, **model_kwargs)

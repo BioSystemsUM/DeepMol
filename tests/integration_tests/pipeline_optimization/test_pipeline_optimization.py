@@ -90,7 +90,7 @@ class TestPipelineOptimization(TestCase):
         po = PipelineOptimization(direction='maximize', study_name='test_pipeline')
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_smiles, seed=123)
-        po.optimize(train_dataset=train, test_dataset=test, objective_steps='ss', metric=metric, n_trials=3, data=train,
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps='all', metric=metric, n_trials=3, data=train,
                     save_top_n=2)
         self.assertEqual(po.best_params, po.best_trial.params)
         self.assertIsInstance(po.best_value, float)
@@ -107,7 +107,7 @@ class TestPipelineOptimization(TestCase):
         po = PipelineOptimization(direction='minimize', study_name='test_pipeline')
         metric = Metric(mean_squared_error)
         train, test = RandomSplitter().train_test_split(self.dataset_regression, seed=123)
-        po.optimize(train_dataset=train, test_dataset=test, objective_steps='ss', metric=metric, n_trials=3, data=train,
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps='all', metric=metric, n_trials=3, data=train,
                     save_top_n=2)
         self.assertEqual(po.best_params, po.best_trial.params)
         self.assertIsInstance(po.best_value, float)

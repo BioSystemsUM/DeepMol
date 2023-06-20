@@ -22,12 +22,19 @@ from deepmol.pipeline_optimization._standardizer_objectives import _get_standard
 
 
 def _get_preset(preset: str, dataset: Dataset, metric: Metric) -> callable:
-    return preset_keras_models
+    if preset == 'deepchem':
+        return preset_deepchem_models
+    elif preset == 'sklearn':
+        return preset_sklearn_models
+    elif preset == 'keras':
+        return preset_keras_models
+    elif preset == 'all':
+        return preset_all_models
 
 
 # TODO: change trial choices names
-def preset_deepchem_objective(trial,
-                              data: Dataset) -> list:
+def preset_deepchem_models(trial,
+                           data: Dataset) -> list:
     # TODO: "mpnn_model" is not working (DeepChem-> AttributeError: 'GraphData' object has no attribute 'get_num_atoms')
     # TODO: "megnet_model" is not working (error with torch_geometric (extra_requirement))
     # TODO: "cnn_model" is not working (raise PicklingError(
@@ -258,19 +265,39 @@ def preset_sklearn_models(trial, data: Dataset) -> list:
 def preset_keras_models(trial, data: Dataset) -> list:
     n_tasks = data.n_tasks
     mode = data.mode
-    featurizer = _get_featurizer(trial, '1D')
-    if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
-            featurizer.__class__.__name__ == 'All3DDescriptors':
-        scaler = _get_scaler(trial)
+    featurizer_type = trial.suggest_categorical('featurizer_type', ['1D', '2D'])
+    featurizer = _get_featurizer(trial, featurizer_type)
+    if featurizer_type == '1D':
+        if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
+                featurizer.__class__.__name__ == 'All3DDescriptors':
+            scaler = _get_scaler(trial)
+        else:
+            scaler = PassThroughTransformer()
+        feature_selector = _get_feature_selector(trial, task_type=mode)
+        input_shape = (len(featurizer.feature_names),)
     else:
         scaler = PassThroughTransformer()
-    feature_selector = _get_feature_selector(trial, task_type=mode)
+        feature_selector = PassThroughTransformer()
+        input_shape = featurizer.fit(data).shape
     # TODO: adjust input size for one hot encoding etc
-    keras_model = _get_keras_model(trial, task_type=mode, input_shape=(len(featurizer.feature_names),))
+    keras_model = _get_keras_model(trial, task_type=mode, featurizer_type=featurizer_type,
+                                   input_shape=input_shape)
     final_steps = [('standardizer', _get_standardizer(trial)), ('featurizer', featurizer), ('scaler', scaler),
                    ('feature_selector', feature_selector), ('model', keras_model)]
     print(trial.params)
     return final_steps
+
+
+def preset_all_models(trial, data: Dataset):
+    model_type_choice = trial.suggest_categorical('model_type', ['keras', 'sklearn', 'deepchem'])
+    if model_type_choice == 'keras':
+        return preset_keras_models(trial, data)
+    elif model_type_choice == 'sklearn':
+        return preset_sklearn_models(trial, data)
+    elif model_type_choice == 'deepchem':
+        return preset_deepchem_models(trial, data)
+    else:
+        raise ValueError("Unknown model type: %s" % model_type_choice)
 
 
 def prepare_dataset_for_textcnn(dataset, max_length=150, pad_char='E'):

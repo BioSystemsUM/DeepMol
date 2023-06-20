@@ -112,6 +112,8 @@ class PipelineOptimization:
             Additional arguments to be passed to the objective function.
         """
         if isinstance(objective_steps, str):
+            assert objective_steps in ['keras', 'deepchem', 'sklearn', 'all'], \
+                'objective_steps must be one of the following: keras, deepchem, sklearn, all'
             objective_steps = _get_preset(objective_steps, train_dataset, metric)
         objective = Objective(objective_steps, self.study, self.direction, train_dataset, test_dataset, metric,
                               save_top_n, **kwargs)

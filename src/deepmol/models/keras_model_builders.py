@@ -214,9 +214,9 @@ def keras_tabular_transformer_model(model_dir: str = 'keras_model/', model_kwarg
 
 
 def make_simple_rnn_model_builder(input_dim: tuple, n_rnn_layers: int = 1, rnn_units: int = 64,
-                                  dropout_rnn: float = 0.1, dense_units: int = 64, last_layer_units: int = 1,
-                                  last_layer_activation: str = 'sigmoid', loss: str = 'binary_crossentropy',
-                                  optimizer: str = 'adam', metric: str = 'accuracy'):
+                                  dropout_rnn: float = 0.1, dense_units: int = 64, dense_dropout: float = 0.1,
+                                  last_layer_units: int = 1, last_layer_activation: str = 'sigmoid',
+                                  loss: str = 'binary_crossentropy', optimizer: str = 'adam', metric: str = 'accuracy'):
     inputs = Input(shape=input_dim)
     x = inputs
     for _ in range(n_rnn_layers):
@@ -224,7 +224,7 @@ def make_simple_rnn_model_builder(input_dim: tuple, n_rnn_layers: int = 1, rnn_u
         x = Dropout(dropout_rnn)(x)
     x = Flatten()(x)
     x = Dense(units=dense_units, activation="relu")(x)
-    x = Dropout(0.1)(x)
+    x = Dropout(dense_dropout)(x)
     outputs = Dense(units=last_layer_units, activation=last_layer_activation)(x)
     model = Model(inputs=inputs, outputs=outputs)
     model.compile(loss=loss, optimizer=optimizer, metrics=[metric])

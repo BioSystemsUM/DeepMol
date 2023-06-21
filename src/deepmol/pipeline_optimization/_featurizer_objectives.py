@@ -6,17 +6,29 @@ from deepmol.base import Transformer
 from deepmol.compound_featurization import All3DDescriptors, TwoDimensionDescriptors, MorganFingerprint, \
     AtomPairFingerprint, LayeredFingerprint, RDKFingerprint, MACCSkeysFingerprint, Mol2Vec, SmilesOneHotEncoder
 
-# _1D_FEATURIZERS = {'3d_descriptors': All3DDescriptors, '2d_descriptors': TwoDimensionDescriptors,
-#                    'morgan': MorganFingerprint, 'atom_pair': AtomPairFingerprint, 'layered': LayeredFingerprint,
-#                    'rdk': RDKFingerprint, 'maccs': MACCSkeysFingerprint, 'mol2vec': Mol2Vec}
+# TODO: include All3DDescriptors? (It takes a lot of time to compute)
+# TODO: include MixedFeaturizer?
 _1D_FEATURIZERS = {'2d_descriptors': TwoDimensionDescriptors,
                    'morgan': MorganFingerprint, 'atom_pair': AtomPairFingerprint, 'layered': LayeredFingerprint,
                    'rdk': RDKFingerprint, 'maccs': MACCSkeysFingerprint, 'mol2vec': Mol2Vec}
 
-# TODO: add one-hot encoding and other featurizers from deepchem that are not graph-based + MixedFeaturizer
-
 
 def _get_featurizer(trial: Trial, feat_type: Literal['1D', '2D']) -> Transformer:
+    """
+    Optuna objective function for featurizers.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+    feat_type : Literal['1D', '2D']
+        The type of the featurizer. Either '1D' or '2D'.
+
+    Returns
+    -------
+    Transformer
+        The featurizer.
+    """
     if feat_type == '1D':
         feat = trial.suggest_categorical('1D_featurizer', list(_1D_FEATURIZERS.keys()))
         if feat == 'morgan':

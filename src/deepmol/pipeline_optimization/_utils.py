@@ -1,11 +1,11 @@
 from copy import deepcopy, copy
+from typing import Literal
 
 from deepchem.models import TextCNNModel
 
 from deepmol.base import DatasetTransformer, PassThroughTransformer
 from deepmol.compound_featurization import SmilesSeqFeat, CoulombFeat
 from deepmol.datasets import Dataset
-from deepmol.metrics import Metric
 from deepmol.pipeline_optimization._deepchem_models_objectives import gat_model_steps, gcn_model_steps, \
     pagtn_model_steps, attentive_fp_model_steps, mpnn_model_steps, megnet_model_steps, cnn_model_steps, \
     multitask_classifier_model_steps, multitask_irv_classifier_model_steps, \
@@ -21,7 +21,20 @@ from deepmol.pipeline_optimization._sklearn_model_objectives import _get_sk_mode
 from deepmol.pipeline_optimization._standardizer_objectives import _get_standardizer
 
 
-def _get_preset(preset: str, dataset: Dataset, metric: Metric) -> callable:
+def _get_preset(preset: Literal['deepchem', 'sklearn', 'keras', 'all']) -> callable:
+    """
+    Returns the function that returns the list of steps for the given preset.
+
+    Parameters
+    ----------
+    preset : Literal['deepchem', 'sklearn', 'keras', 'all']
+        The preset to use.
+
+    Returns
+    -------
+    callable
+        The function that returns the list of steps for the given preset.
+    """
     if preset == 'deepchem':
         return preset_deepchem_models
     elif preset == 'sklearn':
@@ -33,8 +46,22 @@ def _get_preset(preset: str, dataset: Dataset, metric: Metric) -> callable:
 
 
 # TODO: change trial choices names
-def preset_deepchem_models(trial,
-                           data: Dataset) -> list:
+def preset_deepchem_models(trial, data: Dataset) -> list:
+    """
+    Returns the list of steps for the deepchem preset.
+
+    Parameters
+    ----------
+    trial : optuna.trial.Trial
+        The trial.
+    data : deepmol.datasets.Dataset
+        The dataset.
+
+    Returns
+    -------
+    list
+        The list of steps for the deepchem preset.
+    """
     # TODO: "mpnn_model" is not working (DeepChem-> AttributeError: 'GraphData' object has no attribute 'get_num_atoms')
     # TODO: "megnet_model" is not working (error with torch_geometric (extra_requirement))
     # TODO: "cnn_model" is not working (raise PicklingError(
@@ -240,11 +267,25 @@ def preset_deepchem_models(trial,
         final_steps.extend([featurizer, scaler, model])
     else:
         raise ValueError("Unknown model: %s" % model_steps)
-    print(trial.params)
     return final_steps
 
 
 def preset_sklearn_models(trial, data: Dataset) -> list:
+    """
+    Preset sklearn models for hyperparameter optimization.
+
+    Parameters
+    ----------
+    trial: optuna.trial.Trial
+        Trial object that stores the current progress of hyperparameter optimization.
+    data: Dataset
+        Dataset object.
+
+    Returns
+    -------
+    final_steps: list
+        List of tuples, where each tuple is a step in the sklearn pipeline.
+    """
     n_tasks = data.n_tasks
     mode = data.mode
     print(mode)
@@ -258,11 +299,25 @@ def preset_sklearn_models(trial, data: Dataset) -> list:
     sk_model = _get_sk_model(trial, task_type=mode)
     final_steps = [('standardizer', _get_standardizer(trial)), ('featurizer', featurizer), ('scaler', scaler),
                    ('feature_selector', feature_selector), ('model', sk_model)]
-    print(trial.params)
     return final_steps
 
 
 def preset_keras_models(trial, data: Dataset) -> list:
+    """
+    Preset keras models for hyperparameter optimization.
+
+    Parameters
+    ----------
+    trial: optuna.trial.Trial
+        Optuna trial object.
+    data: Dataset
+        Dataset object.
+
+    Returns
+    -------
+    final_steps: list
+        List of steps for keras models for hyperparameter optimization.
+    """
     n_tasks = data.n_tasks
     mode = data.mode
     featurizer_type = trial.suggest_categorical('featurizer_type', ['1D', '2D'])
@@ -284,11 +339,25 @@ def preset_keras_models(trial, data: Dataset) -> list:
                                    input_shape=input_shape)
     final_steps = [('standardizer', _get_standardizer(trial)), ('featurizer', featurizer), ('scaler', scaler),
                    ('feature_selector', feature_selector), ('model', keras_model)]
-    print(trial.params)
     return final_steps
 
 
-def preset_all_models(trial, data: Dataset):
+def preset_all_models(trial, data: Dataset) -> list:
+    """
+    Preset all models for the trial.
+
+    Parameters
+    ----------
+    trial: optuna.trial.Trial
+        Optuna trial object.
+    data: Dataset
+        Dataset to be used for model selection.
+
+    Returns
+    -------
+    final_steps: list
+        List of steps for the pipeline.
+    """
     model_type_choice = trial.suggest_categorical('model_type', ['keras', 'sklearn', 'deepchem'])
     if model_type_choice == 'keras':
         return preset_keras_models(trial, data)
@@ -300,7 +369,24 @@ def preset_all_models(trial, data: Dataset):
         raise ValueError("Unknown model type: %s" % model_type_choice)
 
 
-def prepare_dataset_for_textcnn(dataset, max_length=150, pad_char='E'):
+def prepare_dataset_for_textcnn(dataset: Dataset, max_length: int = 150, pad_char: str = 'E') -> Dataset:
+    """
+    Prepares a dataset for use with the TextCNN model.
+
+    Parameters
+    ----------
+    dataset: Dataset
+        Dataset to be prepared.
+    max_length: int, optional (default 150)
+        Maximum length of the SMILES strings.
+    pad_char: str, optional (default 'E')
+        Character to use for padding.
+
+    Returns
+    -------
+    dataset: Dataset
+        Prepared dataset.
+    """
     padded_smiles = [smile.ljust(max_length, pad_char) for smile in dataset.smiles]
     truncated_smiles = [smile[:max_length] for smile in padded_smiles]
     dataset._X = truncated_smiles

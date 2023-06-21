@@ -88,12 +88,12 @@ class ConvMolFeat(MolecularFeaturizer):
 
 class PagtnMolGraphFeat(MolecularFeaturizer):
     """
-    This class is a featuriser of PAGTN graph networks for molecules.
+    This class is a featurizer of PAGTN graph networks for molecules.
 
     The featurization is based on `PAGTN model <https://arxiv.org/abs/1905.12712>`_. It is slightly more computationally
-    intensive than default Graph Convolution Featuriser, but it builds a Molecular Graph connecting all atom pairs
+    intensive than default Graph Convolution Featurizer, but it builds a Molecular Graph connecting all atom pairs
     accounting for interactions of an atom with every other atom in the Molecule. According to the paper, interactions
-    between two pairs of atom are dependent on the relative distance between them and and hence, the function needs
+    between two pairs of atom are dependent on the relative distance between them and hence, the function needs
     to calculate the shortest path between them.
 
     References

@@ -57,7 +57,6 @@ class TestShap(TestCase):
         self.mlp_model = KerasModel(basic_dnn_regression,
                                     epochs=2,
                                     mode='regression',
-                                    loss='mse',
                                     batch_size=1)
         self.mlp_model.fit(self.regression_dataset)
 

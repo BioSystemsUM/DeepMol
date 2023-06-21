@@ -25,9 +25,6 @@ class KerasModel(Model):
                  model_builder: callable,
                  mode: str = 'classification',
                  model_dir: str = None,
-                 loss: str = 'binary_crossentropy',
-                 optimizer: str = 'adam',
-                 learning_rate: float = 0.001,
                  epochs: int = 150,
                  batch_size: int = 10,
                  verbose: int = 0,
@@ -43,12 +40,6 @@ class KerasModel(Model):
             The mode of the model. Can be either 'classification' or 'regression'.
         model_path: str
             The directory to save the model to.
-        loss: str
-            The loss function to use.
-        optimizer: str
-            The optimizer to use.
-        learning_rate: float
-            The learning rate to use.
         epochs: int
             The number of epochs to train for.
         batch_size: int
@@ -57,18 +48,12 @@ class KerasModel(Model):
             The verbosity of the model.
         """
         self.mode = mode
-        self.loss = loss
-        self.optimizer = optimizer
-        self.learning_rate = learning_rate
         self.batch_size = batch_size
         self.epochs = epochs
         self.model_builder = model_builder
         self.verbose = verbose
 
         self.parameters_to_save = {'mode': self.mode,
-                                   'loss': self.loss,
-                                   'optimizer': self.optimizer,
-                                   'learning_rate': self.learning_rate,
                                    'batch_size': self.batch_size,
                                    'epochs': self.epochs,
                                    'verbose': self.verbose,

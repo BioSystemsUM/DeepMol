@@ -16,10 +16,28 @@ from deepmol.models.deepchem_model_builders import gat_model, gcn_model, attenti
 #  and (pip install  dglgo -f https://data.dgl.ai/wheels-test/repo.html)
 
 
-def gat_model_steps(trial: Trial,
-                    model_dir: str = 'gat_model/',
-                    gat_kwargs: dict = None,
+def gat_model_steps(trial: Trial, model_dir: str = 'gat_model/', gat_kwargs: dict = None,
                     deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Predictor, Transformer]]]:
+    """
+    Steps to optimize a GAT model with optuna.
+    It defines the featurizer (MolGraphConvFeat) and the model (GATModel) with respective optimizable parameters.
+
+    Parameters
+    ----------
+    trial: optuna.Trial
+        Optuna trial object.
+    model_dir: str
+        Path to save the model.
+    gat_kwargs: dict
+        GATModel parameters.
+    deepchem_kwargs: dict
+        Deepchem parameters.
+
+    Returns
+    -------
+    List[Tuple[str, Union[Predictor, Transformer]]]
+        List of tuples (steps) with the featurizer and the model.
+    """
     # Classifier/ Regressor
     # MolGraphConvFeaturizer
     featurizer = MolGraphConvFeat()
@@ -36,10 +54,28 @@ def gat_model_steps(trial: Trial,
     return [('featurizer', featurizer), ('model', model)]
 
 
-def gcn_model_steps(trial: Trial,
-                    model_dir: str = 'gcn_model/',
-                    gcn_kwargs: dict = None,
+def gcn_model_steps(trial: Trial, model_dir: str = 'gcn_model/', gcn_kwargs: dict = None,
                     deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Predictor, Transformer]]]:
+    """
+    Steps to optimize a GCN model with optuna.
+    It defines the featurizer (MolGraphConvFeat) and the model (GCNModel) with respective optimizable parameters.
+
+    Parameters
+    ----------
+    trial: optuna.Trial
+        Optuna trial object.
+    model_dir: str
+        Path to save the model.
+    gcn_kwargs: dict
+        GCNModel parameters.
+    deepchem_kwargs: dict
+        Deepchem parameters.
+
+    Returns
+    -------
+    List[Tuple[str, Union[Predictor, Transformer]]]
+        List of tuples (steps) with the featurizer and the model.
+    """
     # Classifier/ Regressor
     # MolGraphConvFeaturizer
     featurizer = MolGraphConvFeat()
@@ -56,10 +92,29 @@ def gcn_model_steps(trial: Trial,
     return [('featurizer', featurizer), ('model', model)]
 
 
-def attentive_fp_model_steps(trial: Trial,
-                             model_dir: str = 'attentive_fp_model/',
-                             attentive_fp_kwargs: dict = None,
+def attentive_fp_model_steps(trial: Trial, model_dir: str = 'attentive_fp_model/', attentive_fp_kwargs: dict = None,
                              deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Predictor, Transformer]]]:
+    """
+    Steps to optimize a AttentiveFP model with optuna.
+    It defines the featurizer (MolGraphConvFeat) and the model (AttentiveFPModel) with respective optimizable
+    parameters.
+
+    Parameters
+    ----------
+    trial: optuna.Trial
+        Optuna trial object.
+    model_dir: str
+        Path to save the model.
+    attentive_fp_kwargs: dict
+        AttentiveFPModel parameters.
+    deepchem_kwargs: dict
+        Deepchem parameters.
+
+    Returns
+    -------
+    List[Tuple[str, Union[Predictor, Transformer]]]
+        List of tuples (steps) with the featurizer and the model.
+    """
     # Classifier/ Regressor
     # MolGraphConvFeaturizer
     featurizer = MolGraphConvFeat(use_edges=True)
@@ -75,10 +130,28 @@ def attentive_fp_model_steps(trial: Trial,
     return [('featurizer', featurizer), ('model', model)]
 
 
-def pagtn_model_steps(trial: Trial,
-                      model_dir: str = 'pagtn_model/',
-                      pagtn_kwargs: dict = None,
+def pagtn_model_steps(trial: Trial, model_dir: str = 'pagtn_model/', pagtn_kwargs: dict = None,
                       deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Predictor, Transformer]]]:
+    """
+    Steps to optimize a PAGTN model with optuna.
+    It defines the featurizer (PagtnMolGraphFeat) and the model (PAGTNModel) with respective optimizable parameters.
+
+    Parameters
+    ----------
+    trial: optuna.Trial
+        Optuna trial object.
+    model_dir: str
+        Path to save the model.
+    pagtn_kwargs: dict
+        PAGTNModel parameters.
+    deepchem_kwargs: dict
+        Deepchem parameters.
+
+    Returns
+    -------
+    List[Tuple[str, Union[Predictor, Transformer]]]
+        List of tuples (steps) with the featurizer and the model.
+    """
     # Classifier/ Regressor
     # PagtnMolGraphFeaturizer
     featurizer = PagtnMolGraphFeat()
@@ -93,10 +166,28 @@ def pagtn_model_steps(trial: Trial,
     return [('featurizer', featurizer), ('model', model)]
 
 
-def mpnn_model_steps(trial: Trial,
-                     model_dir: str = 'mpnn_model/',
-                     mpnn_kwargs: dict = None,
+def mpnn_model_steps(trial: Trial, model_dir: str = 'mpnn_model/', mpnn_kwargs: dict = None,
                      deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Predictor, Transformer]]]:
+    """
+    Steps to optimize a MPNN model with optuna.
+    It defines the featurizer (MolGraphConvFeat) and the model (MPNNModel) with respective optimizable parameters.
+
+    Parameters
+    ----------
+    trial: optuna.Trial
+        Optuna trial object.
+    model_dir: str
+        Path to save the model.
+    mpnn_kwargs: dict
+        MPNNModel parameters.
+    deepchem_kwargs: dict
+        Deepchem parameters.
+
+    Returns
+    -------
+    List[Tuple[str, Union[Predictor, Transformer]]]
+        List of tuples (steps) with the featurizer and the model.
+    """
     # Classifier/ Regressor
     # MolGraphConvFeaturizer
     featurizer = MolGraphConvFeat(use_edges=True)
@@ -108,10 +199,28 @@ def mpnn_model_steps(trial: Trial,
     return [('featurizer', featurizer), ('model', model)]
 
 
-def megnet_model_steps(trial: Trial,
-                       model_dir: str = 'megnet_model/',
-                       megnet_kwargs: dict = None,
+def megnet_model_steps(trial: Trial, model_dir: str = 'megnet_model/', megnet_kwargs: dict = None,
                        deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Predictor, Transformer]]]:
+    """
+    Steps to optimize a MEGNET model with optuna.
+    It defines the featurizer (MolGraphConvFeat) and the model (MEGNETModel) with respective optimizable parameters.
+
+    Parameters
+    ----------
+    trial: optuna.Trial
+        Optuna trial object.
+    model_dir: str
+        Path to save the model.
+    megnet_kwargs: dict
+        MEGNETModel parameters.
+    deepchem_kwargs: dict
+        Deepchem parameters.
+
+    Returns
+    -------
+    List[Tuple[str, Union[Predictor, Transformer]]]
+        List of tuples (steps) with the featurizer and the model.
+    """
     # TODO: add "pip install torch_geometric" to requirements.txt
     # Classifier/ Regressor
     # MolGraphConvFeat
@@ -123,10 +232,28 @@ def megnet_model_steps(trial: Trial,
     return [('featurizer', featurizer), ('model', model)]
 
 
-def dmpnn_model_steps(trial: Trial,
-                      model_dir: str = 'dmpnn_model/',
-                      dmpnn_kwargs: dict = None,
+def dmpnn_model_steps(trial: Trial, model_dir: str = 'dmpnn_model/', dmpnn_kwargs: dict = None,
                       deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Predictor, Transformer]]]:
+    """
+    Steps to optimize a DMPNN model with optuna.
+    It defines the featurizer (DMPNNFeat) and the model (DMPNNModel) with respective optimizable parameters.
+
+    Parameters
+    ----------
+    trial: optuna.Trial
+        Optuna trial object.
+    model_dir: str
+        Path to save the model.
+    dmpnn_kwargs: dict
+        DMPNNModel parameters.
+    deepchem_kwargs: dict
+        Deepchem parameters.
+
+    Returns
+    -------
+    List[Tuple[str, Union[Predictor, Transformer]]]
+        List of tuples (steps) with the featurizer and the model.
+    """
     # Classifier/ Regressor
     # DMPNNFeaturizer
     featurizer = DMPNNFeat()
@@ -140,10 +267,28 @@ def dmpnn_model_steps(trial: Trial,
     return [('featurizer', featurizer), ('model', model)]
 
 
-def cnn_model_steps(trial: Trial,
-                    model_dir: str = 'cnn_model/',
-                    cnn_kwargs: dict = None,
+def cnn_model_steps(trial: Trial, model_dir: str = 'cnn_model/', cnn_kwargs: dict = None,
                     deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Predictor, Transformer]]]:
+    """
+    Steps to optimize a CNN model with optuna.
+    It defines the model (CNNModel) with respective optimizable parameters.
+
+    Parameters
+    ----------
+    trial: optuna.Trial
+        Optuna trial object.
+    model_dir: str
+        Path to save the model.
+    cnn_kwargs: dict
+        CNNModel parameters.
+    deepchem_kwargs: dict
+        Deepchem parameters.
+
+    Returns
+    -------
+    List[Tuple[str, Union[Predictor, Transformer]]]
+        List of tuples (steps) with the model.
+    """
     # Classifier/ Regressor
     # works with 1D, 2D and 3D data
     layer_filters = trial.suggest_categorical('layer_filters', [[100], [100, 100], [100, 100, 100]])
@@ -156,10 +301,29 @@ def cnn_model_steps(trial: Trial,
     return [('model', model)]
 
 
-def multitask_classifier_model_steps(trial: Trial,
-                                     model_dir: str = 'multitask_classifier_model/',
+def multitask_classifier_model_steps(trial: Trial, model_dir: str = 'multitask_classifier_model/',
                                      multitask_classifier_kwargs: dict = None,
                                      deepchem_kwargs: dict = None) -> List[Tuple[str, Predictor]]:
+    """
+    Steps to optimize a multitask classifier model with optuna.
+    It defines the model (MultitaskClassifier) with respective optimizable parameters.
+
+    Parameters
+    ----------
+    trial: optuna.Trial
+        Optuna trial object.
+    model_dir: str
+        Path to save the model.
+    multitask_classifier_kwargs: dict
+        MultitaskClassifier parameters.
+    deepchem_kwargs: dict
+        Deepchem parameters.
+
+    Returns
+    -------
+    List[Tuple[str, Predictor]]
+        List of tuples (steps) with the model.
+    """
     # Classifier
     # 1D descriptors
     dropouts = trial.suggest_float('dropout', 0.0, 0.5, step=0.25)
@@ -171,10 +335,29 @@ def multitask_classifier_model_steps(trial: Trial,
     return [('model', model)]
 
 
-def multitask_irv_classifier_model_steps(trial: Trial,
-                                         model_dir: str = 'multitask_irv_classifier_model/',
+def multitask_irv_classifier_model_steps(trial: Trial, model_dir: str = 'multitask_irv_classifier_model/',
                                          multitask_irv_classifier_kwargs: dict = None,
                                          deepchem_kwargs: dict = None) -> List[Tuple[str, Predictor]]:
+    """
+    Steps to optimize a multitask IRV classifier model with optuna.
+    It defines the model (MultitaskIRVClassifier) with respective optimizable parameters.
+
+    Parameters
+    ----------
+    trial: optuna.Trial
+        Optuna trial object.
+    model_dir: str
+        Path to save the model.
+    multitask_irv_classifier_kwargs: dict
+        MultitaskIRVClassifier parameters.
+    deepchem_kwargs: dict
+        Deepchem parameters.
+
+    Returns
+    -------
+    List[Tuple[str, Predictor]]
+        List of tuples (steps) with the model.
+    """
     # Classifier
     # 1D Descriptors
     K = trial.suggest_int('K', 5, 25, step=5)
@@ -189,6 +372,26 @@ def progressive_multitask_classifier_model_steps(trial: Trial,
                                                  model_dir: str = 'progressive_multitask_classifier_model/',
                                                  progressive_multitask_classifier_kwargs: dict = None,
                                                  deepchem_kwargs: dict = None) -> List[Tuple[str, Predictor]]:
+    """
+    Steps to optimize a progressive multitask classifier model with optuna.
+    It defines the model (ProgressiveMultitaskClassifier) with respective optimizable parameters.
+
+    Parameters
+    ----------
+    trial: optuna.Trial
+        Optuna trial object.
+    model_dir: str
+        Path to save the model.
+    progressive_multitask_classifier_kwargs: dict
+        ProgressiveMultitaskClassifier parameters.
+    deepchem_kwargs: dict
+        Deepchem parameters.
+
+    Returns
+    -------
+    List[Tuple[str, Predictor]]
+        List of tuples (steps) with the model.
+    """
     # Classifier
     # 1D Descriptors
     dropouts = trial.suggest_float('dropout', 0.0, 0.5, step=0.25)
@@ -201,10 +404,29 @@ def progressive_multitask_classifier_model_steps(trial: Trial,
     return [('model', model)]
 
 
-def robust_multitask_classifier_model_steps(trial: Trial,
-                                            model_dir: str = 'robust_multitask_classifier_model/',
+def robust_multitask_classifier_model_steps(trial: Trial, model_dir: str = 'robust_multitask_classifier_model/',
                                             robust_multitask_classifier_kwargs: dict = None,
                                             deepchem_kwargs: dict = None) -> List[Tuple[str, Predictor]]:
+    """
+    Steps to optimize a robust multitask classifier model with optuna.
+    It defines the model (RobustMultitaskClassifier) with respective optimizable parameters.
+
+    Parameters
+    ----------
+    trial: optuna.Trial
+        Optuna trial object.
+    model_dir: str
+        Path to save the model.
+    robust_multitask_classifier_kwargs: dict
+        RobustMultitaskClassifier parameters.
+    deepchem_kwargs: dict
+        Deepchem parameters.
+
+    Returns
+    -------
+    List[Tuple[str, Predictor]]
+        List of tuples (steps) with the model.
+    """
     # Classifier
     # 1D Descriptors
     dropouts = trial.suggest_float('dropout', 0.0, 0.5, step=0.25)
@@ -221,6 +443,26 @@ def robust_multitask_classifier_model_steps(trial: Trial,
 
 def sc_score_model_steps(trial: Trial, model_dir: str = 'sc_score_model/', sc_score_kwargs: dict = None,
                          deepchem_kwargs: dict = None) -> List[Tuple[str, Predictor]]:
+    """
+    Steps to optimize a sc score model with optuna.
+    It defines the model (SCScoreModel) with respective optimizable parameters.
+
+    Parameters
+    ----------
+    trial: optuna.Trial
+        Optuna trial object.
+    model_dir: str
+        Path to save the model.
+    sc_score_kwargs: dict
+        SCScoreModel parameters.
+    deepchem_kwargs: dict
+        Deepchem parameters.
+
+    Returns
+    -------
+    List[Tuple[str, Predictor]]
+        List of tuples (steps) with the model.
+    """
     # Classifier
     # 1D Descriptors
     dropouts = trial.suggest_float('dropout', 0.0, 0.5, step=0.25)
@@ -233,6 +475,26 @@ def sc_score_model_steps(trial: Trial, model_dir: str = 'sc_score_model/', sc_sc
 
 def chem_ception_model_steps(trial: Trial, model_dir: str = 'chem_ception_model/', chem_ception_kwargs: dict = None,
                              deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Transformer, Predictor]]]:
+    """
+    Steps to optimize a chem ception model with optuna.
+    It defines the featurizer (SmilesImageFeat) and the model (ChemCeption) with respective optimizable parameters.
+
+    Parameters
+    ----------
+    trial: optuna.Trial
+        Optuna trial object.
+    model_dir: str
+        Path to save the model.
+    chem_ception_kwargs: dict
+        ChemCeption parameters.
+    deepchem_kwargs: dict
+        Deepchem parameters.
+
+    Returns
+    -------
+    List[Tuple[str, Union[Transformer, Predictor]]]
+        List of tuples (steps) with the featurizer and the model.
+    """
     # Classifier/ Regressor
     # SmilesToImage
     featurizer = SmileImageFeat()
@@ -245,6 +507,26 @@ def chem_ception_model_steps(trial: Trial, model_dir: str = 'chem_ception_model/
 
 def dag_model_steps(trial: Trial, model_dir: str = 'dag_model/', dag_kwargs: dict = None,
                     deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Transformer, Predictor]]]:
+    """
+    Steps to optimize a dag model with optuna.
+    It defines the featurizer (ConvMolFeat) and the model (DAGModel) with respective optimizable parameters.
+
+    Parameters
+    ----------
+    trial: optuna.Trial
+        Optuna trial object.
+    model_dir: str
+        Path to save the model.
+    dag_kwargs: dict
+        DAGModel parameters.
+    deepchem_kwargs: dict
+        Deepchem parameters.
+
+    Returns
+    -------
+    List[Tuple[str, Union[Transformer, Predictor]]]
+        List of tuples (steps) with the featurizer and the model.
+    """
     # Classifier/ Regressor
     # ConvMolFeaturizer
     featurizer = ConvMolFeat()
@@ -257,6 +539,26 @@ def dag_model_steps(trial: Trial, model_dir: str = 'dag_model/', dag_kwargs: dic
 
 def graph_conv_model_steps(trial: Trial, model_dir: str = 'graph_conv_model/', graph_conv_kwargs: dict = None,
                            deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Transformer, Predictor]]]:
+    """
+    Steps to optimize a graph conv model with optuna.
+    It defines the featurizer (ConvMolFeat) and the model (GraphConvModel) with respective optimizable parameters.
+
+    Parameters
+    ----------
+    trial: optuna.Trial
+        Optuna trial object.
+    model_dir: str
+        Path to save the model.
+    graph_conv_kwargs: dict
+        GraphConvModel parameters.
+    deepchem_kwargs: dict
+        Deepchem parameters.
+
+    Returns
+    -------
+    List[Tuple[str, Union[Transformer, Predictor]]]
+        List of tuples (steps) with the featurizer and the model.
+    """
     # Classifier/ Regressor
     # ConvMolFeaturizer
     featurizer = ConvMolFeat()
@@ -275,6 +577,26 @@ def graph_conv_model_steps(trial: Trial, model_dir: str = 'graph_conv_model/', g
 
 def smiles_to_vec_model_steps(trial: Trial, model_dir: str = 'smiles_to_vec_model/', smiles_to_vec_kwargs: dict = None,
                               deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Transformer, Predictor]]]:
+    """
+    Steps to optimize a smiles to vec model with optuna.
+    It defines the featurizer (SmilesSeqFeat) and the model (SmilesToVec) with respective optimizable parameters.
+
+    Parameters
+    ----------
+    trial: optuna.Trial
+        Optuna trial object.
+    model_dir: str
+        Path to save the model.
+    smiles_to_vec_kwargs: dict
+        SmilesToVec parameters.
+    deepchem_kwargs: dict
+        Deepchem parameters.
+
+    Returns
+    -------
+    List[Tuple[str, Union[Transformer, Predictor]]]
+        List of tuples (steps) with the featurizer and the model.
+    """
     # Classifier/ Regressor
     # SmilesToSeq
     featurizer = SmilesSeqFeat()
@@ -293,6 +615,26 @@ def smiles_to_vec_model_steps(trial: Trial, model_dir: str = 'smiles_to_vec_mode
 
 def text_cnn_model_steps(trial: Trial, model_dir: str = 'text_cnn_model/', text_cnn_kwargs: dict = None,
                          deepchem_kwargs: dict = None) -> List[Tuple[str, Predictor]]:
+    """
+    Steps to optimize a text cnn model with optuna.
+    It defines the model (TextCNNModel) with respective optimizable parameters.
+
+    Parameters
+    ----------
+    trial: optuna.Trial
+        Optuna trial object.
+    model_dir: str
+        Path to save the model.
+    text_cnn_kwargs: dict
+        TextCNNModel parameters.
+    deepchem_kwargs: dict
+        Deepchem parameters.
+
+    Returns
+    -------
+    List[Tuple[str, Predictor]]
+        List of tuples (steps) with the model.
+    """
     # Classifier/ Regressor
     n_embedding = trial.suggest_categorical('n_embedding', [50, 75, 100])
     text_cnn_kwargs['n_embedding'] = n_embedding
@@ -304,6 +646,26 @@ def text_cnn_model_steps(trial: Trial, model_dir: str = 'text_cnn_model/', text_
 
 def weave_model_steps(trial: Trial, model_dir: str = 'weave_model/', weave_kwargs: dict = None,
                       deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Transformer, Predictor]]]:
+    """
+    Steps to optimize a weave model with optuna.
+    It defines the featurizer (WeaveFeat) and the model (WeaveModel) with respective optimizable parameters.
+
+    Parameters
+    ----------
+    trial: optuna.Trial
+        Optuna trial object.
+    model_dir: str
+        Path to save the model.
+    weave_kwargs: dict
+        WeaveModel parameters.
+    deepchem_kwargs: dict
+        Deepchem parameters.
+
+    Returns
+    -------
+    List[Tuple[str, Union[Transformer, Predictor]]]
+        List of tuples (steps) with the featurizer and the model.
+    """
     # Classifier/ Regressor
     # WeaveFeaturizer
     featurizer = WeaveFeat()
@@ -320,7 +682,27 @@ def weave_model_steps(trial: Trial, model_dir: str = 'weave_model/', weave_kwarg
 
 
 def dtnn_model_steps(trial: Trial, model_dir: str = 'dtnn_model/', dtnn_kwargs: dict = None,
-                     deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Transformer, Predictor]]]:
+                     deepchem_kwargs: dict = None) -> List[Tuple[str, Predictor]]:
+    """
+    Steps to optimize a dtnn model with optuna.
+    It defines the model (DTNNModel) with respective optimizable parameters.
+
+    Parameters
+    ----------
+    trial: optuna.Trial
+        Optuna trial object.
+    model_dir: str
+        Path to save the model.
+    dtnn_kwargs: dict
+        DTNNModel parameters.
+    deepchem_kwargs: dict
+        Deepchem parameters.
+
+    Returns
+    -------
+    List[Tuple[str, Predictor]]
+        List of tuples (steps) with the model.
+    """
     # Regressor
     # CoulombMatrix
     n_embedding = trial.suggest_categorical('n_embedding', [50, 75, 100])
@@ -335,6 +717,26 @@ def dtnn_model_steps(trial: Trial, model_dir: str = 'dtnn_model/', dtnn_kwargs: 
 
 def mat_model_steps(trial: Trial, model_dir: str = 'mat_model/', mat_kwargs: dict = None,
                     deepchem_kwargs: dict = None) -> List[Tuple[str, Union[Transformer, Predictor]]]:
+    """
+    Steps to optimize a mat model with optuna.
+    It defines the featurizer (MATFeat) and the model (MATModel) with respective optimizable parameters.
+
+    Parameters
+    ----------
+    trial: optuna.Trial
+        Optuna trial object.
+    model_dir: str
+        Path to save the model.
+    mat_kwargs: dict
+        MATModel parameters.
+    deepchem_kwargs: dict
+        Deepchem parameters.
+
+    Returns
+    -------
+    List[Tuple[str, Union[Transformer, Predictor]]]
+        List of tuples (steps) with the featurizer and the model.
+    """
     # Regressor
     # MATFeaturizer
     featurizer = MATFeat()
@@ -358,10 +760,29 @@ def mat_model_steps(trial: Trial, model_dir: str = 'mat_model/', mat_kwargs: dic
     return [('featurizer', featurizer), ('model', model)]
 
 
-def progressive_multitask_regressor_model_steps(trial: Trial,
-                                                model_dir: str = 'progressive_multitask_regressor_model/',
+def progressive_multitask_regressor_model_steps(trial: Trial, model_dir: str = 'progressive_multitask_regressor_model/',
                                                 progressive_multitask_regressor_kwargs: dict = None,
                                                 deepchem_kwargs: dict = None) -> List[Tuple[str, Predictor]]:
+    """
+    Steps to optimize a progressive multitask regressor model with optuna.
+    It defines the model (ProgressiveMultitaskRegressor) with respective optimizable parameters.
+
+    Parameters
+    ----------
+    trial: optuna.Trial
+        Optuna trial object.
+    model_dir: str
+        Path to save the model.
+    progressive_multitask_regressor_kwargs: dict
+        ProgressiveMultitaskRegressor parameters.
+    deepchem_kwargs: dict
+        Deepchem parameters.
+
+    Returns
+    -------
+    List[Tuple[str, Predictor]]
+        List of tuples (steps) with the model.
+    """
     # Regressor
     # 1D Descriptors
     dropouts = trial.suggest_float('dropout', 0.0, 0.5, step=0.25)
@@ -377,6 +798,26 @@ def progressive_multitask_regressor_model_steps(trial: Trial,
 def multitask_regressor_model_steps(trial: Trial, model_dir: str = 'multitask_regressor_model/',
                                     multitask_regressor_kwargs: dict = None,
                                     deepchem_kwargs: dict = None) -> List[Tuple[str, Predictor]]:
+    """
+    Steps to optimize a multitask regressor model with optuna.
+    It defines the model (MultitaskRegressor) with respective optimizable parameters.
+
+    Parameters
+    ----------
+    trial: optuna.Trial
+        Optuna trial object.
+    model_dir: str
+        Path to save the model.
+    multitask_regressor_kwargs: dict
+        MultitaskRegressor parameters.
+    deepchem_kwargs: dict
+        Deepchem parameters.
+
+    Returns
+    -------
+    List[Tuple[str, Predictor]]
+        List of tuples (steps) with the model.
+    """
     # Regressor
     # 1D Descriptors
     dropouts = trial.suggest_float('dropout', 0.0, 0.5, step=0.25)
@@ -388,10 +829,29 @@ def multitask_regressor_model_steps(trial: Trial, model_dir: str = 'multitask_re
     return [('model', model)]
 
 
-def robust_multitask_regressor_model_steps(trial: Trial,
-                                           model_dir: str = 'robust_multitask_regressor_model/',
+def robust_multitask_regressor_model_steps(trial: Trial, model_dir: str = 'robust_multitask_regressor_model/',
                                            robust_multitask_regressor_kwargs: dict = None,
                                            deepchem_kwargs: dict = None) -> List[Tuple[str, Predictor]]:
+    """
+    Steps to optimize a robust multitask regressor model with optuna.
+    It defines the model (RobustMultitaskRegressor) with respective optimizable parameters.
+
+    Parameters
+    ----------
+    trial: optuna.Trial
+        Optuna trial object.
+    model_dir: str
+        Path to save the model.
+    robust_multitask_regressor_kwargs: dict
+        RobustMultitaskRegressor parameters.
+    deepchem_kwargs: dict
+        Deepchem parameters.
+
+    Returns
+    -------
+    List[Tuple[str, Predictor]]
+        List of tuples (steps) with the model.
+    """
     # Regressor
     # 1D Descriptors
     dropouts = trial.suggest_float('dropout', 0.0, 0.5, step=0.25)

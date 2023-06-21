@@ -73,6 +73,23 @@ def baseline_dense_model_builder(input_dim: int = 1024,
 
 def keras_dense_model(model_dir: str = 'keras_model/', model_kwargs: dict = None,
                       keras_kwargs: dict = None) -> KerasModel:
+    """
+    Builds a dense neural network model using DeepMol's KerasModel wrapper.
+
+    Parameters
+    ----------
+    model_dir : str
+        Path to save the model.
+    model_kwargs : dict
+        Keyword arguments for the model builder.
+    keras_kwargs : dict
+        Keyword arguments for the KerasModel wrapper.
+
+    Returns
+    -------
+    model : KerasModel
+        Dense neural network model.
+    """
     keras_kwargs = {} if keras_kwargs is None else keras_kwargs
     mode = 'classification' if 'mode' not in keras_kwargs else keras_kwargs['mode']
     model_path = model_dir
@@ -157,6 +174,23 @@ def baseline_cnn_model_builder(input_dim: int = 1024,
 
 def keras_cnn_model(model_dir: str = 'keras_model/', model_kwargs: dict = None,
                     keras_kwargs: dict = None) -> KerasModel:
+    """
+    Builds a convolutional neural network model using DeepMol's KerasModel wrapper.
+
+    Parameters
+    ----------
+    model_dir : str
+        Path to save the model.
+    model_kwargs : dict
+        Keyword arguments for the model builder.
+    keras_kwargs : dict
+        Keyword arguments for the KerasModel wrapper.
+
+    Returns
+    -------
+    model : KerasModel
+        Convolutional neural network model.
+    """
     keras_kwargs = {} if keras_kwargs is None else keras_kwargs
     mode = 'classification' if 'mode' not in keras_kwargs else keras_kwargs['mode']
     model_path = model_dir
@@ -173,6 +207,39 @@ def make_tabular_transformer_model_builder(input_dim: int, embedding_output_dim:
                                            last_layer_units: int = 1, last_layer_activation: str = 'sigmoid',
                                            loss: str = 'binary_crossentropy', optimizer: str = 'adam',
                                            metric: str = 'accuracy'):
+    """
+    Builds a tabular transformer model.
+
+    Parameters
+    ----------
+    input_dim : int
+        Number of features.
+    embedding_output_dim : int
+        Dimension of the embedding output.
+    n_attention_layers : int
+        Number of attention layers.
+    n_heads : int
+        Number of attention heads.
+    dropout_attention_l : float
+        Dropout rate in the attention layers.
+    dense_units : int
+        Number of units in the dense layer.
+    last_layer_units : int
+        Number of units in the last layer.
+    last_layer_activation : str
+        Activation function in the last layer.
+    loss : str
+        Loss function.
+    optimizer : str
+        Optimizer.
+    metric : str
+        Metric to be evaluated by the model during training and testing.
+
+    Returns
+    -------
+    model : Model
+        Tabular transformer model.
+    """
     inputs = Input(shape=(input_dim,))
 
     # Positional encoding
@@ -202,6 +269,23 @@ def make_tabular_transformer_model_builder(input_dim: int, embedding_output_dim:
 
 def keras_tabular_transformer_model(model_dir: str = 'keras_model/', model_kwargs: dict = None,
                                     keras_kwargs: dict = None) -> KerasModel:
+    """
+    Builds a tabular transformer model using DeepMol's KerasModel wrapper.
+
+    Parameters
+    ----------
+    model_dir : str
+        Path to save the model.
+    model_kwargs : dict
+        Keyword arguments for the model builder.
+    keras_kwargs : dict
+        Keyword arguments for the KerasModel wrapper.
+
+    Returns
+    -------
+    model : KerasModel
+        Tabular transformer model.
+    """
     keras_kwargs = {} if keras_kwargs is None else keras_kwargs
     mode = 'classification' if 'mode' not in keras_kwargs else keras_kwargs['mode']
     model_path = model_dir
@@ -217,6 +301,39 @@ def make_simple_rnn_model_builder(input_dim: tuple, n_rnn_layers: int = 1, rnn_u
                                   dropout_rnn: float = 0.1, dense_units: int = 64, dense_dropout: float = 0.1,
                                   last_layer_units: int = 1, last_layer_activation: str = 'sigmoid',
                                   loss: str = 'binary_crossentropy', optimizer: str = 'adam', metric: str = 'accuracy'):
+    """
+    Builds a simple recurrent neural network model.
+
+    Parameters
+    ----------
+    input_dim : tuple
+        Input shape.
+    n_rnn_layers : int
+        Number of recurrent layers.
+    rnn_units : int
+        Number of units in the recurrent layer.
+    dropout_rnn : float
+        Dropout rate in the recurrent layers.
+    dense_units : int
+        Number of units in the dense layer.
+    dense_dropout : float
+        Dropout rate in the dense layer.
+    last_layer_units : int
+        Number of units in the last layer.
+    last_layer_activation : str
+        Activation function in the last layer.
+    loss : str
+        Loss function.
+    optimizer : str
+        Optimizer.
+    metric : str
+        Metric to be evaluated by the model during training and testing.
+
+    Returns
+    -------
+    model : Model
+        Simple recurrent neural network model.
+    """
     inputs = Input(shape=input_dim)
     x = inputs
     for _ in range(n_rnn_layers):
@@ -233,6 +350,23 @@ def make_simple_rnn_model_builder(input_dim: tuple, n_rnn_layers: int = 1, rnn_u
 
 def keras_simple_rnn_model(model_dir: str = 'keras_model/', model_kwargs: dict = None,
                            keras_kwargs: dict = None) -> KerasModel:
+    """
+    Builds a simple recurrent neural network model using DeepMol's KerasModel wrapper.
+
+    Parameters
+    ----------
+    model_dir : str
+        Path to save the model.
+    model_kwargs : dict
+        Keyword arguments for the model builder.
+    keras_kwargs : dict
+        Keyword arguments for the KerasModel wrapper.
+
+    Returns
+    -------
+    model : KerasModel
+        Simple recurrent neural network model.
+    """
     keras_kwargs = {} if keras_kwargs is None else keras_kwargs
     mode = 'classification' if 'mode' not in keras_kwargs else keras_kwargs['mode']
     model_path = model_dir
@@ -248,6 +382,37 @@ def make_rnn_model_builder(num_lstm_layers: int = 1, lstm_units: List[int] = [12
                            gru_units: List[int] = [128], dense_units: int = 64, last_layer_units: int = 1,
                            last_layer_activation: str = 'sigmoid', loss: str = 'binary_crossentropy',
                            optimizer: str = 'adam', metric: str = 'accuracy'):
+    """
+    Builds a recurrent neural network model.
+
+    Parameters
+    ----------
+    num_lstm_layers : int
+        Number of LSTM layers.
+    lstm_units : List[int]
+        Number of units in each LSTM layer.
+    num_gru_layers : int
+        Number of GRU layers.
+    gru_units : List[int]
+        Number of units in each GRU layer.
+    dense_units : int
+        Number of units in the dense layer.
+    last_layer_units : int
+        Number of units in the last layer.
+    last_layer_activation : str
+        Activation function in the last layer.
+    loss : str
+        Loss function.
+    optimizer : str
+        Optimizer.
+    metric : str
+        Metric to be evaluated by the model during training and testing.
+
+    Returns
+    -------
+    model : Model
+        Recurrent neural network model.
+    """
     assert len(lstm_units) == num_lstm_layers, "lstm_units must be a list of length num_lstm_layers"
     assert len(gru_units) == num_gru_layers, "gru_units must be a list of length num_gru_layers"
     model = Sequential()
@@ -272,6 +437,23 @@ def make_rnn_model_builder(num_lstm_layers: int = 1, lstm_units: List[int] = [12
 
 def keras_rnn_model(model_dir: str = 'keras_model/', model_kwargs: dict = None,
                     keras_kwargs: dict = None) -> KerasModel:
+    """
+    Builds a recurrent neural network model using DeepMol's KerasModel wrapper.
+
+    Parameters
+    ----------
+    model_dir : str
+        Path to save the model.
+    model_kwargs : dict
+        Keyword arguments for the model builder.
+    keras_kwargs : dict
+        Keyword arguments for the KerasModel wrapper.
+
+    Returns
+    -------
+    model : KerasModel
+        Recurrent neural network model.
+    """
     keras_kwargs = {} if keras_kwargs is None else keras_kwargs
     mode = 'classification' if 'mode' not in keras_kwargs else keras_kwargs['mode']
     model_path = model_dir
@@ -288,6 +470,39 @@ def make_bidirectional_rnn_model_builder(input_dim: tuple, num_lstm_layers: int 
                                          last_layer_units: int = 1, last_layer_activation: str = 'sigmoid',
                                          loss: str = 'binary_crossentropy', optimizer: str = 'adam',
                                          metric: str = 'accuracy'):
+    """
+    Builds a bidirectional recurrent neural network model.
+
+    Parameters
+    ----------
+    input_dim : tuple
+        Input shape.
+    num_lstm_layers : int
+        Number of LSTM layers.
+    lstm_units : List[int]
+        Number of units in each LSTM layer.
+    num_gru_layers : int
+        Number of GRU layers.
+    gru_units : List[int]
+        Number of units in each GRU layer.
+    dense_units : int
+        Number of units in the dense layer.
+    last_layer_units : int
+        Number of units in the last layer.
+    last_layer_activation : str
+        Activation function in the last layer.
+    loss : str
+        Loss function.
+    optimizer : str
+        Optimizer.
+    metric : str
+        Metric to be evaluated by the model during training and testing.
+
+    Returns
+    -------
+    model : Model
+        Bidirectional recurrent neural network model.
+    """
     model = Sequential()
 
     # Add LSTM layers
@@ -318,6 +533,23 @@ def make_bidirectional_rnn_model_builder(input_dim: tuple, num_lstm_layers: int 
 
 def keras_bidirectional_rnn_model(model_dir: str = 'keras_model/', model_kwargs: dict = None,
                                   keras_kwargs: dict = None) -> KerasModel:
+    """
+    Builds a bidirectional recurrent neural network model using DeepMol's KerasModel wrapper.
+
+    Parameters
+    ----------
+    model_dir : str
+        Path to save the model.
+    model_kwargs : dict
+        Keyword arguments for the model builder.
+    keras_kwargs : dict
+        Keyword arguments for the KerasModel wrapper.
+
+    Returns
+    -------
+    model : KerasModel
+        Bidirectional recurrent neural network model.
+    """
     keras_kwargs = {} if keras_kwargs is None else keras_kwargs
     mode = 'classification' if 'mode' not in keras_kwargs else keras_kwargs['mode']
     model_path = model_dir

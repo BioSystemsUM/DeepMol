@@ -5,7 +5,6 @@ from sklearn.metrics import accuracy_score
 from deepmol.metrics import Metric
 from deepmol.parameter_optimization import HyperparameterOptimizerValidation
 from unit_tests.models.test_models import ModelsTestCase
-from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.layers import Dropout
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -43,7 +42,7 @@ class TestKerasHyperparameterOptimization(ModelsTestCase, TestCase):
         params_dict_dense = {
             "input_dim": [self.binary_dataset.X.shape[1]],
             "dropout": [0.5, 0.6, 0.7],
-            "optimizer": [Adam]
+            "optimizer": ['adam']
         }
 
         best_dnn, best_hyperparams, all_results = optimizer.hyperparameter_search(train_dataset=self.binary_dataset,

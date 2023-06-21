@@ -39,7 +39,7 @@ class BaseFeatureSelector(ABC, Transformer):
         dataset: Dataset
             Dataset to perform feature selection on
         inplace: bool
-            Whether to perform the feature selection inplace or not.
+            Whether to perform the feature selection in the received dataset or not.
 
         Returns
         -------
@@ -62,7 +62,7 @@ class BaseFeatureSelector(ABC, Transformer):
         dataset: Dataset
           Dataset containing the selected features and indexes of the features kept as 'self.features2keep'.
         """
-        dataset = dataset.select_features_by_index(list(self.features_to_keep), inplace=True)
+        dataset = dataset.select_features_by_index(list(self.features_to_keep))
         return dataset
 
     def _fit(self, dataset: Dataset) -> 'BaseFeatureSelector':

@@ -28,56 +28,186 @@ from deepmol.models.sklearn_model_builders import linear_regression_model, ridge
 
 
 def linear_regression_step(trial):
+    """
+    Get a LinearRegression object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The LinearRegression object step.
+    """
     return linear_regression_model()
 
 
 def ridge_step(trial):
+    """
+    Get a Ridge object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The Ridge object step.
+    """
     alpha = trial.suggest_float('alpha', 0.001, 10.0)
     ridge_kwargs = {'alpha': alpha}
     return ridge_model(ridge_kwargs=ridge_kwargs)
 
 
 def ridge_classifier_step(trial):
+    """
+    Get a RidgeClassifier object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The RidgeClassifier object step.
+    """
     alpha = trial.suggest_float('alpha', 0.001, 10.0)
     ridge_classifier_kwargs = {'alpha': alpha}
     return ridge_classifier_model(ridge_classifier_kwargs=ridge_classifier_kwargs)
 
 
 def ridge_cv_step(trial):
+    """
+    Get a RidgeCV object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The RidgeCV object step.
+    """
     alpha = trial.suggest_float('alpha', 0.01, 10.0)
     ridge_cv_kwargs = {'alphas': alpha}
     return ridge_cv_model(ridge_cv_kwargs=ridge_cv_kwargs)
 
 
 def ridge_classifier_cv_step(trial):
+    """
+    Get a RidgeClassifierCV object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The RidgeClassifierCV object step.
+    """
     alpha = trial.suggest_float('alpha', 0.01, 10.0)
     ridge_classifier_cv_kwargs = {'alphas': alpha}
     return ridge_classifier_cv_model(ridge_classifier_cv_kwargs=ridge_classifier_cv_kwargs)
 
 
 def lasso_step(trial):
+    """
+    Get a Lasso object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The Lasso object step.
+    """
     alpha = trial.suggest_float('alpha', 0.01, 10.0)
     lasso_kwargs = {'alpha': alpha}
     return lasso_model(lasso_kwargs=lasso_kwargs)
 
 
 def lasso_cv_step(trial):
+    """
+    Get a LassoCV object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The LassoCV object step.
+    """
     alpha = trial.suggest_float('alpha', 0.01, 10.0)
     lasso_cv_kwargs = {'alphas': [alpha]}
     return lasso_cv_model(lasso_cv_kwargs=lasso_cv_kwargs)
 
 
 def lasso_lars_cv_step(trial):
+    """
+    Get a LassoLarsCV object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The LassoLarsCV object step.
+    """
     return lasso_lars_cv_model()
 
 
 def lasso_lars_ic_step(trial):
+    """
+    Get a LassoLarsIC object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The LassoLarsIC object step.
+    """
     criterion = trial.suggest_categorical('criterion', ['aic', 'bic'])
     lasso_lars_ic_kwargs = {'criterion': criterion}
     return lasso_lars_ic_model(lasso_lars_ic_kwargs=lasso_lars_ic_kwargs)
 
 
 def elastic_net_step(trial):
+    """
+    Get a ElasticNet object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    ElasticNet
+        The ElasticNet object step.
+    """
     alpha = trial.suggest_float('alpha', 0.01, 10.0)
     l1_ratio = trial.suggest_uniform('l1_ratio', 0.0, 1.0)
     elastic_net_kwargs = {'alpha': alpha, 'l1_ratio': l1_ratio}
@@ -85,10 +215,36 @@ def elastic_net_step(trial):
 
 
 def ortogonal_matching_pursuit_step(trial):
+    """
+    Get a OrtogonalMatchingPursuit object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The OrtogonalMatchingPursuit object step.
+    """
     return ortogonal_matching_pursuit_model()
 
 
 def bayesian_ridge_step(trial):
+    """
+    Get a BayesianRidge object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The BayesianRidge object step.
+    """
     alpha = trial.suggest_float('alpha', 1e-5, 1e+1)
     lambda_1 = trial.suggest_float('lambda_1', 1e-5, 1e+1)
     lambda_2 = trial.suggest_float('lambda_2', 1e-5, 1e+1)
@@ -97,6 +253,19 @@ def bayesian_ridge_step(trial):
 
 
 def ard_regression_step(trial):
+    """
+    Get a ARDRegression object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The ARDRegression object step.
+    """
     alpha_1 = trial.suggest_loguniform('alpha_1', 1e-8, 1.0)
     alpha_2 = trial.suggest_loguniform('alpha_2', 1e-8, 1.0)
     lambda_1 = trial.suggest_loguniform('lambda_1', 1e-8, 1.0)
@@ -108,18 +277,57 @@ def ard_regression_step(trial):
 
 
 def logistic_regression_step(trial):
+    """
+    Get a LogisticRegression object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The LogisticRegression object step.
+    """
     C = trial.suggest_float('C', 0.01, 10.0, log=True)
     logistic_regression_kwargs = {'C': C}
     return logistic_regression_model(logistic_regression_kwargs=logistic_regression_kwargs)
 
 
 def logistic_regression_cv_step(trial):
+    """
+    Get a LogisticRegressionCV object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The LogisticRegressionCV object step.
+    """
     Cs = trial.suggest_int('Cs', 1, 10)
     logistic_regression_cv_kwargs = {'Cs': Cs}
     return logistic_regression_cv_model(logistic_regression_cv_kwargs=logistic_regression_cv_kwargs)
 
 
 def tweedie_regressor_step(trial):
+    """
+    Get a TweedieRegressor object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The TweedieRegressor object step.
+    """
     power = trial.suggest_float('power', 0.0, 1.0)
     alpha = trial.suggest_float('alpha', 0.0, 2.0)
     tweedie_regression_kwargs = {'power': power, 'alpha': alpha}
@@ -127,30 +335,95 @@ def tweedie_regressor_step(trial):
 
 
 def poisson_regressor_step(trial):
+    """
+    Get a PoissonRegressor object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The PoissonRegressor object step.
+    """
     alpha = trial.suggest_float('alpha', 0.0, 2.0)
     poisson_regression_kwargs = {'alpha': alpha}
     return poisson_regressor_model(poisson_regressor_kwargs=poisson_regression_kwargs)
 
 
 def gamma_regressor_step(trial):
+    """
+    Get a GammaRegressor object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The GammaRegressor object step.
+    """
     alpha = trial.suggest_float('alpha', 0.0, 2.0)
     gamma_regression_kwargs = {'alpha': alpha}
     return gamma_regressor_model(gamma_regressor_kwargs=gamma_regression_kwargs)
 
 
 def perceptron_step(trial):
+    """
+    Get a Perceptron object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The Perceptron object step.
+    """
     alpha = trial.suggest_float('alpha', 0.0, 2.0)
     perceptron_kwargs = {'alpha': alpha}
     return perceptron_model(perceptron_kwargs=perceptron_kwargs)
 
 
 def passive_aggressive_regressor_step(trial):
+    """
+    Get a PassiveAggressiveRegressor object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The PassiveAggressiveRegressor object step.
+    """
     C = trial.suggest_float('C', 0.0, 10.0)
     passive_aggressive_regressor_kwargs = {'C': C}
     return passive_aggressive_regressor_model(passive_aggressive_regressor_kwargs=passive_aggressive_regressor_kwargs)
 
 
 def passive_aggressive_classifier_step(trial):
+    """
+    Get a PassiveAggressiveClassifier object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The PassiveAggressiveClassifier object step.
+    """
     C = trial.suggest_float('C', 0.0, 10.0)
     passive_aggressive_classifier_kwargs = {'C': C}
     return passive_aggressive_classifier_model(
@@ -158,6 +431,19 @@ def passive_aggressive_classifier_step(trial):
 
 
 def huber_regressor_step(trial):
+    """
+    Get a HuberRegressor object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The HuberRegressor object step.
+    """
     alpha = trial.suggest_float('alpha', 0.0, 2.0)
     epsilon = trial.suggest_float('epsilon', 1.0, 2.0)
     huber_regressor_kwargs = {'alpha': alpha, 'epsilon': epsilon}
@@ -165,6 +451,19 @@ def huber_regressor_step(trial):
 
 
 def ransac_regressor_step(trial):
+    """
+    Get a RANSACRegressor object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The RANSACRegressor object step.
+    """
     base_estimator = trial.suggest_categorical('base_estimator', ['linear', 'ridge', 'lasso'])
     if base_estimator == 'linear':
         model = LinearRegression()
@@ -178,11 +477,37 @@ def ransac_regressor_step(trial):
 
 
 def theil_sen_regressor_step(trial):
+    """
+    Get a TheilSenRegressor object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The TheilSenRegressor object step.
+    """
     theil_sen_regressor_kwargs = {}
     return theil_sen_regressor_model(theil_sen_regressor_kwargs=theil_sen_regressor_kwargs)
 
 
 def quantile_regressor_step(trial):
+    """
+    Get a QuantileRegressor object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The QuantileRegressor object step.
+    """
     alpha = trial.suggest_float('alpha', 0.0, 1.0)
     quantile = trial.suggest_uniform('quantile', 0.1, 0.9)
     quantile_regressor_kwargs = {'alpha': alpha, 'quantile': quantile}
@@ -190,6 +515,19 @@ def quantile_regressor_step(trial):
 
 
 def linear_discriminat_analysis_step(trial):
+    """
+    Get a LinearDiscriminantAnalysis object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The LinearDiscriminantAnalysis object step.
+    """
     solver = trial.suggest_categorical('solver', ['svd', 'lsqr', 'eigen'])
     shrinkage = trial.suggest_float('shrinkage', 0.0, 1.0)
     linear_discriminant_analysis_kwargs = {'solver': solver, 'shrinkage': shrinkage}
@@ -197,6 +535,19 @@ def linear_discriminat_analysis_step(trial):
 
 
 def quadratic_discriminant_analysis_step(trial):
+    """
+    Get a QuadraticDiscriminantAnalysis object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The QuadraticDiscriminantAnalysis object step.
+    """
     reg_param = trial.suggest_uniform('reg_param', 0.0, 1.0)
     quadratic_discriminant_analysis_kwargs = {'reg_param': reg_param}
     return quadratic_discriminant_analysis_model(
@@ -204,6 +555,19 @@ def quadratic_discriminant_analysis_step(trial):
 
 
 def kernel_ridge_step(trial):
+    """
+    Get a KernelRidge object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The KernelRidge object step.
+    """
     alpha = trial.suggest_float('alpha', 0.0, 1.0)
     kernel = trial.suggest_categorical('kernel', ['linear', 'poly', 'rbf'])
     gamma = trial.suggest_float('gamma', 0.0, 1.0)
@@ -212,6 +576,19 @@ def kernel_ridge_step(trial):
 
 
 def svc_step(trial):
+    """
+    Get a SVC object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The SVC object step.
+    """
     C = trial.suggest_float('C', 0.1, 10.0)
     kernel = trial.suggest_categorical('kernel', ['linear', 'poly', 'rbf'])
     gamma = trial.suggest_float('gamma', 0.0, 1.0)
@@ -221,6 +598,19 @@ def svc_step(trial):
 
 
 def nu_svc_step(trial):
+    """
+    Get a NuSVC object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The NuSVC object step.
+    """
     nu = trial.suggest_float('nu', 0.0, 1.0)
     kernel = trial.suggest_categorical('kernel', ['linear', 'poly', 'rbf'])
     gamma = trial.suggest_float('gamma', 0.0, 1.0)
@@ -230,12 +620,38 @@ def nu_svc_step(trial):
 
 
 def linear_svc_step(trial):
+    """
+    Get a LinearSVC object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The LinearSVC object step.
+    """
     C = trial.suggest_float('C', 0.1, 10.0)
     linear_svc_kwargs = {'C': C}
     return linear_svc_model(linear_svc_kwargs=linear_svc_kwargs)
 
 
 def svr_step(trial):
+    """
+    Get a SVR object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The SVR object step.
+    """
     C = trial.suggest_float('C', 0.1, 10.0)
     kernel = trial.suggest_categorical('kernel', ['linear', 'poly', 'rbf'])
     gamma = trial.suggest_float('gamma', 0.0, 1.0)
@@ -245,6 +661,19 @@ def svr_step(trial):
 
 
 def nu_svr_step(trial):
+    """
+    Get a NuSVR object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The NuSVR object step.
+    """
     nu = trial.suggest_float('nu', 0.0, 1.0)
     C = trial.suggest_float('C', 0.1, 10.0)
     kernel = trial.suggest_categorical('kernel', ['linear', 'poly', 'rbf'])
@@ -255,6 +684,19 @@ def nu_svr_step(trial):
 
 
 def linear_svr_step(trial):
+    """
+    Get a LinearSVR object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The LinearSVR object step.
+    """
     epsilon = trial.suggest_float('epsilon', 0.0, 1.0)
     C = trial.suggest_float('C', 0.1, 10.0)
     linear_svr_kwargs = {'epsilon': epsilon, 'C': C}
@@ -262,6 +704,19 @@ def linear_svr_step(trial):
 
 
 def one_class_svm_step(trial):
+    """
+    Get a OneClassSVM object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The OneClassSVM object step.
+    """
     nu = trial.suggest_float('nu', 0.0, 1.0)
     kernel = trial.suggest_categorical('kernel', ['linear', 'poly', 'rbf'])
     gamma = trial.suggest_float('gamma', 0.0, 1.0)
@@ -271,6 +726,19 @@ def one_class_svm_step(trial):
 
 
 def sgd_regressor_step(trial):
+    """
+    Get a SGDRegressor object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The SGDRegressor object step.
+    """
     penalty = trial.suggest_categorical('penalty', ['l2', 'l1', 'elasticnet'])
     alpha = trial.suggest_float('alpha', 0.0, 1.0)
     l1_ratio = trial.suggest_float('l1_ratio', 0.0, 1.0)
@@ -280,6 +748,24 @@ def sgd_regressor_step(trial):
 
 
 def sgd_classifier_step(trial):
+    """
+    Get a SGDClassifier object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The SGDClassifier object step.
+    """
+    penalty = trial.suggest_categorical('penalty', ['l2', 'l1', 'elasticnet'])
+    alpha = trial.suggest_float('alpha', 0.0, 1.0)
+    l1_ratio = trial.suggest_float('l1_ratio', 0.0, 1.0)
+    sgd_classifier_kwargs = {'penalty': penalty, 'alpha': alpha, 'l1_ratio': l1_ratio}
+    return sgd_classifier_model(sgd_classifier_kwargs=sgd_classifier_kwargs)
     penalty = trial.suggest_categorical('penalty', ['l2', 'l1', 'elasticnet'])
     alpha = trial.suggest_float('alpha', 0.0, 1.0)
     l1_ratio = trial.suggest_float('l1_ratio', 0.0, 1.0)
@@ -289,6 +775,19 @@ def sgd_classifier_step(trial):
 
 
 def sgd_one_class_svm_step(trial):
+    """
+    Get a SGDOneClassSVM object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    OneClassSVM
+        The SGDOneClassSVM object step.
+    """
     nu = trial.suggest_float('nu', 0.0, 1.0)
     tol = trial.suggest_float('tol', 0.0, 1.0)
     sgd_one_class_svm_kwargs = {'nu': nu, 'tol': tol}
@@ -296,6 +795,19 @@ def sgd_one_class_svm_step(trial):
 
 
 def kneighbors_regressor_step(trial):
+    """
+    Get a KNeighborsRegressor object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The KNeighborsRegressor object step.
+    """
     n_neighbors = trial.suggest_int('n_neighbors', 2, 10)
     weights = trial.suggest_categorical('weights', ['uniform', 'distance'])
     algorithm = trial.suggest_categorical('algorithm', ['auto', 'ball_tree', 'kd_tree', 'brute'])
@@ -307,6 +819,19 @@ def kneighbors_regressor_step(trial):
 
 
 def kneighbors_classifier_step(trial):
+    """
+    Get a KNeighborsClassifier object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The KNeighborsClassifier object step.
+    """
     n_neighbors = trial.suggest_int('n_neighbors', 2, 10)
     weights = trial.suggest_categorical('weights', ['uniform', 'distance'])
     algorithm = trial.suggest_categorical('algorithm', ['auto', 'ball_tree', 'kd_tree', 'brute'])
@@ -318,6 +843,19 @@ def kneighbors_classifier_step(trial):
 
 
 def radius_neighbors_regressor_step(trial):
+    """
+    Get a RadiusNeighborsRegressor object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The RadiusNeighborsRegressor object step.
+    """
     radius_n = trial.suggest_float('radius_n', 0.0, 10.0)
     weights = trial.suggest_categorical('weights', ['uniform', 'distance'])
     algorithm = trial.suggest_categorical('algorithm', ['auto', 'ball_tree', 'kd_tree', 'brute'])
@@ -329,6 +867,19 @@ def radius_neighbors_regressor_step(trial):
 
 
 def radius_neighbors_classifier_step(trial):
+    """
+    Get a RadiusNeighborsClassifier object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The RadiusNeighborsClassifier object step.
+    """
     radius_n = trial.suggest_int('radius_n', 0.0, 10.0)
     weights = trial.suggest_categorical('weights', ['uniform', 'distance'])
     algorithm = trial.suggest_categorical('algorithm', ['auto', 'ball_tree', 'kd_tree', 'brute'])
@@ -340,23 +891,75 @@ def radius_neighbors_classifier_step(trial):
 
 
 def nearest_centroid_step(trial):
+    """
+    Get a NearestCentroid object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The NearestCentroid object step.
+    """
     metric = trial.suggest_categorical('metric', ['euclidean', 'manhattan', 'chebyshev', 'minkowski'])
     nearest_centroid_kwargs = {'metric': metric}
     return nearest_centroid_model(nearest_centroid_kwargs=nearest_centroid_kwargs)
 
 
 def gaussian_process_regressor_step(trial):
+    """
+    Get a GaussianProcessRegressor object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The GaussianProcessRegressor object step.
+    """
     alpha = trial.suggest_float('alpha', 0.0, 1.0)
     gaussian_process_regressor_kwargs = {'alpha': alpha}
     return gaussian_process_regressor_model(gaussian_process_regressor_kwargs=gaussian_process_regressor_kwargs)
 
 
 def gaussian_process_classifier_step(trial):
+    """
+    Get a GaussianProcessClassifier object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The GaussianProcessClassifier object step.
+    """
     gaussian_process_classifier_kwargs = {}
     return gaussian_process_classifier_model(gaussian_process_classifier_kwargs=gaussian_process_classifier_kwargs)
 
 
 def pls_regression_step(trial):
+    """
+    Get a PLSRegression object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The PLSRegression object step.
+    """
     n_components = trial.suggest_int('n_components', 2, 10)
     scale = trial.suggest_categorical('scale', [True, False])
     pls_regression_kwargs = {'n_components': n_components, 'scale': scale}
@@ -364,46 +967,150 @@ def pls_regression_step(trial):
 
 
 def gaussian_nb_step(trial):
+    """
+    Get a GaussianNB object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The GaussianNB object step.
+    """
     gaussian_nb_kwargs = {}
     return gaussian_nb_model(gaussian_nb_kwargs=gaussian_nb_kwargs)
 
 
 def multinomial_nb_step(trial):
+    """
+    Get a MultinomialNB object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The MultinomialNB object step.
+    """
     alpha = trial.suggest_float('alpha', 0.0, 1.0)
     multinomial_nb_kwargs = {'alpha': alpha}
     return multinomial_nb_model(multinomial_nb_kwargs=multinomial_nb_kwargs)
 
 
 def bernoulli_nb_step(trial):
+    """
+    Get a BernoulliNB object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The BernoulliNB object step.
+    """
     alpha = trial.suggest_float('alpha', 0.0, 1.0)
     bernoulli_nb_kwargs = {'alpha': alpha}
     return bernoulli_nb_model(bernoulli_nb_kwargs=bernoulli_nb_kwargs)
 
 
 def categorical_nb_step(trial):
+    """
+    Get a CategoricalNB object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The CategoricalNB object step.
+    """
     alpha = trial.suggest_float('alpha', 0.0, 1.0)
     categorical_nb_kwargs = {'alpha': alpha}
     return categorical_nb_model(categorical_nb_kwargs=categorical_nb_kwargs)
 
 
 def complement_nb_step(trial):
+    """
+    Get a ComplementNB object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The ComplementNB object step.
+    """
     alpha = trial.suggest_float('alpha', 0.0, 1.0)
     complement_nb_kwargs = {'alpha': alpha}
     return complement_nb_model(complement_nb_kwargs=complement_nb_kwargs)
 
 
 def decision_tree_regressor_step(trial):
+    """
+    Get a DecisionTreeRegressor object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The DecisionTreeRegressor object step.
+    """
     decision_tree_regressor_kwargs = {}
     return decision_tree_regressor_model(decision_tree_regressor_kwargs=decision_tree_regressor_kwargs)
 
 
 def decision_tree_classifier_step(trial):
+    """
+    Get a DecisionTreeClassifier object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The DecisionTreeClassifier object step.
+    """
     criterion = trial.suggest_categorical('criterion', ['gini', 'entropy'])
     decision_tree_classifier_kwargs = {'criterion': criterion}
     return decision_tree_classifier_model(decision_tree_classifier_kwargs=decision_tree_classifier_kwargs)
 
 
 def random_forest_regressor_step(trial):
+    """
+    Get a RandomForestRegressor object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The RandomForestRegressor object step.
+    """
     n_estimators = trial.suggest_int('n_estimators', 100, 1000, step=100)
     criterion = trial.suggest_categorical('criterion', ['mse', 'mae'])
     max_features = trial.suggest_categorical('max_features', ['auto', 'sqrt', 'log2'])
@@ -414,6 +1121,19 @@ def random_forest_regressor_step(trial):
 
 
 def random_forest_classifier_step(trial):
+    """
+    Get a RandomForestClassifier object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The RandomForestClassifier object step.
+    """
     n_estimators = trial.suggest_int('n_estimators', 100, 1000, step=100)
     criterion = trial.suggest_categorical('criterion', ['gini', 'entropy'])
     max_features = trial.suggest_categorical('max_features', ['auto', 'sqrt', 'log2'])
@@ -424,6 +1144,19 @@ def random_forest_classifier_step(trial):
 
 
 def extra_trees_regressor_step(trial):
+    """
+    Get a ExtraTreesRegressor object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The ExtraTreesRegressor object step.
+    """
     n_estimators = trial.suggest_int('n_estimators', 100, 1000, step=100)
     criterion = trial.suggest_categorical('criterion', ['mse', 'mae'])
     max_features = trial.suggest_categorical('max_features', ['auto', 'sqrt', 'log2'])
@@ -434,6 +1167,19 @@ def extra_trees_regressor_step(trial):
 
 
 def extra_trees_classifier_step(trial):
+    """
+    Get a ExtraTreesClassifier object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The ExtraTreesClassifier object step.
+    """
     n_estimators = trial.suggest_int('n_estimators', 100, 1000, step=100)
     criterion = trial.suggest_categorical('criterion', ['gini', 'entropy'])
     max_features = trial.suggest_categorical('max_features', ['auto', 'sqrt', 'log2'])
@@ -444,6 +1190,19 @@ def extra_trees_classifier_step(trial):
 
 
 def ada_boost_regressor_step(trial):
+    """
+    Get a AdaBoostRegressor object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The AdaBoostRegressor object step.
+    """
     n_estimators = trial.suggest_int('n_estimators', 50, 500, step=50)
     learning_rate = trial.suggest_float('learning_rate', 0.01, 1.0)
     loss = trial.suggest_categorical('loss', ['linear', 'square', 'exponential'])
@@ -452,6 +1211,19 @@ def ada_boost_regressor_step(trial):
 
 
 def ada_boost_classifier_step(trial):
+    """
+    Get a AdaBoostClassifier object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The AdaBoostClassifier object step.
+    """
     n_estimators = trial.suggest_int('n_estimators', 50, 500, step=50)
     learning_rate = trial.suggest_float('learning_rate', 0.01, 1.0)
     algorithm = trial.suggest_categorical('algorithm', ['SAMME', 'SAMME.R'])
@@ -461,6 +1233,19 @@ def ada_boost_classifier_step(trial):
 
 
 def gradient_boosting_regressor_step(trial):
+    """
+    Get a GradientBoostingRegressor object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The GradientBoostingRegressor object step.
+    """
     loss = trial.suggest_categorical('loss', ['ls', 'lad', 'huber', 'quantile'])
     n_estimators = trial.suggest_int('n_estimators', 50, 500, step=50)
     learning_rate = trial.suggest_float('learning_rate', 0.01, 1.0)
@@ -473,6 +1258,19 @@ def gradient_boosting_regressor_step(trial):
 
 
 def gradient_boosting_classifier_step(trial):
+    """
+    Get a GradientBoostingClassifier object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The GradientBoostingClassifier object step.
+    """
     loss = trial.suggest_categorical('loss', ['deviance', 'exponential'])
     n_estimators = trial.suggest_int('n_estimators', 50, 500, step=50)
     learning_rate = trial.suggest_float('learning_rate', 0.01, 1.0)
@@ -485,6 +1283,19 @@ def gradient_boosting_classifier_step(trial):
 
 
 def hist_gradient_boosting_regressor_step(trial):
+    """
+    Get a HistGradientBoostingRegressor object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The HistGradientBoostingRegressor object step.
+    """
     loss = trial.suggest_categorical('loss', ['least_squares', 'least_absolute_deviation', 'poisson'])
     learning_rate = trial.suggest_float('learning_rate', 0.01, 1.0)
     hist_gradient_boosting_regressor_kwargs = {'loss': loss, 'learning_rate': learning_rate}
@@ -493,6 +1304,19 @@ def hist_gradient_boosting_regressor_step(trial):
 
 
 def hist_gradient_boosting_classifier_step(trial):
+    """
+    Get a HistGradientBoostingClassifier object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The HistGradientBoostingClassifier object step.
+    """
     learning_rate = trial.suggest_float('learning_rate', 0.01, 1.0)
     hist_gradient_boosting_classifier_kwargs = {'learning_rate': learning_rate}
     return hist_gradient_boosting_classifier_model(
@@ -500,6 +1324,19 @@ def hist_gradient_boosting_classifier_step(trial):
 
 
 def voting_regressor_step(trial):
+    """
+    Get a VotingRegressor object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The VotingRegressor object step.
+    """
     estimators = [('lr', LinearRegression()), ('svr', SVR()), ('rfr', RandomForestRegressor()),
                   ('gbr', GradientBoostingRegressor()), ('mlpr', MLPRegressor())]
     weights = [trial.suggest_float('weight_lr', 0.0, 1.0), trial.suggest_float('weight_svr', 0.0, 1.0),
@@ -512,6 +1349,19 @@ def voting_regressor_step(trial):
 
 
 def voting_classifier_step(trial):
+    """
+    Get a VotingClassifier object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The VotingClassifier object step.
+    """
     estimators = [('lr', LogisticRegression()), ('svc', SVC()), ('rfr', RandomForestClassifier()),
                   ('gbr', GradientBoostingClassifier()), ('mlpr', MLPClassifier())]
     weights = [trial.suggest_float('weight_lr', 0.0, 1.0), trial.suggest_float('weight_svc', 0.0, 1.0),
@@ -524,6 +1374,19 @@ def voting_classifier_step(trial):
 
 
 def stacking_regressor_step(trial):
+    """
+    Get a StackingRegressor object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The StackingRegressor object step.
+    """
     estimators = [('lr', LinearRegression()), ('svr', SVR()), ('rfr', RandomForestRegressor()),
                   ('gbr', GradientBoostingRegressor())]
     final_estimator = MLPRegressor()
@@ -532,6 +1395,19 @@ def stacking_regressor_step(trial):
 
 
 def stacking_classifier_step(trial):
+    """
+    Get a StackingClassifier object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The StackingClassifier object step.
+    """
     estimators = [('lr', LogisticRegression()), ('svc', SVC()), ('rfr', RandomForestClassifier()),
                   ('gbr', GradientBoostingClassifier())]
     final_estimator = MLPClassifier()
@@ -540,6 +1416,19 @@ def stacking_classifier_step(trial):
 
 
 def bagging_regressor_step(trial):
+    """
+    Get a BaggingRegressor object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The BaggingRegressor object step.
+    """
     base_estimator = trial.suggest_categorical('base_estimator', ['lr', 'svr', 'rfr', 'gbr', 'mlpr'])
     if base_estimator == 'lr':
         base_estimator = LinearRegression()
@@ -560,6 +1449,19 @@ def bagging_regressor_step(trial):
 
 
 def bagging_classifier_step(trial):
+    """
+    Get a BaggingClassifier object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The BaggingClassifier object step.
+    """
     base_estimator = trial.suggest_categorical('base_estimator', ['lr', 'svc', 'rfr', 'gbr', 'mlpr'])
     if base_estimator == 'lr':
         base_estimator = LogisticRegression()
@@ -580,6 +1482,19 @@ def bagging_classifier_step(trial):
 
 
 def one_vs_rest_classifier_step(trial):
+    """
+    Get a OneVsRestClassifier object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The OneVsRestClassifier object step.
+    """
     estimator = trial.suggest_categorical('estimator', ['lr', 'svc', 'rfr', 'gbr', 'mlpr'])
     if estimator == 'lr':
         estimator = LogisticRegression()
@@ -596,6 +1511,19 @@ def one_vs_rest_classifier_step(trial):
 
 
 def one_vs_one_classifier_step(trial):
+    """
+    Get a OneVsOneClassifier object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The OneVsOneClassifier object step.
+    """
     estimator = trial.suggest_categorical('estimator', ['lr', 'svc', 'rfr', 'gbr', 'mlpr'])
     if estimator == 'lr':
         estimator = LogisticRegression()
@@ -612,6 +1540,32 @@ def one_vs_one_classifier_step(trial):
 
 
 def output_code_classifier_step(trial):
+    """
+    Get a OutputCodeClassifier object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The OutputCodeClassifier object step.
+    """
+    estimator = trial.suggest_categorical('estimator', ['lr', 'svc', 'rfr', 'gbr', 'mlpr'])
+    if estimator == 'lr':
+        estimator = LogisticRegression()
+    elif estimator == 'svc':
+        estimator = SVC()
+    elif estimator == 'rfr':
+        estimator = RandomForestClassifier()
+    elif estimator == 'gbr':
+        estimator = GradientBoostingClassifier()
+    else:
+        estimator = MLPClassifier()
+    output_code_classifier_kwargs = {'estimator': estimator}
+    return output_code_classifier_model(output_code_classifier_kwargs=output_code_classifier_kwargs)
     estimator = trial.suggest_categorical('estimator', ['lr', 'svc', 'rfr', 'gbr', 'mlpr'])
     if estimator == 'lr':
         estimator = LogisticRegression()
@@ -629,6 +1583,19 @@ def output_code_classifier_step(trial):
 
 
 def multi_output_classifier_step(trial):
+    """
+    Get a MultiOutputClassifier object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The MultiOutputClassifier object step.
+    """
     estimator = trial.suggest_categorical('estimator', ['lr', 'svc', 'rfr', 'gbr', 'mlpr'])
     if estimator == 'lr':
         estimator = LogisticRegression()
@@ -645,6 +1612,33 @@ def multi_output_classifier_step(trial):
 
 
 def classifier_chain_step(trial):
+    """
+    Get a ClassifierChain object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The ClassifierChain object step.
+    """
+    base_estimator = trial.suggest_categorical('base_estimator', ['lr', 'svc', 'rfr', 'gbr', 'mlpr'])
+    if base_estimator == 'lr':
+        base_estimator = LogisticRegression()
+    elif base_estimator == 'svc':
+        base_estimator = SVC()
+    elif base_estimator == 'rfr':
+        base_estimator = RandomForestClassifier()
+    elif base_estimator == 'gbr':
+        base_estimator = GradientBoostingClassifier()
+    else:
+        base_estimator = MLPClassifier()
+    order = trial.suggest_categorical('order', ['random', 'natural'])
+    classifier_chain_kwargs = {'base_estimator': base_estimator, 'order': order}
+    return classifier_chain_model(classifier_chain_kwargs=classifier_chain_kwargs)
     estimator = trial.suggest_categorical('estimator', ['lr', 'svc', 'rfr', 'gbr', 'mlpr'])
     if estimator == 'lr':
         estimator = LogisticRegression()
@@ -662,6 +1656,19 @@ def classifier_chain_step(trial):
 
 
 def multi_output_regressor_step(trial):
+    """
+    Get a MultiOutputRegressor object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Regressor
+        The MultiOutputRegressor object step.
+    """
     estimator = trial.suggest_categorical('estimator', ['lr', 'svr', 'rfr', 'gbr', 'mlpr'])
     if estimator == 'lr':
         estimator = LinearRegression()
@@ -678,6 +1685,33 @@ def multi_output_regressor_step(trial):
 
 
 def regressor_chain_step(trial):
+    """
+    Get a RegressorChain object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Regressor
+        The RegressorChain object step.
+    """
+    base_estimator = trial.suggest_categorical('base_estimator', ['lr', 'svr', 'rfr', 'gbr', 'mlpr'])
+    if base_estimator == 'lr':
+        base_estimator = LinearRegression()
+    elif base_estimator == 'svr':
+        base_estimator = SVR()
+    elif base_estimator == 'rfr':
+        base_estimator = RandomForestRegressor()
+    elif base_estimator == 'gbr':
+        base_estimator = GradientBoostingRegressor()
+    else:
+        base_estimator = MLPRegressor()
+    order = trial.suggest_categorical('order', ['random', 'natural'])
+    regressor_chain_kwargs = {'base_estimator': base_estimator, 'order': order}
+    return regressor_chain_model(regressor_chain_kwargs=regressor_chain_kwargs)
     estimator = trial.suggest_categorical('estimator', ['lr', 'svr', 'rfr', 'gbr', 'mlpr'])
     if estimator == 'lr':
         estimator = LinearRegression()
@@ -695,11 +1729,37 @@ def regressor_chain_step(trial):
 
 
 def isotonic_regression_step(trial):
+    """
+    Get a IsotonicRegression object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Regressor
+        The IsotonicRegression object step.
+    """
     isotonic_regression_kwargs = {}
     return isotonic_regression_model(isotonic_regression_kwargs=isotonic_regression_kwargs)
 
 
 def mlp_regressor_step(trial):
+    """
+    Get a MLPRegressor object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Regressor
+        The MLPRegressor object step.
+    """
     hidden_layer_sizes = trial.suggest_categorical("hidden_layer_sizes", [(50,), (100,), (50, 50), (100, 50)])
     activation = trial.suggest_categorical("activation", ["relu", "tanh"])
     alpha = trial.suggest_loguniform("alpha", 1e-5, 1e-2)
@@ -708,6 +1768,19 @@ def mlp_regressor_step(trial):
 
 
 def mlp_classifier_step(trial):
+    """
+    Get a MLPClassifier object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The MLPClassifier object step.
+    """
     hidden_layer_sizes = trial.suggest_categorical("hidden_layer_sizes", [(50,), (100,), (50, 50), (100, 50)])
     activation = trial.suggest_categorical("activation", ["relu", "tanh"])
     alpha = trial.suggest_loguniform("alpha", 1e-5, 1e-2)
@@ -806,6 +1879,21 @@ _MULTITASK_REGRESSION_MODELS = {'multi_output_regressor_model': multi_output_reg
 
 
 def _get_sk_model(trial, task_type: str) -> Predictor:
+    """
+    Get a sklearn model step based on the task type for the optuna optimization.
+
+    Parameters
+    ----------
+    trial: optuna.trial.Trial
+        The optuna trial object.
+    task_type: str
+        The task type of the model.
+
+    Returns
+    -------
+    Predictor
+        The sklearn model step.
+    """
     if task_type == "regression":
         model = trial.suggest_categorical("regression_model", list(_REGRESSION_MODELS.keys()))
         return _REGRESSION_MODELS[model](trial)

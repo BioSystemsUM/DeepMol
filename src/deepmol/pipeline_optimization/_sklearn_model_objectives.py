@@ -764,11 +764,6 @@ def sgd_classifier_step(trial):
     penalty = trial.suggest_categorical('penalty', ['l2', 'l1', 'elasticnet'])
     alpha = trial.suggest_float('alpha', 0.0, 1.0)
     l1_ratio = trial.suggest_float('l1_ratio', 0.0, 1.0)
-    sgd_classifier_kwargs = {'penalty': penalty, 'alpha': alpha, 'l1_ratio': l1_ratio}
-    return sgd_classifier_model(sgd_classifier_kwargs=sgd_classifier_kwargs)
-    penalty = trial.suggest_categorical('penalty', ['l2', 'l1', 'elasticnet'])
-    alpha = trial.suggest_float('alpha', 0.0, 1.0)
-    l1_ratio = trial.suggest_float('l1_ratio', 0.0, 1.0)
     epsilon = trial.suggest_float('epsilon', 0.0, 1.0)
     sgd_classifier_kwargs = {'penalty': penalty, 'alpha': alpha, 'l1_ratio': l1_ratio, 'epsilon': epsilon}
     return sgd_classifier_model(sgd_classifier_kwargs=sgd_classifier_kwargs)
@@ -1564,19 +1559,6 @@ def output_code_classifier_step(trial):
         estimator = GradientBoostingClassifier()
     else:
         estimator = MLPClassifier()
-    output_code_classifier_kwargs = {'estimator': estimator}
-    return output_code_classifier_model(output_code_classifier_kwargs=output_code_classifier_kwargs)
-    estimator = trial.suggest_categorical('estimator', ['lr', 'svc', 'rfr', 'gbr', 'mlpr'])
-    if estimator == 'lr':
-        estimator = LogisticRegression()
-    elif estimator == 'svc':
-        estimator = SVC()
-    elif estimator == 'rfr':
-        estimator = RandomForestClassifier()
-    elif estimator == 'gbr':
-        estimator = GradientBoostingClassifier()
-    else:
-        estimator = MLPClassifier()
     code_size = trial.suggest_float('code_size', 1, 10, step=0.5)
     output_code_classifier_kwargs = {'estimator': estimator, 'code_size': code_size}
     return output_code_classifier_model(output_code_classifier_kwargs=output_code_classifier_kwargs)
@@ -1625,20 +1607,6 @@ def classifier_chain_step(trial):
     Classifier
         The ClassifierChain object step.
     """
-    base_estimator = trial.suggest_categorical('base_estimator', ['lr', 'svc', 'rfr', 'gbr', 'mlpr'])
-    if base_estimator == 'lr':
-        base_estimator = LogisticRegression()
-    elif base_estimator == 'svc':
-        base_estimator = SVC()
-    elif base_estimator == 'rfr':
-        base_estimator = RandomForestClassifier()
-    elif base_estimator == 'gbr':
-        base_estimator = GradientBoostingClassifier()
-    else:
-        base_estimator = MLPClassifier()
-    order = trial.suggest_categorical('order', ['random', 'natural'])
-    classifier_chain_kwargs = {'base_estimator': base_estimator, 'order': order}
-    return classifier_chain_model(classifier_chain_kwargs=classifier_chain_kwargs)
     estimator = trial.suggest_categorical('estimator', ['lr', 'svc', 'rfr', 'gbr', 'mlpr'])
     if estimator == 'lr':
         estimator = LogisticRegression()
@@ -1698,20 +1666,6 @@ def regressor_chain_step(trial):
     Regressor
         The RegressorChain object step.
     """
-    base_estimator = trial.suggest_categorical('base_estimator', ['lr', 'svr', 'rfr', 'gbr', 'mlpr'])
-    if base_estimator == 'lr':
-        base_estimator = LinearRegression()
-    elif base_estimator == 'svr':
-        base_estimator = SVR()
-    elif base_estimator == 'rfr':
-        base_estimator = RandomForestRegressor()
-    elif base_estimator == 'gbr':
-        base_estimator = GradientBoostingRegressor()
-    else:
-        base_estimator = MLPRegressor()
-    order = trial.suggest_categorical('order', ['random', 'natural'])
-    regressor_chain_kwargs = {'base_estimator': base_estimator, 'order': order}
-    return regressor_chain_model(regressor_chain_kwargs=regressor_chain_kwargs)
     estimator = trial.suggest_categorical('estimator', ['lr', 'svr', 'rfr', 'gbr', 'mlpr'])
     if estimator == 'lr':
         estimator = LinearRegression()

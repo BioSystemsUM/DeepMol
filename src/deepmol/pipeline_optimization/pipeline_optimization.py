@@ -114,7 +114,7 @@ class PipelineOptimization:
         if isinstance(objective_steps, str):
             assert objective_steps in ['keras', 'deepchem', 'sklearn', 'all'], \
                 'objective_steps must be one of the following: keras, deepchem, sklearn, all'
-            objective_steps = _get_preset(objective_steps, train_dataset, metric)
+            objective_steps = _get_preset(objective_steps)
         objective = Objective(objective_steps, self.study, self.direction, train_dataset, test_dataset, metric,
                               save_top_n, **kwargs)
         self.study.optimize(objective, n_trials=n_trials)

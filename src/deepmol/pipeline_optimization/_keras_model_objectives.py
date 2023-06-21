@@ -5,6 +5,21 @@ from deepmol.models.keras_model_builders import keras_dense_model, keras_cnn_mod
 
 
 def keras_dense_classification_step(trial: Trial, input_shape: tuple):
+    """
+    Optuna model step for a dense Keras model for classification.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+    input_shape : tuple
+        The shape of the input data.
+
+    Returns
+    -------
+    keras_dense_model
+        A dense Keras model.
+    """
     input_dim = input_shape[0]
     n_hidden_layers = trial.suggest_int('n_hidden_layers', 1, 5)
     layers_units = [trial.suggest_int(f'layer_units_{i}', 8, 64) for i in range(n_hidden_layers + 1)]
@@ -28,6 +43,21 @@ def keras_dense_classification_step(trial: Trial, input_shape: tuple):
 
 
 def keras_dense_regression_step(trial: Trial, input_shape: tuple):
+    """
+    Optuna model step for a dense Keras model for regression.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+    input_shape : tuple
+        The shape of the input data.
+
+    Returns
+    -------
+    keras_dense_model
+        A dense Keras model.
+    """
     input_dim = input_shape[0]
     n_hidden_layers = trial.suggest_int('n_hidden_layers', 1, 5)
     layers_units = [trial.suggest_int(f'layer_units_{i}', 8, 64) for i in range(n_hidden_layers + 1)]
@@ -52,6 +82,21 @@ def keras_dense_regression_step(trial: Trial, input_shape: tuple):
 
 
 def keras_cnn_classification_step(trial: Trial, input_shape: tuple):
+    """
+    Optuna model step for a CNN Keras model for classification.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+    input_shape : tuple
+        The shape of the input data.
+
+    Returns
+    -------
+    keras_cnn_model
+        A CNN Keras model.
+    """
     input_dim = input_shape[0]
     g_noise = trial.suggest_float('g_noise', 0.01, 0.1)
     n_conv_layers = trial.suggest_int('n_conv_layers', 1, 3)
@@ -72,11 +117,25 @@ def keras_cnn_classification_step(trial: Trial, input_shape: tuple):
                     'dense_units': dense_units, 'dense_activation': dense_activation, 'dropout': dropout,
                     'last_layer_units': last_layer_units, 'last_layer_activation': last_layer_activation, 'loss': loss,
                     'optimizer': optimizer, 'metrics': metrics}
-    print(model_kwargs)
     return keras_cnn_model(model_kwargs=model_kwargs)
 
 
 def keras_cnn_regression_step(trial: Trial, input_shape: tuple):
+    """
+    Optuna model step for a CNN Keras model for regression.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+    input_shape : tuple
+        The shape of the input data.
+
+    Returns
+    -------
+    keras_cnn_model
+        A CNN Keras model.
+    """
     input_dim = input_shape[0]
     g_noise = trial.suggest_float('g_noise', 0.01, 0.1)
     n_conv_layers = trial.suggest_int('n_conv_layers', 1, 3)
@@ -98,11 +157,25 @@ def keras_cnn_regression_step(trial: Trial, input_shape: tuple):
                     'last_layer_units': last_layer_units, 'last_layer_activation': last_layer_activation, 'loss': loss,
                     'optimizer': optimizer, 'metrics': metrics}
     keras_kwargs = {'mode': 'regression'}
-    print(model_kwargs)
     return keras_cnn_model(model_kwargs=model_kwargs, keras_kwargs=keras_kwargs)
 
 
 def keras_tabular_transformer_classification_step(trial: Trial, input_shape: tuple):
+    """
+    Optuna model step for a Tabular Transformer Keras model for classification.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+    input_shape : tuple
+        The shape of the input data.
+
+    Returns
+    -------
+    keras_tabular_transformer_model
+        A Tabular Transformer Keras model.
+    """
     input_dim = input_shape[0]
     embedding_output_dim = trial.suggest_int('embedding_output_dim', 8, 64)
     n_attention_layers = trial.suggest_int('n_attention_layers', 1, 4)
@@ -124,6 +197,21 @@ def keras_tabular_transformer_classification_step(trial: Trial, input_shape: tup
 
 # TODO: generally fails (predict returns nan)
 def keras_tabular_transformer_regression_step(trial: Trial, input_shape: tuple):
+    """
+    Optuna model step for a Tabular Transformer Keras model for regression.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+    input_shape : tuple
+        The shape of the input data.
+
+    Returns
+    -------
+    keras_tabular_transformer_model
+        A Tabular Transformer Keras model.
+    """
     input_dim = input_shape[0]
     embedding_output_dim = trial.suggest_int('embedding_output_dim', 8, 64)
     n_attention_layers = trial.suggest_int('n_attention_layers', 1, 4)
@@ -145,6 +233,21 @@ def keras_tabular_transformer_regression_step(trial: Trial, input_shape: tuple):
 
 
 def keras_simple_rnn_classification_step(trial: Trial, input_shape: tuple):
+    """
+    Optuna model step for a Simple RNN Keras model for classification.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+    input_shape : tuple
+        The shape of the input data.
+
+    Returns
+    -------
+    keras_simple_rnn_model
+        A Simple RNN Keras model.
+    """
     n_rnn_layers = trial.suggest_int('n_rnn_layers', 1, 3)
     rnn_units = trial.suggest_int('rnn_units', 32, 256, step=32)
     dropout_rnn = trial.suggest_float('dropout_rnn', 0.0, 0.8, step=0.2)
@@ -163,6 +266,21 @@ def keras_simple_rnn_classification_step(trial: Trial, input_shape: tuple):
 
 
 def keras_simple_rnn_regression_step(trial: Trial, input_shape: tuple):
+    """
+    Optuna model step for a Simple RNN Keras model for regression.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+    input_shape : tuple
+        The shape of the input data.
+
+    Returns
+    -------
+    keras_simple_rnn_model
+        A Simple RNN Keras model.
+    """
     n_rnn_layers = trial.suggest_int('n_rnn_layers', 1, 3)
     rnn_units = trial.suggest_int('rnn_units', 32, 256, step=32)
     dropout_rnn = trial.suggest_float('dropout_rnn', 0.0, 0.8, step=0.2)
@@ -182,6 +300,21 @@ def keras_simple_rnn_regression_step(trial: Trial, input_shape: tuple):
 
 
 def keras_rnn_classification_step(trial: Trial, input_shape: tuple):
+    """
+    Optuna model step for a RNN Keras model for classification.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+    input_shape : tuple
+        The shape of the input data.
+
+    Returns
+    -------
+    keras_rnn_model
+        A RNN Keras model.
+    """
     num_lstm_layers = trial.suggest_int('num_lstm_layers', 1, 3)
     lstm_units = []
     for i in range(num_lstm_layers):
@@ -204,6 +337,21 @@ def keras_rnn_classification_step(trial: Trial, input_shape: tuple):
 
 
 def keras_rnn_regression_step(trial: Trial, input_shape: tuple):
+    """
+    Optuna model step for a RNN Keras model for regression.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+    input_shape : tuple
+        The shape of the input data.
+
+    Returns
+    -------
+    keras_rnn_model
+        A RNN Keras model.
+    """
     num_lstm_layers = trial.suggest_int('num_lstm_layers', 1, 3)
     lstm_units = []
     for i in range(num_lstm_layers):
@@ -227,6 +375,21 @@ def keras_rnn_regression_step(trial: Trial, input_shape: tuple):
 
 
 def keras_bidirectional_rnn_classification_step(trial: Trial, input_shape: tuple):
+    """
+    Optuna model step for a bidirectional RNN Keras model for classification.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+    input_shape : tuple
+        The shape of the input data.
+
+    Returns
+    -------
+    keras_bidirectional_rnn_model
+        A bidirectional RNN Keras model.
+    """
     input_dim = input_shape
     num_lstm_layers = trial.suggest_int('num_lstm_layers', 1, 3)
     lstm_units = []
@@ -250,6 +413,21 @@ def keras_bidirectional_rnn_classification_step(trial: Trial, input_shape: tuple
 
 
 def keras_bidirectional_rnn_regression_step(trial: Trial, input_shape: tuple):
+    """
+    Optuna model step for a bidirectional RNN Keras model for regression.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+    input_shape : tuple
+        The shape of the input data.
+
+    Returns
+    -------
+    keras_bidirectional_rnn_model
+        A bidirectional RNN Keras model.
+    """
     input_dim = input_shape
     num_lstm_layers = trial.suggest_int('num_lstm_layers', 1, 3)
     lstm_units = []
@@ -295,6 +473,25 @@ _2D_REGRESSION_MODELS = {'keras_simple_rnn': keras_simple_rnn_regression_step,
 
 
 def _get_keras_model(trial, task_type: str, featurizer_type: str, input_shape: tuple):
+    """
+    Get a Keras model step for Optuna based on the task type and featurizer type.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+    task_type : str
+        The type of task, either classification or regression.
+    featurizer_type : str
+        The type of featurizer, either 1D or 2D.
+    input_shape : tuple
+        The shape of the input data.
+
+    Returns
+    -------
+    keras_model
+        A Keras model step for Optuna.
+    """
     if task_type == 'classification':
         if featurizer_type == '1D':
             model_name = trial.suggest_categorical('model', _TABULAR_CLASSIFICATION_MODELS.keys())

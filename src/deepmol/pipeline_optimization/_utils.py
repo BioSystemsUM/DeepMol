@@ -328,17 +328,15 @@ def preset_keras_models(trial, data: Dataset) -> list:
             scaler = _get_scaler(trial)
         else:
             scaler = PassThroughTransformer()
-        feature_selector = _get_feature_selector(trial, task_type=mode)
         input_shape = (len(featurizer.feature_names),)
     else:
         scaler = PassThroughTransformer()
-        feature_selector = PassThroughTransformer()
         input_shape = featurizer.fit(data).shape
     # TODO: adjust input size for one hot encoding etc
     keras_model = _get_keras_model(trial, task_type=mode, featurizer_type=featurizer_type,
                                    input_shape=input_shape)
     final_steps = [('standardizer', _get_standardizer(trial)), ('featurizer', featurizer), ('scaler', scaler),
-                   ('feature_selector', feature_selector), ('model', keras_model)]
+                   ('model', keras_model)]
     return final_steps
 
 

@@ -1,4 +1,4 @@
-# DeepMol pipelines
+# Pipelines
 
 In DeepMol we have implemented a pipeline class that allows to build a ML pipeline with just a few lines of code. The pipeline class is a wrapper around the sklearn pipeline class. The pipeline class allows to build a ML pipeline with the whatever steps you want to build. The steps can be any of the following:
 - Feature selection
@@ -15,11 +15,11 @@ The pipeline class also allows to visualize the chemical space using the **trans
 
 In this tutorial we will show how to build a ML pipeline to predict drug activity against DRD2 receptor using DeepMol.
 
-# Predict drug activity against DRD2 receptor using DeepMol
+## Pipeline for supervised learning
 
-We were able to build a ML pipeline to predict drug activity against DRD2 receptor using DeepMol wit just 9 lines of code.
+We were able to build a ML pipeline to predict drug activity against DRD2 receptor using DeepMol in a few lines of code.
 
-### Let us define a pipeline to predict drug activity against DRD2 receptor
+<font size="4"> **Let us define a pipeline to predict drug activity against DRD2 receptor** </font>
 
 We will use the following steps:
 - Basic standardization
@@ -56,8 +56,7 @@ pipeline = Pipeline(steps=steps, path="DRD2")
 
 The steps of the pipeline have to be defined as a list of tuples. The first element of the tuple is the name of the step and the second element is the object that implements the step. The pipeline class will respect the order of the steps you defined. The path parameter is the path where the pipeline will be saved.
 
-### Let us load the data
-
+<font size="4"> **Let us load the data** </font>
 
 ```python
 loader = CSVLoader(dataset_path='../data/CHEMBL217_reduced.csv',
@@ -74,10 +73,9 @@ train, test = SingletaskStratifiedSplitter().train_test_split(data, fra_train=0.
 
     [14:20:38] Explicit valence for atom # 6 N, 5, is greater than permitted
 
+<font size="4"> **Let us fit the pipeline** </font>
 
-### Let us fit the pipeline
-
-
+### Fit
 ```python
 pipeline.fit(train)
 ```
@@ -87,10 +85,13 @@ pipeline.fit(train)
 
     <deepmol.pipeline.pipeline.Pipeline at 0x7f60284a2280>
 
+### Predict
+```python
+y_pred = pipeline.predict(test)
+```
 
 
-### Let us evaluate the pipeline
-
+### Evaluate 
 
 ```python
 pipeline.evaluate(test, metrics=[Metric(roc_auc_score), Metric(accuracy_score), Metric(precision_score), Metric(recall_score), Metric(f1_score)])
@@ -108,7 +109,8 @@ pipeline.evaluate(test, metrics=[Metric(roc_auc_score), Metric(accuracy_score), 
 
 
 
-### Now we can save it and load it again
+### Save and load
+Now we can save it and load it again
 
 
 ```python
@@ -137,7 +139,7 @@ pipeline.evaluate(test, metrics=[Metric(roc_auc_score), Metric(accuracy_score), 
 
 
 
-### Let us try using the pipeline just to visualize the chemical space
+## Pipeline just to visualize the chemical space
 
 
 ```python
@@ -151,6 +153,7 @@ pipeline = Pipeline(steps=steps, path="DRD2")
     2023-06-05 14:20:38,885 — INFO — Standardizer BasicStandardizer initialized with -1 jobs.
 
 
+### Fit and transform
 
 ```python
 pipeline.fit(train)
@@ -185,7 +188,7 @@ dataset.X
            [1., 0., 0., ..., 0., 0., 0.]], dtype=float32)
 
 
-
+### Generate plot with PCA
 
 ```python
 from deepmol.unsupervised import PCA

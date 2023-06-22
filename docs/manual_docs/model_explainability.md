@@ -35,8 +35,7 @@ test_df = feature_selection_method.transform(test_dataset)
 
 ```
 
-### First, let us train a simple random forest
-
+<font size="4"> **First, let us train a simple random forest** </font>
 
 ```python
 from deepmol.models import SklearnModel
@@ -50,7 +49,7 @@ model.fit(train_df)
 
 ### Compute SHAP values
 
-#### 1. Using the DeepMol API
+#### Using the DeepMol API
 
 For computing SHAP values using DeepMol, we need to use the ShapValues class. This class takes as input the type of explainer, possible values: "auto", "permutation", "partition", "tree", or "linear". For more information on the different types of explainers, please refer to the [SHAP documentation](https://shap.readthedocs.io/en/latest/#shap.Explainer).
 
@@ -100,11 +99,11 @@ shap_calc.fit(train_dataset, model)
 
 
 
-#### 2. Generating plots with the DeepMol API
+#### Generating plots with the DeepMol API
 
 In each of the following plots, the x-axis represents the SHAP value for each feature, and the y-axis represents the feature's name. The color of each point indicates the value of the feature for that instance. The points are sorted by the SHAP value, with the most impactful features at the top. The plots are useful for identifying the most important features in a model, as well as the range of values for each feature. Negative values indicate that the feature value contributes to a lower prediction, while positive values indicate that the feature value contributes to a higher prediction.
 
-#### Let's start with the beeswarm plot
+##### Beeswarm plot
 
 Here we can see the impact of the most impactful features on the model's predictions. The x-axis represents the SHAP value for each feature, and the y-axis represents the feature's name. The color of each point indicates the value of the feature for that instance. The points are sorted by the SHAP value, with the most impactful features at the top. The beeswarm plot is useful for identifying the most important features in a model, as well as the range of values for each feature.
 
@@ -118,7 +117,7 @@ shap_calc.beeswarm_plot()
     
 
 
-#### Next, let's look at the negative class plot
+##### Negative class plot
 
 This plot shows the SHAP values for the negative class (inactive molecules). The x-axis represents the SHAP value for each feature, and the y-axis represents the feature's name. The color of each point indicates the value of the feature for that instance. The points are sorted by the SHAP value, with the most impactful features at the top. The negative class plot is useful for identifying the most important features in a model, as well as the range of values for each feature.
 
@@ -133,7 +132,7 @@ shap_calc.negative_class_plot()
     
 
 
-#### Finally, let's look at the positive class plot
+##### Positive class plot
 
 This plot shows the SHAP values for the positive class (active molecules). The x-axis represents the SHAP value for each feature, and the y-axis represents the feature's name. The color of each point indicates the value of the feature for that instance. The points are sorted by the SHAP value, with the most impactful features at the top. The positive class plot is useful for identifying the most important features in a model, as well as the range of values for each feature.
 
@@ -148,7 +147,7 @@ shap_calc.positive_class_plot()
     
 
 
-#### We can also plot the SHAP values for a specific molecule
+##### SHAP values for a specific molecule
 
 This plot shows the SHAP values for a specific molecule. The x-axis represents the SHAP value for each feature, and the y-axis represents the feature's name. The color of each point indicates the value of the feature for that instance. The points are sorted by the SHAP value, with the most impactful features at the top. The molecule plot is useful for identifying the most important features in a model, as well as the range of values for each feature.
 
@@ -187,7 +186,7 @@ shap_calc.feature_explanation_plot(1)
     
 
 
-#### We can also generate a heat map of molecules vs features
+##### Heat map of molecules vs features
 
 
 ```python
@@ -205,7 +204,7 @@ shap_calc.heatmap_plot()
 
 It is possible to plot the ON bits (or some of them) in a molecule for MACCS Keys, Morgan and RDK Fingeprints. IT is also possible to draw those bits on the respective molecule. This can be allied with the Shap Values calculation to highlight the zone of the molecule that most contributed to a certain prediction, for instance, the substructure in the molecule that most contributed to its classification as an active or inactive molecule against a receptor.
 
-### Let's start with MACCS Keys
+#### MACCS Keys
 
 
 ```python
@@ -237,7 +236,7 @@ maccs_keys.draw_bit(smi, patt_number)
 
 
 
-### Let's now check Morgan Fingerprint
+#### Morgan Fingerprint
 
 
 ```python
@@ -274,7 +273,7 @@ MorganFingerprint().draw_bits(smi, [41, 80, 90])
 
 
 
-### Finally, let's check RDK Fingerprint
+#### RDK Fingerprint
 
 
 ```python

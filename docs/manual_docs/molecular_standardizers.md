@@ -22,7 +22,7 @@ smiles_non_standardized = ['[H]OC([H])([H])[C@]([H])(O[H])[C@]([H])(O[H])[N+]([H
 df = SmilesDataset(smiles=smiles_non_standardized)
 ```
 
-### Let's see how our molecules look like using RDKit
+#### Let's see how our molecules look like using RDKit
 
 
 ```python
@@ -48,7 +48,7 @@ display(SVG(svg))
     
 
 
-## Standardization using the BasicStandardizer
+## BasicStandardizer
 
 The BasicStandardizer only does sanitization (Kekulize, check valencies, set aromaticity, conjugation and hybridization).
 To perform the standardization we need to call the `standardize` method with the dataset as input.
@@ -90,7 +90,7 @@ display(SVG(svg))
     
 
 
-# Standardization using the CustomStandardizer
+## CustomStandardizer
 
 In the custom standardizer you can choose which tasks to perform. The default tasks are:
 - Remove isotope information (default: False)
@@ -144,7 +144,7 @@ display(SVG(svg))
     
 
 
-# Standardization using the ChEMBLStandardizer
+## ChEMBLStandardizer
 
 [https://github.com/chembl/ChEMBL_Structure_Pipeline](https://github.com/chembl/ChEMBL_Structure_Pipeline)
 

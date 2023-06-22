@@ -4,6 +4,22 @@ deepmol.utils package
 Submodules
 ----------
 
+deepmol.utils.cached\_properties module
+---------------------------------------
+
+.. automodule:: deepmol.utils.cached_properties
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+deepmol.utils.decorators module
+-------------------------------
+
+.. automodule:: deepmol.utils.decorators
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 deepmol.utils.errors module
 ---------------------------
 

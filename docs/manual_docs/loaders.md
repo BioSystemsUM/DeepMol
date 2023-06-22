@@ -34,7 +34,7 @@ csv_dataset = loader.create_dataset(sep=',', header=0)
     2023-05-24 16:51:56,426 — INFO — Assuming classification since there are less than 10 unique y values. If otherwise, explicitly set the mode to 'regression'!
 
 
-# Using SDFLoader
+## Using SDFLoader
 
 SDF stands for "Structural Data File," which is a file format commonly used in chemistry and bioinformatics to represent the structure of molecules.
 
@@ -65,7 +65,7 @@ loader = SDFLoader(dataset_path='../data/example_sdf_file.sdf',
 sdf_dataset = loader.create_dataset()
 ```
 
-# Directly from numpy arrays / lists
+## Directly from numpy arrays / lists
 
 Directly from numpy arrays / lists as a SmilesDataset (both CSVLoader and SDFLoader return SmilesDataset objects).
 
@@ -110,7 +110,7 @@ df_mols = SmilesDataset.from_mols(mols=mols, # only mandatory argument, a list o
                                   mode='auto')
 ```
 
-# Access the data stored in the datasets
+## Access the data stored in the datasets
 
 - dataset.smiles: list of SMILES strings
 - dataset.mols: list of RDKit molecules

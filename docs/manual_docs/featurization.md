@@ -1,4 +1,6 @@
-# Introduction
+# Extracting features from molecules
+
+## Introduction
 
 Extracting features from molecules is a common task in machine learning. There are 4 different types of features: 0D, 1D, 2D, 3D, or 4D.
 
@@ -14,8 +16,6 @@ Extracting features from molecules is a common task in machine learning. There a
 Source : Molecular Descriptors for Structure–Activity Applications: A Hands-On Approach.
 
 As we increase the level of information about a molecule (from 0D to 4D), we also increase the computational cost of calculating the features. For example, calculating 3D features requires the generation of 3D conformers, which can be computationally expensive for large molecules. In addition, some features may not be available for certain molecules, e.g. 3D features cannot be calculated for molecules that do not have a 3D structure. Fortunately, DeepMol provides methods for generating compound 3D structures.
-
-# Generating features using DeepMol
 
 DeepMol provides a number of featurization methods for generating features from molecules. These features can be used for a variety of tasks, such as virtual screening, drug design, and toxicity prediction. The featurization methods are implemented as classes in the deepmol.compound_featurization module. Each class has a featurize method that takes a dataset as input and returns a featurized dataset. The featurize method can be called directly on a dataset object or used in a pipeline with other featurization methods.
 
@@ -36,8 +36,8 @@ The following featurization methods are currently available in DeepMol:
     - MolGanFeat
     - All3DDescriptors
 
-# Import packages
 
+<font size="5"> **Load the dataset** </font>
 
 ```python
 from deepmol.loaders import CSVLoader, SDFLoader
@@ -50,9 +50,6 @@ from deepmol.compound_featurization import WeaveFeat, CoulombFeat, CoulombEigFea
 import numpy as np
 ```
 
-# Load the dataset
-
-
 ```python
 dataset = CSVLoader("../data/CHEMBL217_reduced.csv", id_field="Original_Entry_ID",
                     smiles_field="SMILES", labels_fields=["Activity_Flag"]).create_dataset()
@@ -64,8 +61,6 @@ dataset = CSVLoader("../data/CHEMBL217_reduced.csv", id_field="Original_Entry_ID
 
     [16:43:55] Explicit valence for atom # 6 N, 5, is greater than permitted
 
-
-# Featurize the dataset
 
 ## 1D features: fingerprints and structural keys
 
@@ -95,9 +90,7 @@ On the other hand, atom-pair fingerprints, which describe molecular shape, are b
 [4] A. Capecchi, D. Probst, and J.-L. Reymond. “One molecular fingerprint to rule them all: drugs, biomolecules, and the metabolome”. In: Journal of cheminformatics 12.1 (2020), pp. 1–15
 
 
-## Generate fingerprints and fragment keys with DeepMol
-
-## Morgan Fingerprint
+### Morgan Fingerprint
 
 Morgan fingerprints, also known as circular fingerprints or Morgan/Circular fingerprints, are a type of molecular fingerprint that encodes the structural information of a molecule as a series of binary bitstrings.
 
@@ -146,7 +139,7 @@ np.unique(dataset.X[0], return_counts=True)
 
 
 
-## Atom Pair Fingerprint
+### Atom Pair Fingerprint
 
 Atom pair fingerprint is a type of molecular fingerprinting method used in cheminformatics and computational chemistry. It encodes the presence or absence of pairs of atoms in a molecule, as well as the distance between them.
 
@@ -193,7 +186,7 @@ np.unique(dataset.X[0], return_counts=True)
 
 
 
-## Layered Fingerprint
+### Layered Fingerprint
 
 Layered fingerprints, also known as topological fingerprints, are a type of molecular fingerprinting method used in cheminformatics and computational chemistry. They encode the presence or absence of certain substructures or functional groups in a molecule, which are represented as binary bitstrings.
 
@@ -240,7 +233,7 @@ np.unique(dataset.X[0], return_counts=True)
 
 
 
-## RDK Fingerprint
+### RDK Fingerprint
 
 Fingerprints from rdkit
 
@@ -285,7 +278,7 @@ np.unique(dataset.X[0], return_counts=True)
 
 
 
-## MACCS Keys Fingerprint
+### MACCS Keys Fingerprint
 
 MACCS (Molecular ACCess System) keys are a type of binary molecular fingerprint used in cheminformatics and computational chemistry. They were developed by Molecular Design Limited (now part of Elsevier) and are widely used in the field.
 
@@ -531,9 +524,9 @@ dataset.X[0]
 
 
 
-# 3D descriptors
+## 3D descriptors
 
-## Generating Conformers and exporting to a SDF file
+### Generating Conformers and exporting to a SDF file
 
 3D structures can be generated with DeepMol and being exported to a file.
 
@@ -559,7 +552,7 @@ If you rather want to read directly from a SDF file, you can use the SDFLoader c
 dataset = SDFLoader("../data/CHEMBL217_conformers.sdf", id_field="_ID", labels_fields=["_Class"]).create_dataset()
 ```
 
-### In DeepMol, we only use RDKit 3D descriptors
+### RDKit 3D descriptors
 
 - **AutoCorr3D**: AutoCorr3D is a type of 3D descriptor that captures spatial autocorrelation patterns in a molecule. It quantifies the distribution and arrangement of properties within a three-dimensional grid overlaid on the molecule's structure.
 - **RadialDistributionFunction**: The Radial Distribution Function (RDF), also known as the pair correlation function, is a 3D descriptor that characterizes the distribution of particles or atoms in a system based on their distances from a reference particle.
@@ -740,7 +733,9 @@ dataset.feature_names
 
 
 
-## In DeepMol, we also can use different featurizers for the same dataset, in case you want to use different featurizers at the same time.
+## Mix features
+
+In DeepMol, we also can use different featurizers for the same dataset, in case you want to use different featurizers at the same time.
 
 
 ```python

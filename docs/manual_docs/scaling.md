@@ -8,7 +8,7 @@ Another reason why scaling is important is that it can help to speed up the trai
 
 As we will see below, DeepMol offers a wide variety of scalers.
 
-## Let's start by loading some data
+<font size="5"> **Let's start by loading some data** </font>
 
 
 ```python
@@ -52,7 +52,7 @@ data.X # data is very heterogeneous
 
 
 
-### StandardScaler
+## StandardScaler
 
 Standardize features by removing the mean and scaling to unit variance.
 
@@ -86,7 +86,7 @@ d1.X # the data is much more homogeneous
 
 
 
-### MinMaxScaler
+## MinMaxScaler
 
 Transform features by scaling each feature to a given range.
 
@@ -119,7 +119,7 @@ d2.X # data is scaled between -2 and 2
 
 
 
-### MaxAbsScaler
+## MaxAbsScaler
 
 Scale each feature by its maximum absolute value.
 
@@ -152,7 +152,7 @@ d3.X
 
 
 
-### RobustScaler
+## RobustScaler
 
 Scale features using statistics that are robust to outliers.
 
@@ -185,7 +185,7 @@ d4.X # scaled data
 
 
 
-### Normalizer scaler
+## Normalizer scaler
 
 Normalize samples individually to unit norm.
 
@@ -218,7 +218,7 @@ d5.X # scaled data
 
 
 
-### Binarizer scaler
+## Binarizer scaler
 
 Binarize data (set feature values to 0 or 1) according to a threshold.
 
@@ -245,7 +245,7 @@ d6.X
 
 
 
-### QuantileTransformer
+## QuantileTransformer
 
 The QuantileTransformer is a preprocessing method that transforms input data to have a specified probability distribution. This function maps the data to a uniform or normal distribution using the quantiles of the input data.
 
@@ -280,7 +280,7 @@ d7.X # scale data
 
 
 
-### PowerTransformer
+## PowerTransformer
 
 The PowerTransformer is a preprocessing function in scikit-learn that applies a power transformation to make the data more Gaussian-like. It can be used for data with skewed distributions, as well as data that has a linear relationship with the target variable.
 

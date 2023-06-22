@@ -61,7 +61,7 @@ pca.plot(pca_df.X, path='pca_output_6.png')
 
 ![png](unsupervised_learning_files/pca_output_6.png)
 
-# t-SNE
+## t-SNE
 
 t-SNE (t-distributed Stochastic Neighbor Embedding) is a popular technique in chemoinformatics for visualizing high-dimensional molecular data in a lower-dimensional space.
 
@@ -100,7 +100,7 @@ tsne.plot(tsne_df.X, path='tsne_output_4.png')
 
 ![png](unsupervised_learning_files/tsne_output_4.png)
 
-# KMeans
+## KMeans
 
 K-means clustering is a widely used unsupervised learning algorithm in chemoinformatics for identifying groups of similar chemical compounds based on their molecular descriptors.
 
@@ -137,7 +137,7 @@ kmeans.plot(kmeans_df.X, path='kmeans_output_6.png')
 
 ![png](unsupervised_learning_files/kmeans_output_6.png)
 
-# UMAP
+## UMAP
 
 UMAP (Uniform Manifold Approximation and Projection) is a dimensionality reduction technique that has gained popularity in chemoinformatics for visualizing and analyzing high-dimensional molecular data.
 
@@ -174,7 +174,7 @@ ump.plot(umap_df.X, path='umap_output_6.png')
 
 ![png](unsupervised_learning_files/umap_output_6.png)
 
-# Do your own analysis
+## Do your own analysis
 
 You can always generate the data yourself for any of these unsupervised learning methods and plot them the way you want. Let's try it out with PCA.
 

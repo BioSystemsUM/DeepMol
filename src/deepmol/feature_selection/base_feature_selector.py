@@ -61,7 +61,8 @@ class BaseFeatureSelector(ABC, Transformer):
         dataset: Dataset
           Dataset containing the selected features and indexes of the features kept as 'self.features2keep'.
         """
-        dataset = dataset.select_features_by_index(list(self.features_to_keep))
+        if self.features_to_keep is not None:
+            dataset = dataset.select_features_by_index(list(self.features_to_keep))
         return dataset
 
     def _fit(self, dataset: Dataset) -> 'BaseFeatureSelector':

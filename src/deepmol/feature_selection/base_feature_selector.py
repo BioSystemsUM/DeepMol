@@ -329,8 +329,17 @@ class BorutaAlgorithm(BaseFeatureSelector):
                     max_depth=5
                 )
 
-        self.boruta = BorutaPy(estimator, n_estimators, perc, alpha, two_step, max_iter, random_state, verbose)
-        super().__init__(self.boruta)
+        boruta = BorutaPy(
+            estimator,
+            n_estimators,
+            perc,
+            alpha,
+            two_step,
+            max_iter,
+            random_state,
+            verbose
+        )
+        super().__init__(boruta)
 
     def _fit(self, dataset: Dataset) -> 'BorutaAlgorithm':
         """

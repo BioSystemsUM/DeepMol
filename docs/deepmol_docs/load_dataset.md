@@ -1,4 +1,4 @@
-# Load a dataset from a CSV
+# Load a dataset
 
 To load data from a CSV it's only required to provide the data path and molecules 
 field name. Optionally, it is also possible to provide a field with some ids, 

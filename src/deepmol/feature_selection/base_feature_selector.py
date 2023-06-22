@@ -62,7 +62,8 @@ class BaseFeatureSelector(ABC, Transformer):
         dataset: Dataset
           Dataset containing the selected features and indexes of the features kept as 'self.features2keep'.
         """
-        dataset = dataset.select_features_by_index(list(self.features_to_keep))
+        if self.features_to_keep is not None:
+            dataset = dataset.select_features_by_index(list(self.features_to_keep))
         return dataset
 
     def _fit(self, dataset: Dataset) -> 'BaseFeatureSelector':
@@ -328,17 +329,8 @@ class BorutaAlgorithm(BaseFeatureSelector):
                     max_depth=5
                 )
 
-        boruta = BorutaPy(
-            estimator,
-            n_estimators,
-            perc,
-            alpha,
-            two_step,
-            max_iter,
-            random_state,
-            verbose
-        )
-        super().__init__(boruta)
+        self.boruta = BorutaPy(estimator, n_estimators, perc, alpha, two_step, max_iter, random_state, verbose)
+        super().__init__(self.boruta)
 
     def _fit(self, dataset: Dataset) -> 'BorutaAlgorithm':
         """

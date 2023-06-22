@@ -179,4 +179,7 @@ class PipelineOptimization:
         """
         Returns the parameter importances.
         """
-        return optuna.importance.get_param_importances(self.study)
+        try:
+            return optuna.importance.get_param_importances(self.study)
+        except RuntimeError:
+            return None

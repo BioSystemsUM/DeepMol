@@ -1,13 +1,7 @@
-% deepmol documentation master file, created by
-% sphinx-quickstart on Thu Mar  9 13:50:58 2023.
-% You can adapt this file completely to your liking, but it should at least
-% contain the root `toctree` directive.
-
-# Welcome to deepmol's documentation!
+# docs
 
 ```{toctree}
-:caption: 'Contents:'
-:maxdepth: 2
+:maxdepth: 4
 
 Introduction <deepmol_docs/introduction>
 Installation <deepmol_docs/installation>
@@ -26,10 +20,5 @@ Feature Importance <deepmol_docs/model_explainability>
 About us <deepmol_docs/about_us>
 Related publications <deepmol_docs/publications>
 
-modules
+
 ```
-
-# Indices and tables
-
-- {ref}`modindex`
-- {ref}`search`

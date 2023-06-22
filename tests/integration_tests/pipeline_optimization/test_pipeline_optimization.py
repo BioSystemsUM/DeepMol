@@ -65,6 +65,10 @@ class TestPipelineOptimization(TestCase):
             optuna.delete_study(study_name="test_pipeline", storage="sqlite:///test_pipeline.db")
         except Exception as e:
             print(e)
+        # remove db files
+        for file in os.listdir():
+            if file.endswith('.db'):
+                os.remove(file)
 
     def test_predictor_pipeline(self):
 

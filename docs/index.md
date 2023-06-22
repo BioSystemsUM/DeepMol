@@ -18,11 +18,11 @@ Data scaling <manual_docs/scaling>
 Feature Selection <manual_docs/feature_selection>
 Unsupervised Learning <manual_docs/unsupervised_learning>
 Data Split <manual_docs/splitters>
+Unbalanced Datasets <manual_docs/imbalanced_learn>
 Supervised Learning <manual_docs/models>
 Pipelines <manual_docs/pipeline>
 Hyperparameter optimization <manual_docs/hyperparameter_optimization>
 Feature Importance <manual_docs/model_explainability>
-Unbalanced Datasets <manual_docs/imbalanced_learn>
 About us <manual_docs/about_us>
 Related publications <manual_docs/publications>
 

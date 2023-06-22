@@ -1,4 +1,4 @@
-## About Us
+# About Us
 
 DeepMol is managed by a team of contributors from the BioSystems group 
 at the Centre of Biological Engineering, University of Minho.
@@ -8,15 +8,16 @@ a Ciência e a Tecnologia.
 
 ## Contributors
 <p align="center">
-<img src="../imgs/joao_correia.jpeg" width="200" height="200" />
+<img src="/_static/joao_correia.jpeg" width="200" height="200" />
 </p>
+
 João Correia - PhD student at the University of Minho (UMinho) and 
 researcher at the Centre of Biological Engineering (CEB), Braga, Portugal. João Correia is a PhD student in 
 Bioinformatics currently working with machine learning methods applied to the discovery of new chemical compounds 
 and reactions.
 
 <p align="center">
-<img src="../imgs/joao_capela.jpeg" width="200" height="200" />
+<img src="/_static/joao_capela.jpeg" width="200" height="200" />
 </p>
 
 João Capela - PhD student at the University of Minho (UMinho) and 
@@ -24,7 +25,7 @@ researcher at the Centre of Biological Engineering (CEB), Braga, Portugal. João
 PhD student in Bioinformatics currently working with machine learning methods to expose plant secondary metabolism.
 
 <p align="center">
-<img src="../imgs/vitor_pereira.jpeg" width="200" height="200" />
+<img src="/_static/vitor_pereira.jpeg" width="200" height="200" />
 </p>
 
 Vitor Pereira - Postdoctoral researcher at the University of Minho (UMinho) and Centre of Biological Engineering (CEB),
@@ -32,7 +33,7 @@ Braga, Portugal. Vitor Pereira is a postdoctoral researcher in Bioinformatics cu
 to produce new chemical compounds and proteins.
 
 <p align="center">
-<img src="../imgs/miguel_rocha.jpeg" width="200" height="200" />
+<img src="/_static/miguel_rocha.jpeg" width="200" height="200" />
 </p>
 
 Miguel Rocha - Associate Professor in Artificial Intelligence and Bioinformatics, 

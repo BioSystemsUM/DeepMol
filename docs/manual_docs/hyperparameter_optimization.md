@@ -1,6 +1,6 @@
 # Hyperparameter optimization
 
-## Import packages
+<font size="4"> **Import packages** </font>
 
 
 ```python
@@ -28,8 +28,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 ```
 
-
-## First of all, let's load the data
+<font size="4"> **First of all, let's load the data** </font>
 
 
 ```python
@@ -39,9 +38,7 @@ train_dataset, valid_dataset, test_dataset = RandomSplitter().train_valid_test_s
 
     2023-06-02 11:34:09,557 — INFO — Assuming classification since there are less than 10 unique y values. If otherwise, explicitly set the mode to 'regression'!
 
-
-## Let's featurize the data
-
+<font size="4"> **Let's featurize the data** </font>
 
 ```python
 morgan_fingerprints = MorganFingerprint()
@@ -58,10 +55,10 @@ Moreover, for each method the user have to specify the metric to optimize and if
 
 The parameters must be specified as a dictionary, where the keys are the parameters names and the values are the values to try.
 
+
+### Hyperparameter tuning with a validation set
+
 Let's see how to perform hyperparameter tuning of a SVM with a validation set.
-
-
-
 
 ```python
 params_dict_svc = {"C": [1.0, 1.2, 0.8], "kernel": ['linear', 'poly', 'rbf']} # The keys are the parameters names and the values are the values to try
@@ -141,7 +138,7 @@ SklearnModel.load("my_model").predict(test_dataset)
 
 
 
-## Now let's try with cross validation
+### Hyperparameter tuning with cross validation
 
 
 ```python
@@ -269,7 +266,7 @@ SklearnModel.load("my_model").predict(test_dataset)
 
 
 
-# Hyperparameter tuning with keras
+## Hyperparameter tuning with keras
 
 DeepMol provide methods to perform hyperparameter tuning with keras models. The hyperparameter tuning can be performed with a validation set, previously created, or with cross validation. Anyway, the hyperparameter tuning is performed with a random search if the number of iterations is specified, otherwise a grid search is performed.
 
@@ -303,17 +300,17 @@ def create_model(input_dim, optimizer='adam', dropout=0.5):
 
 ```
 
+### Hyperparameter tuning with a validation set
+
 Let's see how to perform hyperparameter tuning of a DNN with a validation set.
 
 
 ```python
-from tensorflow.keras.optimizers import Adam
-
 optimizer = HyperparameterOptimizerValidation(create_model)
 params_dict_dense = {
                    "input_dim": [train_dataset.X.shape[1]],
                    "dropout": [0.5, 0.6, 0.7],
-                   "optimizer": [Adam]
+                   "optimizer": ["adam"]
                    }
 
 best_dnn, best_hyperparams, all_results = optimizer.hyperparameter_search(train_dataset=train_dataset,
@@ -430,9 +427,28 @@ best_dnn.predict(test_dataset)
            [1.0000000e+00, 0.0000000e+00],
            [1.0000000e+00, 0.0000000e+00]], dtype=float32)
 
+### Hyperparameter tuning with cross validation
 
+The hyperparameter tuning is very similar to the previous one, but in this case the hyperparameter tuning is performed with cross validation and as in for Sklearn models!
 
-# Hyperparameter tuning with deepchem models
+```python
+optimizer = HyperparameterOptimizerCV(create_model)
+params_dict_dense = {
+                   "input_dim": [train_dataset.X.shape[1]],
+                   "dropout": [0.5, 0.6, 0.7],
+                   "optimizer": ["adam"]
+                   }
+best_dnn, best_hyperparams, all_results = optimizer.hyperparameter_search(train_dataset=train_dataset,
+                                                                          metric=Metric(accuracy_score),
+                                                                          maximize_metric=True,
+                                                                          cv=3,
+                                                                          n_iter_search=2,
+                                                                          params_dict=params_dict_dense,
+                                                                          model_type="keras"
+                                                                          )
+```
+
+## Hyperparameter tuning with DeepChem models
 
 DeepMol provide methods to perform hyperparameter tuning with deepchem models. The hyperparameter tuning can be performed with a validation set, previously created, or with cross validation. Anyway, the hyperparameter tuning is performed with a random search if the number of iterations is specified, otherwise a grid search is performed.
 
@@ -452,6 +468,7 @@ ConvMolFeat().featurize(valid_dataset, inplace=True)
 ConvMolFeat().featurize(test_dataset, inplace=True)
 ```
 
+### Hyperparameter tuning with validation set
 
 ```python
 from deepmol.parameter_optimization import HyperparameterOptimizerValidation
@@ -554,7 +571,7 @@ best_model.predict(test_dataset)
 
 
 
-#### Now, let's try hyperparameter tuning with deepchem models and cross validation
+### Hyperparameter tuning with cross validation
 
 
 ```python

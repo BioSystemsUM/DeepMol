@@ -7,6 +7,7 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
+   deepmol.base
    deepmol.compound_featurization
    deepmol.datasets
    deepmol.evaluator
@@ -19,9 +20,11 @@ Subpackages
    deepmol.models
    deepmol.parallelism
    deepmol.parameter_optimization
+   deepmol.pipeline
    deepmol.scalers
    deepmol.splitters
    deepmol.standardizer
+   deepmol.tokenizers
    deepmol.unsupervised
    deepmol.utils
 

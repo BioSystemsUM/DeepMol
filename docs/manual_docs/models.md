@@ -1,6 +1,6 @@
-# Introducing Machine Learning models in DeepMol
+# Machine Learning models
 
-## Import packages
+<font size="4"> **Import packages** </font>
 
 
 ```python
@@ -17,9 +17,9 @@ logger.setLevel(logging.CRITICAL)
 RDLogger.DisableLog('rdApp.*')
 ```
 
-# Shallow learning models using Scikit-learn
+## Scikit-learn models
 
-## Let's start by loading the data and splitting it into train and test sets
+<font size="4"> **Let's start by loading the data and splitting it into train and test sets** </font>
 
 
 ```python
@@ -41,8 +41,7 @@ train_dataset.get_shape()
     ((13298,), None, (13298,))
 
 
-
-## Let's generate Morgan fingerprints from our data
+<font size="4"> **Let's generate Morgan fingerprints from our data** </font>
 
 
 ```python
@@ -52,9 +51,9 @@ MorganFingerprint(n_jobs=10).featurize(train_dataset, inplace=True)
 MorganFingerprint(n_jobs=10).featurize(test_dataset, inplace=True)
 ```
 
-## Now that we have our data ready, let's train a Random Forest model
+<font size="4"> **Now that we have our data ready, let's train a Random Forest model** </font>
 
-
+### Train models
 ```python
 from deepmol.models import SklearnModel
 from sklearn.ensemble import RandomForestClassifier
@@ -64,7 +63,8 @@ model = SklearnModel(model=rf)
 model.fit(train_dataset)
 ```
 
-## Now that we have our model trained, let's make some predictions
+### Predict
+Now that we have our model trained, let's make some predictions**
 
 
 ```python
@@ -83,9 +83,9 @@ model.predict(test_dataset)
            [0.  , 1.  ]])
 
 
+<font size="4"> **And finally, let's evaluate our model according to some metrics** </font>
 
-## And finally, let's evaluate our model according to some metrics
-
+### Evaluate
 
 ```python
 model.evaluate(test_dataset, metrics=[Metric(metric=roc_auc_score), Metric(metric=accuracy_score)])
@@ -98,16 +98,15 @@ model.evaluate(test_dataset, metrics=[Metric(metric=roc_auc_score), Metric(metri
      {})
 
 
-
-## DeepMol also allows you to save your models without any effort
+### Save and load models
+DeepMol also allows you to save your models without any effort.
 
 
 ```python
 model.save("my_model")
 ```
 
-## And load them back
-
+Load them back is also very simple.
 
 ```python
 model = SklearnModel.load("my_model")
@@ -124,17 +123,18 @@ model.evaluate(test_dataset, metrics=[Metric(metric=roc_auc_score), Metric(metri
 
 As you see in the previous example, DeepMol allows you to train and evaluate your models in a very simple way. You can also use any other model from Scikit-learn, such as SVMs, Logistic Regression, etc. You can also use any other featurization method from DeepMol, such as ECFP, GraphConv, etc. Moreover, saving and deploying your models never was so easy!
 
-# Deep learning models using Keras
+## Keras models
 
-## Let's start by extracting some features from our data
+<font size="4"> **Let's start by extracting some features from our data** </font>
 
 
 ```python
 MorganFingerprint(n_jobs=10).featurize(train_dataset, inplace=True)
 MorganFingerprint(n_jobs=10).featurize(test_dataset, inplace=True)
 ```
+### Train models
 
-## Now that we have our data ready, let's train a Deep Learning model
+Now that we have our data ready, let's train a Deep Learning model
 In DeepMol we provide full flexibility to the user to define the architecture of the model. The only requirement is that the model must be defined as a function that takes as input the input dimension of the data and returns a compiled Keras model. The function can also take as input any other parameter that the user wants to tune. In this case, we will define a simple model with two hidden layers and a dropout layer.
 
 
@@ -155,7 +155,7 @@ def create_model(input_dim, optimizer='adam', dropout=0.5):
 
 ```
 
-## Now that we implemented our model, we can train it
+Now that we implemented our model, we can train it
 
 
 ```python
@@ -178,6 +178,7 @@ model = model.fit(train_dataset)
     1330/1330 [==============================] - 1s 790us/step - loss: 0.0469 - accuracy: 0.9868
 
 
+### Predict
 
 ```python
 model.predict(test_dataset)
@@ -195,6 +196,7 @@ model.predict(test_dataset)
 
 
 
+### Evaluate
 
 ```python
 model.evaluate(test_dataset, metrics=[Metric(metric=roc_auc_score), Metric(metric=accuracy_score)])
@@ -207,6 +209,7 @@ model.evaluate(test_dataset, metrics=[Metric(metric=roc_auc_score), Metric(metri
 
 
 
+### Save and load models
 
 ```python
 model.save("my_model")
@@ -225,20 +228,18 @@ model.evaluate(test_dataset, metrics=[Metric(metric=roc_auc_score), Metric(metri
 
 
 
-# Deep learning models using DeepChem models
+## DeepChem models
 
+<font size="4"> **Generate molecular graphs** </font>
 
 ```python
 from deepmol.compound_featurization import ConvMolFeat
 
 ConvMolFeat(n_jobs=10).featurize(train_dataset, inplace=True)
-```
-
-
-```python
 ConvMolFeat(n_jobs=10).featurize(test_dataset, inplace=True)
 ```
 
+### Train models
 
 ```python
 from deepchem.models import GraphConvModel
@@ -248,6 +249,7 @@ model = DeepChemModel(model=GraphConvModel(graph_conv_layers=[32, 32], dense_lay
 model.fit(train_dataset)
 ```
 
+### Predict
 
 ```python
 model.predict(test_dataset)
@@ -266,7 +268,7 @@ model.predict(test_dataset)
 
 
 
-
+### Evaluate
 ```python
 model.evaluate(test_dataset, metrics=[Metric(metric=roc_auc_score), Metric(metric=accuracy_score)])
 ```
@@ -279,6 +281,7 @@ model.evaluate(test_dataset, metrics=[Metric(metric=roc_auc_score), Metric(metri
 
 
 
+### Save and load models
 
 ```python
 model.save("my_model")

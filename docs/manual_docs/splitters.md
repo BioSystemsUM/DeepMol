@@ -2,7 +2,7 @@
 
 Splitting your data in a Machine Learning pipeline is a crucial step. It is important to make sure that the data is split in a way that the model is not overfitting. In this tutorial we will show you how to use the splitters in DeepMol. Some splitters allow us to have an easier task for a model to learn, while others allow us to have a more difficult task for a model to learn. We will show you how to use the splitters and how to use them in a pipeline.
 
-## Import data
+ <font size="5"> **Import data** </font>
 
 
 ```python
@@ -24,7 +24,7 @@ from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 ```
 
-### Create function to generate t-SNE embeddings
+<font size="5"> **Create function to generate t-SNE embeddings** </font>
 
 
 ```python
@@ -78,8 +78,6 @@ dataset = CSVLoader("../data/CHEMBL217_reduced.csv", id_field="Original_Entry_ID
 ```
 
 
-# Splitters
-
 ## SingletaskStratifiedSplitter
 
 A single task stratified splitter splits the data into train, validation and test sets. The data is split in a way that the distribution of the labels is the same in each set. This is useful when we have a dataset with a large number of classes and we want to make sure that the distribution of the classes is the same in each set.
@@ -90,7 +88,7 @@ splitter = SingletaskStratifiedSplitter()
 train_dataset, valid_dataset, test_dataset = splitter.train_valid_test_split(dataset, frac_train=0.8, frac_valid=0.1, frac_test=0.1)
 ```
 
-### Below we can see the distribution of the labels in each set
+ Below we can see the distribution of the labels in each set
 
 As you might see, the distribution of the labels is roughly the same in each set.
 
@@ -164,8 +162,7 @@ pd.Series(test_dataset.y).value_counts()
 
 
 
-### Below we can see the distribution of the molecules in each set
-
+<font size="5"> **Below we can see the distribution of the molecules in each set** </font>
 
 ```python
 generate_tsne_molecular_similarities(train_dataset, valid_dataset, test_dataset)
@@ -235,7 +232,7 @@ similarity_splitter = SimilaritySplitter()
 train_dataset, valid_dataset, test_dataset = similarity_splitter.train_valid_test_split(dataset, frac_train=0.8, frac_valid=0.1, frac_test=0.1, homogenous_threshold=0.7)
 ```
 
-### Below we can see the distribution of the labels in each set
+<font size="4"> **Below we can see the distribution of the labels in each set** </font>
 
 
 ```python
@@ -278,9 +275,7 @@ pd.Series(test_dataset.y).value_counts()
     dtype: int64
 
 
-
-### Below we can see the distribution of the molecules in each set - they look quite separated from each other
-
+<font size="4"> **Below we can see the distribution of the molecules in each set - they look quite separated from each other** </font>
 
 ```python
 generate_tsne_molecular_similarities(train_dataset, valid_dataset, test_dataset)
@@ -313,8 +308,7 @@ model.evaluate(test_dataset, [Metric(accuracy_score, name="accuracy")])
     ({'accuracy': 0.7899159663865546}, {})
 
 
-
-### Let's try with a lower threshold and see what happens
+<font size="4"> **Let's try with a lower threshold and see what happens** </font>
 
 
 ```python
@@ -358,7 +352,7 @@ model.evaluate(test_dataset, [Metric(accuracy_score, name="accuracy")])
 
 The scaffold splitter splits the data into train, validation and test sets. The data is split in a way that the scaffolds of the molecules in each set are different or the same, depending on the **homogenous_datasets** parameter. This is useful when we want to make sure that the molecules in the validation and test sets are different or similar in terms of substructures from the molecules in the training set.
 
-### Let's see how it works and create a split with different scaffolds in each set
+<font size="4"> **Let's see how it works and create a split with different scaffolds in each set** </font>
 
 
 ```python
@@ -369,7 +363,7 @@ scaffold_splitter = ScaffoldSplitter()
 train_dataset, valid_dataset, test_dataset = scaffold_splitter.train_valid_test_split(dataset, frac_train=0.8, frac_valid=0.1, frac_test=0.1, homogenous_datasets = False)
 ```
 
-### Below we can see the distribution of the molecules in each set
+<font size="4"> **Below we can see the distribution of the molecules in each set** </font>
 
 As you might see, the distribution of the molecules in each set is a bit different.
 
@@ -385,8 +379,7 @@ generate_tsne_molecular_similarities(train_dataset, valid_dataset, test_dataset)
 ![png](splitters_files/splitters_49_1.png)
     
 
-
-### Let's see how it works when training a model
+<font size="4"> **Let's see how it works when training a model** </font>
 
 
 ```python
@@ -406,8 +399,7 @@ model.evaluate(test_dataset, [Metric(accuracy_score, name="accuracy")])
     ({'accuracy': 0.9663865546218487}, {})
 
 
-
-### Let's make things a bit easier and create a split with similar scaffolds in each set
+<font size="4"> **Let's make things a bit easier and create a split with similar scaffolds in each set** </font>
 
 
 ```python
@@ -461,7 +453,7 @@ butina_splitter = ButinaSplitter()
 train_dataset, valid_dataset, test_dataset = butina_splitter.train_valid_test_split(dataset, frac_train=0.8, frac_valid=0.1, frac_test=0.1, homogenous_datasets = False)
 ```
 
-### Below we can see the distribution of the molecules in each set
+<font size="4"> **Below we can see the distribution of the molecules in each set** </font>
 
 As you might see, the distribution of the molecules in each set is a bit different.
 
@@ -494,8 +486,7 @@ model.evaluate(test_dataset, [Metric(accuracy_score, name="accuracy")])
     ({'accuracy': 0.9147659063625451}, {})
 
 
-
-### Let's make things a bit easier and create a split with similar molecules in each set
+<font size="4"> **Let's make things a bit easier and create a split with similar molecules in each set** </font>
 
 
 ```python
@@ -504,7 +495,7 @@ butina_splitter = ButinaSplitter()
 train_dataset, valid_dataset, test_dataset = butina_splitter.train_valid_test_split(dataset, frac_train=0.8, frac_valid=0.1, frac_test=0.1, homogenous_datasets = True)
 ```
 
-### Below we can see the distribution of the molecules in each set
+<font size="4"> **Below we can see the distribution of the molecules in each set** </font>
 
 
 ```python

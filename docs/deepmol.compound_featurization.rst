@@ -36,6 +36,14 @@ deepmol.compound\_featurization.mol2vec module
    :undoc-members:
    :show-inheritance:
 
+deepmol.compound\_featurization.one\_hot\_encoder module
+--------------------------------------------------------
+
+.. automodule:: deepmol.compound_featurization.one_hot_encoder
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 deepmol.compound\_featurization.rdkit\_descriptors module
 ---------------------------------------------------------
 
@@ -48,6 +56,14 @@ deepmol.compound\_featurization.rdkit\_fingerprints module
 ----------------------------------------------------------
 
 .. automodule:: deepmol.compound_featurization.rdkit_fingerprints
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+deepmol.compound\_featurization.similarity\_matrix module
+---------------------------------------------------------
+
+.. automodule:: deepmol.compound_featurization.similarity_matrix
    :members:
    :undoc-members:
    :show-inheritance:

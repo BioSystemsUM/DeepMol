@@ -4,7 +4,7 @@ The selection of the most relevant features can significantly improve the perfor
 
 DeepMol supports many types of feature selection provided by scikit-learn including Low Variance Feature Selection, KBest, Percentile, Recursive Feature Elimination and selecting features based on importance weights.
 
-### Let's load our dataset with already computed features (2048 features)
+<font size="5"> **Let's load our dataset with already computed features (2048 features)** </font>
 
 
 ```python
@@ -32,7 +32,7 @@ train_dataset, valid_dataset, test_dataset = splitter.train_valid_test_split(csv
     2023-06-02 15:55:25,941 — INFO — Labels_shape: (500,)
 
 
-### Let's use the LowVarianceFS feature selector
+## LowVarianceFS
 
 Low variance feature selection is a technique used to select features in a dataset that have little or no variability across the data. This method is based on the assumption that features with low variance have little impact on the model's predictive ability and can be safely removed.
 
@@ -68,7 +68,7 @@ test_dataset_low_variance_fs.get_shape()
 
 
 
-### Let's use the KbestFS feature selector
+## KbestFS
 
 SelectKBest is a feature selection algorithm in machine learning that selects the top k features with the highest predictive power from a given dataset. This algorithm works by scoring each feature and selecting the top k features based on their scores.
 
@@ -106,7 +106,7 @@ test_dataset_kbest_fs.get_shape()
 
 
 
-### Let's use the PercentilFS feature selector
+## PercentilFS
 
 SelectPercentile is a feature selection algorithm in machine learning that selects the top features based on their statistical scores, similar to SelectKBest. However, instead of selecting a fixed number of features, SelectPercentile selects a percentage of the most informative features from a given dataset.
 
@@ -139,7 +139,7 @@ test_dataset_percentil_fs.get_shape()
 
 
 
-### Let's use the RFECVFS feature selector
+## RFECVFS
 
 Recursive Feature Elimination with Cross-Validation (RFECV) is a feature selection algorithm in machine learning that selects the most informative subset of features from a given dataset by iteratively eliminating the least important features.
 
@@ -178,7 +178,7 @@ test_dataset_RFECVFS.get_shape()
 
 
 
-### Let's use the SelectFromModelFS feature selector
+## SelectFromModelFS
 
 SelectFromModel is a feature selection algorithm in machine learning that selects the most informative subset of features from a given dataset based on the importance scores provided by a base estimator.
 
@@ -214,7 +214,7 @@ test_dataset_SelectFromModelFS.get_shape()
 
 
 
-### Let's use the BorutaAlgorithm feature selector
+## BorutaAlgorithm
 
 The boruta algorithm works by comparing the importance of each feature in the original dataset with the importance of the same feature in a shuffled version of the dataset. If the importance of the feature in the original dataset is significantly higher than its importance in the shuffled dataset, the feature is deemed "confirmed" and is selected for the final feature subset.
 

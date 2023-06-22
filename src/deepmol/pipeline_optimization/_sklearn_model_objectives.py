@@ -529,8 +529,7 @@ def linear_discriminat_analysis_step(trial):
         The LinearDiscriminantAnalysis object step.
     """
     solver = trial.suggest_categorical('solver', ['svd', 'lsqr', 'eigen'])
-    shrinkage = trial.suggest_float('shrinkage', 0.0, 1.0)
-    linear_discriminant_analysis_kwargs = {'solver': solver, 'shrinkage': shrinkage}
+    linear_discriminant_analysis_kwargs = {'solver': solver}
     return linear_discriminant_analysis_model(linear_discriminant_analysis_kwargs=linear_discriminant_analysis_kwargs)
 
 

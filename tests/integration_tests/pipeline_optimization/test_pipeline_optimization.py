@@ -2,6 +2,7 @@ import os
 import shutil
 from unittest import TestCase
 
+import optuna
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, mean_squared_error
 from sklearn.svm import SVC
@@ -86,12 +87,18 @@ class TestPipelineOptimization(TestCase):
         # assert that 3 pipelines were saved
         self.assertEqual(len(os.listdir('test_predictor_pipeline')), 3)
 
+        df = po.trials_dataframe()
+        self.assertEqual(len(df), 5)
+        df2 = po.trials_dataframe(cols=['number', 'value'])
+        self.assertEqual(df2.shape, (5, 2))
+
     def test_classification_preset(self):
-        po = PipelineOptimization(direction='maximize', study_name='test_pipeline')
+        storage_name = "sqlite:///test_pipeline.db"
+        po = PipelineOptimization(direction='maximize', study_name='test_pipeline', storage=storage_name)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_smiles, seed=123)
-        po.optimize(train_dataset=train, test_dataset=test, objective_steps='all', metric=metric, n_trials=3, data=train,
-                    save_top_n=2)
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps='all', metric=metric, n_trials=3,
+                    data=train, save_top_n=2)
         self.assertEqual(po.best_params, po.best_trial.params)
         self.assertIsInstance(po.best_value, float)
 
@@ -102,6 +109,12 @@ class TestPipelineOptimization(TestCase):
         best_pipeline = po.best_pipeline
         new_predictions = best_pipeline.evaluate(test, [metric])[0][metric.name]
         self.assertEqual(new_predictions, po.best_value)
+
+        param_importance = po.get_param_importances()
+        for param in param_importance:
+            self.assertTrue(param in po.best_params.keys())
+
+        optuna.delete_study(study_name="test_pipeline", storage="sqlite:///test_pipeline.db")
 
     def test_regression_preset(self):
         po = PipelineOptimization(direction='minimize', study_name='test_pipeline')

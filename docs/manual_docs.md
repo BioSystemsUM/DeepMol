@@ -15,6 +15,7 @@ Supervised Learning <manual_docs/models>
 Feature Importance <manual_docs/feature_importance>
 Unbalanced Datasets <manual_docs/unbalanced_datasets>
 Pipeline <manual_docs/pipeline>
+Pipeline Optimization <manual_docs/pipeline_optimization>
 About us <manual_docs/about_us>
 Related publications <manual_docs/publications>
 

@@ -60,6 +60,11 @@ class TestPipelineOptimization(TestCase):
         for file in os.listdir():
             if file.endswith('_model'):
                 shutil.rmtree(file)
+        # remove study rdbm
+        try:
+            optuna.delete_study(study_name="test_pipeline", storage="sqlite:///test_pipeline.db")
+        except Exception as e:
+            print(e)
 
     def test_predictor_pipeline(self):
 
@@ -114,13 +119,12 @@ class TestPipelineOptimization(TestCase):
         for param in param_importance:
             self.assertTrue(param in po.best_params.keys())
 
-        optuna.delete_study(study_name="test_pipeline", storage="sqlite:///test_pipeline.db")
-
     def test_regression_preset(self):
         po = PipelineOptimization(direction='minimize', study_name='test_pipeline')
         metric = Metric(mean_squared_error)
         train, test = RandomSplitter().train_test_split(self.dataset_regression, seed=123)
-        po.optimize(train_dataset=train, test_dataset=test, objective_steps='all', metric=metric, n_trials=3, data=train,
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps='all', metric=metric, n_trials=3,
+                    data=train,
                     save_top_n=2)
         self.assertEqual(po.best_params, po.best_trial.params)
         self.assertIsInstance(po.best_value, float)

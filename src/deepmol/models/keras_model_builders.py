@@ -92,12 +92,11 @@ def keras_dense_model(model_dir: str = 'keras_model/', model_kwargs: dict = None
     """
     keras_kwargs = {} if keras_kwargs is None else keras_kwargs
     mode = 'classification' if 'mode' not in keras_kwargs else keras_kwargs['mode']
-    model_path = model_dir
     epochs = 150 if 'epochs' not in keras_kwargs else keras_kwargs['epochs']
     batch_size = 10 if 'batch_size' not in keras_kwargs else keras_kwargs['batch_size']
     verbose = 0 if 'verbose' not in keras_kwargs else keras_kwargs['verbose']
     model_kwargs = {} if model_kwargs is None else model_kwargs
-    return KerasModel(model_builder=baseline_dense_model_builder, mode=mode, model_path=model_path, epochs=epochs,
+    return KerasModel(model_builder=baseline_dense_model_builder, mode=mode, model_dir=model_dir, epochs=epochs,
                       batch_size=batch_size, verbose=verbose, **model_kwargs)
 
 
@@ -193,12 +192,11 @@ def keras_cnn_model(model_dir: str = 'keras_model/', model_kwargs: dict = None,
     """
     keras_kwargs = {} if keras_kwargs is None else keras_kwargs
     mode = 'classification' if 'mode' not in keras_kwargs else keras_kwargs['mode']
-    model_path = model_dir
     epochs = 150 if 'epochs' not in keras_kwargs else keras_kwargs['epochs']
     batch_size = 10 if 'batch_size' not in keras_kwargs else keras_kwargs['batch_size']
     verbose = 0 if 'verbose' not in keras_kwargs else keras_kwargs['verbose']
     model_kwargs = {} if model_kwargs is None else model_kwargs
-    return KerasModel(model_builder=baseline_cnn_model_builder, mode=mode, model_path=model_path, epochs=epochs,
+    return KerasModel(model_builder=baseline_cnn_model_builder, mode=mode, model_dir=model_dir, epochs=epochs,
                       batch_size=batch_size, verbose=verbose, **model_kwargs)
 
 
@@ -288,12 +286,11 @@ def keras_tabular_transformer_model(model_dir: str = 'keras_model/', model_kwarg
     """
     keras_kwargs = {} if keras_kwargs is None else keras_kwargs
     mode = 'classification' if 'mode' not in keras_kwargs else keras_kwargs['mode']
-    model_path = model_dir
     epochs = 150 if 'epochs' not in keras_kwargs else keras_kwargs['epochs']
     batch_size = 10 if 'batch_size' not in keras_kwargs else keras_kwargs['batch_size']
     verbose = 0 if 'verbose' not in keras_kwargs else keras_kwargs['verbose']
     model_kwargs = {} if model_kwargs is None else model_kwargs
-    return KerasModel(model_builder=make_tabular_transformer_model_builder, mode=mode, model_path=model_path,
+    return KerasModel(model_builder=make_tabular_transformer_model_builder, mode=mode, model_dir=model_dir,
                       epochs=epochs, batch_size=batch_size, verbose=verbose, **model_kwargs)
 
 
@@ -369,12 +366,11 @@ def keras_simple_rnn_model(model_dir: str = 'keras_model/', model_kwargs: dict =
     """
     keras_kwargs = {} if keras_kwargs is None else keras_kwargs
     mode = 'classification' if 'mode' not in keras_kwargs else keras_kwargs['mode']
-    model_path = model_dir
     epochs = 150 if 'epochs' not in keras_kwargs else keras_kwargs['epochs']
     batch_size = 10 if 'batch_size' not in keras_kwargs else keras_kwargs['batch_size']
     verbose = 0 if 'verbose' not in keras_kwargs else keras_kwargs['verbose']
     model_kwargs = {} if model_kwargs is None else model_kwargs
-    return KerasModel(model_builder=make_simple_rnn_model_builder, mode=mode, model_path=model_path, epochs=epochs,
+    return KerasModel(model_builder=make_simple_rnn_model_builder, mode=mode, model_dir=model_dir, epochs=epochs,
                       batch_size=batch_size, verbose=verbose, **model_kwargs)
 
 
@@ -456,12 +452,11 @@ def keras_rnn_model(model_dir: str = 'keras_model/', model_kwargs: dict = None,
     """
     keras_kwargs = {} if keras_kwargs is None else keras_kwargs
     mode = 'classification' if 'mode' not in keras_kwargs else keras_kwargs['mode']
-    model_path = model_dir
     epochs = 150 if 'epochs' not in keras_kwargs else keras_kwargs['epochs']
     batch_size = 10 if 'batch_size' not in keras_kwargs else keras_kwargs['batch_size']
     verbose = 0 if 'verbose' not in keras_kwargs else keras_kwargs['verbose']
     model_kwargs = {} if model_kwargs is None else model_kwargs
-    return KerasModel(model_builder=make_rnn_model_builder, mode=mode, model_path=model_path, epochs=epochs,
+    return KerasModel(model_builder=make_rnn_model_builder, mode=mode, model_dir=model_dir, epochs=epochs,
                       batch_size=batch_size, verbose=verbose, **model_kwargs)
 
 
@@ -552,10 +547,9 @@ def keras_bidirectional_rnn_model(model_dir: str = 'keras_model/', model_kwargs:
     """
     keras_kwargs = {} if keras_kwargs is None else keras_kwargs
     mode = 'classification' if 'mode' not in keras_kwargs else keras_kwargs['mode']
-    model_path = model_dir
     epochs = 150 if 'epochs' not in keras_kwargs else keras_kwargs['epochs']
     batch_size = 10 if 'batch_size' not in keras_kwargs else keras_kwargs['batch_size']
     verbose = 0 if 'verbose' not in keras_kwargs else keras_kwargs['verbose']
     model_kwargs = {} if model_kwargs is None else model_kwargs
-    return KerasModel(model_builder=make_bidirectional_rnn_model_builder, mode=mode, model_path=model_path,
+    return KerasModel(model_builder=make_bidirectional_rnn_model_builder, mode=mode, model_dir=model_dir,
                       epochs=epochs, batch_size=batch_size, verbose=verbose, **model_kwargs)

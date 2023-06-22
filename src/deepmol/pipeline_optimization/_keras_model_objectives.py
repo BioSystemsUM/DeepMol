@@ -494,17 +494,17 @@ def _get_keras_model(trial, task_type: str, featurizer_type: str, input_shape: t
     """
     if task_type == 'classification':
         if featurizer_type == '1D':
-            model_name = trial.suggest_categorical('model', _TABULAR_CLASSIFICATION_MODELS.keys())
+            model_name = trial.suggest_categorical('model', list(_TABULAR_CLASSIFICATION_MODELS.keys()))
             return _TABULAR_CLASSIFICATION_MODELS[model_name](trial, input_shape)
         elif featurizer_type == '2D':
-            model_name = trial.suggest_categorical('model', _2D_CLASSIFICATION_MODELS.keys())
+            model_name = trial.suggest_categorical('model', list(_2D_CLASSIFICATION_MODELS.keys()))
             return _2D_CLASSIFICATION_MODELS[model_name](trial, input_shape)
     elif task_type == 'regression':
         if featurizer_type == '1D':
-            model_name = trial.suggest_categorical('model', _TABULAR_REGRESSION_MODELS.keys())
+            model_name = trial.suggest_categorical('model', list(_TABULAR_REGRESSION_MODELS.keys()))
             return _TABULAR_REGRESSION_MODELS[model_name](trial, input_shape)
         elif featurizer_type == '2D':
-            model_name = trial.suggest_categorical('model', _2D_REGRESSION_MODELS.keys())
+            model_name = trial.suggest_categorical('model', list(_2D_REGRESSION_MODELS.keys()))
             return _2D_REGRESSION_MODELS[model_name](trial, input_shape)
     else:
         raise ValueError(f'Unknown task type: {task_type}')

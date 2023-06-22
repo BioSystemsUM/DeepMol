@@ -2,6 +2,7 @@ import os
 from typing import Union, List
 
 import optuna
+import pandas as pd
 from optuna.pruners import BasePruner
 from optuna.samplers import BaseSampler
 from optuna.storages import BaseStorage
@@ -155,3 +156,27 @@ class PipelineOptimization:
         best_trial_id = self.study.best_trial.number
         path = os.path.join(self.study.study_name, f'trial_{best_trial_id}')
         return Pipeline.load(path)
+
+    def trials_dataframe(self, cols: List[str] = None) -> pd.DataFrame:
+        """
+        Returns the trials dataframe.
+
+        Parameters
+        ----------
+        cols : list of str
+            Columns to be returned.
+
+        Returns
+        -------
+        pd.DataFrame
+            Trials dataframe.
+        """
+        if cols is not None:
+            return self.study.trials_dataframe(attrs=tuple(cols))
+        return self.study.trials_dataframe()
+
+    def get_param_importances(self):
+        """
+        Returns the parameter importances.
+        """
+        return optuna.importance.get_param_importances(self.study)

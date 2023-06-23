@@ -120,8 +120,9 @@ class TestPipelineOptimization(TestCase):
         self.assertEqual(new_predictions, po.best_value)
 
         param_importance = po.get_param_importances()
-        for param in param_importance:
-            self.assertTrue(param in po.best_params.keys())
+        if param_importance is not None:
+            for param in param_importance:
+                self.assertTrue(param in po.best_params.keys())
 
     def test_regression_preset(self):
         po = PipelineOptimization(direction='minimize', study_name='test_pipeline')

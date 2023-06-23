@@ -1,6 +1,6 @@
 from optuna import Trial
 
-from deepmol.models.keras_model_builders import keras_dense_model, keras_cnn_model, keras_tabular_transformer_model, \
+from deepmol.models.keras_model_builders import keras_dense_model, keras_1D_cnn_model, keras_tabular_transformer_model, \
     keras_simple_rnn_model, keras_rnn_model, keras_bidirectional_rnn_model
 
 
@@ -81,9 +81,9 @@ def keras_dense_regression_step(trial: Trial, input_shape: tuple):
     return keras_dense_model(model_kwargs=model_kwargs, keras_kwargs=keras_kwargs)
 
 
-def keras_cnn_classification_step(trial: Trial, input_shape: tuple):
+def keras_1D_cnn_classification_step(trial: Trial, input_shape: tuple):
     """
-    Optuna model step for a CNN Keras model for classification.
+    Optuna model step for a 1D CNN Keras model for classification.
 
     Parameters
     ----------
@@ -94,8 +94,8 @@ def keras_cnn_classification_step(trial: Trial, input_shape: tuple):
 
     Returns
     -------
-    keras_cnn_model
-        A CNN Keras model.
+    keras_1D_cnn_model
+        A 1D CNN Keras model.
     """
     input_dim = input_shape[0]
     g_noise = trial.suggest_float('g_noise', 0.01, 0.1)
@@ -117,12 +117,12 @@ def keras_cnn_classification_step(trial: Trial, input_shape: tuple):
                     'dense_units': dense_units, 'dense_activation': dense_activation, 'dropout': dropout,
                     'last_layer_units': last_layer_units, 'last_layer_activation': last_layer_activation, 'loss': loss,
                     'optimizer': optimizer, 'metrics': metrics}
-    return keras_cnn_model(model_kwargs=model_kwargs)
+    return keras_1D_cnn_model(model_kwargs=model_kwargs)
 
 
-def keras_cnn_regression_step(trial: Trial, input_shape: tuple):
+def keras_1D_cnn_regression_step(trial: Trial, input_shape: tuple):
     """
-    Optuna model step for a CNN Keras model for regression.
+    Optuna model step for a 1D CNN Keras model for regression.
 
     Parameters
     ----------
@@ -133,8 +133,8 @@ def keras_cnn_regression_step(trial: Trial, input_shape: tuple):
 
     Returns
     -------
-    keras_cnn_model
-        A CNN Keras model.
+    keras_1D_cnn_model
+        A 1D CNN Keras model.
     """
     input_dim = input_shape[0]
     g_noise = trial.suggest_float('g_noise', 0.01, 0.1)
@@ -157,7 +157,7 @@ def keras_cnn_regression_step(trial: Trial, input_shape: tuple):
                     'last_layer_units': last_layer_units, 'last_layer_activation': last_layer_activation, 'loss': loss,
                     'optimizer': optimizer, 'metrics': metrics}
     keras_kwargs = {'mode': 'regression'}
-    return keras_cnn_model(model_kwargs=model_kwargs, keras_kwargs=keras_kwargs)
+    return keras_1D_cnn_model(model_kwargs=model_kwargs, keras_kwargs=keras_kwargs)
 
 
 def keras_tabular_transformer_classification_step(trial: Trial, input_shape: tuple):
@@ -452,7 +452,7 @@ def keras_bidirectional_rnn_regression_step(trial: Trial, input_shape: tuple):
 
 
 _TABULAR_CLASSIFICATION_MODELS = {'keras_dense': keras_dense_classification_step,
-                                  'keras_cnn': keras_cnn_classification_step,
+                                  'keras_1D_cnn': keras_1D_cnn_classification_step,
                                   'keras_tabular_transformer': keras_tabular_transformer_classification_step,
                                   }
 
@@ -462,7 +462,7 @@ _2D_CLASSIFICATION_MODELS = {'keras_simple_rnn': keras_simple_rnn_classification
                              }
 
 _TABULAR_REGRESSION_MODELS = {'keras_dense': keras_dense_regression_step,
-                              'keras_cnn': keras_cnn_regression_step,
+                              'keras_1D_cnn': keras_1D_cnn_regression_step,
                               'keras_tabular_transformer': keras_tabular_transformer_regression_step,
                               }
 

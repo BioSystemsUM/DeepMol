@@ -100,22 +100,22 @@ def keras_dense_model(model_dir: str = 'keras_model/', model_kwargs: dict = None
                       batch_size=batch_size, verbose=verbose, **model_kwargs)
 
 
-def baseline_cnn_model_builder(input_dim: int = 1024,
-                               g_noise: float = 0.05,
-                               n_conv_layers: int = 2,
-                               filters: List[int] = [8, 16],
-                               kernel_sizes: List[int] = [32, 32],
-                               strides: List[int] = [1, 1],
-                               activations: List[str] = ['relu', 'relu'],
-                               padding: str = 'same',
-                               dense_units: int = 128,
-                               dense_activation: str = 'relu',
-                               dropout: float = 0.5,
-                               last_layer_units: int = 1,
-                               last_layer_activation: str = 'sigmoid',
-                               loss: str = 'binary_crossentropy',
-                               optimizer: str = 'adadelta',
-                               metrics: Union[str, List[str]] = 'accuracy'):
+def baseline_1D_cnn_model_builder(input_dim: int = 1024,
+                                  g_noise: float = 0.05,
+                                  n_conv_layers: int = 2,
+                                  filters: List[int] = [8, 16],
+                                  kernel_sizes: List[int] = [32, 32],
+                                  strides: List[int] = [1, 1],
+                                  activations: List[str] = ['relu', 'relu'],
+                                  padding: str = 'same',
+                                  dense_units: int = 128,
+                                  dense_activation: str = 'relu',
+                                  dropout: float = 0.5,
+                                  last_layer_units: int = 1,
+                                  last_layer_activation: str = 'sigmoid',
+                                  loss: str = 'binary_crossentropy',
+                                  optimizer: str = 'adadelta',
+                                  metrics: Union[str, List[str]] = 'accuracy'):
     """
     Builds a 1D convolutional neural network model.
 
@@ -141,6 +141,8 @@ def baseline_cnn_model_builder(input_dim: int = 1024,
         the input. "causal" results in causal (dilated) convolutions.
     dense_units : int
         Number of units in the dense layer.
+    dense_activation : str
+        Activation function in the dense layer.
     dropout : float
         Dropout rate in the dense layer.
     last_layer_units : int
@@ -171,8 +173,8 @@ def baseline_cnn_model_builder(input_dim: int = 1024,
     return model
 
 
-def keras_cnn_model(model_dir: str = 'keras_model/', model_kwargs: dict = None,
-                    keras_kwargs: dict = None) -> KerasModel:
+def keras_1D_cnn_model(model_dir: str = 'keras_model/', model_kwargs: dict = None,
+                       keras_kwargs: dict = None) -> KerasModel:
     """
     Builds a convolutional neural network model using DeepMol's KerasModel wrapper.
 
@@ -196,7 +198,7 @@ def keras_cnn_model(model_dir: str = 'keras_model/', model_kwargs: dict = None,
     batch_size = 10 if 'batch_size' not in keras_kwargs else keras_kwargs['batch_size']
     verbose = 0 if 'verbose' not in keras_kwargs else keras_kwargs['verbose']
     model_kwargs = {} if model_kwargs is None else model_kwargs
-    return KerasModel(model_builder=baseline_cnn_model_builder, mode=mode, model_dir=model_dir, epochs=epochs,
+    return KerasModel(model_builder=baseline_1D_cnn_model_builder, mode=mode, model_dir=model_dir, epochs=epochs,
                       batch_size=batch_size, verbose=verbose, **model_kwargs)
 
 

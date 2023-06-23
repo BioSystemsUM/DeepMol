@@ -3,14 +3,12 @@ from typing import Literal
 from optuna import Trial
 
 from deepmol.base import Transformer
-from deepmol.compound_featurization import All3DDescriptors, TwoDimensionDescriptors, MorganFingerprint, \
-    AtomPairFingerprint, LayeredFingerprint, RDKFingerprint, MACCSkeysFingerprint, Mol2Vec, SmilesOneHotEncoder
+from deepmol.compound_featurization import TwoDimensionDescriptors, MorganFingerprint, AtomPairFingerprint, \
+    LayeredFingerprint, RDKFingerprint, MACCSkeysFingerprint, Mol2Vec, SmilesOneHotEncoder, MixedFeaturizer
 
-# TODO: include All3DDescriptors? (It takes a lot of time to compute)
-# TODO: include MixedFeaturizer?
-_1D_FEATURIZERS = {'2d_descriptors': TwoDimensionDescriptors,
-                   'morgan': MorganFingerprint, 'atom_pair': AtomPairFingerprint, 'layered': LayeredFingerprint,
-                   'rdk': RDKFingerprint, 'maccs': MACCSkeysFingerprint, 'mol2vec': Mol2Vec}
+_1D_FEATURIZERS = {'2d_descriptors': TwoDimensionDescriptors, 'morgan': MorganFingerprint,
+                   'atom_pair': AtomPairFingerprint, 'layered': LayeredFingerprint, 'rdk': RDKFingerprint,
+                   'maccs': MACCSkeysFingerprint, 'mol2vec': Mol2Vec, 'mixed': MixedFeaturizer}
 
 
 def _get_featurizer(trial: Trial, feat_type: Literal['1D', '2D']) -> Transformer:
@@ -50,6 +48,12 @@ def _get_featurizer(trial: Trial, feat_type: Literal['1D', '2D']) -> Transformer
             min_path = trial.suggest_int('min_path', 1, 3)
             max_path = trial.suggest_int('max_path', 5, 10)
             return RDKFingerprint(fpSize=fpSize, minPath=min_path, maxPath=max_path)
+        elif feat == 'mixed':
+            available_feats = list(_1D_FEATURIZERS.keys())
+            available_feats.remove('mixed')
+            f1 = trial.suggest_categorical('f1', available_feats)
+            f2 = trial.suggest_categorical('f2', available_feats)
+            return MixedFeaturizer([_1D_FEATURIZERS[f1](), _1D_FEATURIZERS[f2]()])
         return _1D_FEATURIZERS[feat]()
     elif feat_type == '2D':
         return SmilesOneHotEncoder()

@@ -1,4 +1,4 @@
-****# DeepMol Pipeline Optimization
+# DeepMol Pipeline Optimization
 
 In DeepMol we can optimize Pipelines using the `PipelineOptimization` class. This class
 uses the `Optuna` library to optimize the hyperparameters of the pipeline. It is possible
@@ -157,4 +157,4 @@ po.optimize(train_dataset=train, test_dataset=test, objective_steps='all',
 In this case we are optimizing between all the available steps in DeepMol.
 In this case we want to minimize the mean squared error (regression task).
 
-The best params and best pipeline can be obtained as in the previous example.****
+The best params and best pipeline can be obtained as in the previous example.

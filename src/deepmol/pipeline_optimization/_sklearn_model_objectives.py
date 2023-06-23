@@ -1,30 +1,5 @@
-from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier, GradientBoostingRegressor, \
-    GradientBoostingClassifier
-from sklearn.linear_model import LinearRegression, Ridge, Lasso, LogisticRegression
-from sklearn.neural_network import MLPRegressor, MLPClassifier
-from sklearn.svm import SVR, SVC
-
 from deepmol.base import Predictor
-from deepmol.models.sklearn_model_builders import linear_regression_model, ridge_model, ridge_classifier_model, \
-    ridge_cv_model, ridge_classifier_cv_model, lasso_model, lasso_cv_model, lasso_lars_cv_model, lasso_lars_ic_model, \
-    elastic_net_model, ortogonal_matching_pursuit_model, bayesian_ridge_model, ard_regression_model, \
-    logistic_regression_model, logistic_regression_cv_model, tweedie_regressor_model, poisson_regressor_model, \
-    gamma_regressor_model, perceptron_model, passive_aggressive_regressor_model, passive_aggressive_classifier_model, \
-    huber_regressor_model, ransac_regressor_model, theil_sen_regressor_model, quantile_regressor_model, \
-    linear_discriminant_analysis_model, quadratic_discriminant_analysis_model, kernel_ridge_regressor_model, svc_model, \
-    nu_svc_model, linear_svc_model, svr_model, nu_svr_model, linear_svr_model, one_class_svm_model, sgd_regressor_model, \
-    sgd_classifier_model, sgd_one_class_svm_model, kneighbors_regressor_model, kneighbors_classifier_model, \
-    radius_neighbors_regressor_model, radius_neighbors_classifier_model, nearest_centroid_model, \
-    gaussian_process_regressor_model, gaussian_process_classifier_model, pls_regression_model, gaussian_nb_model, \
-    multinomial_nb_model, bernoulli_nb_model, categorical_nb_model, complement_nb_model, decision_tree_regressor_model, \
-    decision_tree_classifier_model, random_forest_regressor_model, random_forest_classifier_model, \
-    extra_trees_regressor_model, extra_trees_classifier_model, ada_boost_regressor_model, ada_boost_classifier_model, \
-    gradient_boosting_regressor_model, gradient_boosting_classifier_model, hist_gradient_boosting_regressor_model, \
-    hist_gradient_boosting_classifier_model, voting_regressor_model, voting_classifier_model, stacking_regressor_model, \
-    stacking_classifier_model, bagging_classifier_model, bagging_regressor_model, one_vs_rest_classifier_model, \
-    one_vs_one_classifier_model, output_code_classifier_model, multi_output_classifier_model, classifier_chain_model, \
-    multi_output_regressor_model, regressor_chain_model, isotonic_regression_model, mlp_regressor_model, \
-    mlp_classifier_model
+from deepmol.models.sklearn_model_builders import *
 
 
 def linear_regression_step(trial):

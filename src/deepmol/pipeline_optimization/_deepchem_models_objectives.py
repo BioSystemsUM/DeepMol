@@ -5,15 +5,7 @@ from optuna import Trial
 from deepmol.base import Predictor, Transformer
 from deepmol.compound_featurization import MolGraphConvFeat, PagtnMolGraphFeat, SmileImageFeat, ConvMolFeat, \
     DagTransformer, SmilesSeqFeat, WeaveFeat, DMPNNFeat, MATFeat
-from deepmol.models.deepchem_model_builders import gat_model, gcn_model, attentivefp_model, pagtn_model, mpnn_model, \
-    megnet_model, cnn_model, multitask_classifier_model, multitask_irv_classifier_model, multitask_regressor_model, \
-    progressive_multitask_classifier_model, progressive_multitask_regressor_model, robust_multitask_classifier_model, \
-    robust_multitask_regressor_model, sc_score_model, chem_ception_model, dag_model, graph_conv_model, \
-    smiles_to_vec_model, text_cnn_model, dtnn_model, weave_model, mat_model, dmpnn_model
-
-
-# TODO: add support to gpu dgl (pip install  dgl -f https://data.dgl.ai/wheels/cu116/repo.html)
-#  and (pip install  dglgo -f https://data.dgl.ai/wheels-test/repo.html)
+from deepmol.models.deepchem_model_builders import *
 
 
 def gat_model_steps(trial: Trial, model_dir: str = 'gat_model/', gat_kwargs: dict = None,

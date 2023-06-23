@@ -4,21 +4,15 @@ from typing import Literal
 from deepchem.models import TextCNNModel
 
 from deepmol.base import DatasetTransformer, PassThroughTransformer
-from deepmol.compound_featurization import SmilesSeqFeat, CoulombFeat
+from deepmol.compound_featurization import CoulombFeat
 from deepmol.datasets import Dataset
-from deepmol.pipeline_optimization._deepchem_models_objectives import gat_model_steps, gcn_model_steps, \
-    pagtn_model_steps, attentive_fp_model_steps, mpnn_model_steps, megnet_model_steps, cnn_model_steps, \
-    multitask_classifier_model_steps, multitask_irv_classifier_model_steps, \
-    progressive_multitask_classifier_model_steps, robust_multitask_classifier_model_steps, sc_score_model_steps, \
-    chem_ception_model_steps, dag_model_steps, graph_conv_model_steps, smiles_to_vec_model_steps, text_cnn_model_steps, \
-    weave_model_steps, dmpnn_model_steps, progressive_multitask_regressor_model_steps, \
-    robust_multitask_regressor_model_steps, dtnn_model_steps, mat_model_steps, multitask_regressor_model_steps
 from deepmol.pipeline_optimization._feature_selector_objectives import _get_feature_selector
 from deepmol.pipeline_optimization._featurizer_objectives import _get_featurizer
 from deepmol.pipeline_optimization._keras_model_objectives import _get_keras_model
 from deepmol.pipeline_optimization._scaler_objectives import _get_scaler
 from deepmol.pipeline_optimization._sklearn_model_objectives import _get_sk_model
 from deepmol.pipeline_optimization._standardizer_objectives import _get_standardizer
+from deepmol.pipeline_optimization._deepchem_models_objectives import *
 
 
 def _get_preset(preset: Literal['deepchem', 'sklearn', 'keras', 'all']) -> callable:
@@ -45,7 +39,6 @@ def _get_preset(preset: Literal['deepchem', 'sklearn', 'keras', 'all']) -> calla
         return preset_all_models
 
 
-# TODO: change trial choices names
 def preset_deepchem_models(trial, data: Dataset) -> list:
     """
     Returns the list of steps for the deepchem preset.

@@ -1,7 +1,6 @@
 from optuna import Trial
 
-from deepmol.models.keras_model_builders import keras_dense_model, keras_1D_cnn_model, keras_tabular_transformer_model, \
-    keras_simple_rnn_model, keras_rnn_model, keras_bidirectional_rnn_model
+from deepmol.models.keras_model_builders import *
 
 
 def keras_dense_classification_step(trial: Trial, input_shape: tuple):

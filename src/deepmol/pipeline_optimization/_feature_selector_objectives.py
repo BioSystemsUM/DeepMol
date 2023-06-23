@@ -3,7 +3,7 @@ from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.feature_selection import f_regression
 
 from deepmol.base import PassThroughTransformer, Transformer
-from deepmol.feature_selection import KbestFS, LowVarianceFS, PercentilFS, RFECVFS, SelectFromModelFS, BorutaAlgorithm
+from deepmol.feature_selection import *
 
 
 def k_best_fs(trial: Trial, task_type: str):

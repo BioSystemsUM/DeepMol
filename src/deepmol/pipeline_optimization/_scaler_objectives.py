@@ -1,6 +1,5 @@
 from deepmol.base import PassThroughTransformer, Transformer
-from deepmol.scalers import StandardScaler, MinMaxScaler, MaxAbsScaler, Binarizer, Normalizer, RobustScaler, \
-    KernelCenterer, QuantileTransformer, PowerTransformer
+from deepmol.scalers import *
 
 
 def standard_scaler_step(trial) -> Transformer:

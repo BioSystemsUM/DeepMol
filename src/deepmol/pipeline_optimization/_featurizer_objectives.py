@@ -3,8 +3,7 @@ from typing import Literal
 from optuna import Trial
 
 from deepmol.base import Transformer
-from deepmol.compound_featurization import TwoDimensionDescriptors, MorganFingerprint, AtomPairFingerprint, \
-    LayeredFingerprint, RDKFingerprint, MACCSkeysFingerprint, Mol2Vec, SmilesOneHotEncoder, MixedFeaturizer
+from deepmol.compound_featurization import *
 
 _1D_FEATURIZERS = {'2d_descriptors': TwoDimensionDescriptors, 'morgan': MorganFingerprint,
                    'atom_pair': AtomPairFingerprint, 'layered': LayeredFingerprint, 'rdk': RDKFingerprint,

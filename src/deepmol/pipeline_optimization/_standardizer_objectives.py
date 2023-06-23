@@ -1,5 +1,5 @@
 from deepmol.base import PassThroughTransformer, Transformer
-from deepmol.standardizer import BasicStandardizer, CustomStandardizer, ChEMBLStandardizer
+from deepmol.standardizer import *
 from deepmol.standardizer._utils import simple_standardisation, heavy_standardisation
 
 

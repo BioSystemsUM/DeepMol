@@ -1,8 +1,8 @@
 import os
 from unittest import TestCase
 
+from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.metrics import f1_score
-from sklearn.tree import DecisionTreeClassifier
 
 from deepmol.compound_featurization import MorganFingerprint
 from deepmol.loaders import CSVLoader
@@ -33,16 +33,20 @@ class TestMultiLabelClassification(TestCase):
                                                                  frac_valid=0.2,
                                                                  frac_test=0.1)
 
-        dt = DecisionTreeClassifier()
+        dt = ExtraTreesClassifier()
         model = SklearnModel(model=dt)
         MorganFingerprint().featurize(train_dataset, inplace=True)
         MorganFingerprint().featurize(validation_dataset, inplace=True)
         MorganFingerprint().featurize(test_dataset, inplace=True)
         model.fit(train_dataset)
 
-        metrics = [Metric(f1_score)]
+        metrics = [Metric(f1_score, average='macro')]
 
         evaluate = model.evaluate(test_dataset, metrics, per_task_metrics=True)
         self.assertEqual(len(evaluate[0]), len(metrics))
         evaluate2 = model.evaluate(validation_dataset, metrics)
         self.assertEqual(len(evaluate2[0]), len(metrics))
+
+        dataset_prediction = model.predict(test_dataset)
+        f1_score_value = f1_score(test_dataset.y, dataset_prediction, average='macro')
+        self.assertEqual(evaluate[0]['f1_score'], f1_score_value)

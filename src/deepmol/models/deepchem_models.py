@@ -15,8 +15,9 @@ from deepchem.models import Model as BaseDeepChemModel
 from deepchem.data import NumpyDataset
 import deepchem as dc
 
-from deepmol.models._utils import _get_splitter, save_to_disk, load_from_disk
+from deepmol.models._utils import _get_splitter, save_to_disk, load_from_disk, get_prediction_from_proba
 from deepmol.splitters.splitters import Splitter
+from deepmol.utils.utils import normalize_labels_shape
 
 
 def generate_sequences(epochs: int, train_smiles: List[Union[str, int]]):
@@ -221,20 +222,11 @@ class DeepChemModel(BaseDeepChemModel, Predictor):
         np.ndarray
             The value is a return value of `predict` method of the DeepChem model.
         """
-        if transformers is None:
-            transformers = []
-        new_dataset = NumpyDataset(X=dataset.X, y=dataset.y, ids=dataset.ids, n_tasks=dataset.n_tasks)
 
-        res = self.model.predict(new_dataset, transformers)
+        predictions = self.predict_proba(dataset, transformers)
+        y_pred_rounded = get_prediction_from_proba(dataset, predictions)
 
-        if isinstance(self.model, TorchModel) and self.model.model.mode == 'classification':
-            return res
-        else:
-            new_res = np.squeeze(
-                res)  # this works for all regression models (Keras and PyTorch) and is more general than the
-            # commented code above
-
-        return new_res
+        return y_pred_rounded
 
     def predict_proba(self,
                       dataset: Dataset,
@@ -257,7 +249,22 @@ class DeepChemModel(BaseDeepChemModel, Predictor):
         np.ndarray
             The value is a return value of `predict` method of the DeepChem model.
         """
-        return self.predict(dataset, transformers)
+        if transformers is None:
+            transformers = []
+        new_dataset = NumpyDataset(X=dataset.X, y=dataset.y, ids=dataset.ids, n_tasks=dataset.n_tasks)
+
+        res = self.model.predict(new_dataset, transformers)
+
+        if isinstance(self.model, TorchModel) and self.model.model.mode == 'classification':
+            return res
+        else:
+            new_res = np.squeeze(
+                res)  # this works for all regression models (Keras and PyTorch) and is more general than the
+            # commented code above
+
+        if not dataset.y.shape == np.array(new_res).shape:
+            new_res = normalize_labels_shape(new_res, dataset.n_tasks)
+        return new_res
 
     def predict_on_batch(self, dataset: Dataset) -> np.ndarray:
         """

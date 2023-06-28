@@ -13,6 +13,7 @@ from unit_tests._mock_utils import SmilesDatasetMagicMock
 class ModelsTestCase(ABC):
 
     def setUp(self) -> None:
+        os.environ["CUDA_VISIBLE_DEVICES"] = ""
         # create 100*50 binary numpy array
         x = np.random.randint(2, size=(100, 50))
         x_test = np.random.randint(2, size=(10, 50))

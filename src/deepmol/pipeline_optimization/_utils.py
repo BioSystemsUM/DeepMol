@@ -39,6 +39,87 @@ def _get_preset(preset: Literal['deepchem', 'sklearn', 'keras', 'all']) -> calla
         return preset_all_models
 
 
+def _cnn_model_steps(trial, n_tasks):
+    featurizer = _get_featurizer(trial, '1D')
+    if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
+            featurizer.__class__.__name__ == 'All3DDescriptors':
+        scaler = _get_scaler(trial)
+    else:
+        scaler = PassThroughTransformer()
+    dims = 1
+    n_features = len(featurizer.feature_names)
+    cnn_kwargs = {'n_tasks': n_tasks, 'mode': 'regression', 'n_features': n_features, 'dims': dims}
+    model_step = cnn_model_steps(trial=trial, cnn_kwargs=cnn_kwargs)
+    featurizer = ('featurizer', featurizer)
+    scaler = ('scaler', scaler)
+    model = model_step[0]
+    return [featurizer, scaler, model]
+
+
+def _multitask_classifier_model_steps(trial, n_tasks):
+    featurizer = _get_featurizer(trial, '1D')
+    if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
+            featurizer.__class__.__name__ == 'All3DDescriptors':
+        scaler = _get_scaler(trial)
+    else:
+        scaler = PassThroughTransformer()
+    n_features = len(featurizer.feature_names)
+    multitask_classifier_kwargs = {'n_tasks': n_tasks, 'n_features': n_features}
+    model_step = multitask_classifier_model_steps(trial=trial,
+                                                  multitask_classifier_kwargs=multitask_classifier_kwargs)
+    featurizer = ('featurizer', featurizer)
+    scaler = ('scaler', scaler)
+    model = model_step[0]
+    return [featurizer, scaler, model]
+
+
+def _progressive_multitask_regressor_model_steps(trial, n_tasks):
+    featurizer = _get_featurizer(trial, '1D')
+    if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
+            featurizer.__class__.__name__ == 'All3DDescriptors':
+        scaler = _get_scaler(trial)
+    else:
+        scaler = PassThroughTransformer()
+    n_features = len(featurizer.feature_names)
+    progressive_multitask_regressor_kwargs = {'n_tasks': n_tasks, 'n_features': n_features}
+    model_step = progressive_multitask_regressor_model_steps(trial=trial,
+                                                             progressive_multitask_regressor_kwargs=progressive_multitask_regressor_kwargs)
+    featurizer = ('featurizer', featurizer)
+    scaler = ('scaler', scaler)
+    return [featurizer, scaler, model_step[0]]
+
+def _robust_multitask_regressor_model_steps(trial, n_tasks):
+    featurizer = _get_featurizer(trial, '1D')
+    if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
+            featurizer.__class__.__name__ == 'All3DDescriptors':
+        scaler = _get_scaler(trial)
+    else:
+        scaler = PassThroughTransformer()
+    n_features = len(featurizer.feature_names)
+    robust_multitask_regressor_kwargs = {'n_tasks': n_tasks, 'n_features': n_features}
+    model_step = robust_multitask_regressor_model_steps(trial=trial,
+                                                        robust_multitask_regressor_kwargs=robust_multitask_regressor_kwargs)
+    featurizer = ('featurizer', featurizer)
+    scaler = ('scaler', scaler)
+    return [featurizer, scaler, model_step[0]]
+
+def _multitask_regressor_model_steps(trial, n_tasks):
+    featurizer = _get_featurizer(trial, '1D')
+    if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
+            featurizer.__class__.__name__ == 'All3DDescriptors':
+        scaler = _get_scaler(trial)
+    else:
+        scaler = PassThroughTransformer()
+    n_features = len(featurizer.feature_names)
+    multitask_regressor_kwargs = {'n_tasks': n_tasks, 'n_features': n_features}
+    model_step = multitask_regressor_model_steps(trial=trial,
+                                                 multitask_regressor_kwargs=multitask_regressor_kwargs)
+    featurizer = ('featurizer', featurizer)
+    scaler = ('scaler', scaler)
+    model = model_step[0]
+    return [featurizer, scaler, model]
+
+
 def preset_deepchem_models(trial, data: Dataset) -> list:
     """
     Returns the list of steps for the deepchem preset.
@@ -105,35 +186,11 @@ def preset_deepchem_models(trial, data: Dataset) -> list:
         steps_megnet = megnet_model_steps(trial=trial, megnet_kwargs=megnet_kwargs)
         final_steps.extend(steps_megnet)
     elif model_steps == "cnn_model":
-        featurizer = _get_featurizer(trial, '1D')
-        if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
-                featurizer.__class__.__name__ == 'All3DDescriptors':
-            scaler = _get_scaler(trial)
-        else:
-            scaler = PassThroughTransformer()
-        dims = 1
-        n_features = len(featurizer.feature_names)
-        cnn_kwargs = {'n_tasks': n_tasks, 'mode': 'regression', 'n_features': n_features, 'dims': dims}
-        model_step = cnn_model_steps(trial=trial, cnn_kwargs=cnn_kwargs)
-        featurizer = ('featurizer', featurizer)
-        scaler = ('scaler', scaler)
-        model = model_step[0]
-        final_steps.extend([featurizer, scaler, model])
+        featurizer_scaler_model = _cnn_model_steps(trial, n_tasks)
+        final_steps.extend(featurizer_scaler_model)
     elif model_steps == "multitask_classifier_model":
-        featurizer = _get_featurizer(trial, '1D')
-        if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
-                featurizer.__class__.__name__ == 'All3DDescriptors':
-            scaler = _get_scaler(trial)
-        else:
-            scaler = PassThroughTransformer()
-        n_features = len(featurizer.feature_names)
-        multitask_classifier_kwargs = {'n_tasks': n_tasks, 'n_features': n_features}
-        model_step = multitask_classifier_model_steps(trial=trial,
-                                                      multitask_classifier_kwargs=multitask_classifier_kwargs)
-        featurizer = ('featurizer', featurizer)
-        scaler = ('scaler', scaler)
-        model = model_step[0]
-        final_steps.extend([featurizer, scaler, model])
+        featurizer_scaler_model = _multitask_classifier_model_steps(trial, n_tasks)
+        final_steps.extend(featurizer_scaler_model)
     elif model_steps == "multitask_irv_classifier_model":
         featurizer = _get_featurizer(trial, '1D')
         multitask_irv_classifier_kwargs = {'n_tasks': n_tasks}
@@ -206,33 +263,11 @@ def preset_deepchem_models(trial, data: Dataset) -> list:
         steps_dmpnn = dmpnn_model_steps(trial=trial, dmpnn_kwargs=dmpnn_kwargs)
         final_steps.extend(steps_dmpnn)
     elif model_steps == "progressive_multitask_regressor_model":
-        featurizer = _get_featurizer(trial, '1D')
-        if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
-                featurizer.__class__.__name__ == 'All3DDescriptors':
-            scaler = _get_scaler(trial)
-        else:
-            scaler = PassThroughTransformer()
-        n_features = len(featurizer.feature_names)
-        progressive_multitask_regressor_kwargs = {'n_tasks': n_tasks, 'n_features': n_features}
-        model_step = progressive_multitask_regressor_model_steps(trial=trial,
-                                                                 progressive_multitask_regressor_kwargs=progressive_multitask_regressor_kwargs)
-        featurizer = ('featurizer', featurizer)
-        scaler = ('scaler', scaler)
-        final_steps.extend([featurizer, scaler, model_step[0]])
+        featurizer_scaler_model_step = _progressive_multitask_regressor_model_steps(trial=trial, n_tasks=n_tasks)
+        final_steps.extend(featurizer_scaler_model_step)
     elif model_steps == "robust_multitask_regressor_model":
-        featurizer = _get_featurizer(trial, '1D')
-        if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
-                featurizer.__class__.__name__ == 'All3DDescriptors':
-            scaler = _get_scaler(trial)
-        else:
-            scaler = PassThroughTransformer()
-        n_features = len(featurizer.feature_names)
-        robust_multitask_regressor_kwargs = {'n_tasks': n_tasks, 'n_features': n_features}
-        model_step = robust_multitask_regressor_model_steps(trial=trial,
-                                                            robust_multitask_regressor_kwargs=robust_multitask_regressor_kwargs)
-        featurizer = ('featurizer', featurizer)
-        scaler = ('scaler', scaler)
-        final_steps.extend([featurizer, scaler, model_step[0]])
+        featurizer_scaler_model_step = _robust_multitask_regressor_model_steps(trial=trial, n_tasks=n_tasks)
+        final_steps.extend(featurizer_scaler_model_step)
     elif model_steps == "dtnn_model":
         max_atoms = max([mol.GetNumAtoms() for mol in data.mols])
         featurizer = CoulombFeat(max_atoms=max_atoms)
@@ -244,20 +279,8 @@ def preset_deepchem_models(trial, data: Dataset) -> list:
         mat_steps = mat_model_steps(trial=trial, mat_kwargs=mat_kwargs)
         final_steps.extend(mat_steps)
     elif model_steps == "multitask_regressor_model":
-        featurizer = _get_featurizer(trial, '1D')
-        if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
-                featurizer.__class__.__name__ == 'All3DDescriptors':
-            scaler = _get_scaler(trial)
-        else:
-            scaler = PassThroughTransformer()
-        n_features = len(featurizer.feature_names)
-        multitask_regressor_kwargs = {'n_tasks': n_tasks, 'n_features': n_features}
-        model_step = multitask_regressor_model_steps(trial=trial,
-                                                     multitask_regressor_kwargs=multitask_regressor_kwargs)
-        featurizer = ('featurizer', featurizer)
-        scaler = ('scaler', scaler)
-        model = model_step[0]
-        final_steps.extend([featurizer, scaler, model])
+        featurizer_scaler_model_step = _multitask_regressor_model_steps(trial=trial, n_tasks=n_tasks)
+        final_steps.extend(featurizer_scaler_model_step)
     else:
         raise ValueError("Unknown model: %s" % model_steps)
     return final_steps

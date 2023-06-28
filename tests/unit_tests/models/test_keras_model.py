@@ -1,3 +1,4 @@
+import os
 import shutil
 from unittest import TestCase
 
@@ -13,6 +14,8 @@ from unit_tests.models.test_models import ModelsTestCase
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, GaussianNoise, Conv1D, Flatten, Reshape
 from tensorflow.keras.optimizers import Adadelta, Adam, RMSprop
+
+
 
 
 def make_cnn_model(input_dim=None,
@@ -107,9 +110,7 @@ class TestKerasModel(ModelsTestCase, TestCase):
             loaded_model = KerasModel.load("test_model")
             self.assertEqual(50, loaded_model.model.sk_params["input_dim"])
             loaded_model_predictions = loaded_model.predict(self.binary_dataset_test)
-
-            for i in range(len(first_predictions)):
-                self.assertEqual(first_predictions[i][0], loaded_model_predictions[i][0])
+            assert np.array_equal(first_predictions, loaded_model_predictions)
 
             shutil.rmtree("test_model")
 
@@ -129,9 +130,7 @@ class TestKerasModel(ModelsTestCase, TestCase):
 
             loaded_model_predictions = loaded_model.predict(self.one_hot_encoded_dataset)
 
-            for i in range(len(first_predictions)):
-                self.assertEqual(first_predictions[i][0], loaded_model_predictions[i][0])
-
+            assert np.array_equal(first_predictions, loaded_model_predictions)
             shutil.rmtree("test_model")
 
             model_kwargs = {'input_dim': (50, 10)}

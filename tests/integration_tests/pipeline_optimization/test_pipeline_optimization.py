@@ -15,6 +15,8 @@ from deepmol.splitters import RandomSplitter
 
 from tests import TEST_DIR
 
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
+
 
 class TestPipelineOptimization(TestCase):
 

@@ -172,7 +172,7 @@ class DeepChemModel(BaseDeepChemModel, Predictor):
             The `Dataset` to train this model on.
         """
         # TODO: better way to validate model.mode and dataset.mode
-        if dataset.mode != 'multitask':
+        if not isinstance(dataset.mode, list):
             if hasattr(self.model, 'mode'):
                 model_mode = self.model.mode
                 if model_mode != dataset.mode:

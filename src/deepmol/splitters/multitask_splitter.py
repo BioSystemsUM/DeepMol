@@ -1,5 +1,7 @@
 from typing import List, Tuple
 
+import numpy as np
+
 from deepmol.datasets import Dataset
 from deepmol.splitters.splitters import Splitter
 from skmultilearn.model_selection import IterativeStratification
@@ -35,6 +37,9 @@ class MultiTaskStratifiedSplitter(Splitter):
         test_indexes: List[int]
             Indexes of the test set
         """
+
+        if seed is not None:
+            np.random.seed(seed)
 
         if frac_valid == 0:
             stratifier = IterativeStratification(n_splits=2, order=1,

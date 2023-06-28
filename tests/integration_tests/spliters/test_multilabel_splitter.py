@@ -43,6 +43,27 @@ class MultiTaskStratifierSplitterTestCase(SplittersTestCase, TestCase):
         self.assertAlmostEqual(total_validation_fracs / dataset.y.shape[1], frac_validation, delta=0.1)
         self.assertAlmostEqual(total_test_fracs / dataset.y.shape[1], frac_test, delta=0.1)
 
+    def test_train_test_split(self):
+        dataset = os.path.join(TEST_DIR, 'data', 'multilabel_classification_dataset.csv')
+        loader = CSVLoader(dataset_path=dataset,
+                           smiles_field='smiles',
+                           id_field='ids',
+                           labels_fields=['C00341', 'C01789', 'C00078', 'C00049', 'C00183', 'C03506', 'C00187',
+                                          'C00079', 'C00047', 'C01852', 'C00407', 'C00129', 'C00235', 'C00062',
+                                          'C00353', 'C00148', 'C00073', 'C00108', 'C00123', 'C00135', 'C00448',
+                                          'C00082', 'C00041'],
+                           mode='auto')
+        # create the dataset
+        dataset = loader.create_dataset(sep=',', header=0)
+
+        train_dataset, test_dataset = \
+            MultiTaskStratifiedSplitter().train_test_split(dataset, frac_train=0.8)
+
+        self.assertAlmostEqual(len(train_dataset.smiles), len(dataset.smiles) * 0.8,
+                               delta=100)
+        self.assertAlmostEqual(len(test_dataset.smiles), len(dataset.smiles) * 0.2,
+                               delta=60)
+
     def test_split(self):
         dataset = os.path.join(TEST_DIR, 'data', 'multilabel_classification_dataset.csv')
         loader = CSVLoader(dataset_path=dataset,
@@ -93,4 +114,3 @@ class MultiTaskStratifierSplitterTestCase(SplittersTestCase, TestCase):
 
             self.assertAlmostEqual(total_train_fracs / dataset.y.shape[1], 0.8, delta=0.1)
             self.assertAlmostEqual(total_test_fracs / dataset.y.shape[1], 0.2, delta=0.1)
-

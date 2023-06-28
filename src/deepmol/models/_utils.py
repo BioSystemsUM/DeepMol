@@ -153,23 +153,57 @@ def get_prediction_from_proba(dataset: Dataset, y_pred_proba: np.ndarray) -> np.
     np.ndarray: Predictions with shape (n_samples,).
 
     """
-    if dataset.mode == "classification" or dataset.mode == "multitask":
-        if np.all((dataset.y == 0) | (dataset.y == 1)):
-            if y_pred_proba.shape[1] == 1:
-                y_pred = np.array([1 if pred >= 0.5 else 0 for pred in y_pred_proba])
+    if isinstance(dataset.mode, list):
+        y_preds = []
+        for i in range(len(dataset.mode)):
+            if dataset.mode[i] == "classification":
+                if np.all((dataset.y[:, i] == 0) | (dataset.y[:, i] == 1)):
+                    if len(y_pred_proba[:, i].shape) == 1:
+                        y_pred = np.array([1 if pred >= 0.5 else 0 for pred in y_pred_proba[:, i]])
+                    elif len(y_pred_proba[:, i].shape) == 2 and y_pred_proba[:, i].shape[1] == 1:
+                        y_pred = np.array([1 if pred >= 0.5 else 0 for pred in y_pred_proba[:, i]])
+                    else:
+                        y_pred = multi_label_binarize(y_pred_proba[:, i])
+
+                else:
+                    y_pred = []
+                    if not len(y_pred_proba[:, i]) == 0:
+                        y_pred = np.argmax(y_pred_proba[:, i], axis=1)
+
+            elif dataset.mode[i] == "regression":
+                y_pred = y_pred_proba[:, i]
+
             else:
-                y_pred = multi_label_binarize(y_pred_proba)
+                y_pred = []
+                if not len(y_pred_proba[:, i]) == 0:
+                    y_pred = np.argmax(y_pred_proba[:, i], axis=1)
+                    return y_pred
+
+            y_preds.append(y_pred)
+
+        return np.array(y_preds).T
+    else:
+        if dataset.mode == "classification":
+            if np.all((dataset.y == 0) | (dataset.y == 1)):
+                if len(y_pred_proba.shape) == 1:
+                    y_pred = np.array([1 if pred >= 0.5 else 0 for pred in y_pred_proba])
+                elif len(y_pred_proba.shape) == 2 and y_pred_proba.shape[1] == 1:
+                    y_pred = np.array([1 if pred >= 0.5 else 0 for pred in y_pred_proba])
+                elif len(dataset.y.shape) == 1:
+                    y_pred = np.array([1 if pred >= 0.5 else 0 for pred in y_pred_proba[:, 1]])
+                else:
+                    y_pred = multi_label_binarize(y_pred_proba)
+            else:
+                y_pred = []
+                if not len(y_pred_proba) == 0:
+                    y_pred = np.argmax(y_pred_proba, axis=1)
+                    return y_pred
+        elif dataset.mode == "regression":
+            y_pred = y_pred_proba
         else:
             y_pred = []
             if not len(y_pred_proba) == 0:
                 y_pred = np.argmax(y_pred_proba, axis=1)
                 return y_pred
-    elif dataset.mode == "regression":
-        y_pred = y_pred_proba
-    else:
-        y_pred = []
-        if not len(y_pred_proba) == 0:
-            y_pred = np.argmax(y_pred_proba, axis=1)
-            return y_pred
 
-    return y_pred
+        return y_pred

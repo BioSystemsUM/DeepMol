@@ -6,6 +6,7 @@ import numpy as np
 from rdkit.Chem import MolFromSmiles
 
 from deepmol.datasets import SmilesDataset
+from deepmol.models._utils import get_prediction_from_proba
 from unit_tests._mock_utils import SmilesDatasetMagicMock
 
 
@@ -84,7 +85,7 @@ class ModelsTestCase(ABC):
                                                         n_tasks=3,
                                                         label_names=['multitask_label_1', 'multitask_label_2',
                                                                      'multitask_label_3'],
-                                                        mode='multitask')
+                                                        mode=["classification"] * 3)
         self.multitask_dataset.__len__.return_value = 100
         self.multitask_dataset_test = SmilesDatasetMagicMock(spec=SmilesDataset,
                                                              X=x_test,
@@ -93,7 +94,7 @@ class ModelsTestCase(ABC):
                                                              n_tasks=3,
                                                              label_names=['multitask_label_1', 'multitask_label_2',
                                                                           'multitask_label_3'],
-                                                             mode='multitask')
+                                                             mode=["classification"] * 3)
         self.multitask_dataset_test.__len__.return_value = 10
 
         # create regression dataset

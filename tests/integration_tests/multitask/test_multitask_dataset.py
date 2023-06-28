@@ -64,13 +64,14 @@ class TestMultitaskDataset(MultitaskBaseTestCase, TestCase):
         md.label_names = md.label_names[:3]
         # replace np.nan in y by 0
         md._y = np.nan_to_num(md.y)
+        md.mode = ["classification", "classification", "classification"]
         MorganFingerprint(radius=2, size=1024).featurize(md, inplace=True)
         train, test = RandomSplitter().train_test_split(md, frac_train=0.8, seed=123)
         mt_model = basic_multitask_dnn(input_shape=(1024,),
                                        task_names=md.label_names,
                                        losses=['binary_crossentropy', 'binary_crossentropy', 'binary_crossentropy'],
                                        metrics=['accuracy', 'accuracy', 'accuracy'])
-        model = KerasModel(mt_model, epochs=2, mode='multitask')
+        model = KerasModel(mt_model, epochs=2, mode=["classification", "classification", "classification"])
         model.fit(train)
 
         metrics = [Metric(precision_score, average="macro"), Metric(recall_score, average="macro")]
@@ -87,4 +88,3 @@ class TestMultitaskDataset(MultitaskBaseTestCase, TestCase):
         predictions = model.predict(test)
         precision_score_value = precision_score(test.y, predictions, average="macro")
         self.assertEqual(a['precision_score'], precision_score_value)
-        print(model.predict_proba(test))

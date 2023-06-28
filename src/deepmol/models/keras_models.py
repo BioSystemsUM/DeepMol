@@ -41,7 +41,7 @@ class KerasModel(Model):
             A function that builds a keras model.
         mode: Union[str, list]
             The mode of the model. Can be either 'classification' or 'regression'.
-        model_path: str
+        model_dir: str
             The directory to save the model to.
         epochs: int
             The number of epochs to train for.

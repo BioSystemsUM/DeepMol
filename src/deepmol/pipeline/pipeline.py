@@ -239,7 +239,6 @@ class Pipeline(Transformer):
                                 'path': transformer_path}
 
         if self.is_prediction_pipeline():
-            # TODO: make model_dir mandatory or something by default
             predictor_path = os.path.join(self.path, f'{self.steps[-1][1].model_dir}')
             self.steps[-1][1].save(predictor_path)
             steps_to_save[len(self.steps) - 1] = {'name': self.steps[-1][0],

@@ -8,6 +8,7 @@ from typing import Union, List
 import numpy as np
 from rdkit import Chem
 from rdkit.Chem import Mol, AllChem, MolFromSmiles, Descriptors, rdMolDescriptors
+from rdkit.Chem.GraphDescriptors import Ipc
 from rdkit.Chem.rdForceFieldHelpers import UFFOptimizeMoleculeConfs
 from rdkit.ML.Descriptors import MoleculeDescriptors
 
@@ -430,9 +431,16 @@ class TwoDimensionDescriptors(MolecularFeaturizer):
         all_descriptors: np.ndarray
             Array with all 2D descriptors from rdkit.
         """
-        calc = MoleculeDescriptors.MolecularDescriptorCalculator([x[0] for x in Descriptors._descList])
+        calc = MoleculeDescriptors.MolecularDescriptorCalculator(self.feature_names)
+        # Deal with very large/inf values of the Ipc descriptor (https://github.com/rdkit/rdkit/issues/1527)
+        # find position of Ipc
+        pos = self.feature_names.index("Ipc")
+        # calculate AvgIpc
+        avg_ipc = Ipc(mol, avg=1)
 
-        descriptors = calc.CalcDescriptors(mol)
+        descriptors = list(calc.CalcDescriptors(mol))
+        # replace Ipc with AvgIpc
+        descriptors[pos] = avg_ipc
         assert not np.isnan(np.sum(descriptors))
         descriptors = np.array(descriptors, dtype=np.float32)
         return descriptors

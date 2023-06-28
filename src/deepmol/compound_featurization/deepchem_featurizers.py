@@ -1,10 +1,13 @@
 from typing import List, Dict, Any, Union
 
 import numpy as np
+from deepchem.data import NumpyDataset
 from deepchem.feat import ConvMolFeaturizer, WeaveFeaturizer, MolGraphConvFeaturizer, CoulombMatrix, CoulombMatrixEig, \
-    SmilesToImage, SmilesToSeq, MolGanFeaturizer, GraphMatrix
+    SmilesToImage, SmilesToSeq, MolGanFeaturizer, GraphMatrix, PagtnMolGraphFeaturizer, DMPNNFeaturizer, MATFeaturizer
 from deepchem.feat.graph_data import GraphData
 from deepchem.feat.mol_graphs import ConvMol, WeaveMol
+from deepchem.feat.molecule_featurizers.mat_featurizer import MATEncoding
+from deepchem.trans import DAGTransformer as DAGTransformerDC
 from deepchem.utils import ConformerGenerator
 from rdkit.Chem import Mol
 
@@ -80,6 +83,60 @@ class ConvMolFeat(MolecularFeaturizer):
             per_atom_fragmentation=self.per_atom_fragmentation).featurize([mol])
 
         assert feature[0].atom_features is not None
+        return feature[0]
+
+
+class PagtnMolGraphFeat(MolecularFeaturizer):
+    """
+    This class is a featurizer of PAGTN graph networks for molecules.
+
+    The featurization is based on `PAGTN model <https://arxiv.org/abs/1905.12712>`_. It is slightly more computationally
+    intensive than default Graph Convolution Featurizer, but it builds a Molecular Graph connecting all atom pairs
+    accounting for interactions of an atom with every other atom in the Molecule. According to the paper, interactions
+    between two pairs of atom are dependent on the relative distance between them and hence, the function needs
+    to calculate the shortest path between them.
+
+    References
+    ----------
+        [1] Chen, Barzilay, Jaakkola "Path-Augmented Graph Transformer Network"
+        10.26434/chemrxiv.8214422.
+    """
+
+    def __init__(self,
+                 max_length: int = 5,
+                 **kwargs) -> None:
+        """
+        Parameters
+        ----------
+        max_length: int
+            Maximum distance up to which shortest paths must be considered.
+            Paths shorter than max_length will be padded and longer will be
+            truncated, default to ``5``.
+        kwargs:
+            Additional arguments for the base class.
+        """
+        super().__init__(**kwargs)
+        self.max_length = max_length
+        self.feature_names = ['pagtn_mol_graph_feat']
+
+    def _featurize(self, mol: Mol) -> GraphData:
+        """
+        Featurizes a single molecule.
+
+        Parameters
+        ----------
+        mol: Mol
+            Molecule to featurize.
+
+        Returns
+        -------
+        feature: GraphData
+            The GraphData features of the molecule.
+        """
+        # featurization process using DeepChem PagtnMolGraphFeaturizer
+        feature = PagtnMolGraphFeaturizer(max_length=self.max_length).featurize([mol])
+
+        assert feature[0].node_features is not None
         return feature[0]
 
 
@@ -478,7 +535,7 @@ class SmileImageFeat(MolecularFeaturizer):
         self.res = res
         self.img_spec = img_spec
         self.embed = int(img_size * res / 2)
-        self.feature_names = ['smile_image_feat']
+        self.feature_names = [f'smile_image_feat_{i}' for i in range(img_size)]
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -577,19 +634,19 @@ class SmilesSeqFeat(Transformer):
             rdkit_mols = None
 
         # featurization process using DeepChem SmilesToSeq
-        dataset.X = SmilesToSeq(
+        dataset._X = SmilesToSeq(
             char_to_idx=self.char_to_idx,
             max_len=self.max_len,
             pad_len=self.pad_len).featurize(rdkit_mols)
 
         # identify which rows did not get featurized
         indexes = []
-        for i, feat in enumerate(dataset.X):
+        for i, feat in enumerate(dataset._X):
             if len(feat) == 0:
                 indexes.append(i)
         # treat indexes with no featurization
-        dataset.remove_elements(indexes)
-        dataset.X = np.asarray([np.asarray(feat, dtype=object) for feat in dataset.X])
+        dataset.remove_elements(indexes, inplace=True)
+        dataset._X = np.asarray([np.asarray(feat, dtype=object) for feat in dataset._X if len(feat) > 0])
         return dataset
 
     def _fit(self, dataset: Dataset) -> 'SmilesSeqFeat':
@@ -625,6 +682,181 @@ class SmilesSeqFeat(Transformer):
             The transformed dataset.
         """
         return self.featurize(dataset)
+
+
+class DagTransformer(Transformer):
+    """
+    Performs transform from ConvMol adjacency lists to DAG calculation orders
+
+    This transformer is used by `DAGModel` before training to transform its
+    inputs to the correct shape. This expansion turns a molecule with `n` atoms
+    into `n` DAGs, each with root at a different atom in the molecule.
+
+    Reference:
+    https://deepchem.readthedocs.io/en/latest/api_reference/transformers.html#dagtransformer
+    """
+
+    def __init__(self, max_atoms: int = 50) -> None:
+        """
+        Initialize this transformer.
+
+        Parameters
+        ----------
+        max_atoms: int
+            Maximum number of atoms in a molecule.
+        """
+        super().__init__()
+        self.max_atoms = max_atoms
+        self.feature_names = ['dag_transformer_feat']
+
+    def _transform(self, dataset: Dataset) -> Dataset:
+        """
+        Transform the dataset. This method is called by the transform method of the Transformer class.
+        Transforms ConvMolFeat features to DAG calculation orders.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to transform.
+
+        Returns
+        -------
+        dataset: Dataset
+            Transformed dataset.
+        """
+        if dataset.X is None:
+            raise ValueError("Dataset must have X property set (ConvMolFeat).")
+        dd = NumpyDataset(X=dataset._X, y=dataset.y, ids=dataset.ids, n_tasks=dataset.n_tasks)
+        dd = DAGTransformerDC(max_atoms=self.max_atoms).transform(dd)
+        dataset._X = dd.X
+        dataset.feature_names = self.feature_names
+        return dataset
+
+    def _fit(self, dataset: Dataset) -> 'DagTransformer':
+        """
+        Fit the featurizer. This method is called by the fit method of the Transformer class.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The dataset containing the molecules to featurize in dataset.mols.
+
+        Returns
+        -------
+        self: DagTransformer
+            The fitted featurizer.
+        """
+        return self
+
+
+class DMPNNFeat(MolecularFeaturizer):
+    """
+    Featurizes molecules using DeepChem DMPNNFeaturizer.
+
+    This class is a featurizer for Directed Message Passing Neural Network (D-MPNN) implementation
+
+    The default node(atom) and edge(bond) representations are based on
+    `Analyzing Learned Molecular Representations for Property Prediction paper <https://arxiv.org/pdf/1904.01561.pdf>`_.
+
+    Reference:
+    https://deepchem.readthedocs.io/en/latest/api_reference/featurizers.html#dmpnnfeaturizer
+    """
+
+    def __init__(self,
+                 features_generators: List[str] = None,
+                 is_adding_hs: bool = False,
+                 use_original_atom_ranks: bool = False,
+                 **kwargs) -> None:
+        """
+        Initialize this featurizer.
+
+        Parameters
+        ----------
+        features_generators: List[str], default None
+            List of global feature generators to be used.
+        is_adding_hs: bool, default False
+            Whether to add Hs or not.
+        use_original_atom_ranks: bool, default False
+            Whether to use original atom mapping or canonical atom mapping.
+        kwargs: dict
+            Additional keyword arguments.
+        """
+        super().__init__(**kwargs)
+        self.features_generators = features_generators
+        self.is_adding_hs = is_adding_hs
+        self.use_original_atom_ranks = use_original_atom_ranks
+        self.feature_names = ['dmpnn_feat']
+
+    def _featurize(self, mol: Mol) -> GraphData:
+        """
+        Featurizes a single molecule.
+
+        Parameters
+        ----------
+        mol: Mol
+            Molecule to featurize.
+
+        Returns
+        -------
+        feature: GraphData
+            The DMPNN features of the molecule.
+        """
+        # featurization process using DeepChem DMPNNFeaturizer
+        feature = DMPNNFeaturizer(features_generators=self.features_generators,
+                                  is_adding_hs=self.is_adding_hs,
+                                  use_original_atom_ranks=self.use_original_atom_ranks).featurize([mol])
+
+        assert feature[0].node_features is not None
+
+        return feature[0]
+
+
+class MATFeat(MolecularFeaturizer):
+    """
+    Featurizes molecules using DeepChem MATFeaturizer.
+
+    This class is a featurizer for Molecular Attribute Transformer (MAT) implementation
+    The returned value is a numpy array which consists of molecular graph descriptions:
+        - Node Features
+        - Adjacency Matrix
+        - Distance Matrix
+
+    Reference:
+    [1] https://deepchem.readthedocs.io/en/latest/api_reference/featurizers.html#matfeaturizer
+    [2] Lukasz Maziarka et al. “Molecule Attention Transformer`<https://arxiv.org/abs/2002.08264>`”
+    """
+
+    def __init__(self, **kwargs) -> None:
+        """
+        Initialize this featurizer.
+
+        Parameters
+        kwargs: dict
+            Additional keyword arguments.
+        """
+        super().__init__(**kwargs)
+        self.feature_names = ['mat_feat']
+
+    def _featurize(self, mol: Mol) -> MATEncoding:
+        """
+        Featurizes a single molecule.
+
+        Parameters
+        ----------
+        mol: Mol
+            Molecule to featurize.
+
+        Returns
+        -------
+        feature: GraphData
+            The MATEncoding features of the molecule.
+        """
+        # featurization process using DeepChem DMPNNFeaturizer
+        feature = MATFeaturizer().featurize([mol])
+
+        assert feature[0].node_features is not None
+
+        return feature[0]
 
 
 class RawFeat(MolecularFeaturizer):

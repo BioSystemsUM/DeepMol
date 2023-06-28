@@ -4,7 +4,8 @@ from typing import Union, Iterable
 import numpy as np
 from boruta import BorutaPy
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.feature_selection import VarianceThreshold, chi2, SelectKBest, SelectPercentile, RFECV, SelectFromModel
+from sklearn.feature_selection import VarianceThreshold, SelectKBest, SelectPercentile, RFECV, SelectFromModel, \
+    f_classif
 
 from deepmol.base import Transformer
 from deepmol.datasets import Dataset
@@ -112,7 +113,7 @@ class KbestFS(BaseFeatureSelector):
     Select features according to the k-highest scores.
     """
 
-    def __init__(self, k: int = 10, score_func: callable = chi2):
+    def __init__(self, k: int = 10, score_func: callable = f_classif):
         """
         Initialize this KbestFS Feature Selector.
 
@@ -134,7 +135,7 @@ class PercentilFS(BaseFeatureSelector):
     Select features according to a percentile of the highest scores.
     """
 
-    def __init__(self, percentil: int = 10, score_func: callable = chi2):
+    def __init__(self, percentil: int = 10, score_func: callable = f_classif):
         """
         Initialize the PercentilFS Feature Selector.
 

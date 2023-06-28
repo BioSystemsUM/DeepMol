@@ -13,6 +13,7 @@ from unit_tests._mock_utils import SmilesDatasetMagicMock
 class ModelsTestCase(ABC):
 
     def setUp(self) -> None:
+        os.environ["CUDA_VISIBLE_DEVICES"] = ""
         # create 100*50 binary numpy array
         x = np.random.randint(2, size=(100, 50))
         x_test = np.random.randint(2, size=(10, 50))
@@ -128,6 +129,16 @@ class ModelsTestCase(ABC):
                                                                                      'multitask_regression_label_2',
                                                                                      'multitask_regression_label_3'])
         self.multitask_regression_dataset_test.__len__.return_value = 10
+
+        one_hot_x = np.random.randint(2, size=(100, 50, 10))
+        self.one_hot_encoded_dataset = SmilesDatasetMagicMock(spec=SmilesDataset,
+                                                              X=one_hot_x,
+                                                              y=y,
+                                                              n_tasks=1,
+                                                              label_names=['binary_label'],
+                                                              mode='classification',
+                                                              ids=ids,
+                                                              smiles=smiles)
 
     def tearDown(self) -> None:
         if os.path.exists('deepmol.log'):

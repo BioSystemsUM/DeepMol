@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Union
 
 import numpy as np
 from deepchem.feat import ConvMolFeaturizer, WeaveFeaturizer, MolGraphConvFeaturizer, CoulombMatrix, CoulombMatrixEig, \
@@ -625,3 +625,22 @@ class SmilesSeqFeat(Transformer):
             The transformed dataset.
         """
         return self.featurize(dataset)
+
+
+class RawFeat(MolecularFeaturizer):
+
+    def _featurize(self, mol: Union[Mol, str]):
+        """
+        A passthrough featurizer that returns the input molecule unchanged.
+
+        Parameters
+        ----------
+        mol: Mol
+            Molecule to featurize.
+
+        Returns
+        -------
+        mol
+        """
+
+        return mol

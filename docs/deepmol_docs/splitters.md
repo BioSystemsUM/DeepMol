@@ -217,6 +217,83 @@ from deepmol.splitters import RandomSplitter
 train_dataset, valid_dataset, test_dataset = RandomSplitter().train_valid_test_split(dataset, frac_train=0.8, frac_valid=0.1, frac_test=0.1)
 ```
 
+## MultiTaskSplitter
+
+
+```python
+dataset = CSVLoader("../data/tox21.csv", id_field="mol_id",
+                    smiles_field="smiles", labels_fields=["NR-AR","NR-AR-LBD","NR-AhR",
+                                                          "NR-Aromatase", "NR-ER", "NR-ER-LBD",
+                                                          "NR-PPAR-gamma", "SR-ARE","SR-ATAD5","SR-HSE","SR-MMP","SR-p53"]).create_dataset()
+```
+
+    [18:35:38] WARNING: not removing hydrogen atom without neighbors
+
+
+    2023-06-27 18:35:39,339 — INFO — Assuming multitask since y has more than one dimension. If otherwise, explicitly set the mode to 'classification' or 'regression'!
+
+
+
+```python
+from deepmol.splitters import MultiTaskStratifiedSplitter
+train_dataset, test_dataset = MultiTaskStratifiedSplitter().train_test_split(dataset, frac_train=0.8)
+```
+
+
+```python
+import numpy as np
+
+num_ones_per_column_train_dataset = np.sum(train_dataset.y == 1, axis=0)
+num_ones_per_column_test_dataset = np.sum(test_dataset.y == 1, axis=0)
+total = num_ones_per_column_train_dataset + num_ones_per_column_test_dataset
+
+print("The percentage of each task label in the training set is:", num_ones_per_column_train_dataset / total)
+print("The average percentage of the tasks labels in the training set is :", np.mean(num_ones_per_column_train_dataset / total))
+print()
+print("The percentage of each task label in the test set is:", num_ones_per_column_test_dataset / total)
+print("The average percentage of the tasks labels in the test set is :", np.mean(num_ones_per_column_test_dataset / total))
+```
+
+    The percentage of each task label in the training set is: [0.77669903 0.79746835 0.79427083 0.78333333 0.80075662 0.80857143
+     0.8172043  0.79087049 0.74242424 0.7983871  0.82244009 0.79196217]
+    The average percentage of the tasks labels in the training set is : 0.7936989991588942
+    
+    The percentage of each task label in the test set is: [0.22330097 0.20253165 0.20572917 0.21666667 0.19924338 0.19142857
+     0.1827957  0.20912951 0.25757576 0.2016129  0.17755991 0.20803783]
+    The average percentage of the tasks labels in the test set is : 0.20630100084110578
+
+
+
+```python
+from deepmol.splitters import RandomSplitter
+train_dataset, test_dataset = RandomSplitter().train_test_split(dataset, frac_train=0.8)
+```
+
+
+```python
+num_ones_per_column_train_dataset = np.sum(train_dataset.y == 1, axis=0)
+num_ones_per_column_test_dataset = np.sum(test_dataset.y == 1, axis=0)
+total = num_ones_per_column_train_dataset + num_ones_per_column_test_dataset
+
+print("The percentage of each task label in the training set is:", num_ones_per_column_train_dataset / total)
+print("The average percentage of the tasks labels in the training set is :", np.mean(num_ones_per_column_train_dataset / total))
+print()
+print("The percentage of each task label in the test set is:", num_ones_per_column_test_dataset / total)
+print("The average percentage of the tasks labels in the test set is :", np.mean(num_ones_per_column_test_dataset / total))
+```
+
+    The percentage of each task label in the training set is: [0.82200647 0.82700422 0.80729167 0.82333333 0.80075662 0.85142857
+     0.82795699 0.80785563 0.83712121 0.7983871  0.81045752 0.8108747 ]
+    The average percentage of the tasks labels in the training set is : 0.818706169088316
+    
+    The percentage of each task label in the test set is: [0.17799353 0.17299578 0.19270833 0.17666667 0.19924338 0.14857143
+     0.17204301 0.19214437 0.16287879 0.2016129  0.18954248 0.1891253 ]
+    The average percentage of the tasks labels in the test set is : 0.18129383091168402
+
+As you see the MultiTaskSplitter ensures the stratification of the classes in the training and test sets, 
+while the RandomSplitter does not. Although the difference is not big, the multi-task splitter is more robust and 
+scalable for extremely labelled datasets
+
 ## Similarity Splitter
 
 A similarity splitter splits the data into train, validation and test sets. The data is split in a way that the similarity between the molecules in each set is below a certain threshold. This is useful when we want to make sure that the molecules in the validation and test sets are either not too similar or similar to the molecules in the training set.

@@ -1,8 +1,9 @@
 import os
+from typing import Union
 
 import keras
 
-from deepmol.models._utils import _get_splitter, load_from_disk, _save_keras_model
+from deepmol.models._utils import _get_splitter, load_from_disk, _save_keras_model, get_prediction_from_proba
 from deepmol.models.models import Model
 from deepmol.models.sklearn_models import SklearnModel
 from deepmol.metrics.metrics import Metric
@@ -11,6 +12,8 @@ import numpy as np
 from deepmol.datasets import Dataset
 from tensorflow.keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
 from sklearn.base import clone
+
+from deepmol.utils.utils import normalize_labels_shape
 
 
 # Only for sequential single input models
@@ -23,7 +26,7 @@ class KerasModel(Model):
 
     def __init__(self,
                  model_builder: callable,
-                 mode: str = 'classification',
+                 mode: Union[str, list] = 'classification',
                  model_dir: str = None,
                  epochs: int = 150,
                  batch_size: int = 10,
@@ -36,7 +39,7 @@ class KerasModel(Model):
         ----------
         model_builder: callable
             A function that builds a keras model.
-        mode: str
+        mode: Union[str, list]
             The mode of the model. Can be either 'classification' or 'regression'.
         model_path: str
             The directory to save the model to.
@@ -90,6 +93,7 @@ class KerasModel(Model):
         """
         if self.mode != dataset.mode:
             raise ValueError('Dataset mode does not match model mode.')
+
         features = dataset.X.astype('float32')
         if len(dataset.label_names) == 1:
             y = np.squeeze(dataset.y)
@@ -113,13 +117,39 @@ class KerasModel(Model):
           The value is a return value of `predict_proba` or `predict` method of the scikit-learn model. If the
           scikit-learn model has both methods, the value is always a return value of `predict_proba`.
         """
+        predictions = self.predict_proba(dataset)
+        if not dataset.y.shape == np.array(predictions).shape:
+            predictions = normalize_labels_shape(predictions, dataset.n_tasks)
+
+        y_pred_rounded = get_prediction_from_proba(dataset, predictions)
+        return y_pred_rounded
+
+    def predict_proba(self, dataset: Dataset) -> np.ndarray:
+        """
+        Makes predictions on dataset.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to make prediction on.
+
+        Returns
+        -------
+        np.ndarray
+            predictions
+        """
         try:
-            return self.model.predict_proba(dataset.X.astype('float32'))
+            predictions = self.model.predict_proba(dataset.X.astype('float32'))
         except AttributeError as e:
             self.logger.error(e)
             self.logger.info(str(self.model))
             self.logger.info(str(type(self.model)))
-            return self.model.predict(dataset.X.astype('float32'))
+            predictions = self.model.predict(dataset.X.astype('float32'))
+
+        if not dataset.y.shape == np.array(predictions).shape:
+            predictions = normalize_labels_shape(predictions, dataset.n_tasks)
+
+        return predictions
 
     def predict_on_batch(self, dataset: Dataset) -> np.ndarray:
         """

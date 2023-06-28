@@ -2,6 +2,7 @@ import os
 import shutil
 from unittest import TestCase
 
+import numpy as np
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, GradientBoostingRegressor
 from sklearn.metrics import roc_auc_score, precision_score, accuracy_score, confusion_matrix, classification_report, \
     mean_squared_error, mean_absolute_error, f1_score, r2_score, explained_variance_score
@@ -23,8 +24,6 @@ class TestSklearnModel(ModelsTestCase, TestCase):
         test_preds = model.predict(self.binary_dataset_test)
         self.assertEqual(len(test_preds), len(self.binary_dataset_test))
         # evaluate the model
-        for pred in test_preds:
-            self.assertAlmostEqual(sum(pred), 1, delta=0.0001)
 
         metrics = [Metric(roc_auc_score), Metric(precision_score), Metric(accuracy_score), Metric(confusion_matrix),
                    Metric(classification_report)]
@@ -178,7 +177,6 @@ class TestSklearnModel(ModelsTestCase, TestCase):
         self.assertIsInstance(new_model, SklearnModel)
         self.assertEqual("classification", new_model.mode)
 
-        for i in range(len(y_test)):
-            self.assertEqual(y_test[i, 0], predictions_1[i, 0])
+        assert np.array_equal(predictions_1, y_test)
 
         shutil.rmtree("test_model")

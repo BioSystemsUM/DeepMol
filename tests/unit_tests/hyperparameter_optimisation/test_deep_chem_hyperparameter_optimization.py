@@ -47,9 +47,6 @@ class TestDeepChemHyperparameterOptimization(ModelsTestCase, TestCase):
 
         test_preds = best_model.predict(ds_test)
         self.assertEqual(len(test_preds), len(ds_test))
-        for pred in test_preds:
-            self.assertAlmostEqual(sum(pred), 1, delta=0.0001)
-
         metrics = [Metric(roc_auc_score), Metric(precision_score), Metric(accuracy_score), Metric(confusion_matrix),
                    Metric(classification_report)]
 

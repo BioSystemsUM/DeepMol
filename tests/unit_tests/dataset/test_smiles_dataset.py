@@ -7,6 +7,7 @@ import pandas as pd
 from rdkit.Chem import Mol, MolFromSmiles
 
 from deepmol.datasets import SmilesDataset
+from deepmol.models._utils import get_prediction_from_proba
 
 
 class TestSmilesDataset(TestCase):
@@ -23,6 +24,39 @@ class TestSmilesDataset(TestCase):
             shutil.rmtree(self.output_dir)
         if os.path.exists('deepmol.log'):
             os.remove('deepmol.log')
+
+    def test_infer_mode(self):
+        df3 = SmilesDataset(smiles=['C', 'CC', 'CCC'], y=[[1, 0, 1], [0, 1, 0], [1, 0, 1]])
+        assert df3.mode == ['classification', 'classification', 'classification']
+
+        df3 = SmilesDataset(smiles=['C', 'CC', 'CCC'], y=[[3, 1, 0], [2, 1, 0], [1, 0, 1]])
+        assert df3.mode == ['classification', 'classification', 'classification']
+
+        df3 = SmilesDataset(smiles=['C', 'CC', 'CCC'], y=[[3.2, 1, 0], [2, 1, 0], [1, 0, 1]])
+        assert df3.mode == ['regression', 'classification', 'classification']
+
+        df3 = SmilesDataset(smiles=['C', 'CC', 'CCC'], y=[3.2, 3.1, 3.0])
+        assert df3.mode == 'regression'
+
+        df3 = SmilesDataset(smiles=['C', 'CC', 'CCC'], y=[3., 3., 3.])
+        assert df3.mode == 'classification'
+
+    def test_utils(self):
+
+        dataset = SmilesDataset(smiles=['C', 'CC', 'CCC'], y=[[1, 0, 0], [0, 1, 0], [1, 0, 1]])
+        y_pred_proba = np.array([[0.2, 0.1, 0], [0.3, 0.7, 0], [0.99, 0.2, 1]])
+        prediction = get_prediction_from_proba(dataset, y_pred_proba)
+        assert np.array_equal(prediction, np.array([[0, 0, 0], [0, 1, 0], [1, 0, 1]]))
+
+        dataset = SmilesDataset(smiles=['C', 'CC', 'CCC'], y=[0, 1, 2])
+        y_pred_proba = np.array([[0.7, 0.1, 0.2], [0.1, 0.7, 0.2], [0.2, 0.1, 0.7]])
+        prediction = get_prediction_from_proba(dataset, y_pred_proba)
+        assert np.array_equal(prediction, np.array([0, 1, 2]))
+
+        dataset = SmilesDataset(smiles=['C', 'CC', 'CCC'], y=[[0, 1, 3.2], [1, 1, 3.2], [1, 0, 3.2]])
+        y_pred_proba = np.array([[0.7, 0.6, 3.2], [0.1, 1, 3.2], [0.2, 0.1, 3.2]])
+        prediction = get_prediction_from_proba(dataset, y_pred_proba)
+        assert np.array_equal(prediction, np.array([[1, 1, 3.2], [0, 1, 3.2], [0, 0, 3.2]]))
 
     def test_smiles_dataset_args(self):
         for i, mol in enumerate(self.smiles):

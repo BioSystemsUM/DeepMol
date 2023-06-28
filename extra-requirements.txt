@@ -25,6 +25,7 @@ tensorflow-probability==0.20.1: deep_learning
 boruta==0.3: preprocessing
 scikit-learn==1.2.0: machine_learning, deep_learning
 optuna==3.1.1: machine_learning, deep_learning
+scikit-multilearn==0.2.0: machine_learning, deep_learning
 pytest>=7.1.1: test
 pytest-cov>=3.0.0: test
 mypy>=0.942: test

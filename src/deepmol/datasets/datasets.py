@@ -483,7 +483,7 @@ class SmilesDataset(Dataset):
         self._label_names = None
         self.mode = None
 
-    def _infer_mode(self) -> Union[str, None]:
+    def _infer_mode(self) -> Union[str, None, List[str]]:
         """
         Infers the mode of the dataset.
 
@@ -497,9 +497,19 @@ class SmilesDataset(Dataset):
         if len(self._y.shape) > 1:
             self.logger.info("Assuming multitask since y has more than one dimension. If otherwise, explicitly set the "
                              "mode to 'classification' or 'regression'!")
-            return 'multitask'
-        classes = np.unique(self.y)
-        if len(classes) > 10:
+            labels_per_task = []
+            for label in range(self._y.shape[1]):
+                label_i = self._y[:, label]
+                classes = np.all(np.isclose(label_i, np.round(label_i), equal_nan=True))
+                if classes:
+                    labels_per_task.append('classification')
+                else:
+                    labels_per_task.append('regression')
+
+            return labels_per_task
+
+        classes = np.all(np.isclose(self.y, np.round(self.y), equal_nan=True))
+        if not classes:
             self.logger.info("Assuming regression since there are more than 10 unique y values. If otherwise, "
                              "explicitly set the mode to 'classification'!")
             return 'regression'
@@ -692,8 +702,13 @@ class SmilesDataset(Dataset):
         mode: str
             The mode of the dataset.
         """
-        if mode not in ['classification', 'regression', None]:
-            raise ValueError('The mode must be either "classification" or "regression".')
+        if not isinstance(mode, list):
+            if mode not in ['classification', 'regression', None]:
+                raise ValueError('The mode must be either "classification" or "regression".')
+        else:
+            for m in mode:
+                if m not in ['classification', 'regression', None]:
+                    raise ValueError('The mode must be either "classification" or "regression".')
         self._mode = mode
 
     def get_shape(self) -> Tuple[Tuple, Union[Tuple, None], Union[Tuple, None]]:

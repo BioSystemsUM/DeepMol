@@ -11,6 +11,8 @@ from deepmol.metrics.metrics import Metric
 
 from sklearn.base import clone
 
+from deepmol.utils.utils import normalize_labels_shape
+
 
 class SklearnModel(Model):
     """
@@ -101,10 +103,32 @@ class SklearnModel(Model):
           The value is a return value of `predict_proba` or `predict` method of the scikit-learn model. If the
           scikit-learn model has both methods, the value is always a return value of `predict_proba`.
         """
-        try:
-            return self.model.predict_proba(dataset.X)
-        except AttributeError:
-            return self.model.predict(dataset.X)
+        predictions = self.model.predict(dataset.X)
+
+        if not dataset.y.shape == np.array(predictions).shape:
+            predictions = normalize_labels_shape(predictions, dataset.n_tasks)
+
+        return predictions
+
+    def predict_proba(self, dataset: Dataset) -> np.ndarray:
+        """
+        Makes predictions on dataset.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to make prediction on.
+
+        Returns
+        -------
+        np.ndarray
+        """
+        predictions = self.model.predict_proba(dataset.X)
+
+        if not dataset.y.shape == np.array(predictions).shape:
+            predictions = normalize_labels_shape(predictions, dataset.n_tasks)
+
+        return predictions
 
     def predict_on_batch(self, dataset: Dataset) -> np.ndarray:
         """

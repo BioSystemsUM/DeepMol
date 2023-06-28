@@ -334,14 +334,16 @@ class SingletaskStratifiedSplitter(Splitter):
         test_idx = np.array([])
 
         # divide idx by y value
-        classes = np.unique(dataset.y)
+
         if not force_split:
             # check if regression or classification (assume regression if there are more than 10 unique y values)
-            if len(classes) > 10:
+            classes = np.all(np.isclose(dataset.y, np.round(dataset.y), equal_nan=True))
+            if not classes:
                 raise ValueError("Cannot stratify by regression labels. Use other splitter instead. "
                                  "If you want to force the split, set force_split=True.")
         remaining_idx = []
         idx_by_class = {}
+        classes = np.unique(dataset.y)
         for c in classes:
             idx_by_class[c] = np.where(dataset.y == c)[0]
             np.random.shuffle(idx_by_class[c])

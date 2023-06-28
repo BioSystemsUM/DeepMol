@@ -1,6 +1,7 @@
 import shutil
 from unittest import TestCase
 
+import numpy as np
 from sklearn.metrics import roc_auc_score, precision_score, classification_report, accuracy_score, confusion_matrix
 
 from deepmol.metrics import Metric
@@ -61,9 +62,6 @@ class TestKerasModel(ModelsTestCase, TestCase):
 
         test_preds = model.predict(self.binary_dataset_test)
         self.assertEqual(len(test_preds), len(self.binary_dataset_test))
-        # evaluate the model
-        for pred in test_preds:
-            self.assertAlmostEqual(sum(pred), 1, delta=0.0001)
 
         metrics = [Metric(roc_auc_score), Metric(precision_score), Metric(accuracy_score), Metric(confusion_matrix),
                    Metric(classification_report)]
@@ -89,8 +87,8 @@ class TestKerasModel(ModelsTestCase, TestCase):
         self.assertEqual(2, loaded_model.epochs)
         self.assertEqual(50, loaded_model.model.sk_params["input_dim"])
         loaded_model_predictions = loaded_model.predict(self.binary_dataset_test)
-        for i in range(len(first_predictions)):
-            self.assertEqual(first_predictions[i][0], loaded_model_predictions[i][0])
+
+        assert np.array_equal(first_predictions, loaded_model_predictions)
 
         shutil.rmtree("test_model")
 

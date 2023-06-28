@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Union
 
 import numpy as np
 from deepchem.data import NumpyDataset
@@ -857,3 +857,22 @@ class MATFeat(MolecularFeaturizer):
         assert feature[0].node_features is not None
 
         return feature[0]
+
+
+class RawFeat(MolecularFeaturizer):
+
+    def _featurize(self, mol: Union[Mol, str]):
+        """
+        A passthrough featurizer that returns the input molecule unchanged.
+
+        Parameters
+        ----------
+        mol: Mol
+            Molecule to featurize.
+
+        Returns
+        -------
+        mol
+        """
+
+        return mol

@@ -21,6 +21,7 @@ Subpackages
    deepmol.parallelism
    deepmol.parameter_optimization
    deepmol.pipeline
+   deepmol.pipeline_optimization
    deepmol.scalers
    deepmol.splitters
    deepmol.standardizer

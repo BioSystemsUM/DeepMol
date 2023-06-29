@@ -229,9 +229,71 @@ class TestPipeline(TestCase):
         pipeline = Pipeline(steps=steps, hpo=optimizer, path='test_pipeline/')
         pipeline.fit(self.dataset_smiles, self.dataset_smiles)
         self.assertTrue(pipeline.is_fitted())
-        print(len(pipeline.hpo_all_results_))
         self.assertTrue(len(pipeline.hpo_all_results_) == 13)
         self.assertTrue(len(pipeline.hpo_best_hyperparams_) == 2)
+        self.assertEqual(pipeline.steps[-1][0], "best_model")
+        predictions = pipeline.predict(self.dataset_smiles)
+        pipeline.save()
+        pipeline = Pipeline.load(pipeline.path)
+        new_predictions = pipeline.predict(self.dataset_smiles)
+        self.assertTrue(np.array_equal(predictions, new_predictions))
+
+    def test_hpo_validation_deepchem_models(self):
+        standardizer = BasicStandardizer()
+        featurizer = ConvMolFeat()
+
+        def graphconv_builder(graph_conv_layers, batch_size=256, epochs=5):
+            graph = GraphConvModel(n_tasks=1, graph_conv_layers=graph_conv_layers, batch_size=batch_size,
+                                   mode='classification')
+            return DeepChemModel(graph, model_dir=None, epochs=epochs)
+
+        steps = [('standardizer', standardizer),
+                 ('featurizer', featurizer)]
+
+        params_dict_deepchem = {"graph_conv_layers": [[64, 64], [128, 128]]}
+        optimizer = HyperparameterOptimizerValidation(graphconv_builder, metric=Metric(accuracy_score),
+                                                      maximize_metric=True,
+                                                      n_iter_search=2,
+                                                      params_dict=params_dict_deepchem,
+                                                      model_type="deepchem", epochs=2)
+
+        pipeline = Pipeline(steps=steps, hpo=optimizer, path='test_pipeline/')
+        pipeline.fit(self.dataset_smiles, self.dataset_smiles)
+        self.assertTrue(pipeline.is_fitted())
+        self.assertTrue(len(pipeline.hpo_all_results_) == 2)
+        self.assertTrue(len(pipeline.hpo_best_hyperparams_) == 1)
+        self.assertEqual(pipeline.steps[-1][0], "best_model")
+        predictions = pipeline.predict(self.dataset_smiles)
+        pipeline.save()
+        pipeline = Pipeline.load(pipeline.path)
+        new_predictions = pipeline.predict(self.dataset_smiles)
+        self.assertTrue(np.array_equal(predictions, new_predictions))
+
+    def test_hpo_cv_deepchem_models(self):
+        standardizer = BasicStandardizer()
+        featurizer = ConvMolFeat()
+
+        def graphconv_builder(graph_conv_layers, batch_size=256, epochs=5):
+            graph = GraphConvModel(n_tasks=1, graph_conv_layers=graph_conv_layers, batch_size=batch_size,
+                                   mode='classification')
+            return DeepChemModel(graph, model_dir=None, epochs=epochs)
+
+        steps = [('standardizer', standardizer),
+                 ('featurizer', featurizer)]
+
+        params_dict_deepchem = {"graph_conv_layers": [[64, 64], [128, 128]]}
+        optimizer = HyperparameterOptimizerCV(graphconv_builder, metric=Metric(accuracy_score),
+                                              maximize_metric=True,
+                                              n_iter_search=2,
+                                              cv=3,
+                                              params_dict=params_dict_deepchem,
+                                              model_type="deepchem", epochs=2)
+
+        pipeline = Pipeline(steps=steps, hpo=optimizer, path='test_pipeline/')
+        pipeline.fit(self.dataset_smiles)
+        self.assertTrue(pipeline.is_fitted())
+        self.assertTrue(len(pipeline.hpo_all_results_) == 11)
+        self.assertTrue(len(pipeline.hpo_best_hyperparams_) == 1)
         self.assertEqual(pipeline.steps[-1][0], "best_model")
         predictions = pipeline.predict(self.dataset_smiles)
         pipeline.save()

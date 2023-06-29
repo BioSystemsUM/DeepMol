@@ -71,14 +71,16 @@ class TestDeepChemHyperparameterOptimization(ModelsTestCase, TestCase):
                                    mode='classification')
             return DeepChemModel(graph, epochs=epochs)
 
-        model_graph = HyperparameterOptimizerValidation(model_builder=graphconv_builder)
+        model_graph = HyperparameterOptimizerValidation(model_builder=graphconv_builder,
+                                                        metric=Metric(accuracy_score),
+                                                        maximize_metric=True,
+                                                        n_iter_search=2,
+                                                        params_dict={'graph_conv_layers': [[64, 64], [32, 32]]},
+                                                        model_type="deepchem"
+                                                        )
 
-        best_model, best_hyperparams, all_results = model_graph.hyperparameter_search(
+        best_model, best_hyperparams, all_results = model_graph.fit(
             train_dataset=self.binary_dataset,
             valid_dataset=self.binary_dataset,
-            metric=Metric(accuracy_score),
-            maximize_metric=True,
-            n_iter_search=2,
-            params_dict={'graph_conv_layers': [[64, 64], [32, 32]]},
-            model_type="deepchem"
+
         )

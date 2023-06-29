@@ -27,6 +27,7 @@ operations on molecular data.
     - [Feature Importance (Shap Values)](#feature-importance-shap-values)
     - [Unbalanced Datasets](#unbalanced-datasets)
     - [Pipelines](#pipeline)
+    - [Pipeline Optimization](#pipeline-optimization)
 - [About Us](#about-us)
 - [Citing DeepMol](#citing-deepmol)
   - [Related Publications](#publications-using-deepmol)
@@ -477,23 +478,20 @@ def create_model(input_dim, optimizer='adam', dropout=0.5):
     )
     return model
 
-optimizer = HyperparameterOptimizerValidation(create_model)
+optimizer = HyperparameterOptimizerValidation(create_model,
+                                              metric=Metric(accuracy_score),
+                                              maximize_metric=True,
+                                              n_iter_search=2,
+                                              params_dict=params_dict_dense,
+                                              model_type="keras")
 params_dict_dense = {
                    "input_dim": [train_dataset.X.shape[1]],
                    "dropout": [0.5, 0.6, 0.7],
                    "optimizer": [Adam]
                    }
 
-best_dnn, best_hyperparams, all_results = optimizer.hyperparameter_search(train_dataset=train_dataset,
-                                                                          valid_dataset=valid_dataset,
-                                                                          metric=Metric(accuracy_score),
-                                                                          maximize_metric=True,
-                                                                          n_iter_search=2,
-                                                                          params_dict=params_dict_dense,
-                                                                          model_type="keras"
-                                                                          )
-print(best_hyperparams)
-print(best_model)
+best_dnn, best_hyperparams, all_results = optimizer.fit(train_dataset=train_dataset,
+                                                        valid_dataset=valid_dataset)
 
 # Evaluate model
 best_model.evaluate(test_dataset, metrics)
@@ -632,13 +630,83 @@ pipeline.save()
 pipeline = Pipeline.load('test_pipeline/')
 ``` 
 
-## About Us
+### Pipeline optimization
+```python
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.svm import SVC
+
+from deepmol.loaders import CSVLoader
+from deepmol.metrics import Metric
+from deepmol.models import SklearnModel
+from deepmol.pipeline_optimization import PipelineOptimization
+from deepmol.splitters import RandomSplitter
+
+# DEFINE THE OBJECTIVE FUNCTION
+def objective(trial):
+    model = trial.suggest_categorical('model', ['RandomForestClassifier', 'SVC'])
+    if model == 'RandomForestClassifier':
+        n_estimators = trial.suggest_int('model__n_estimators', 10, 100, step=10)
+        model = RandomForestClassifier(n_estimators=n_estimators)
+    elif model == 'SVC':
+        kernel = trial.suggest_categorical('model__kernel', ['linear', 'poly', 'rbf', 'sigmoid'])
+        model = SVC(kernel=kernel)
+    model = SklearnModel(model=model, model_dir='model')
+    steps = [('model', model)]
+    return steps
+ 
+# LOAD THE DATA   
+loader = CSVLoader('data_path...',
+                   smiles_field='mols',
+                   id_field='ids',
+                   labels_fields=['y'],
+                   features_fields=['f1', 'f2', 'f3', '...'],
+                   mode='classification')
+dataset_descriptors = loader.create_dataset(sep=",")
+   
+# OPTIMIZE THE PIPELINE 
+po = PipelineOptimization(direction='maximize', study_name='test_predictor_pipeline')
+metric = Metric(accuracy_score)
+train, test = RandomSplitter().train_test_split(dataset_descriptors, seed=123)
+po.optimize(train_dataset=train, test_dataset=test, objective_steps=objective, 
+            metric=metric, n_trials=5, save_top_n=3)
+```
+
+### About Us
 
 DeepMol is managed by a team of contributors from the BioSystems group 
 at the Centre of Biological Engineering, University of Minho.
 
 This research was financed by Portuguese Funds through FCT – Fundação para 
 a Ciência e a Tecnologia.
+
+#### Contributors
+
+João Correia - PhD student at the University of Minho (UMinho) and 
+researcher at the Centre of Biological Engineering (CEB), Braga, Portugal. João Correia is a PhD student in 
+Bioinformatics currently working with machine learning methods applied to the discovery of new chemical compounds 
+and reactions. [GitHub](https://github.com/jcorreia11), [LinkedIn](https://www.linkedin.com/in/joaocorreia95/), 
+[Research Gate](https://www.researchgate.net/profile/Joao-Correia-70)
+
+João Capela - PhD student at the University of Minho (UMinho) and 
+researcher at the Centre of Biological Engineering (CEB), Braga, Portugal. João Capela is a 
+PhD student in Bioinformatics currently working with machine learning methods to expose plant secondary metabolism.
+[GitHub](https://github.com/jcapels), [LinkedIn](https://www.linkedin.com/in/joaocapels/), 
+[ResearchGate](https://www.researchgate.net/profile/Joao-Capela-4)
+
+Vitor Pereira - Postdoctoral researcher at the University of Minho (UMinho) and Centre of Biological Engineering (CEB),
+Braga, Portugal. Vitor Pereira is a postdoctoral researcher in Bioinformatics currently working with machine learning
+to produce new chemical compounds and proteins. 
+[GitHub](https://github.com/vmspereira), [LinkedIn](https://www.linkedin.com/in/v%C3%ADtor-s%C3%A1-pereira/),
+[ResearchGate](https://www.researchgate.net/profile/Vitor-Pereira-9)
+
+Miguel Rocha - Associate Professor in Artificial Intelligence and Bioinformatics, 
+being the founder of the MSc in Bioinformatics (2007) and its current Director. 
+He is currently the CSO of OmniumAI. He has 20 years of experience in applying AI and data science 
+technologies to biological and biomedical data, both in academic (with numerous publications) 
+and in industry scenarios.
+[GitHub](https://github.com/miguelfrocha), [LinkedIn](https://www.linkedin.com/in/miguelprocha/),
+[ResearchGate](https://www.researchgate.net/profile/Miguel-Rocha-16)
 
 ## Citing DeepMol
 

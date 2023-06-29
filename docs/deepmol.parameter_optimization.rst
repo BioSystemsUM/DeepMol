@@ -4,6 +4,14 @@ deepmol.parameter\_optimization package
 Submodules
 ----------
 
+deepmol.parameter\_optimization.base\_hyperparameter\_optimization module
+-------------------------------------------------------------------------
+
+.. automodule:: deepmol.parameter_optimization.base_hyperparameter_optimization
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 deepmol.parameter\_optimization.deepchem\_hyperparameter\_optimization module
 -----------------------------------------------------------------------------
 

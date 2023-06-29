@@ -8,6 +8,8 @@ Scikit-learn and DeepChem to build custom ML and DL models or
 make use of pre-built ones. It uses the RDKit framework to perform 
 operations on molecular data.
 
+More detailed and comprehensive documentation in [DeepMol readthedocs](https://deepmol.readthedocs.io/en/latest/).
+
 ### Table of contents:
 
 - [Requirements](#requirements)

@@ -8,6 +8,7 @@ import numpy as np
 from deepmol.base import Transformer, Predictor
 from deepmol.datasets import Dataset
 from deepmol.metrics import Metric
+from deepmol.parameter_optimization.hyperparameter_optimization import HyperparameterOptimizer
 from deepmol.pipeline._utils import _get_predictor_instance
 
 
@@ -19,7 +20,8 @@ class Pipeline(Transformer):
     fit() and predict() methods.
     """
 
-    def __init__(self, steps: List[Tuple[str, Union[Transformer, Predictor]]], path: str = None) -> None:
+    def __init__(self, steps: List[Tuple[str, Union[Transformer, Predictor]]], path: str = None,
+                 hpo: HyperparameterOptimizer = None) -> None:
         """
         Pipeline of transformers and predictors. The last step must be a predictor, all other steps must be
         transformers. It applies a list of transformers in a sequence followed by a predictor.
@@ -31,10 +33,14 @@ class Pipeline(Transformer):
         path: str
             Path to directory where pipeline will be stored. If not specified, pipeline will be stored in a temporary
             directory.
+        hpo: HyperparameterOptimizer
+            Hyperparameter optimizer to use for hyperparameter optimization. If not specified, no hyperparameter
+            optimization will be performed.
         """
         super().__init__()
         self.steps = steps
         self.path = path
+        self.hpo = hpo
 
     def is_fitted(self) -> bool:
         """
@@ -88,31 +94,35 @@ class Pipeline(Transformer):
         if not os.path.exists(self.path):
             os.makedirs(self.path)
 
-    def fit(self, dataset_train: Dataset) -> 'Pipeline':
+    def fit(self, train_dataset: Dataset, validation_dataset: Dataset = None) -> 'Pipeline':
         """
         Fit the pipeline to the train data.
 
         Parameters
         ----------
-        dataset_train: Dataset
+        train_dataset: Dataset
             Dataset to fit the pipeline to.
+        validation_dataset: Dataset
+            Dataset to validate the pipeline on if hpo is not None.
 
         Returns
         -------
         self: Pipeline
             Fitted pipeline.
         """
-        self._fit(dataset_train)
+        self._fit(train_dataset, validation_dataset)
         return self
 
-    def _fit(self, dataset: Dataset) -> 'Pipeline':
+    def _fit(self, train_dataset: Dataset, validation_dataset: Dataset = None) -> 'Pipeline':
         """
         Fit the pipeline to the dataset. It also validates if the pipeline steps make sense.
 
         Parameters
         ----------
-        dataset: Dataset
+        train_dataset: Dataset
             Dataset to fit the pipeline to.
+        validation_dataset: Dataset
+            Dataset to validate the pipeline on if hpo is not None.
 
         Returns
         -------
@@ -121,13 +131,33 @@ class Pipeline(Transformer):
         """
         self._validate_steps()
 
-        if self.is_prediction_pipeline():
-            for name, transformer in self.steps[:-1]:
-                dataset = transformer.fit_transform(dataset)
-            self.steps[-1][1].fit(dataset)
+        if self.hpo is None:
+            if self.is_prediction_pipeline():
+                for name, transformer in self.steps[:-1]:
+                    train_dataset = transformer.fit_transform(train_dataset)
+                self.steps[-1][1].fit(train_dataset)
+            else:
+                for name, transformer in self.steps:
+                    train_dataset = transformer.fit_transform(train_dataset)
         else:
-            for name, transformer in self.steps:
-                dataset = transformer.fit_transform(dataset)
+            if self.is_prediction_pipeline():
+                for name, transformer in self.steps[:-1]:
+                    train_dataset = transformer.fit_transform(train_dataset)
+                    if validation_dataset is not None:
+                        validation_dataset = transformer.transform(validation_dataset)
+            else:
+                for name, transformer in self.steps:
+                    train_dataset = transformer.fit_transform(train_dataset)
+                    if validation_dataset is not None:
+                        validation_dataset = transformer.transform(validation_dataset)
+
+            best_model, self.hpo_best_hyperparams_, self.hpo_all_results_ = self.hpo.fit(train_dataset,
+                                                                                         validation_dataset)
+            if self.is_prediction_pipeline():
+                self.steps[-1] = ("best_model", best_model)
+            else:
+                self.steps.append(("best_model", best_model))
+
         return self
 
     def _transform(self, dataset: Dataset) -> Dataset:

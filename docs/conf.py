@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.abspath('../src/'))
 project = 'deepmol'
 copyright = '2023, João Correia and João Capela'
 author = 'João Correia and João Capela'
-release = '0.0.5-beta'
+release = '1.0.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

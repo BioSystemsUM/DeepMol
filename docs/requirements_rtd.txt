@@ -27,3 +27,8 @@ optuna==3.1.1
 tensorflow-probability==0.20.1
 torch_geometric==2.3.1
 scikit-multilearn==0.2.0
+sphinx
+rst-to-myst
+sphinx-rtd-theme
+sphinx-autobuild
+myst-parser

@@ -1,21 +1,21 @@
-deepmol.evaluator package
-=========================
+# deepmol.evaluator package
 
-Submodules
-----------
+## Submodules
 
-deepmol.evaluator.evaluator module
-----------------------------------
+## deepmol.evaluator.evaluator module
 
+```{eval-rst}
 .. automodule:: deepmol.evaluator.evaluator
    :members:
    :undoc-members:
    :show-inheritance:
+```
 
-Module contents
----------------
+## Module contents
 
+```{eval-rst}
 .. automodule:: deepmol.evaluator
    :members:
    :undoc-members:
    :show-inheritance:
+```

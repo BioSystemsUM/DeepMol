@@ -1,37 +1,39 @@
-deepmol.tokenizers package
-==========================
+# deepmol.tokenizers package
 
-Submodules
-----------
+## Submodules
 
-deepmol.tokenizers.atom\_level\_smiles\_tokenizer module
---------------------------------------------------------
+## deepmol.tokenizers.atom_level_smiles_tokenizer module
 
+```{eval-rst}
 .. automodule:: deepmol.tokenizers.atom_level_smiles_tokenizer
    :members:
    :undoc-members:
    :show-inheritance:
+```
 
-deepmol.tokenizers.kmer\_smiles\_tokenizer module
--------------------------------------------------
+## deepmol.tokenizers.kmer_smiles_tokenizer module
 
+```{eval-rst}
 .. automodule:: deepmol.tokenizers.kmer_smiles_tokenizer
    :members:
    :undoc-members:
    :show-inheritance:
+```
 
-deepmol.tokenizers.tokenizer module
------------------------------------
+## deepmol.tokenizers.tokenizer module
 
+```{eval-rst}
 .. automodule:: deepmol.tokenizers.tokenizer
    :members:
    :undoc-members:
    :show-inheritance:
+```
 
-Module contents
----------------
+## Module contents
 
+```{eval-rst}
 .. automodule:: deepmol.tokenizers
    :members:
    :undoc-members:
    :show-inheritance:
+```

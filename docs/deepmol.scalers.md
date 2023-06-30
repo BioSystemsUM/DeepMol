@@ -1,29 +1,30 @@
-deepmol.scalers package
-=======================
+# deepmol.scalers package
 
-Submodules
-----------
+## Submodules
 
-deepmol.scalers.base\_scaler module
------------------------------------
+## deepmol.scalers.base_scaler module
 
+```{eval-rst}
 .. automodule:: deepmol.scalers.base_scaler
    :members:
    :undoc-members:
    :show-inheritance:
+```
 
-deepmol.scalers.sklearn\_scalers module
----------------------------------------
+## deepmol.scalers.sklearn_scalers module
 
+```{eval-rst}
 .. automodule:: deepmol.scalers.sklearn_scalers
    :members:
    :undoc-members:
    :show-inheritance:
+```
 
-Module contents
----------------
+## Module contents
 
+```{eval-rst}
 .. automodule:: deepmol.scalers
    :members:
    :undoc-members:
    :show-inheritance:
+```

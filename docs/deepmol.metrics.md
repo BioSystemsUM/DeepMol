@@ -1,29 +1,30 @@
-deepmol.metrics package
-=======================
+# deepmol.metrics package
 
-Submodules
-----------
+## Submodules
 
-deepmol.metrics.metrics module
-------------------------------
+## deepmol.metrics.metrics module
 
+```{eval-rst}
 .. automodule:: deepmol.metrics.metrics
    :members:
    :undoc-members:
    :show-inheritance:
+```
 
-deepmol.metrics.metrics\_functions module
------------------------------------------
+## deepmol.metrics.metrics_functions module
 
+```{eval-rst}
 .. automodule:: deepmol.metrics.metrics_functions
    :members:
    :undoc-members:
    :show-inheritance:
+```
 
-Module contents
----------------
+## Module contents
 
+```{eval-rst}
 .. automodule:: deepmol.metrics
    :members:
    :undoc-members:
    :show-inheritance:
+```

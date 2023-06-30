@@ -1,21 +1,21 @@
-deepmol.parallelism package
-===========================
+# deepmol.parallelism package
 
-Submodules
-----------
+## Submodules
 
-deepmol.parallelism.multiprocessing module
-------------------------------------------
+## deepmol.parallelism.multiprocessing module
 
+```{eval-rst}
 .. automodule:: deepmol.parallelism.multiprocessing
    :members:
    :undoc-members:
    :show-inheritance:
+```
 
-Module contents
----------------
+## Module contents
 
+```{eval-rst}
 .. automodule:: deepmol.parallelism
    :members:
    :undoc-members:
    :show-inheritance:
+```

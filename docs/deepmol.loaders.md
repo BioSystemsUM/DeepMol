@@ -1,21 +1,21 @@
-deepmol.loaders package
-=======================
+# deepmol.loaders package
 
-Submodules
-----------
+## Submodules
 
-deepmol.loaders.loaders module
-------------------------------
+## deepmol.loaders.loaders module
 
+```{eval-rst}
 .. automodule:: deepmol.loaders.loaders
    :members:
    :undoc-members:
    :show-inheritance:
+```
 
-Module contents
----------------
+## Module contents
 
+```{eval-rst}
 .. automodule:: deepmol.loaders
    :members:
    :undoc-members:
    :show-inheritance:
+```

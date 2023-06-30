@@ -1,21 +1,21 @@
-deepmol.pipeline package
-========================
+# deepmol.pipeline package
 
-Submodules
-----------
+## Submodules
 
-deepmol.pipeline.pipeline module
---------------------------------
+## deepmol.pipeline.pipeline module
 
+```{eval-rst}
 .. automodule:: deepmol.pipeline.pipeline
    :members:
    :undoc-members:
    :show-inheritance:
+```
 
-Module contents
----------------
+## Module contents
 
+```{eval-rst}
 .. automodule:: deepmol.pipeline
    :members:
    :undoc-members:
    :show-inheritance:
+```

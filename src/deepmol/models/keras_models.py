@@ -1,12 +1,19 @@
+import os
+from typing import Union
+
+import keras
+
+from deepmol.models._utils import _get_splitter, load_from_disk, _save_keras_model, get_prediction_from_proba
 from deepmol.models.models import Model
 from deepmol.models.sklearn_models import SklearnModel
 from deepmol.metrics.metrics import Metric
-from deepmol.splitters.splitters import RandomSplitter, SingletaskStratifiedSplitter
-from typing import Sequence
+from deepmol.splitters.splitters import Splitter
 import numpy as np
 from deepmol.datasets import Dataset
-from keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
+from tensorflow.keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
 from sklearn.base import clone
+
+from deepmol.utils.utils import normalize_labels_shape
 
 
 # Only for sequential single input models
@@ -19,11 +26,8 @@ class KerasModel(Model):
 
     def __init__(self,
                  model_builder: callable,
-                 mode: str = 'classification',
+                 mode: Union[str, list] = 'classification',
                  model_dir: str = None,
-                 loss: str = 'binary_crossentropy',
-                 optimizer: str = 'adam',
-                 learning_rate: float = 0.001,
                  epochs: int = 150,
                  batch_size: int = 10,
                  verbose: int = 0,
@@ -35,16 +39,10 @@ class KerasModel(Model):
         ----------
         model_builder: callable
             A function that builds a keras model.
-        mode: str
+        mode: Union[str, list]
             The mode of the model. Can be either 'classification' or 'regression'.
         model_dir: str
             The directory to save the model to.
-        loss: str
-            The loss function to use.
-        optimizer: str
-            The optimizer to use.
-        learning_rate: float
-            The learning rate to use.
         epochs: int
             The number of epochs to train for.
         batch_size: int
@@ -52,16 +50,17 @@ class KerasModel(Model):
         verbose: int
             The verbosity of the model.
         """
-        super().__init__(model_builder, model_dir, **kwargs)
         self.mode = mode
-        self.loss = loss
-        self.optimizer = optimizer
-        self.learning_rate = learning_rate
-        self.model_type = 'keras'
         self.batch_size = batch_size
         self.epochs = epochs
         self.model_builder = model_builder
         self.verbose = verbose
+
+        self.parameters_to_save = {'mode': self.mode,
+                                   'batch_size': self.batch_size,
+                                   'epochs': self.epochs,
+                                   'verbose': self.verbose,
+                                   **kwargs}
 
         if mode == 'classification':
             self.model = KerasClassifier(build_fn=model_builder, epochs=epochs, batch_size=batch_size,
@@ -72,7 +71,16 @@ class KerasModel(Model):
         else:
             self.model = model_builder
 
-    def fit(self, dataset: Dataset, **kwargs) -> None:
+        super().__init__(self.model, model_dir, **kwargs)
+
+    @property
+    def model_type(self):
+        """
+        Returns the type of the model.
+        """
+        return 'keras'
+
+    def _fit(self, dataset: Dataset, **kwargs) -> None:
         """
         Fits keras model to data.
 
@@ -85,6 +93,7 @@ class KerasModel(Model):
         """
         if self.mode != dataset.mode:
             raise ValueError('Dataset mode does not match model mode.')
+
         features = dataset.X.astype('float32')
         if len(dataset.label_names) == 1:
             y = np.squeeze(dataset.y)
@@ -108,43 +117,108 @@ class KerasModel(Model):
           The value is a return value of `predict_proba` or `predict` method of the scikit-learn model. If the
           scikit-learn model has both methods, the value is always a return value of `predict_proba`.
         """
+        predictions = self.predict_proba(dataset)
+        if not dataset.y.shape == np.array(predictions).shape:
+            predictions = normalize_labels_shape(predictions, dataset.n_tasks)
+
+        y_pred_rounded = get_prediction_from_proba(dataset, predictions)
+        return y_pred_rounded
+
+    def predict_proba(self, dataset: Dataset) -> np.ndarray:
+        """
+        Makes predictions on dataset.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to make prediction on.
+
+        Returns
+        -------
+        np.ndarray
+            predictions
+        """
         try:
-            return self.model.predict_proba(dataset.X.astype('float32'))
-        except AttributeError:
+            predictions = self.model.predict_proba(dataset.X.astype('float32'))
+        except AttributeError as e:
+            self.logger.error(e)
             self.logger.info(str(self.model))
             self.logger.info(str(type(self.model)))
-            return self.model.predict(dataset.X.astype('float32'))
+            predictions = self.model.predict(dataset.X.astype('float32'))
 
-    def predict_on_batch(self, X: Dataset) -> np.ndarray:
+        if not dataset.y.shape == np.array(predictions).shape:
+            predictions = normalize_labels_shape(predictions, dataset.n_tasks)
+
+        return predictions
+
+    def predict_on_batch(self, dataset: Dataset) -> np.ndarray:
         """
         Makes predictions on batch of data.
 
         Parameters
         ----------
-        X: Dataset
-          Dataset to make prediction on.
+        dataset: Dataset
+            Dataset to make prediction on.
 
         Returns
         -------
         np.ndarray
             numpy array of predictions.
         """
-        return super(KerasModel, self).predict(X)
+        return super(KerasModel, self).predict(dataset)
 
-    def fit_on_batch(self, X: Sequence, y: Sequence):
+    def fit_on_batch(self, dataset: Dataset) -> None:
         """
         Fits model on batch of data.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to fit model on.
         """
 
-    def reload(self) -> None:
+    @classmethod
+    def load(cls, folder_path: str) -> 'KerasModel':
         """
         Reloads the model from disk.
-        """
 
-    def save(self) -> None:
+        Parameters
+        ----------
+        folder_path: str
+            The folder path to load the model from.
+
+        Returns
+        -------
+        KerasModel
+            The loaded model.
+        """
+        file_path_model_builder = os.path.join(folder_path, 'model_builder.pkl')
+        model_builder = load_from_disk(file_path_model_builder)
+        file_path_model = os.path.join(folder_path, 'model.h5')
+        model = keras.models.load_model(file_path_model)
+        model_parameters = load_from_disk(os.path.join(folder_path, 'model_parameters.pkl'))
+        keras_model_class = cls(model_builder=model_builder, **model_parameters)
+        keras_model_class.model.model = model
+        return keras_model_class
+
+    def save(self, file_path: str = None) -> None:
         """
         Saves the model to disk.
+
+        Parameters
+        ----------
+        file_path: str
+            The path to save the model to.
         """
+        if file_path is None:
+            if self.model_dir is None:
+                raise ValueError('No model directory specified.')
+            else:
+                # write self in pickle format
+                _save_keras_model(self.model_dir, self.model.model, self.parameters_to_save, self.model_builder)
+        else:
+            # write self in pickle format
+            _save_keras_model(file_path, self.model.model, self.parameters_to_save, self.model_builder)
 
     def get_task_type(self) -> str:
         """
@@ -159,6 +233,7 @@ class KerasModel(Model):
     def cross_validate(self,
                        dataset: Dataset,
                        metric: Metric,
+                       splitter: Splitter = None,
                        folds: int = 3):
         """
         Cross validates the model on a dataset.
@@ -169,6 +244,8 @@ class KerasModel(Model):
             The `Dataset` to cross validate on.
         metric: Metric
             The metric to use for cross validation.
+        splitter: Splitter
+            The splitter to use for cross validation.
         folds: int
             The number of folds to use for cross validation.
 
@@ -179,14 +256,8 @@ class KerasModel(Model):
             score of the best model, the fourth is the test scores of all models, the fifth is the average train scores
             of all folds and the sixth is the average test score of all folds.
         """
-        # TODO: add option to choose between splitters
-        splitter = None
-        if dataset.mode == 'classification':
-            splitter = SingletaskStratifiedSplitter()
-        if dataset.mode == 'regression':
-            splitter = RandomSplitter()
-
-        assert splitter is not None
+        if splitter is None:
+            splitter = _get_splitter(dataset)
 
         datasets = splitter.k_fold_split(dataset, folds)
 

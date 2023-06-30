@@ -1,5 +1,6 @@
 import os
 from abc import ABC, abstractmethod
+from copy import copy
 from unittest.mock import MagicMock
 
 import numpy as np

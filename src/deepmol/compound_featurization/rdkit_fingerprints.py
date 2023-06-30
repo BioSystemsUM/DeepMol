@@ -1,8 +1,24 @@
+import os.path
+import random
+from typing import Tuple, Union, List
+
+import PIL
 import numpy as np
-from rdkit.Chem import Mol, rdMolDescriptors, MACCSkeys, rdmolops
+from IPython.core.display_functions import display
+from rdkit.Chem import MACCSkeys, Draw
 from rdkit.Chem.rdMolDescriptors import GetAtomPairAtomCode
 
 from deepmol.compound_featurization import MolecularFeaturizer
+
+from rdkit.Chem.Draw import rdMolDraw2D
+from rdkit import Chem
+import tempfile
+from PIL import Image
+
+from rdkit.Chem import rdMolDescriptors, Mol, rdmolops
+
+from deepmol.compound_featurization._constants import MACCSsmartsPatts
+from deepmol.compound_featurization._utils import get_substructure_depiction, svg_text_to_file
 
 
 class MorganFingerprint(MolecularFeaturizer):
@@ -62,6 +78,122 @@ class MorganFingerprint(MolecularFeaturizer):
         fp = np.asarray(fp, dtype=np.float32)
         return fp
 
+    def draw_bit(self, mol: Mol, bit: int, molSize: Tuple[int, int] = (450, 200), file_path: str = None) -> str:
+        """
+        Draw a molecule with a Morgan fingerprint bit highlighted.
+
+        Parameters
+        ----------
+        mol: Mol
+            Molecule to draw.
+        bit: int
+            Bit to highlight.
+        molSize: Tuple[int, int]
+            Size of the molecule.
+        file_path: str
+            Path to save the image.
+
+        Returns
+        -------
+        str
+            The molecule in SVG format.
+        """
+        if mol is None:
+            raise ValueError('Molecule is None! Please insert a valid molecule')
+
+        info = {}
+        rdMolDescriptors.GetMorganFingerprintAsBitVect(mol, self.radius,
+                                                       nBits=self.size,
+                                                       useChirality=self.chiral,
+                                                       useBondTypes=self.bonds,
+                                                       useFeatures=self.features,
+                                                       bitInfo=info)
+
+        if bit not in info.keys():
+            self.logger.info(f'Bits ON: {list(info.keys())}')
+            raise ValueError('Bit is off! Bits ON: %s' % (list(info.keys())))
+
+        self.logger.info('Bit %d with %d hits!' % (bit, len(info[bit])))
+
+        aid, rad = info[bit][0]
+
+        depiction = get_substructure_depiction(mol, aid, rad, molSize=molSize)
+
+        if file_path is not None:
+            svg_text_to_file(depiction.data, file_path)
+
+        return depiction
+
+    def draw_bits(self, mol: Mol, bit_indexes: Union[int, str, List[int]],
+                  file_path: str = None) -> str:
+        """
+        Draw a molecule with a Morgan fingerprint bit highlighted.
+
+        Parameters
+        ----------
+        mol: Mol
+            Molecule to draw.
+        bit_indexes: Union[int, str, List[int]]
+            Bit to highlight. If int, only one bit is highlighted. If list, all the bits in the list are highlighted.
+            If 'ON', all the bits ON are highlighted.
+        file_path : str
+            Path to save the image.
+
+        Returns
+        -------
+        str
+        """
+
+        if mol is None:
+            raise ValueError('Molecule is None! Please insert a valid molecule')
+
+        bi = {}
+
+        fp = rdMolDescriptors.GetMorganFingerprintAsBitVect(mol,
+                                                            radius=self.radius,
+                                                            nBits=self.size,
+                                                            useChirality=self.chiral,
+                                                            useBondTypes=self.bonds,
+                                                            useFeatures=self.features,
+                                                            bitInfo=bi)
+
+        if isinstance(bit_indexes, int):
+            if bit_indexes not in bi.keys():
+                self.logger.info(f'Bits ON: {bi.keys()}')
+                raise ValueError('Bit is off! Select a on bit')
+            svg_text = Draw.DrawMorganBit(mol, bit_indexes, bi)
+            if file_path is not None:
+                svg_text_to_file(svg_text, file_path)
+            return svg_text
+
+        elif isinstance(bit_indexes, list):
+            bits_on = []
+            for b in bit_indexes:
+                if b in bi.keys():
+                    bits_on.append(b)
+                else:
+                    self.logger.info('Bit %d is off!' % (b))
+            if len(bits_on) == 0:
+                raise ValueError('All the selected bits are off! Select on bits!')
+            elif len(bits_on) != len(bit_indexes):
+                self.logger.info(f'Using only bits ON: {bits_on}')
+            tpls = [(mol, x, bi) for x in bits_on]
+            svg_text = Draw.DrawMorganBits(tpls, molsPerRow=5, legends=['bit_' + str(x) for x in bits_on])
+
+            if file_path is not None:
+                svg_text_to_file(svg_text, file_path)
+
+            return svg_text
+        elif bit_indexes == 'ON':
+            tpls = [(mol, x, bi) for x in fp.GetOnBits()]
+            svg_text = Draw.DrawMorganBits(tpls, molsPerRow=5, legends=[str(x) for x in fp.GetOnBits()])
+            if file_path is not None:
+                svg_text_to_file(svg_text, file_path)
+            return svg_text
+
+        else:
+            raise ValueError('Bits must be integer, list of integers or ON!')
+
 
 class MACCSkeysFingerprint(MolecularFeaturizer):
     """
@@ -93,6 +225,88 @@ class MACCSkeysFingerprint(MolecularFeaturizer):
         fp = MACCSkeys.GenMACCSKeys(mol)
         fp = np.asarray(fp, dtype=np.float32)
         return fp
+
+    def draw_bit(self, mol: Mol, bit_index: int, file_path: str = None) -> PIL.Image.Image:
+        """
+        Draw a molecule with a MACCS key highlighted.
+
+        Parameters
+        ----------
+        mol: Mol
+            Molecule to draw.
+        bit_index: int
+            Index of the MACCS key to highlight.
+        file_path: str
+            Path to save the image to. If None, the image is not saved.
+
+        Returns
+        -------
+        im: PIL.Image.Image
+            Image of the molecule with the MACCS key highlighted.
+        """
+
+        if mol is None:
+            raise ValueError('Molecule cannot be None!')
+
+        if bit_index not in MACCSsmartsPatts.keys():
+            raise ValueError('Bit index must be between 1 and 166!')
+
+        smart = MACCSsmartsPatts[bit_index][0]
+        if "?" in smart:
+            raise ValueError('Bit %d cannot be drawn!' % (bit_index))
+
+        patt = Chem.MolFromSmarts(smart)
+
+        if mol.HasSubstructMatch(patt):
+            hit_ats = mol.GetSubstructMatches(patt)
+            bond_lists = []
+            for i, hit_at in enumerate(hit_ats):
+                hit_at = list(hit_at)
+                bond_list = []
+                for bond in patt.GetBonds():
+                    a1 = hit_at[bond.GetBeginAtomIdx()]
+                    a2 = hit_at[bond.GetEndAtomIdx()]
+                    bond_list.append(mol.GetBondBetweenAtoms(a1, a2).GetIdx())
+                bond_lists.append(bond_list)
+
+            colours = []
+            for i in range(len(hit_ats)):
+                colours.append((random.random(), random.random(), random.random()))
+            atom_cols = {}
+            bond_cols = {}
+            atom_list = []
+            bond_list = []
+            for i, (hit_atom, hit_bond) in enumerate(zip(hit_ats, bond_lists)):
+                hit_atom = list(hit_atom)
+                for at in hit_atom:
+                    atom_cols[at] = colours[i]
+                    atom_list.append(at)
+                for bd in hit_bond:
+                    bond_cols[bd] = colours[i]
+                    bond_list.append(bd)
+            d = rdMolDraw2D.MolDraw2DCairo(500, 500)
+            rdMolDraw2D.PrepareAndDrawMolecule(d, mol, highlightAtoms=atom_list,
+                                               highlightAtomColors=atom_cols,
+                                               highlightBonds=bond_list,
+                                               highlightBondColors=bond_cols)
+
+            d.FinishDrawing()
+            if file_path is None:
+                with tempfile.TemporaryDirectory() as tmp_dir_name:
+                    d.WriteDrawingText(tmp_dir_name + 'mol.png')
+                    im = Image.open(tmp_dir_name + 'mol.png')
+                    return im
+            elif ".png" in file_path.lower():
+                d.WriteDrawingText(file_path)
+                im = Image.open(file_path)
+                return im
+            else:
+                raise ValueError('File path must end with .png!')
+        else:
+            fp = MACCSkeys.GenMACCSKeys(mol)
+            fp = np.asarray(fp, dtype=np.float32)
+            bits_on = np.where(fp == 1)[0]
+            self.logger.info(f'Pattern does not match molecule! Active bits: {bits_on}')
 
 
 class LayeredFingerprint(MolecularFeaturizer):
@@ -255,6 +469,138 @@ class RDKFingerprint(MolecularFeaturizer):
                                      useBondOrder=self.useBondOrder)
         fp = np.asarray(fp, dtype=np.float32)
         return fp
+
+    def draw_bits(self, mol: Mol, bits: Union[int, str, List[int]], file_path: str = None) -> str:
+        """
+        Draw a molecule with a RDK fingerprint bit highlighted.
+
+        Parameters
+        ----------
+        mol: Mol
+            Molecule to draw.
+        bits: Union[int, str, List[int]]
+            Bit to highlight. If int, the bit to highlight. If str, the name of the bit to highlight.
+            If 'ON', all the bits ON are highlighted.
+        file_path: str
+            Path to save the image. If None, the image is not saved.
+        Returns
+        -------
+        Str
+            The molecule with the fingerprint bits.
+        """
+        rdkbit = {}
+        fp = rdmolops.RDKFingerprint(mol,
+                                     minPath=self.minPath,
+                                     maxPath=self.maxPath,
+                                     fpSize=self.fpSize,
+                                     nBitsPerHash=self.nBitsPerHash,
+                                     useHs=self.useHs,
+                                     tgtDensity=self.tgtDensity,
+                                     minSize=self.minSize,
+                                     branchedPaths=self.branchedPaths,
+                                     useBondOrder=self.useBondOrder,
+                                     bitInfo=rdkbit)
+        if isinstance(bits, int):
+            if bits not in rdkbit.keys():
+                self.logger.info(f'Bits ON: {list(rdkbit.keys())}')
+                raise ValueError(f'Bit is off! Select a on bit. Bits ON: {list(rdkbit.keys())}')
+            svg_text = Draw.DrawRDKitBit(mol, bits, rdkbit)
+            if file_path is not None:
+                svg_text_to_file(svg_text, file_path)
+            return svg_text
+
+        elif isinstance(bits, list):
+            bits_on = []
+            for bit in bits:
+                if bit in rdkbit.keys():
+                    bits_on.append(bit)
+                else:
+                    self.logger.info(f'Bit {bit} is off! Select a on bit. Bits ON: {list(rdkbit.keys())} ')
+            if len(bits_on) == 0:
+                raise ValueError('All the selected bits are off! Select on bits! Bit is off! Select a on bit. Bits '
+                                 f'ON: {bits_on}')
+            elif len(bits_on) != len(bits):
+                self.logger.info(f'Bits ON: {bits_on}')
+
+            tpls = [(mol, x, rdkbit) for x in bits_on]
+            svg_text = Draw.DrawRDKitBits(tpls, molsPerRow=5, legends=['bit_' + str(x) for x in bits_on])
+            if file_path is not None:
+                svg_text_to_file(svg_text, file_path)
+            return svg_text
+
+        elif bits == 'ON':
+            tpls = [(mol, x, rdkbit) for x in fp.GetOnBits()]
+            svg_text = Draw.DrawRDKitBits(tpls, molsPerRow=5, legends=[str(x) for x in fp.GetOnBits()])
+            if file_path is not None:
+                svg_text_to_file(svg_text, file_path)
+            return svg_text
+
+        else:
+            raise ValueError('Bits must be integer, list of integers or ON!')
+
+    def draw_bit(self, mol: Mol,
+                 bit: int,
+                 folder_path: str = None,
+                 molSize: Tuple[int, int] = (450, 200)):
+        """
+        Draw a molecule with a RDK fingerprint bit highlighted.
+
+        Parameters
+        ----------
+        mol: Mol
+            Molecule to draw.
+        bit: int
+            Bit to highlight.
+        folder_path: str
+            Path for the folder to save images.
+        molSize: Tuple[int, int]
+            Size of the molecule.
+
+        Returns
+        -------
+        Images
+            The molecule with the fingerprint bit highlighted.
+        """
+        if mol is None:
+            raise ValueError('Mol is None!')
+
+        info = {}
+        rdmolops.RDKFingerprint(mol,
+                                minPath=self.minPath,
+                                maxPath=self.maxPath,
+                                fpSize=self.fpSize,
+                                nBitsPerHash=self.nBitsPerHash,
+                                useHs=self.useHs,
+                                tgtDensity=self.tgtDensity,
+                                minSize=self.minSize,
+                                branchedPaths=self.branchedPaths,
+                                useBondOrder=self.useBondOrder,
+                                bitInfo=info)
+
+        if bit not in info.keys():
+            self.logger.info(f'Bits ON: {info.keys()}')
+            raise ValueError(f'Bit is off! Select a on bit. Bits ON: {list(info.keys())}')
+
+        self.logger.info('Bit %d with %d hits!' % (bit, len(info[bit])))
+
+        images = []
+        for i in range(len(info[bit])):
+            d = rdMolDraw2D.MolDraw2DCairo(molSize[0], molSize[1])
+            rdMolDraw2D.PrepareAndDrawMolecule(d, mol, highlightBonds=info[bit][i])
+            d.FinishDrawing()
+            if folder_path is None:
+                with tempfile.TemporaryDirectory() as tmp_dir_name:
+                    file_to_save_image = os.path.join(tmp_dir_name, f'mol_{i}.png')
+                    d.WriteDrawingText(file_to_save_image)
+                    im = Image.open(file_to_save_image)
+                    images.append(im)
+            else:
+                os.makedirs(folder_path, exist_ok=True)
+                file_to_save_image = os.path.join(folder_path, f'mol_{i}.png')
+                d.WriteDrawingText(file_to_save_image)
+                im = Image.open(file_to_save_image)
+                images.append(im)
+        return display(*images)
 
 
 class AtomPairFingerprint(MolecularFeaturizer):

@@ -17,14 +17,14 @@ from tests.unit_tests.featurizers.test_featurizers import FeaturizerTestCase
 class Test2DDescriptors(FeaturizerTestCase, TestCase):
 
     def test_featurize(self):
-        TwoDimensionDescriptors().featurize(self.mock_dataset)
-        self.assertEqual(5, self.mock_dataset._X.shape[0])
+        TwoDimensionDescriptors().featurize(self.mock_dataset, inplace=True)
+        self.assertEqual(7, self.mock_dataset._X.shape[0])
 
     def test_featurize_with_nan(self):
         dataset_rows_number = len(self.mock_dataset_with_invalid.mols) - 1  # one mol has invalid smiles
 
         dataset = copy(self.mock_dataset_with_invalid)
-        TwoDimensionDescriptors().featurize(dataset)
+        TwoDimensionDescriptors().featurize(dataset, inplace=True)
         self.assertEqual(dataset_rows_number, dataset._X.shape[0])
 
 
@@ -74,7 +74,7 @@ class Test3DDescriptors(FeaturizerTestCase, TestCase):
 
     def test_featurize(self):
         dataset_rows_number = len(self.mock_dataset.mols)
-        All3DDescriptors(mandatory_generation_of_conformers=True).featurize(self.mock_dataset)
+        All3DDescriptors(mandatory_generation_of_conformers=True).featurize(self.mock_dataset, inplace=True)
         self.assertEqual(dataset_rows_number, self.mock_dataset._X.shape[0])
         # assert that all 3d descriptors are always computed in the same order
         mol = ThreeDimensionalMoleculeGenerator().generate_conformers(self.mock_dataset.mols[0])
@@ -89,7 +89,7 @@ class Test3DDescriptors(FeaturizerTestCase, TestCase):
         dataset_rows_number = len(self.mock_dataset_with_invalid.mols) - 1  # one mol has invalid smiles
 
         dataset = copy(self.mock_dataset_with_invalid)
-        method(**kwargs).featurize(dataset)
+        method(**kwargs).featurize(dataset, inplace=True)
         self.assertEqual(dataset_rows_number, dataset._X.shape[0])
 
     def test_featurize_with_nan(self):
@@ -109,7 +109,7 @@ class Test3DDescriptors(FeaturizerTestCase, TestCase):
 
     def valid_featurize_to_fail(self, method, **kwargs):
         with self.assertRaises(SystemExit) as cm:
-            method(**kwargs).featurize(self.mock_dataset)
+            method(**kwargs).featurize(self.mock_dataset, inplace=True)
 
         self.assertEqual(cm.exception.code, 1)
 

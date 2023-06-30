@@ -21,7 +21,8 @@ except ImportError:
 
 try:
     from .deepchem_featurizers import WeaveFeat, CoulombFeat, CoulombEigFeat, ConvMolFeat, MolGraphConvFeat, \
-        SmileImageFeat, SmilesSeqFeat, MolGanFeat
+        SmileImageFeat, SmilesSeqFeat, MolGanFeat, PagtnMolGraphFeat, DagTransformer, DMPNNFeat, MATFeat, RawFeat
 except ImportError:
     warnings.warn("DeepChem not available. Please install it to use it.")
 
+from .one_hot_encoder import SmilesOneHotEncoder

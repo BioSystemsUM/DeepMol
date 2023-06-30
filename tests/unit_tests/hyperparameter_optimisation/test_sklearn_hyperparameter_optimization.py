@@ -17,14 +17,16 @@ class TestSklearnHyperparameterOptimization(ModelsTestCase, TestCase):
     def test_fit_predict_evaluate(self):
         train_dataset, test_dataset = self.binary_dataset, self.binary_dataset_test
 
-        optimizer = HyperparameterOptimizerValidation(SVC)
         params_dict_svc = {"C": [1.0, 1.2, 0.8]}
-        best_svm, best_hyperparams, all_results = optimizer.hyperparameter_search(train_dataset=train_dataset,
-                                                                                  valid_dataset=test_dataset,
-                                                                                  metric=Metric(accuracy_score),
-                                                                                  maximize_metric=True,
-                                                                                  n_iter_search=2,
-                                                                                  params_dict=params_dict_svc)
+
+        optimizer = HyperparameterOptimizerValidation(SVC, metric=Metric(accuracy_score),
+                                                      maximize_metric=True,
+                                                      n_iter_search=2,
+                                                      params_dict=params_dict_svc,
+                                                      model_type="sklearn")
+
+        best_svm, best_hyperparams, all_results = optimizer.fit(train_dataset=train_dataset,
+                                                                valid_dataset=test_dataset)
 
         # Evaluate model
         result = best_svm.evaluate(test_dataset, [Metric(accuracy_score)])
@@ -46,34 +48,29 @@ class TestSklearnHyperparameterOptimization(ModelsTestCase, TestCase):
                           "class_weight": [{0: 1., 1: 1.}, {0: 1., 1: 5}, {0: 1., 1: 10}]
                           }
 
-        optimizer = HyperparameterOptimizerCV(rf_model_builder)
-
         metric = Metric(roc_auc_score)
+        optimizer = HyperparameterOptimizerCV(rf_model_builder, metric=metric,
+                                              n_iter_search=2,
+                                              cv=2, params_dict=params_dict_rf,
+                                              model_type="sklearn", maximize_metric=True)
 
-        best_rf, best_hyperparams, all_results = optimizer.hyperparameter_search(train_dataset=train_dataset,
-                                                                                 metric=metric,
-                                                                                 n_iter_search=2,
-                                                                                 cv=2, params_dict=params_dict_rf,
-                                                                                 model_type="sklearn")
+        best_rf, best_hyperparams, all_results = optimizer.fit(train_dataset=train_dataset)
 
         self.assertEqual(len(all_results['mean_test_score']), 2)
         self.assertEqual(all_results['params'][np.argmax(all_results['mean_test_score'])], best_hyperparams)
 
-        best_rf, best_hyperparams, all_results = optimizer.hyperparameter_search(train_dataset=train_dataset,
-                                                                                 metric=Metric(roc_auc_score),
-                                                                                 n_iter_search=2,
-                                                                                 cv=2, params_dict=params_dict_rf,
-                                                                                 model_type="sklearn")
+        best_rf, best_hyperparams, all_results = optimizer.fit(train_dataset=train_dataset)
 
         self.assertEqual(len(all_results['mean_test_score']), 2)
         self.assertEqual(all_results['params'][np.argmax(all_results['mean_test_score'])], best_hyperparams)
 
         with self.assertRaises(AttributeError):
-            optimizer.hyperparameter_search(train_dataset=train_dataset,
-                                            metric="not_a_metric",
-                                            n_iter_search=2,
-                                            cv=2, params_dict=params_dict_rf,
-                                            model_type="sklearn")
+            optimizer = HyperparameterOptimizerCV(rf_model_builder,
+                                                  metric="not_a_metric",
+                                                  n_iter_search=2,
+                                                  cv=2, params_dict=params_dict_rf,
+                                                  model_type="sklearn", maximize_metric=True)
+            optimizer.fit(train_dataset=train_dataset)
 
     def test_validate_metrics(self):
         metric = validate_metrics(roc_auc_score)
@@ -103,16 +100,17 @@ class TestSklearnHyperparameterOptimization(ModelsTestCase, TestCase):
                           "class_weight": [{0: 1., 1: 1.}, {0: 1., 1: 5}, {0: 1., 1: 10}]
                           }
 
-        optimizer = HyperparameterOptimizerValidation(rf_model_builder)
+        optimizer = HyperparameterOptimizerValidation(rf_model_builder,
+                                                      metric=Metric(roc_auc_score),
+                                                      maximize_metric=True,
+                                                      n_iter_search=2,
+                                                      params_dict=params_dict_rf,
+                                                      model_type="sklearn")
 
         metrics = [Metric(roc_auc_score)]
 
-        best_rf, best_hyperparams, all_results = optimizer.hyperparameter_search(train_dataset=train_dataset,
-                                                                                 valid_dataset=test_dataset,
-                                                                                 metric=Metric(roc_auc_score),
-                                                                                 maximize_metric=True,
-                                                                                 n_iter_search=2,
-                                                                                 params_dict=params_dict_rf)
+        best_rf, best_hyperparams, all_results = optimizer.fit(train_dataset=train_dataset,
+                                                               valid_dataset=test_dataset)
 
         best_model_name = _convert_hyperparam_dict_to_filename(best_hyperparams)
 

@@ -4,13 +4,15 @@ from typing import Tuple
 import numpy as np
 from rdkit.Chem import Mol
 
+from deepmol.base import Transformer
 from deepmol.datasets import Dataset
 from deepmol.loggers.logger import Logger
 from deepmol.parallelism.multiprocessing import JoblibMultiprocessing
+from deepmol.utils.decorators import modify_object_inplace_decorator
 from deepmol.utils.utils import canonicalize_mol_object, mol_to_smiles
 
 
-class MolecularStandardizer(ABC):
+class MolecularStandardizer(ABC, Transformer):
     """
     Class for handling the standardization of molecules.
     """
@@ -24,6 +26,7 @@ class MolecularStandardizer(ABC):
         n_jobs: int
             Number of jobs to run in parallel.
         """
+        super().__init__()
         self.n_jobs = n_jobs
         self.logger = Logger()
         self.logger.info(f"Standardizer {self.__class__.__name__} initialized with {n_jobs} jobs.")
@@ -53,6 +56,7 @@ class MolecularStandardizer(ABC):
         except Exception:
             return mol, mol_to_smiles(mol, canonical=True)
 
+    @modify_object_inplace_decorator
     def standardize(self, dataset: Dataset) -> Dataset:
         """
         Standardizes a dataset of molecules.
@@ -89,3 +93,35 @@ class MolecularStandardizer(ABC):
         mol: Mol
             Standardized mol.
         """
+
+    def _transform(self, dataset: Dataset) -> Dataset:
+        """
+        Standardizes a dataset of molecules. This method is called by the `transform` method.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to standardize.
+
+        Returns
+        -------
+        dataset: Dataset
+            Standardized dataset.
+        """
+        return self.standardize(dataset)
+
+    def _fit(self, dataset: Dataset) -> 'MolecularStandardizer':
+        """
+        Fits the standardizer to a dataset of molecules.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset of molecules.
+
+        Returns
+        -------
+        self: CustomStandardizer
+            The fitted standardizer.
+        """
+        return self

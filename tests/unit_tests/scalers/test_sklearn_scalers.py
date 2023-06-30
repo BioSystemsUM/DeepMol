@@ -17,19 +17,19 @@ class SklearnScalersTestCase(ScalersTestCase, TestCase):
         for scaler in self.get_scalers():
             df = copy.deepcopy(self.dataset)
             df2 = copy.deepcopy(self.dataset)
-            scaler.fit_transform(df)
+            scaler.scale(df, inplace=True)
             # assert data has changed
             self.assertFalse((self.dataset.X == df.X).all())
 
             scaler.save("test_scaler.pkl")
             scaler.load("test_scaler.pkl")
 
-            scaler.fit_transform(df2)
+            scaler.scale(df2, inplace=True)
             self.assertTrue((df.X == df2.X).all())
 
     @skip("Not implemented. This scaler changes the number of features!")
     def test_polynomial_features(self):
         df = copy.deepcopy(self.polynomial_features)
         scaler = PolynomialFeatures(degree=2)
-        scaler.fit_transform(df)
+        scaler.scale(df, inplace=True)
         self.assertFalse((self.polynomial_features.X == df.X).all())

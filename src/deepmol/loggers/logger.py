@@ -88,15 +88,17 @@ class Logger(metaclass=SingletonMeta):
         """
         Creates the handlers for the logger.
         """
-        self.logger = logging.getLogger(self.file_path)
 
-        self.console_handler = logging.StreamHandler(sys.stdout)
-        self.console_handler.setFormatter(self.formatter)
-        self.file_handler = TimedRotatingFileHandler(self.file_path, when='midnight')
-        self.file_handler.setFormatter(self.formatter)
-        self.logger.addHandler(self.file_handler)
-        self.logger.addHandler(self.console_handler)
-        self.logger.setLevel(self.level)
+        if not self.logger:
+            self.logger = logging.getLogger(self.file_path)
+            self.console_handler = logging.StreamHandler(sys.stdout)
+            self.console_handler.setFormatter(self.formatter)
+            self.file_handler = TimedRotatingFileHandler(self.file_path, when='midnight')
+            self.file_handler.setFormatter(self.formatter)
+            if not self.logger.hasHandlers():
+                self.logger.addHandler(self.file_handler)
+                self.logger.addHandler(self.console_handler)
+            self.logger.setLevel(self.level)
 
     def set_file_path(self, file_path: str):
         """
@@ -213,8 +215,10 @@ class Logger(metaclass=SingletonMeta):
         """
         d = self.__dict__.copy()
         d['logger'] = d['logger'].name
-        d['console_handler'] = d['console_handler'].name
-        d['file_handler'] = d['file_handler'].name
+        if 'console_handler' in d:
+            d['console_handler'] = 'console_handler'
+        if 'file_handler' in d:
+            d['file_handler'] = 'file_handler'
 
         return d
 
@@ -228,4 +232,6 @@ class Logger(metaclass=SingletonMeta):
             The dictionary to set the state of the logger.
 
         """
+
+        d['logger'] = logging.getLogger(d['file_path'])
         self.__dict__.update(d)

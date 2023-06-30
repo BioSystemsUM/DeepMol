@@ -1,7 +1,13 @@
+from pathlib import Path
+
 import pandas as pd
 import shap
+from matplotlib import pyplot as plt
+from shap import Explanation
 
 from deepmol.datasets import Dataset
+from deepmol.feature_importance._utils import str_to_explainer, str_to_masker, get_model_instance_from_explainer
+from deepmol.loggers import Logger
 from deepmol.models.models import Model
 
 
@@ -11,111 +17,141 @@ class ShapValues:
     It allows to compute and analyze the SHAP values of DeepMol models.
     """
 
-    def __init__(self, dataset: Dataset, model: Model):
+    def __init__(self, explainer: str = 'permutation', masker: str = None) -> None:
         """
         Initialize the ShapValues object
 
         Parameters
         ----------
-        dataset: Dataset
-            Dataset object
-        model: Model
-            Model object
+        explainer: str
+            The explainer to use. It can be one of the following:
+            - 'explainer': Explainer
+            (https://shap.readthedocs.io/en/latest/generated/shap.Explainer.html#shap.Explainer)
+            - 'permutation': Permutation explainer
+            (https://shap.readthedocs.io/en/latest/generated/shap.explainers.Permutation.html#shap.explainers.Permutation)
+            - 'exact': Exact explainer
+            (https://shap.readthedocs.io/en/latest/example_notebooks/api_examples/explainers/Exact.html?highlight=exact#Exact-explainer)
+            - 'additive': Additive explainer
+            (https://shap.readthedocs.io/en/latest/generated/shap.explainers.Additive.html)
+            - 'tree': Tree explainer
+            (https://shap.readthedocs.io/en/latest/generated/shap.explainers.Tree.html)
+            - 'gpu_tree': GPU Tree explainer
+            (https://shap.readthedocs.io/en/latest/generated/shap.explainers.GPUTree.html)
+            - 'partition': Partition explainer
+            (https://shap.readthedocs.io/en/latest/generated/shap.explainers.Partition.html)
+            - 'linear': Linear explainer
+            (https://shap.readthedocs.io/en/latest/generated/shap.explainers.Linear.html)
+            - 'sampling': Sampling explainer
+            (https://shap.readthedocs.io/en/latest/generated/shap.explainers.Sampling.html)
+            - 'deep': Deep explainer
+            (https://github.com/slundberg/shap/blob/master/shap/explainers/_deep/deep_tf.py) and
+            (https://github.com/slundberg/shap/blob/master/shap/explainers/_deep/deep_pytorch.py)
+            - 'kernel': Kernel explainer
+            (https://github.com/slundberg/shap/blob/master/shap/explainers/_kernel.py)
+            - 'random': Random explainer
+            (https://shap.readthedocs.io/en/latest/generated/shap.explainers.other.Random.html)
+
+        masker: str
+            The masker to use. It can be one of the following:
+            - 'independent': Independent masker
+            (https://shap.readthedocs.io/en/latest/generated/shap.maskers.Independent.html)
+            - 'partition': Partition masker
+            (https://shap.readthedocs.io/en/latest/generated/shap.maskers.Partition.html)
         """
-        self.dataset = dataset
-        self.model = model
+        self.explainer = str_to_explainer(explainer)
+        self.explainer_str = explainer
+        self.masker = str_to_masker(masker) if masker is not None else None
         self.shap_values = None
+        self.mode = None
+        self.logger = Logger()
 
-    # TODO: masker not working
-    def computePermutationShap(self, masker: bool = False, plot: bool = True, max_evals: int = 500, **kwargs):
+    def fit(self, dataset: Dataset, model: Model, **kwargs) -> Explanation:
         """
-        Compute the SHAP values using the Permutation explainer.
+        Compute the SHAP values for the given dataset and model.
 
         Parameters
         ----------
-        masker: bool
-            If True, use a Partition masker to explain the model predictions on the given dataset
-        plot: bool
-            If True, plot the SHAP values
-        max_evals: int
-            Maximum number of iterations
+        dataset: Dataset
+            The dataset to compute the SHAP values for.
+        model: Model
+            The model to compute the SHAP values for.
         kwargs: dict
-            Additional arguments for the plot function
+            Additional arguments for the SHAP explainer.
+
+        Returns
+        -------
+        shap_values: np.array
+            The SHAP values.
         """
-        columns_names = self.dataset.feature_names
-        X = pd.DataFrame(self.dataset.X, columns=columns_names, dtype=float)
-
-        model = self.model.model
-
-        if masker:
-            y = self.dataset.y
-
-            # build a clustering of the features based on shared information about y
-            clustering = shap.utils.hclust(X, y)
-
-            # above we implicitly used shap.maskers.Independent by passing a raw dataframe as the masker
-            # now we explicitly use a Partition masker that uses the clustering we just computed
-            masker = shap.maskers.Partition(X, clustering=clustering)
-
-            # build a Permutation explainer and explain the model predictions on the given dataset
-            explainer = shap.explainers.Permutation(model.predict_proba, masker)
-
+        self.mode = dataset.mode
+        if self.explainer_str == 'deep':
+            data = dataset.X
+            if self.masker is not None:
+                # TODO: check this
+                raise ValueError('DeepExplainer does not support maskers.')
         else:
-            explainer = shap.explainers.Permutation(model.predict, X)
-
-        self.shap_values = explainer(X, max_evals=max_evals)
-        if plot:
-            # visualize all the training set predictions
-            if masker:
-                shap.plots.bar(self.shap_values, **kwargs)
+            data = pd.DataFrame(dataset.X, columns=dataset.feature_names, dtype=float)
+        model_instance = get_model_instance_from_explainer(self.explainer_str, model)
+        if self.masker is not None:
+            masker = self.masker(data)
+            if self.explainer_str in ['sampling', 'kernel']:
+                explainer = self.explainer(model_instance, data=data, masker=masker, **kwargs)
             else:
-                shap.plots.beeswarm(self.shap_values, **kwargs)
+                explainer = self.explainer(model_instance, masker=masker, **kwargs)
+        else:
+            explainer = self.explainer(model_instance, data, **kwargs)
+        try:
+            shap_values = explainer(data)
+        except Exception as e:
+            self.logger.error(f'Error while computing SHAP values: {e}. Using shap_values method instead.')
+            shap_values = explainer.shap_values(data)
+        self.shap_values = shap_values
+        return shap_values
 
-    # TODO: masker not working
-    # TODO: too much iterations needed (remove?)
-    def computeExactShap(self, masker: bool = False, plot: bool = True, **kwargs):
+    def beeswarm_plot(self, path: str = None, **kwargs) -> None:
         """
-        Compute the SHAP values using the Exact explainer.
+        Plot the SHAP values of all the features as a beeswarm plot.
 
         Parameters
         ----------
-        masker: bool
-            If True, use a Partition masker to explain the model predictions on the given dataset
-        plot: bool
-            If True, plot the SHAP values
-        kwargs: dict
-            Additional arguments for the plot function
+        path: str
+            Path to save the plot to.
+        kwargs:
+            Additional keyword arguments for the plot function:
+            see:
+            https://github.com/slundberg/shap/blob/45b85c1837283fdaeed7440ec6365a886af4a333/shap/plots/_beeswarm.py#L23
         """
-        columns_names = self.dataset.feature_names
-        X = pd.DataFrame(self.dataset.X, columns=columns_names)
-
-        model = self.model.model
-
-        if masker:
-            y = self.dataset.y
-
-            # build a clustering of the features based on shared information about y
-            clustering = shap.utils.hclust(X, y)
-
-            # above we implicitly used shap.maskers.Independent by passing a raw dataframe as the masker
-            # now we explicitly use a Partition masker that uses the clustering we just computed
-            masker = shap.maskers.Partition(X, clustering=clustering)
-
-            # build an Exact explainer and explain the model predictions on the given dataset
-            explainer = shap.explainers.Exact(model.predict_proba, masker)
+        if path:
+            plt.figure()
+            shap.plots.beeswarm(self.shap_values, show=False, **kwargs)
+            plt.gcf().set_size_inches(10, 6)
+            plt.tight_layout()
+            plt.savefig(path)
         else:
-            explainer = shap.explainers.Exact(model.predict_proba, X)
+            shap.plots.beeswarm(self.shap_values, **kwargs)
 
-        self.shap_values = explainer(X)
-        if plot:
-            # visualize all the training set predictions
-            if masker:
-                shap.plots.bar(self.shap_values, **kwargs)
-            else:
-                shap.plots.beeswarm(self.shap_values, **kwargs)
+    def bar_plot(self, path: str = None, **kwargs) -> None:
+        """
+        Plot the SHAP values of all the features as a beeswarm plot.
 
-    # TODO: check why force is not working (maybe java plugin is missing?)
-    def plotSampleExplanation(self, index: int = 0, plot_type: str = 'waterfall', **kwargs):
+        Parameters
+        ----------
+        path: str
+            Path to save the plot to.
+        kwargs:
+            Additional keyword arguments for the plot function:
+            see: https://github.com/slundberg/shap/blob/45b85c1837283fdaeed7440ec6365a886af4a333/shap/plots/_bar.py#L19
+        """
+        if path:
+            plt.figure()
+            shap.plots.bar(self.shap_values, show=False, **kwargs)
+            plt.gcf().set_size_inches(10, 6)
+            plt.tight_layout()
+            plt.savefig(path)
+        else:
+            shap.plots.bar(self.shap_values, **kwargs)
+
+    def sample_explanation_plot(self, index: int, plot_type: str = 'waterfall', path: str = None, **kwargs) -> None:
         """
         Plot the SHAP values of a single sample.
 
@@ -125,24 +161,36 @@ class ShapValues:
             Index of the sample to explain
         plot_type: str
             Type of plot to use. Can be 'waterfall' or 'force'
+        path: str
+            Path to save the plot to.
         kwargs:
             Additional arguments for the plot function.
+            see:https://github.com/slundberg/shap/blob/45b85c1837283fdaeed7440ec6365a886af4a333/shap/plots/_force.py#L33
+            https://github.com/slundberg/shap/blob/45b85c1837283fdaeed7440ec6365a886af4a333/shap/plots/_waterfall.py#L18
         """
-        if self.shap_values is None:
-            print('Shap values not computed yet! Computing shap values...')
-            self.computeShap(plot=False)
-
         if plot_type == 'waterfall':
             # visualize the nth prediction's explanation
-            shap.plots.waterfall(self.shap_values[index], **kwargs)
+            if path:
+                plt.figure()
+                shap.plots.waterfall(self.shap_values[index], show=False, **kwargs)
+                plt.gcf().set_size_inches(10, 6)
+                plt.tight_layout()
+                plt.savefig(path)
+            else:
+                shap.plots.waterfall(self.shap_values[index], **kwargs)
         elif plot_type == 'force':
             shap.initjs()
-            # visualize the first prediction's explanation with a force plot
-            shap.plots.force(self.shap_values[index], **kwargs)
+            if path:
+                new_file_path = str(Path(path).with_suffix('.html'))
+                plot = shap.plots.force(self.shap_values[index], show=False, **kwargs)
+                shap.save_html(new_file_path, plot)
+            else:
+                shap.plots.force(self.shap_values[index], **kwargs)
+            shap.initjs()
         else:
             raise ValueError('Plot type must be waterfall or force!')
 
-    def plotFeatureExplanation(self, index: int = None, **kwargs):
+    def feature_explanation_plot(self, index: int, path: str = None, **kwargs) -> None:
         """
         Plot the SHAP values of a single feature.
 
@@ -150,38 +198,116 @@ class ShapValues:
         ----------
         index: int
             Index of the feature to explain
+        path: str
+            Path to save the plot to.
         kwargs:
             Additional arguments for the plot function.
+            see:
+            https://github.com/slundberg/shap/blob/45b85c1837283fdaeed7440ec6365a886af4a333/shap/plots/_scatter.py#L19
         """
-        if index is None:
-            # summarize the effects of all the features
-            shap.plots.beeswarm(self.shap_values, **kwargs)
+        # create a dependence scatter plot to show the effect of a single feature across the whole dataset
+        if path:
+            plt.figure()
+            shap.plots.scatter(self.shap_values[:, index], color=self.shap_values[:, index], show=False, **kwargs)
+            plt.gcf().set_size_inches(10, 6)
+            plt.tight_layout()
+            plt.savefig(path)
         else:
-            # create a dependence scatter plot to show the effect of a single feature across the whole dataset
             shap.plots.scatter(self.shap_values[:, index], color=self.shap_values[:, index], **kwargs)
 
-    def plotHeatMap(self, **kwargs):
+    def heatmap_plot(self, path: str = None, **kwargs) -> None:
         """
         Plot the SHAP values of all the features as a heatmap.
 
         Parameters
         ----------
+        path: str
+            Path to save the plot to.
         kwargs:
             Additional arguments for the plot function.
+            see:
+            https://github.com/slundberg/shap/blob/45b85c1837283fdaeed7440ec6365a886af4a333/shap/plots/_heatmap.py#L12
         """
-        if self.shap_values is not None:
-            shap.plots.heatmap(self.shap_values, **kwargs)
+        if path:
+            plt.figure()
+            shap.plots.heatmap(self.shap_values, show=False, **kwargs)
+            plt.gcf().set_size_inches(10, 6)
+            plt.tight_layout()
+            plt.savefig(path)
         else:
-            raise ValueError('Shap values not computed yet!')
+            shap.plots.heatmap(self.shap_values, **kwargs)
 
-    # TODO: check this again
-    '''
-    def plotPositiveClass(self):
-        shap_values2 = self.shap_values[...,1]
-        print(shap_values2)
-        shap.plots.bar(shap_values2)
+    def positive_class_plot(self, path: str = None, **kwargs) -> None:
+        """
+        Plot the SHAP values of the positive class as a bar plot.
 
-    def plotNegativeClass(self):
-        shap_values2 = self.shap_values[...,0]
-        shap.plots.bar(shap_values2)
-    '''
+        Parameters
+        ----------
+        path: str
+            Path to save the plot to.
+        kwargs:
+            Additional arguments for the plot function.
+            see: https://github.com/slundberg/shap/blob/45b85c1837283fdaeed7440ec6365a886af4a333/shap/plots/_bar.py#L19
+        """
+        if self.mode != 'classification':
+            raise ValueError('This method is only available for binary classification models.')
+        shap_values2 = self.shap_values[..., 1]
+        if path:
+            plt.figure()
+            shap.plots.bar(shap_values2, show=False, **kwargs)
+            plt.gcf().set_size_inches(10, 6)
+            plt.tight_layout()
+            plt.savefig(path)
+        else:
+            shap.plots.bar(shap_values2, **kwargs)
+
+    def negative_class_plot(self, path: str = None, **kwargs) -> None:
+        """
+        Plot the SHAP values of the positive class as a bar plot.
+
+        Parameters
+        ----------
+        path: str
+            Path to save the plot to.
+        kwargs:
+            Additional arguments for the plot function.
+            see: https://github.com/slundberg/shap/blob/45b85c1837283fdaeed7440ec6365a886af4a333/shap/plots/_bar.py#L19
+        """
+        if self.mode != 'classification':
+            raise ValueError('This method is only available for binary classification models.')
+        shap_values2 = self.shap_values[..., 0]
+        if path:
+            plt.figure()
+            shap.plots.bar(shap_values2, show=False, **kwargs)
+            plt.gcf().set_size_inches(10, 6)
+            plt.tight_layout()
+            plt.savefig(path)
+        else:
+            shap.plots.bar(shap_values2, **kwargs)
+
+    def decision_plot(self, path: str = None, **kwargs) -> None:
+        """
+        Plot the SHAP values of all the features as a decision plot.
+
+        Parameters
+        ----------
+        path: str
+            Path to save the plot to.
+        kwargs:
+            Additional arguments for the plot function.
+            see:
+            https://github.com/slundberg/shap/blob/45b85c1837283fdaeed7440ec6365a886af4a333/shap/plots/_decision.py#L222
+        """
+        # check if the explainer has an expected value
+        if not hasattr(self.explainer, 'expected_value'):
+            raise ValueError('The explainer does not support an expected value.')
+        expected_value = self.explainer.expected_value
+        if path:
+            plt.figure()
+            shap.plots.decision(self.shap_values, show=False, **kwargs)
+            plt.gcf().set_size_inches(10, 6)
+            plt.tight_layout()
+            plt.savefig(path)
+        else:
+            shap.plots.decision(expected_value, self.shap_values, **kwargs)
+

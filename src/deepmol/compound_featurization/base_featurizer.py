@@ -4,15 +4,16 @@ from typing import Tuple
 import numpy as np
 from rdkit.Chem import Mol, MolToSmiles
 
+from deepmol.base import Transformer
 from deepmol.datasets import Dataset
 from deepmol.loggers.logger import Logger
 from deepmol.parallelism.multiprocessing import JoblibMultiprocessing
-from deepmol.scalers import BaseScaler
+from deepmol.utils.decorators import modify_object_inplace_decorator
 from deepmol.utils.errors import PreConditionViolationException
 from deepmol.utils.utils import canonicalize_mol_object
 
 
-class MolecularFeaturizer(ABC):
+class MolecularFeaturizer(ABC, Transformer):
     """
     Abstract class for calculating a set of features for a molecule.
     A `MolecularFeaturizer` uses SMILES strings or RDKit molecule objects to represent molecules.
@@ -29,6 +30,7 @@ class MolecularFeaturizer(ABC):
         n_jobs: int
             The number of jobs to run in parallel in the featurization.
         """
+        super().__init__()
         self.n_jobs = n_jobs
         self.feature_names = None
         self.logger = Logger()
@@ -62,16 +64,14 @@ class MolecularFeaturizer(ABC):
                 smiles = MolToSmiles(mol)
             else:
                 smiles = None
-            self.logger = Logger()
             self.logger.error(f"Failed to featurize {smiles}. Appending empty array")
             self.logger.error("Exception message: {}".format(e))
             remove_mol = True
             return np.array([]), remove_mol
 
+    @modify_object_inplace_decorator
     def featurize(self,
                   dataset: Dataset,
-                  scaler: BaseScaler = None,
-                  path_to_save_scaler: str = None,
                   remove_nans_axis: int = 0
                   ) -> Dataset:
 
@@ -82,10 +82,6 @@ class MolecularFeaturizer(ABC):
         ----------
         dataset: Dataset
             The dataset containing the molecules to featurize in dataset.mols.
-        scaler: BaseScaler
-            The scaler to use for scaling the generated features.
-        path_to_save_scaler: str
-            The path to save the scaler to.
         remove_nans_axis: int
             The axis to remove NaNs from. If None, no NaNs are removed.
 
@@ -102,7 +98,7 @@ class MolecularFeaturizer(ABC):
         features, remove_mols = zip(*features)
 
         remove_mols_list = np.array(remove_mols)
-        dataset.remove_elements(dataset.ids[remove_mols_list])
+        dataset.remove_elements(dataset.ids[remove_mols_list], inplace=True)
 
         features = np.array(features)
         features = features[~remove_mols_list]
@@ -112,21 +108,48 @@ class MolecularFeaturizer(ABC):
             pass
         else:
             features = np.vstack(features)
+
+        dataset.clear_cached_properties()
         dataset._X = features
         dataset.feature_names = self.feature_names
 
-        dataset.remove_nan(remove_nans_axis)
-
-        if scaler and path_to_save_scaler:
-            # transform data
-            scaler.fit_transform(dataset)
-            scaler.save(path_to_save_scaler)
-
-        elif scaler:
-            scaler.transform(dataset)
-
+        dataset.remove_nan(remove_nans_axis, inplace=True)
         return dataset
 
     @abstractmethod
     def _featurize(self, mol: Mol):
         raise NotImplementedError
+
+    def _transform(self, dataset: Dataset) -> Dataset:
+        """
+        Calculate features for molecules. This method is called by the transform method of the Transformer class.
+        To be used by pipeline.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The dataset containing the molecules to featurize in dataset.mols.
+
+        Returns
+        -------
+        dataset: Dataset
+            The input Dataset containing a featurized representation of the molecules in Dataset.X.
+        """
+        return self.featurize(dataset)
+
+    def _fit(self, dataset: Dataset) -> 'MolecularFeaturizer':
+        """
+        Fit the featurizer. This method is called by the fit method of the Transformer class.
+        To be used by pipeline.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The dataset containing the molecules to featurize in dataset.mols.
+
+        Returns
+        -------
+        self: MolecularFeaturizer
+            The fitted featurizer.
+        """
+        return self

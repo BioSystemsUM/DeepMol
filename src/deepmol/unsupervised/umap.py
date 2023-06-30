@@ -1,7 +1,9 @@
+from typing import Tuple
+
 import numpy as np
 import umap
 
-from deepmol.datasets import Dataset, SmilesDataset
+from deepmol.datasets import Dataset
 from deepmol.unsupervised.base_unsupervised import UnsupervisedLearn
 import plotly.express as px
 
@@ -45,7 +47,7 @@ class UMAP(UnsupervisedLearn):
         else:
             self.umap = umap.UMAP(**kwargs)
 
-    def _run_unsupervised(self, dataset: Dataset, **kwargs) -> SmilesDataset:
+    def _run_unsupervised(self, dataset: Dataset, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
         """
         Compute cluster centers and predict cluster index for each sample.
 
@@ -58,20 +60,15 @@ class UMAP(UnsupervisedLearn):
 
         Returns
         -------
-        SmilesDataset
-            The dataset with the new features.
+        x_new : np.ndarray
+            The new features.
+        feature_names : np.ndarray
+            The names of the new features.
         """
         self.dataset = dataset
         x_new = self.umap.fit_transform(dataset.X)
-        feature_names = [f'UMAP_{i}' for i in range(x_new.shape[1])]
-        return SmilesDataset(smiles=dataset.smiles,
-                             mols=dataset.mols,
-                             X=x_new,
-                             y=dataset.y,
-                             ids=dataset.ids,
-                             feature_names=feature_names,
-                             label_names=dataset.label_names,
-                             mode=dataset.mode)
+        feature_names = np.array([f'UMAP_{i}' for i in range(x_new.shape[1])])
+        return x_new, feature_names
 
     def plot(self, x_new: np.ndarray, path: str = None, **kwargs) -> None:
         """
@@ -95,10 +92,10 @@ class UMAP(UnsupervisedLearn):
 
         if x_new.shape[1] == 2:
             fig = px.scatter(x_new, x=0, y=1, color=y,
-                             labels={'0': 'PC 1', '1': 'PC 2', 'color': self.dataset.label_names[0]}, **kwargs)
+                             labels={'0': 'UMAP 1', '1': 'UMAP 2', 'color': self.dataset.label_names[0]}, **kwargs)
         elif x_new.shape[1] == 3:
             fig = px.scatter_3d(x_new, x=0, y=1, z=2, color=y,
-                                labels={'0': 'PC 1', '1': 'PC 2', '2': 'PC 3', 'color': self.dataset.label_names[0]})
+                                labels={'0': 'UMAP 1', '1': 'UMAP 2', '2': 'UMAP 3', 'color': self.dataset.label_names[0]})
         else:
             labels = {str(i): f"UMAP {i + 1}" for i in range(x_new.shape[1])}
             labels['color'] = self.dataset.label_names[0]
@@ -111,3 +108,38 @@ class UMAP(UnsupervisedLearn):
         fig.show()
         if path is not None:
             fig.write_image(path)
+
+    def _fit(self, dataset: Dataset) -> 'UMAP':
+        """
+        Fit the model with dataset.X.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The dataset to perform unsupervised learning.
+
+        Returns
+        -------
+        self: TSNE
+            The fitted model.
+        """
+        self.umap.fit(dataset.X)
+        return self
+
+    def _transform(self, dataset: Dataset) -> Dataset:
+        """
+        Apply dimensionality reduction on dataset.X.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The dataset to perform unsupervised learning.
+
+        Returns
+        -------
+        dataset: Dataset
+            The transformed dataset.
+        """
+        dataset._X = self.umap.transform(dataset.X)
+        dataset.feature_names = np.array([f'UMAP_{i}' for i in range(dataset.X.shape[1])])
+        return dataset

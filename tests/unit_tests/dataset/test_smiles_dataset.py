@@ -7,6 +7,7 @@ import pandas as pd
 from rdkit.Chem import Mol, MolFromSmiles
 
 from deepmol.datasets import SmilesDataset
+from deepmol.models._utils import get_prediction_from_proba
 
 
 class TestSmilesDataset(TestCase):
@@ -23,6 +24,39 @@ class TestSmilesDataset(TestCase):
             shutil.rmtree(self.output_dir)
         if os.path.exists('deepmol.log'):
             os.remove('deepmol.log')
+
+    def test_infer_mode(self):
+        df3 = SmilesDataset(smiles=['C', 'CC', 'CCC'], y=[[1, 0, 1], [0, 1, 0], [1, 0, 1]])
+        assert df3.mode == ['classification', 'classification', 'classification']
+
+        df3 = SmilesDataset(smiles=['C', 'CC', 'CCC'], y=[[3, 1, 0], [2, 1, 0], [1, 0, 1]])
+        assert df3.mode == ['classification', 'classification', 'classification']
+
+        df3 = SmilesDataset(smiles=['C', 'CC', 'CCC'], y=[[3.2, 1, 0], [2, 1, 0], [1, 0, 1]])
+        assert df3.mode == ['regression', 'classification', 'classification']
+
+        df3 = SmilesDataset(smiles=['C', 'CC', 'CCC'], y=[3.2, 3.1, 3.0])
+        assert df3.mode == 'regression'
+
+        df3 = SmilesDataset(smiles=['C', 'CC', 'CCC'], y=[3., 3., 3.])
+        assert df3.mode == 'classification'
+
+    def test_utils(self):
+
+        dataset = SmilesDataset(smiles=['C', 'CC', 'CCC'], y=[[1, 0, 0], [0, 1, 0], [1, 0, 1]])
+        y_pred_proba = np.array([[0.2, 0.1, 0], [0.3, 0.7, 0], [0.99, 0.2, 1]])
+        prediction = get_prediction_from_proba(dataset, y_pred_proba)
+        assert np.array_equal(prediction, np.array([[0, 0, 0], [0, 1, 0], [1, 0, 1]]))
+
+        dataset = SmilesDataset(smiles=['C', 'CC', 'CCC'], y=[0, 1, 2])
+        y_pred_proba = np.array([[0.7, 0.1, 0.2], [0.1, 0.7, 0.2], [0.2, 0.1, 0.7]])
+        prediction = get_prediction_from_proba(dataset, y_pred_proba)
+        assert np.array_equal(prediction, np.array([0, 1, 2]))
+
+        dataset = SmilesDataset(smiles=['C', 'CC', 'CCC'], y=[[0, 1, 3.2], [1, 1, 3.2], [1, 0, 3.2]])
+        y_pred_proba = np.array([[0.7, 0.6, 3.2], [0.1, 1, 3.2], [0.2, 0.1, 3.2]])
+        prediction = get_prediction_from_proba(dataset, y_pred_proba)
+        assert np.array_equal(prediction, np.array([[1, 1, 3.2], [0, 1, 3.2], [0, 0, 3.2]]))
 
     def test_smiles_dataset_args(self):
         for i, mol in enumerate(self.smiles):
@@ -72,13 +106,13 @@ class TestSmilesDataset(TestCase):
     def test_remove_duplicates(self):
         df0 = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCC', 'CCCC', 'CCCC', 'CCCCC'])
         self.assertEqual(df0.__len__(), 7)
-        df0.remove_duplicates()
+        df0.remove_duplicates(inplace=True)
         self.assertEqual(df0.__len__(), 7)
 
         df = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCC', 'CCCC', 'CCCC', 'CCCCC'],
                            X=[1, 1, 3, 4, 5, 6, 1])
         self.assertEqual(df.__len__(), 7)
-        df.remove_duplicates()
+        df.remove_duplicates(inplace=True)
         self.assertEqual(df.__len__(), 5)
         self.assertTrue('CC' not in df.smiles)
         self.assertTrue('CCCCC' not in df.smiles)
@@ -86,7 +120,7 @@ class TestSmilesDataset(TestCase):
         df2 = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCC', 'CCCC', 'CCCC', 'CCCCC'],
                             X=[[1, 1], [1, 1], [3, 4], [4, 5], [5, 6], [6, 1], [1, 1]])
         self.assertEqual(df2.__len__(), 7)
-        df2.remove_duplicates()
+        df2.remove_duplicates(inplace=True)
         self.assertEqual(df2.__len__(), 5)
         self.assertTrue('CC' not in df2.smiles)
         self.assertTrue('CCCCC' not in df2.smiles)
@@ -100,7 +134,7 @@ class TestSmilesDataset(TestCase):
                                [[1, 0, 0], [0, 1, 1], [0, 0, 1]],
                                [[1, 0, 0], [0, 1, 0], [0, 0, 1]]])
         self.assertEqual(df3.__len__(), 7)
-        df3.remove_duplicates()
+        df3.remove_duplicates(inplace=True)
         self.assertEqual(df3.__len__(), 5)
         self.assertTrue('CC' not in df3.smiles)
         self.assertTrue('CCCCC' not in df3.smiles)
@@ -108,7 +142,7 @@ class TestSmilesDataset(TestCase):
         df2 = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCC', 'CCCC', 'CCCC', 'CCCCC'],
                             X=[[1, 1], [1, np.nan], [3, 4], [4, 5], [5, 6], [6, 1], [1, np.nan]])
         self.assertEqual(df2.__len__(), 7)
-        df2.remove_duplicates()
+        df2.remove_duplicates(inplace=True)
         self.assertEqual(df2.__len__(), 7)
 
         df2.feature_names = ['feature1', 'feature2']
@@ -119,22 +153,36 @@ class TestSmilesDataset(TestCase):
         with self.assertRaises(ValueError):
             df2.feature_names = ['feature1', 'feature1']
 
+        # inplace=False
+        df0 = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCC', 'CCCC', 'CCCC', 'CCCCC'],
+                            X=[1, 1, 3, 4, 5, 6, 1])
+        self.assertEqual(df0.__len__(), 7)
+        df0.remove_duplicates()
+        self.assertEqual(df0.__len__(), 7)
+        df00 = df0.remove_duplicates(inplace=False)
+        self.assertEqual(df00.__len__(), 5)
+        self.assertEqual(df0.__len__(), 7)
+
     def test_remove_nan_axis_0(self):
         df0 = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCC', 'CCCC', 'CCCC', 'CCCCC'])
         self.assertEqual(df0.__len__(), 7)
-        df0.remove_nan()
+        df0.remove_nan(inplace=True)
         self.assertEqual(df0.__len__(), 7)
 
         df = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCC', 'CCCC', 'CCCC', 'CCCCC'],
                            X=[1, np.nan, 3, 4, 5, 6, 1])
         self.assertEqual(df.__len__(), 7)
         df.remove_nan()
+        self.assertEqual(df.__len__(), 7)
+        dff = df.remove_nan()
+        self.assertEqual(dff.__len__(), 6)
+        df.remove_nan(inplace=True)
         self.assertEqual(df.__len__(), 6)
 
         df2 = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCC', 'CCCC', 'CCCC', 'CCCCC'],
                             X=[[1, 1], [1, np.nan], [3, 4], [4, 5], [5, 6], [6, 1], [1, np.nan]])
         self.assertEqual(df2.__len__(), 7)
-        df2.remove_nan()
+        df2.remove_nan(inplace=True)
         self.assertEqual(df2.__len__(), 5)
 
         df3 = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCC', 'CCCC', 'CCCC', 'CCCCC'],
@@ -146,25 +194,29 @@ class TestSmilesDataset(TestCase):
                                [[1, 0, 0], [0, 1, 1], [0, 0, 1]],
                                [[1, 0, 0], [0, 1, 0], [0, 0, np.nan]]])
         self.assertEqual(df3.__len__(), 7)
-        df3.remove_nan()
+        df3.remove_nan(inplace=True)
         self.assertEqual(df3.__len__(), 5)
 
     def test_remove_nan_axis_1(self):
         df0 = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCC', 'CCCC', 'CCCC', 'CCCCC'])
         self.assertEqual(df0.__len__(), 7)
-        df0.remove_nan(axis=1)
+        df0.remove_nan(axis=1, inplace=True)
         self.assertEqual(df0.__len__(), 7)
 
         df = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCC', 'CCCC', 'CCCC', 'CCCCC'],
                            X=[1, np.nan, 3, 4, 5, 6, 1])
         self.assertEqual(df.__len__(), 7)
         df.remove_nan(axis=1)
+        self.assertEqual(df.__len__(), 7)
+        dff = df.remove_nan()
+        self.assertEqual(dff.__len__(), 6)
+        df.remove_nan(inplace=True)
         self.assertEqual(df.__len__(), 6)
 
         df2 = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCC', 'CCCC', 'CCCC', 'CCCCC'],
                             X=[[1, 1], [np.nan, np.nan], [3, 4], [4, 5], [5, 6], [6, 1], [1, np.nan]])
         self.assertEqual(df2.__len__(), 7)
-        df2.remove_nan(axis=1)
+        df2.remove_nan(axis=1, inplace=True)
         self.assertEqual(df2.__len__(), 6)
         self.assertEqual(df2.X.shape, (6, 1))
         self.assertEqual(df2.feature_names, ['feature_0'])
@@ -178,7 +230,7 @@ class TestSmilesDataset(TestCase):
                                [6, np.nan],
                                [1, np.nan]])
         self.assertEqual(df3.__len__(), 7)
-        df3.remove_nan(axis=1)
+        df3.remove_nan(axis=1, inplace=True)
         self.assertEqual(df3.__len__(), 6)
         self.assertEqual(df3.X.shape, (6, 1))
         self.assertEqual(df2.feature_names, ['feature_0'])
@@ -192,7 +244,7 @@ class TestSmilesDataset(TestCase):
                                [[1, 0, 0], [0, 1, np.nan], [0, 0, 1]],
                                [[1, 0, 1], [0, 1, np.nan], [0, 0, 1]]])
         self.assertEqual(df3.__len__(), 7)
-        df3.remove_nan(axis=1)
+        df3.remove_nan(axis=1, inplace=True)
         self.assertEqual(df3.__len__(), 6)
         self.assertEqual(df3.X.shape, (6, 2, 3))
 
@@ -210,7 +262,7 @@ class TestSmilesDataset(TestCase):
                            X=[1, 2, 3, 4, 5, 6, 1],
                            feature_names=['XXX'])
         self.assertEqual(df.X.shape, (7,))
-        df.select_features_by_index([0])
+        df.select_features_by_index([0], inplace=True)
         self.assertEqual(df.feature_names, [['XXX']])
 
         df = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCC', 'CCCC', 'CCCC', 'CCCCC'],
@@ -218,6 +270,10 @@ class TestSmilesDataset(TestCase):
                            feature_names=['XXX', 'YYY'])
         self.assertEqual(df.X.shape, (7, 2))
         df.select_features_by_index([1])
+        self.assertEqual(df.X.shape, (7, 2))
+        df0 = df.select_features_by_index([1])
+        self.assertEqual(df0.X.shape, (7, 1))
+        df.select_features_by_index([1], inplace=True)
         self.assertEqual(df.X.shape, (7, 1))
         self.assertEqual(df.feature_names, ['YYY'])
 
@@ -225,7 +281,7 @@ class TestSmilesDataset(TestCase):
                            X=[[1, 1, 1], [1, 2, 3], [3, 4, 4], [4, 5, 6]],
                            feature_names=['XXX', 'YYY', 'ZZZ'])
         self.assertEqual(df.X.shape, (4, 3))
-        df.select_features_by_index([0, 2])
+        df.select_features_by_index([0, 2], inplace=True)
         self.assertEqual(df.X.shape, (4, 2))
         self.assertEqual(df.feature_names, ['XXX', 'ZZZ'])
 
@@ -234,7 +290,7 @@ class TestSmilesDataset(TestCase):
                            X=[1, 2, 3, 4, 5, 6, 1],
                            feature_names=['XXX'])
         self.assertEqual(df.X.shape, (7,))
-        df.select_features_by_name(['XXX'])
+        df.select_features_by_name(['XXX'], inplace=True)
         self.assertEqual(df.feature_names, [['XXX']])
 
         df = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCC', 'CCCC', 'CCCC', 'CCCCC'],
@@ -242,6 +298,10 @@ class TestSmilesDataset(TestCase):
                            feature_names=['XXX', 'YYY'])
         self.assertEqual(df.X.shape, (7, 2))
         df.select_features_by_name(['YYY'])
+        self.assertEqual(df.X.shape, (7, 2))
+        df0 = df.select_features_by_name(['YYY'])
+        self.assertEqual(df0.X.shape, (7, 1))
+        df.select_features_by_name(['YYY'], inplace=True)
         self.assertEqual(df.X.shape, (7, 1))
         self.assertEqual(df.feature_names, ['YYY'])
 
@@ -249,7 +309,7 @@ class TestSmilesDataset(TestCase):
                            X=[[1, 1, 1], [1, 2, 3], [3, 4, 4], [4, 5, 6]],
                            feature_names=['XXX', 'YYY', 'ZZZ'])
         self.assertEqual(df.X.shape, (4, 3))
-        df.select_features_by_name(['XXX', 'ZZZ'])
+        df.select_features_by_name(['XXX', 'ZZZ'], inplace=True)
         self.assertEqual(df.X.shape, (4, 2))
         self.assertEqual(df.feature_names, ['XXX', 'ZZZ'])
 
@@ -358,6 +418,15 @@ class TestSmilesDataset(TestCase):
         d2 = SmilesDataset(smiles=['CCCCCCCCCC', 'CCCCCCCCCCCCCCC'])
         d2.load_features(os.path.join(self.output_dir, 'test.csv'))
 
+        with self.assertRaises(AttributeError):
+            self.assertEqual(d1.X.shape, d2.X.shape)
+        d3 = d2.load_features(os.path.join(self.output_dir, 'test.csv'))
+        self.assertEqual(d1.X.shape, d3.X.shape)
+        for i in range(d1.X.shape[0]):
+            for j in range(d1.X.shape[1]):
+                self.assertEqual(d1.X[i, j], d3.X[i, j])
+
+        d2.load_features(os.path.join(self.output_dir, 'test.csv'), inplace=True)
         self.assertEqual(d1.X.shape, d2.X.shape)
         for i in range(d1.X.shape[0]):
             for j in range(d1.X.shape[1]):

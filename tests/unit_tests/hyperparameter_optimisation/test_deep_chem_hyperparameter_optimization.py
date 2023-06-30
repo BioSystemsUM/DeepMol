@@ -1,3 +1,5 @@
+import os
+import pickle
 from unittest import TestCase
 from unittest.mock import MagicMock
 
@@ -11,6 +13,8 @@ from deepmol.metrics import Metric
 from deepmol.models import DeepChemModel
 from deepmol.parameter_optimization import HyperparameterOptimizerCV
 from unit_tests.models.test_models import ModelsTestCase
+
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 
 class TestDeepChemHyperparameterOptimization(ModelsTestCase, TestCase):
@@ -33,19 +37,17 @@ class TestDeepChemHyperparameterOptimization(ModelsTestCase, TestCase):
                                    mode='classification')
             return DeepChemModel(graph, model_dir=None, epochs=epochs)
 
-        model_graph = HyperparameterOptimizerCV(model_builder=graphconv_builder)
+        model_graph = HyperparameterOptimizerCV(model_builder=graphconv_builder,
+                                                metric=Metric(roc_auc_score),
+                                                n_iter_search=2,
+                                                cv=2, params_dict={'graph_conv_layers': [[64, 64],
+                                                                                         [32, 32]]},
+                                                model_type="deepchem", maximize_metric=True)
 
-        best_model, _, _ = model_graph.hyperparameter_search(train_dataset=ds_train, metric=Metric(roc_auc_score),
-                                                             n_iter_search=2,
-                                                             cv=2, params_dict={'graph_conv_layers': [[64, 64],
-                                                                                                      [32, 32]]},
-                                                             model_type="deepchem")
+        best_model, _, _ = model_graph.fit(train_dataset=ds_train)
 
         test_preds = best_model.predict(ds_test)
         self.assertEqual(len(test_preds), len(ds_test))
-        for pred in test_preds:
-            self.assertAlmostEqual(sum(pred), 1, delta=0.0001)
-
         metrics = [Metric(roc_auc_score), Metric(precision_score), Metric(accuracy_score), Metric(confusion_matrix),
                    Metric(classification_report)]
 
@@ -57,3 +59,28 @@ class TestDeepChemHyperparameterOptimization(ModelsTestCase, TestCase):
         self.assertTrue('accuracy_score' in evaluate[0].keys())
         self.assertTrue('confusion_matrix' in evaluate[0].keys())
         self.assertTrue('classification_report' in evaluate[0].keys())
+
+    def test_fit_predict_evaluate_with_validation_set(self):
+        from deepmol.compound_featurization import ConvMolFeat
+
+        self.binary_dataset.X = ConvMolFeaturizer().featurize([MolFromSmiles('CCC')] * 100)
+        from deepmol.parameter_optimization import HyperparameterOptimizerValidation
+
+        def graphconv_builder(graph_conv_layers, batch_size=256, epochs=5):
+            graph = GraphConvModel(n_tasks=1, graph_conv_layers=graph_conv_layers, batch_size=batch_size,
+                                   mode='classification')
+            return DeepChemModel(graph, epochs=epochs)
+
+        model_graph = HyperparameterOptimizerValidation(model_builder=graphconv_builder,
+                                                        metric=Metric(accuracy_score),
+                                                        maximize_metric=True,
+                                                        n_iter_search=2,
+                                                        params_dict={'graph_conv_layers': [[64, 64], [32, 32]]},
+                                                        model_type="deepchem"
+                                                        )
+
+        best_model, best_hyperparams, all_results = model_graph.fit(
+            train_dataset=self.binary_dataset,
+            valid_dataset=self.binary_dataset,
+
+        )

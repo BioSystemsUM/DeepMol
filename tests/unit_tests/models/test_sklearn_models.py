@@ -1,5 +1,8 @@
+import os
+import shutil
 from unittest import TestCase
 
+import numpy as np
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, GradientBoostingRegressor
 from sklearn.metrics import roc_auc_score, precision_score, accuracy_score, confusion_matrix, classification_report, \
     mean_squared_error, mean_absolute_error, f1_score, r2_score, explained_variance_score
@@ -7,6 +10,7 @@ from sklearn.multioutput import MultiOutputClassifier, MultiOutputRegressor
 
 from deepmol.metrics import Metric
 from deepmol.models import SklearnModel
+from deepmol.splitters import RandomSplitter
 from unit_tests.models.test_models import ModelsTestCase
 
 
@@ -20,8 +24,6 @@ class TestSklearnModel(ModelsTestCase, TestCase):
         test_preds = model.predict(self.binary_dataset_test)
         self.assertEqual(len(test_preds), len(self.binary_dataset_test))
         # evaluate the model
-        for pred in test_preds:
-            self.assertAlmostEqual(sum(pred), 1, delta=0.0001)
 
         metrics = [Metric(roc_auc_score), Metric(precision_score), Metric(accuracy_score), Metric(confusion_matrix),
                    Metric(classification_report)]
@@ -110,3 +112,71 @@ class TestSklearnModel(ModelsTestCase, TestCase):
         self.assertEqual(mean_squared_error_value, test_score[0]["mean_squared_error"])
         self.assertEqual(mean_absolute_error_value, test_score[0]["mean_absolute_error"])
         self.assertEqual(r2_score_value, test_score[0]["r2_score"])
+
+    def test_cross_validate(self):
+        rf = RandomForestClassifier()
+        model = SklearnModel(model=rf)
+        best_model, train_score_best_model, test_score_best_model, train_scores, test_scores, avg_train_score, \
+            avg_test_score = model.cross_validate(self.binary_dataset, metric=Metric(roc_auc_score), folds=3)
+        self.assertIsNotNone(best_model)
+        self.assertIsInstance(train_score_best_model, float)
+        self.assertIsInstance(test_score_best_model, float)
+        self.assertEqual(len(train_scores), 3)
+        self.assertEqual(len(test_scores), 3)
+        self.assertIsInstance(avg_train_score, float)
+        self.assertIsInstance(avg_test_score, float)
+
+        splitter = RandomSplitter()
+        best_model, train_score_best_model, test_score_best_model, train_scores, test_scores, avg_train_score, \
+            avg_test_score = model.cross_validate(self.binary_dataset,
+                                                  metric=Metric(roc_auc_score),
+                                                  splitter=splitter,
+                                                  folds=3)
+        self.assertIsNotNone(best_model)
+        self.assertIsInstance(train_score_best_model, float)
+        self.assertIsInstance(test_score_best_model, float)
+        self.assertEqual(len(train_scores), 3)
+        self.assertEqual(len(test_scores), 3)
+        self.assertIsInstance(avg_train_score, float)
+        self.assertIsInstance(avg_test_score, float)
+
+    def test_save_model(self):
+        rf = RandomForestClassifier()
+        model = SklearnModel(model=rf, mode="classification", model_dir="test_model")
+        model.fit(self.binary_dataset)
+        model.save("test_model")
+        self.assertTrue(os.path.exists("test_model"))
+        shutil.rmtree("test_model")
+
+        self.assertEqual("classification", model.mode)
+
+        with self.assertRaises(ValueError):
+            model.save("test_model.params.pkl")
+
+        with self.assertRaises(ValueError):
+            model.save("test_model.params.joblib")
+
+        rf = RandomForestClassifier()
+        model = SklearnModel(model=rf, mode="classification", model_dir="test_model")
+        model.fit(self.binary_dataset)
+        model.save()
+        self.assertTrue(os.path.exists(os.path.join("test_model", "model.pkl")))
+
+        shutil.rmtree("test_model")
+
+    def test_load_model(self):
+        rf = RandomForestClassifier()
+        model = SklearnModel(model=rf, mode="classification")
+        model.fit(self.binary_dataset)
+        model.save("test_model")
+        predictions_1 = model.predict(self.binary_dataset_test)
+
+        new_model = SklearnModel.load("test_model")
+        y_test = new_model.predict(self.binary_dataset_test)
+        self.assertEqual(len(y_test), len(self.binary_dataset_test.y))
+        self.assertIsInstance(new_model, SklearnModel)
+        self.assertEqual("classification", new_model.mode)
+
+        assert np.array_equal(predictions_1, y_test)
+
+        shutil.rmtree("test_model")

@@ -13,16 +13,16 @@ class TestUMAP(UnsupervisedBaseTestCase, TestCase):
     def validate_umap_classification(self, n_components, **kwargs):
         dataset = copy(self.dataset)
         pca = UMAP(n_components=n_components, **kwargs)
-        components_df = pca.run_unsupervised(dataset)
-        self.assertEqual(components_df.X.shape, (dataset.X.shape[0], n_components))
-        pca.plot(components_df.X, path='test_components.png')
+        components_df = pca.run(dataset)
+        self.assertEqual(components_df._X.shape, (dataset.X.shape[0], n_components))
+        pca.plot(components_df._X, path='test_components.png')
 
     def validate_umap_regression(self, n_components, **kwargs):
         dataset = copy(self.regression_dataset)
         pca = UMAP(n_components=n_components, **kwargs)
-        components_df = pca.run_unsupervised(dataset)
-        self.assertEqual(components_df.X.shape, (dataset.X.shape[0], n_components))
-        pca.plot(components_df.X, path='test_components.png')
+        components_df = pca.run(dataset)
+        self.assertEqual(components_df._X.shape, (dataset.X.shape[0], n_components))
+        pca.plot(components_df._X, path='test_components.png')
 
     @patch.object(Figure, 'show')
     def test_run_unsupervised(self, mock_show):

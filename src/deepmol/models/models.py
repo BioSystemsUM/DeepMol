@@ -1,8 +1,11 @@
 import os
 import shutil
 import tempfile
-from typing import List, Sequence, Union, Tuple, Dict
+from abc import ABC
+from typing import List, Union, Tuple, Dict
 import numpy as np
+
+from deepmol.base import Predictor
 from deepmol.datasets import Dataset
 from deepmol.evaluator.evaluator import Evaluator
 from deepmol.loggers.logger import Logger
@@ -11,7 +14,7 @@ from deepmol.metrics.metrics import Metric
 from sklearn.base import BaseEstimator
 
 
-class Model(BaseEstimator):
+class Model(BaseEstimator, Predictor, ABC):
     """
     Abstract base class for ML/DL models.
     """
@@ -34,6 +37,8 @@ class Model(BaseEstimator):
                 "This constructor is for an abstract class and should never be called directly. Can only call from "
                 "subclass constructors.")
 
+        super().__init__()
+
         self.model_dir_is_temp = False
 
         if model_dir is not None:
@@ -43,7 +48,7 @@ class Model(BaseEstimator):
             model_dir = tempfile.mkdtemp()
             self.model_dir_is_temp = True
 
-        self.model_dir = model_dir
+        self._model_dir = model_dir
         self.model = model
         self.model_class = model.__class__
 
@@ -56,31 +61,44 @@ class Model(BaseEstimator):
         if 'model_dir_is_temp' in dir(self) and self.model_dir_is_temp:
             shutil.rmtree(self.model_dir)
 
-    def fit_on_batch(self, X: Sequence, y: Sequence):
+    def fit_on_batch(self, dataset: Dataset) -> None:
         """
         Perform a single step of training.
 
         Parameters
         ----------
-        X: np.ndarray
-            the inputs for the batch
-        y: np.ndarray
-            the labels for the batch
+        dataset: Dataset
+            Dataset object.
         """
 
-    def predict_on_batch(self, X: Sequence):
+    def predict_on_batch(self, dataset: Dataset) -> np.ndarray:
         """
         Makes predictions on given batch of new data.
 
         Parameters
         ----------
-        X: np.ndarray
-            array of features
-        """
+        dataset: Dataset
+            Dataset object.
 
-    def reload(self) -> None:
+        Returns
+        -------
+        np.ndarray
+            Predicted values.
+        """
+    @classmethod
+    def load(cls, folder_path: str) -> 'Model':
         """
         Reload trained model from disk.
+
+        Parameters
+        ----------
+        folder_path: str
+            Path to folder where model is stored.
+
+        Returns
+        -------
+        Model
+            Model object.
         """
 
     @staticmethod
@@ -98,7 +116,7 @@ class Model(BaseEstimator):
         str
             Path to model file.
         """
-        return os.path.join(model_dir, "model.joblib")
+        return os.path.join(model_dir, "model.pkl")
 
     @staticmethod
     def get_params_filename(model_dir: str) -> str:
@@ -117,21 +135,15 @@ class Model(BaseEstimator):
         """
         return os.path.join(model_dir, "model_params.joblib")
 
-    def save(self) -> None:
+    def save(self, file_path: str = None) -> None:
         """
         Function for saving models.
         Each subclass is responsible for overriding this method.
-        """
-        ("Each class model must implement its own save method.")
-
-    def fit(self, dataset: Dataset):
-        """
-        Fits a model on data in a Dataset object.
 
         Parameters
         ----------
-        dataset: Dataset
-            the Dataset to train on
+        file_path: str
+            Path to file where model should be saved.
         """
 
     def predict(self, dataset: Dataset) -> np.ndarray:
@@ -159,7 +171,19 @@ class Model(BaseEstimator):
         return y_pred
 
     def predict_proba(self, dataset: Dataset) -> np.ndarray:
+        """
+        Uses self to make predictions on provided Dataset object.
 
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to make prediction on
+
+        Returns
+        -------
+        np.ndarray
+            A numpy array of predictions.
+        """
         y_pred = self.model.predict_proba(dataset.X)
         return y_pred
 

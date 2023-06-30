@@ -8,6 +8,8 @@ Scikit-learn and DeepChem to build custom ML and DL models or
 make use of pre-built ones. It uses the RDKit framework to perform 
 operations on molecular data.
 
+More detailed and comprehensive documentation in [DeepMol readthedocs](https://deepmol.readthedocs.io/en/latest/).
+
 ### Table of contents:
 
 - [Requirements](#requirements)
@@ -16,6 +18,7 @@ operations on molecular data.
     - [Manually](#manually)
 - [Getting Started](#getting-started)
     - [Load dataset from csv](#load-a-dataset-from-a-csv)
+    - [Load dataset from sdf](#load-a-dataset-from-a-sdf)
     - [Compound Standardization](#compound-standardization)
     - [Compound Featurization](#compound-featurization)
     - [Feature Selection](#feature-selection)
@@ -25,6 +28,8 @@ operations on molecular data.
     - [Hyperparameter Optimization](#hyperparameter-optimization)
     - [Feature Importance (Shap Values)](#feature-importance-shap-values)
     - [Unbalanced Datasets](#unbalanced-datasets)
+    - [Pipelines](#pipeline)
+    - [Pipeline Optimization](#pipeline-optimization)
 - [About Us](#about-us)
 - [Citing DeepMol](#citing-deepmol)
   - [Related Publications](#publications-using-deepmol)
@@ -118,11 +123,6 @@ pre-release version. New models and features will be added in the future.
 
 ### Load a dataset from a CSV
 
-For now, it is only possible to load data directly from CSV files. Modules to 
-load data from different file types and sources will be implemented in the 
-future. These include JSON, SDF and FASTA files and directly from our 
-databases.
-
 To load data from a CSV it's only required to provide the math and molecules 
 field name. Optionally, it is also possible to provide a field with some ids, 
 the labels fields, features fields, features to keep (useful for instance 
@@ -149,6 +149,27 @@ dataset.get_shape()
 ((1000,), None, (1000,))
 ```
 
+### Load a dataset from a SDF
+
+If you want to load a dataset from a SDF file with 3D structures, it is only required to provide
+the path to the file. Optionally, it is also possible to provide a field with some ids,
+the labels fields.
+
+```python
+from deepmol.loaders import SDFLoader
+
+# load a dataset from a SDF (required fields: dataset_path)
+loader = SDFLoader(dataset_path='../../data/train_dataset.sdf',
+                   id_field='ids',
+                   labels_fields=['y'],
+                   shard_size=1000,
+                   mode='auto')
+dataset = loader.create_dataset()
+dataset.get_shape()
+
+((1000,), None, (1000,))
+```
+
 ### Compound Standardization
 
 It is possible to standardize the loaded molecules using three option. Using
@@ -159,6 +180,8 @@ remove isotope information, neutralize charges, remove stereochemistry and remov
 smaller fragments. Another possibility is to use the ChEMBL Standardizer.
 
 ```python
+from deepmol.standardizer import BasicStandardizer, CustomStandardizer, ChEMBLStandardizer 
+
 # Option 1: Basic Standardizer
 standardizer = BasicStandardizer().standardize(dataset)
 
@@ -188,7 +211,7 @@ Seq2Seq and transformer-based are in  development and will be added soon.
 from deepmol.compound_featurization import MorganFingerprint
 
 # Compute morgan fingerprints for molecules in the previous loaded dataset
-MorganFingerprint(radius=2, size=1024).featurize(dataset)
+MorganFingerprint(radius=2, size=1024).featurize(dataset, inplace=True)
 # view the computed features (dataset.X)
 dataset.X
 ```
@@ -212,7 +235,7 @@ importance weights.
 from deepmol.feature_selection import LowVarianceFS
 
 # Feature Selection to remove features with low variance across molecules
-LowVarianceFS(0.15).select_features(dataset)
+LowVarianceFS(0.15).select_features(dataset, inplace=True)
 
 # print shape of the dataset to see difference in the X shape (fewer features)
 dataset.get_shape()
@@ -229,7 +252,7 @@ KMeans and UMAP.
 from deepmol.unsupervised import UMAP
 
 ump = UMAP()
-umap_df = ump.run_unsupervised(dataset)
+umap_df = ump.run(dataset)
 ump.plot(umap_df.X, path='umap_output.png')
 ```
 
@@ -271,7 +294,7 @@ implemented allowing evaluation of the models under a common workspace.
 Models can be imported from scikit-learn and wrapped using the SKlearnModel
 module.
 
-Check this **[jupyter notebook](examples/notebooks/RandomForestTest.ipynb)** for a complete example!
+Check this **[jupyter notebook](examples/workshop_bod/featurization.ipynb)** for a complete example!
 
 ```python
 from sklearn.ensemble import RandomForestClassifier
@@ -288,10 +311,9 @@ from deepmol.metrics.metrics import Metric
 from deepmol.metrics.metrics_functions import roc_auc_score
 
 # cross validate model on the full dataset
-model.cross_validate(dataset, Metric(roc_auc_score), folds=3)
+best_model, train_score_best_model, test_score_best_model, \
+            train_scores, test_scores, average_train_score, average_test_score = model.cross_validate(dataset, Metric(roc_auc_score), folds=3)
 ```
-
-![cross_validation_output](docs/imgs/cross_validation_output.png)
 
 ```python
 from sklearn.metrics import precision_score, accuracy_score, confusion_matrix, classification_report
@@ -311,15 +333,23 @@ valid_score = model.evaluate(valid_dataset, metrics)
 # evaluate the model on training data
 print('Test Dataset: ')
 test_score = model.evaluate(test_dataset, metrics)
+model.save('my_model')
 ```
 
 ![evaluate_output](docs/imgs/evaluate_output.png)
+
+Loading and saving models was never so easy!
+
+```python
+model = SklearnModel.load('my_model')
+model.evaluate(test_dataset, metrics)
+```
 
 #### Keras model example
 
 Example of how to build and wrap a keras model using the KerasModel module.
 
-Check this **[jupyter notebook](examples/notebooks/test_keras.ipynb)** for a complete example!
+Check this **[jupyter notebook](examples/workshop_bod/models.ipynb)** for a complete example!
 
 ```python
 from tensorflow.keras.models import Sequential
@@ -360,14 +390,22 @@ metrics = [Metric(roc_auc_score),
 
 print('Training set score:', model.evaluate(train_dataset, metrics))
 print('Test set score:', model.evaluate(test_dataset, metrics))
+
+model.save('my_model')
 ```
 
+Loading and saving models was never so easy!
+
+```python
+model = KerasModel.load('my_model')
+model.evaluate(test_dataset, metrics)
+```
 
 #### DeepChem model example
 
 Using DeepChem models:
 
-Check this **[jupyter notebook](examples/notebooks/deepchem_test.ipynb)** for a complete example!
+Check this **[jupyter notebook](examples/workshop_bod/models.ipynb)** for a complete example!
 
 ```python
 from deepmol.compound_featurization import WeaveFeat
@@ -393,30 +431,69 @@ train_score = model_mpnn.evaluate(train_dataset, metrics)
 print('Valid Dataset: ')
 valid_score = model_mpnn.evaluate(valid_dataset, metrics)
 print('Test Dataset: ')
-test_score = model_mpnn.evaluate(test_dataset, metrics)    
+test_score = model_mpnn.evaluate(test_dataset, metrics)
+model_mpnn.save("my_model")
 ```
+Loading and saving models was never so easy!
+
+```python
+model = DeepChemModel.load('my_model')
+model.evaluate(test_dataset, metrics)
+```
+
 
 ### Hyperparameter Optimization
 
 Grid and randomized hyperparameter optimization is provided using cross-validation
-or a held-out validation set.
+or a held-out validation set. For a more detailed example check this 
+**[jupyter notebook](examples/workshop_bod/hyperparameter_optimization.ipynb)**.
 
 ```python
-from deepmol.parameter_optimization.hyperparameter_optimization import HyperparameterOptimizerValidation,
+from deepmol.parameter_optimization.hyperparameter_optimization import HyperparameterOptimizerValidation
 
-HyperparameterOptimizerCV
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.layers import Dropout
+from tensorflow import keras
+from tensorflow.keras import layers
 
-# Hyperparameter Optimization (using the above created keras model)
-optimizer = HyperparameterOptimizerValidation(create_model)
+def create_model(input_dim, optimizer='adam', dropout=0.5):
+    # create model
+    inputs = layers.Input(shape=input_dim)
 
-params_dict = {'optimizer': ['adam', 'rmsprop'],
-               'dropout': [0.2, 0.4, 0.5]}
+    # Define the shared layers
+    shared_layer_1 = layers.Dense(64, activation="relu")
+    dropout_1 = Dropout(dropout)
+    shared_layer_2 = layers.Dense(32, activation="relu")
 
-best_model, best_hyperparams, all_results = optimizer.hyperparameter_search(params_dict, train_dataset,
-                                                                            valid_dataset, Metric(roc_auc_score))
+    # Define the shared layers for the inputs
+    x = shared_layer_1(inputs)
+    x = dropout_1(x)
+    x = shared_layer_2(x)
 
-print(best_hyperparams)
-print(best_model)
+    task_output = layers.Dense(1, activation="sigmoid")(x)
+
+    # Define the model that outputs the predictions for each task
+    model = keras.Model(inputs=inputs, outputs=task_output)
+    # Compile the model with different loss functions and metrics for each task
+    model.compile(
+        optimizer=optimizer, loss="binary_crossentropy", metrics=["accuracy"]
+    )
+    return model
+
+optimizer = HyperparameterOptimizerValidation(create_model,
+                                              metric=Metric(accuracy_score),
+                                              maximize_metric=True,
+                                              n_iter_search=2,
+                                              params_dict=params_dict_dense,
+                                              model_type="keras")
+params_dict_dense = {
+                   "input_dim": [train_dataset.X.shape[1]],
+                   "dropout": [0.5, 0.6, 0.7],
+                   "optimizer": [Adam]
+                   }
+
+best_dnn, best_hyperparams, all_results = optimizer.fit(train_dataset=train_dataset,
+                                                        valid_dataset=valid_dataset)
 
 # Evaluate model
 best_model.evaluate(test_dataset, metrics)
@@ -425,27 +502,30 @@ best_model.evaluate(test_dataset, metrics)
 ### Feature Importance (Shap Values)
 
 Explain the output of a machine learning model can be done using SHAP (SHapley 
-Additive exPlanations) package. The features that most influenced (positively or
+Additive exPlanations) package. For a more detailed description you can check out this **[jupyter notebook](examples/workshop_bod/model_explainability.ipynb)**.
+The features that most influenced (positively or
 negatively) a certain prediction can be calculated and visualized in different 
 ways:
 
 ```python
 from deepmol.feature_importance import ShapValues
 
-shap_calc = ShapValues(test_dataset, model)
-shap_calc.computePermutationShap()
+# compute shap values
+shap_calc = ShapValues()
+shap_calc.fit(train_dataset, model)
+shap_calc.beeswarm_plot()
 ```
 
 ![calc_shap_output](docs/imgs/calc_shap_output.png)
 
 ```python
-shap_calc.plotSampleExplanation(index=1, plot_type='waterfall')
+shap_calc.sample_explanation_plot(index=1, plot_type='waterfall')
 ```
 
 ![sample_explanation_output](docs/imgs/sample_explanation_output.png)
 
 ```python
-shap_calc.plotFeatureExplanation(index=115)
+shap_calc.feature_explanation_plot(1)
 ```
 
 ![feature_explanation_output](docs/imgs/feature_explanation_output.png)
@@ -460,7 +540,7 @@ for instance, the substructure in the molecule that most contributed to its
 classification as an active or inactive molecule against a receptor.
 
 ```python
-from deepmol.utils.utils import draw_MACCS_Pattern
+from deepmol.compound_featurization import MACCSkeysFingerprint
 
 patt_number = 54
 mol_number = 1
@@ -471,7 +551,9 @@ print('Prediction: ', prediction)
 print('Actual Value: ', actual_value)
 smi = test_dataset.mols[mol_number]
 
-draw_MACCS_Pattern(smi, patt_number)
+maccs_keys = MACCSkeysFingerprint()
+
+maccs_keys.draw_bit(smi, patt_number)
 ```
 
 ![draw_maccs_output](docs/imgs/draw_maccs_output.png)
@@ -481,7 +563,7 @@ draw_MACCS_Pattern(smi, patt_number)
 
 Multiple methods to deal with unbalanced datasets can be used to do oversampling,
 under-sampling or a mixture of both (Random, SMOTE, SMOTEENN, SMOTETomek and 
-ClusterCentroids).
+ClusterCentroids). For a more detailed example check this **[jupyter notebook](examples/workshop_bod/imbalanced_learn.ipynb)**.
 
 ```python
 from deepmol.imbalanced_learn.imbalanced_learn import SMOTEENN
@@ -490,13 +572,143 @@ train_dataset = SMOTEENN().sample(train_dataset)
 ```
 
 
-## About Us
+### Pipeline
+
+DeepMol provides a pipeline to perform almost all the steps above in a sequence without
+having to worry about the details of each step. The pipeline can be used to perform
+a prediction pipeline (last step is a data predictor) or a data transformation pipeline
+(all steps are data transformers). Transformers must implement the _fit and _transform
+methods and predictors must implement the _fit and _predict methods.
+
+```python
+from deepmol.loaders import CSVLoader
+from tensorflow.keras import Sequential
+from tensorflow.keras.layers import Dense
+from deepmol.models import KerasModel
+from deepmol.standardizer import BasicStandardizer
+from deepmol.compound_featurization import MorganFingerprint
+from deepmol.scalers import StandardScaler
+from deepmol.feature_selection import KbestFS
+from deepmol.pipeline import Pipeline
+from deepmol.metrics import Metric
+from sklearn.metrics import accuracy_score
+
+loader_train = CSVLoader('data_train_path.csv',
+                         smiles_field='Smiles',
+                         labels_fields=['Class'])
+train_dataset = loader_train.create_dataset(sep=";")
+
+loader_test = CSVLoader('data_test_path.csv',
+                        smiles_field='Smiles',
+                        labels_fields=['Class'])
+test_dataset = loader_train.create_dataset(sep=";")
+        
+def basic_classification_model_builder(input_shape):
+  model = Sequential()
+  model.add(Dense(10, input_shape=input_shape, activation='relu'))
+  model.add(Dense(1, activation='sigmoid'))
+  model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+  return model
+
+keras_model = KerasModel(model_builder=basic_classification_model_builder, epochs=2, input_shape=(1024,))
+        
+steps = [('standardizer', BasicStandardizer()),
+         ('featurizer', MorganFingerprint(size=1024)),
+         ('scaler', StandardScaler()),
+         ('feature_selector', KbestFS(k=10)),
+         ('model', keras_model)]
+
+pipeline = Pipeline(steps=steps, path='test_pipeline/')
+
+pipeline.fit_transform(train_dataset)
+
+predictions = pipeline.predict(test_dataset)
+pipeline.evaluate(test_dataset, [Metric(accuracy_score)])
+
+# save pipeline
+pipeline.save()
+
+# load pipeline
+pipeline = Pipeline.load('test_pipeline/')
+``` 
+
+### Pipeline optimization
+```python
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.svm import SVC
+
+from deepmol.loaders import CSVLoader
+from deepmol.metrics import Metric
+from deepmol.models import SklearnModel
+from deepmol.pipeline_optimization import PipelineOptimization
+from deepmol.splitters import RandomSplitter
+
+# DEFINE THE OBJECTIVE FUNCTION
+def objective(trial):
+    model = trial.suggest_categorical('model', ['RandomForestClassifier', 'SVC'])
+    if model == 'RandomForestClassifier':
+        n_estimators = trial.suggest_int('model__n_estimators', 10, 100, step=10)
+        model = RandomForestClassifier(n_estimators=n_estimators)
+    elif model == 'SVC':
+        kernel = trial.suggest_categorical('model__kernel', ['linear', 'poly', 'rbf', 'sigmoid'])
+        model = SVC(kernel=kernel)
+    model = SklearnModel(model=model, model_dir='model')
+    steps = [('model', model)]
+    return steps
+ 
+# LOAD THE DATA   
+loader = CSVLoader('data_path...',
+                   smiles_field='mols',
+                   id_field='ids',
+                   labels_fields=['y'],
+                   features_fields=['f1', 'f2', 'f3', '...'],
+                   mode='classification')
+dataset_descriptors = loader.create_dataset(sep=",")
+   
+# OPTIMIZE THE PIPELINE 
+po = PipelineOptimization(direction='maximize', study_name='test_predictor_pipeline')
+metric = Metric(accuracy_score)
+train, test = RandomSplitter().train_test_split(dataset_descriptors, seed=123)
+po.optimize(train_dataset=train, test_dataset=test, objective_steps=objective, 
+            metric=metric, n_trials=5, save_top_n=3)
+```
+
+### About Us
 
 DeepMol is managed by a team of contributors from the BioSystems group 
 at the Centre of Biological Engineering, University of Minho.
 
 This research was financed by Portuguese Funds through FCT – Fundação para 
 a Ciência e a Tecnologia.
+
+#### Contributors
+
+João Correia - PhD student at the University of Minho (UMinho) and 
+researcher at the Centre of Biological Engineering (CEB), Braga, Portugal. João Correia is a PhD student in 
+Bioinformatics currently working with machine learning methods applied to the discovery of new chemical compounds 
+and reactions. [GitHub](https://github.com/jcorreia11), [LinkedIn](https://www.linkedin.com/in/joaocorreia95/), 
+[Research Gate](https://www.researchgate.net/profile/Joao-Correia-70)
+
+João Capela - PhD student at the University of Minho (UMinho) and 
+researcher at the Centre of Biological Engineering (CEB), Braga, Portugal. João Capela is a 
+PhD student in Bioinformatics currently working with machine learning methods to expose plant secondary metabolism.
+[GitHub](https://github.com/jcapels), [LinkedIn](https://www.linkedin.com/in/joaocapels/), 
+[ResearchGate](https://www.researchgate.net/profile/Joao-Capela-4)
+
+Vitor Pereira - Postdoctoral researcher at the University of Minho (UMinho) and Centre of Biological Engineering (CEB),
+Braga, Portugal. Vitor Pereira is a postdoctoral researcher in Bioinformatics currently working with machine learning
+to produce new chemical compounds and proteins. 
+[GitHub](https://github.com/vmspereira), [LinkedIn](https://www.linkedin.com/in/v%C3%ADtor-s%C3%A1-pereira/),
+[ResearchGate](https://www.researchgate.net/profile/Vitor-Pereira-9)
+
+Miguel Rocha - Associate Professor in Artificial Intelligence and Bioinformatics, 
+being the founder of the MSc in Bioinformatics (2007) and its current Director. 
+He is currently the CSO of OmniumAI. He has 20 years of experience in applying AI and data science 
+technologies to biological and biomedical data, both in academic (with numerous publications) 
+and in industry scenarios.
+[GitHub](https://github.com/miguelfrocha), [LinkedIn](https://www.linkedin.com/in/miguelprocha/),
+[ResearchGate](https://www.researchgate.net/profile/Miguel-Rocha-16)
 
 ## Citing DeepMol
 

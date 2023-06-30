@@ -1,44 +1,50 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 
 import joblib
-import numpy as np
 
+from deepmol.base import Transformer
 from deepmol.datasets import Dataset
+from deepmol.utils.decorators import modify_object_inplace_decorator
 
 
-class BaseScaler(ABC):
+class BaseScaler(ABC, Transformer):
     """
     Abstract class for all scalers. It is used to define the interface for all scalers.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, scaler, columns: list = None) -> None:
         """
         Constructor for the BaseScaler class.
         """
         if self.__class__ == BaseScaler:
             raise Exception('Abstract class BaseScaler should not be instantiated')
+        super().__init__()
+        self._scaler_object = scaler
+        self.columns = columns
 
     @property
-    @abstractmethod
-    def scaler_object(self) -> object:
+    def scaler_object(self):
         """
         Returns the scaler object.
 
         Returns
         -------
-        object
+        object:
             The scaler object.
         """
+        return self._scaler_object
 
     @scaler_object.setter
-    @abstractmethod
-    def scaler_object(self, value: object) -> None:
+    def scaler_object(self, value: object):
         """
         Sets the scaler object.
 
+        Parameters
+        ----------
         value: object
             The scaler object.
         """
+        self._scaler_object = value
 
     def save(self, file_path: str) -> None:
         """
@@ -47,10 +53,9 @@ class BaseScaler(ABC):
         file_path: str
             The path to the file where the scaler object will be saved.
         """
-        joblib.dump(self.scaler_object, file_path)
+        joblib.dump(self._scaler_object, file_path)
 
-    @abstractmethod
-    def load(self, file_path: str) -> object:
+    def load(self, file_path: str) -> 'BaseScaler':
         """
         Loads the scaler object from a file.
 
@@ -62,91 +67,47 @@ class BaseScaler(ABC):
         object
             The scaler object.
         """
+        self._scaler_object = joblib.load(file_path)
+        return self
 
-    def fit_transform(self, dataset: Dataset, columns: list = None) -> None:
+    @modify_object_inplace_decorator
+    def scale(self, dataset: Dataset) -> Dataset:
         """
-        Fits and transforms the dataset.
+        Scales the dataset.
 
         dataset: Dataset
-            The dataset to be fitted and transformed.
-        columns: list
-            The columns to be fitted and transformed.
+            The dataset to be scaled.
         """
-        if not columns:
-            columns = [i for i in range(dataset.X.shape[1])]
-        try:
-            res = self._fit_transform(dataset.X[:, columns])
-            # TODO: due to X being a property, the "set" method must choose so that it could behave as a numpy array
-            dataset.X[:, columns] = res
-        except Exception as e:
-            raise Exception(f"It was not possible to scale the data. Error: {e}")
+        return self.fit_transform(dataset)
 
-    @abstractmethod
-    def _fit_transform(self, X: np.ndarray) -> None:
+    def _fit(self, dataset: Dataset) -> 'BaseScaler':
         """
-        Fits and transforms the dataset.
+        Fits the scaler with the dataset.
 
-        X: np.ndarray
-            The dataset to be fitted and transformed.
-        """
-
-    def fit(self, dataset: Dataset, columns: list = None) -> None:
-        """
-        Fits the dataset.
-
+        Parameters
+        ----------
         dataset: Dataset
             The dataset to be fitted.
-        columns: list
-            The columns to be fitted.
+
+        Returns
+        -------
+        BaseScaler
+            The fitted scaler.
         """
-        if not columns:
-            columns = [i for i in range(dataset.X.shape[1])]
-        try:
-            self._fit(dataset.X[:, columns])
+        if not self.columns:
+            self.columns = [i for i in range(dataset.X.shape[1])]
+        x = dataset.X[:, self.columns]
+        self._scaler_object.fit(x)
+        return self
 
-        except:
-            raise Exception("It was not possible to scale the data")
-
-    @abstractmethod
-    def _fit(self, X: np.ndarray) -> None:
-        """
-        Fits the dataset.
-
-        X: np.ndarray
-            The dataset to be fitted.
-        """
-
-    def transform(self, dataset: Dataset, columns: list = None) -> None:
+    def _transform(self, dataset: Dataset) -> Dataset:
         """
         Transforms the dataset.
 
         dataset: Dataset
             The dataset to be transformed.
-        columns: list
-            The columns to be transformed.
         """
-        if not columns:
-            columns = [i for i in range(dataset.X.shape[1])]
-        try:
-            res = self._transform(dataset.X[:, columns])
-            dataset.X[:, columns] = res
-
-        except:
-            raise Exception("It was not possible to scale the data")
-
-    def _transform(self, X: np.ndarray) -> None:
-        """
-        Transforms the dataset.
-
-        X: np.ndarray
-            The dataset to be transformed.
-        """
-
-    # TODO: figure out the better way of wrapping this method, as it intends to fit the dataset in batches
-    def partial_fit(self, dataset: Dataset) -> None:
-        """
-        Partially fits the dataset.
-
-        dataset: Dataset
-            The dataset to be partially fitted.
-        """
+        x = dataset.X[:, self.columns]
+        res = self._scaler_object.transform(x)
+        dataset.X[:, self.columns] = res
+        return dataset

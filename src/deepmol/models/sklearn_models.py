@@ -1,17 +1,17 @@
-from typing import Sequence
+import os
 
 import numpy as np
 from sklearn.base import BaseEstimator
 
-from deepmol.models._utils import save_to_disk
+from deepmol.models._utils import save_to_disk, _get_splitter, load_from_disk
 from deepmol.models.models import Model
 from deepmol.datasets import Dataset
-from deepmol.splitters.splitters import RandomSplitter, SingletaskStratifiedSplitter
+from deepmol.splitters.splitters import Splitter
 from deepmol.metrics.metrics import Metric
 
-from deepmol.utils.utils import load_from_disk
-
 from sklearn.base import clone
+
+from deepmol.utils.utils import normalize_labels_shape
 
 
 class SklearnModel(Model):
@@ -38,11 +38,23 @@ class SklearnModel(Model):
         """
         super().__init__(model, model_dir, **kwargs)
         self.mode = mode
-        self.model_type = 'sklearn'
+        self.parameters_to_save = {'mode': self.mode}
 
-    def fit_on_batch(self, X: Sequence, y: Sequence):
+    @property
+    def model_type(self):
+        """
+        Returns the type of the model.
+        """
+        return 'sklearn'
+
+    def fit_on_batch(self, dataset: Dataset) -> None:
         """
         Fits model on batch of data.
+
+        Parameters
+        ----------
+        dataset: Dataset
+          Dataset to train on.
         """
 
     def get_task_type(self) -> str:
@@ -55,7 +67,7 @@ class SklearnModel(Model):
         Returns the number of tasks.
         """
 
-    def fit(self, dataset: Dataset) -> None:
+    def _fit(self, dataset: Dataset) -> None:
         """
         Fits scikit-learn model to data.
 
@@ -91,10 +103,32 @@ class SklearnModel(Model):
           The value is a return value of `predict_proba` or `predict` method of the scikit-learn model. If the
           scikit-learn model has both methods, the value is always a return value of `predict_proba`.
         """
-        try:
-            return self.model.predict_proba(dataset.X)
-        except AttributeError:
-            return self.model.predict(dataset.X)
+        predictions = self.model.predict(dataset.X)
+
+        if not dataset.y.shape == np.array(predictions).shape:
+            predictions = normalize_labels_shape(predictions, dataset.n_tasks)
+
+        return predictions
+
+    def predict_proba(self, dataset: Dataset) -> np.ndarray:
+        """
+        Makes predictions on dataset.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to make prediction on.
+
+        Returns
+        -------
+        np.ndarray
+        """
+        predictions = self.model.predict_proba(dataset.X)
+
+        if not dataset.y.shape == np.array(predictions).shape:
+            predictions = normalize_labels_shape(predictions, dataset.n_tasks)
+
+        return predictions
 
     def predict_on_batch(self, dataset: Dataset) -> np.ndarray:
         """
@@ -112,21 +146,60 @@ class SklearnModel(Model):
         """
         return super(SklearnModel, self).predict(dataset)
 
-    def save(self):
+    def save(self, folder_path: str = None):
         """
-        Saves scikit-learn model to disk using joblib.
-        """
-        save_to_disk(self.model, self.get_model_filename(self.model_dir))
+        Saves scikit-learn model to disk using joblib, numpy or pickle.
+        Supported extensions: .joblib, .pkl, .npy
 
-    def reload(self):
+        Parameters
+        ----------
+        folder_path: str
+            Folder path to save model to.
         """
-        Loads scikit-learn model from joblib file on disk.
+        if folder_path is None:
+            model_path = self.get_model_filename(self.model_dir)
+        else:
+            if "." in folder_path:
+                raise ValueError("folder_path should be a folder, not a file")
+            os.makedirs(folder_path, exist_ok=True)
+            model_path = self.get_model_filename(folder_path)
+
+        save_to_disk(self.model, model_path)
+
+        # change file path to keep the extension but add _params
+        parameters_file_path = model_path.split('.')[0] + '_params.' + model_path.split('.')[1]
+        save_to_disk(self.parameters_to_save, parameters_file_path)
+
+    @classmethod
+    def load(cls, folder_path: str, **kwargs) -> 'SklearnModel':
         """
-        self.model = load_from_disk(self.get_model_filename(self.model_dir))
+        Loads scikit-learn model from joblib or pickle file on disk.
+        Supported extensions: .joblib, .pkl
+
+        Parameters
+        ----------
+        folder_path: str
+            Path to model file.
+
+        Returns
+        -------
+        SklearnModel
+            The loaded scikit-learn model.
+        """
+        if "." in folder_path:
+            raise ValueError("model_path should be a folder, not a file")
+        model_path = cls.get_model_filename(folder_path)
+        model = load_from_disk(model_path)
+        # change file path to keep the extension but add _params
+        parameters_file_path = model_path.split('.')[0] + '_params.' + model_path.split('.')[1]
+        params = load_from_disk(parameters_file_path)
+        instance = cls(model=model, model_dir=model_path, **params)
+        return instance
 
     def cross_validate(self,
                        dataset: Dataset,
                        metric: Metric,
+                       splitter: Splitter = None,
                        folds: int = 3):
         """
         Performs cross-validation on a dataset.
@@ -137,6 +210,8 @@ class SklearnModel(Model):
             Dataset to perform cross-validation on.
         metric: Metric
             Metric to evaluate model performance.
+        splitter: Splitter
+            Splitter to use for cross-validation.
         folds: int
             Number of folds to use for cross-validation.
 
@@ -147,20 +222,10 @@ class SklearnModel(Model):
             score of the best model, the fourth is the test scores of all models, the fifth is the average train scores
             of all folds and the sixth is the average test score of all folds.
         """
-        # TODO: add option to choose between splitters
-        if dataset.mode == 'classification':
-            splitter = SingletaskStratifiedSplitter()
-            datasets = splitter.k_fold_split(dataset, folds)
-        elif dataset.mode == 'regression':
-            splitter = RandomSplitter()
-            datasets = splitter.k_fold_split(dataset, folds)
-        else:
-            try:
-                splitter = SingletaskStratifiedSplitter()
-                datasets = splitter.k_fold_split(dataset, folds)
-            except Exception as e:
-                splitter = RandomSplitter()
-                datasets = splitter.k_fold_split(dataset, folds)
+        if splitter is None:
+            splitter = _get_splitter(dataset)
+
+        datasets = splitter.k_fold_split(dataset, folds)
 
         train_scores = []
         train_score_best_model = 0
@@ -171,17 +236,19 @@ class SklearnModel(Model):
         avg_test_score = 0
         best_model = None
         split = 1
+
+        print("Computing K-fold cross validation")
         for train_ds, test_ds in datasets:
             split += 1
             dummy_model = clone(SklearnModel(model=self.model))
 
             dummy_model.fit(train_ds)
 
-            train_score = dummy_model.evaluate(train_ds, metric)[0]
+            train_score = dummy_model.evaluate(train_ds, [metric])[0]
             train_scores.append(train_score[metric.name])
             avg_train_score += train_score[metric.name]
 
-            test_score = dummy_model.evaluate(test_ds, metric)[0]
+            test_score = dummy_model.evaluate(test_ds, [metric])[0]
             test_scores.append(test_score[metric.name])
             avg_test_score += test_score[metric.name]
 
@@ -190,4 +257,5 @@ class SklearnModel(Model):
                 train_score_best_model = train_score[metric.name]
                 best_model = dummy_model
 
-        return best_model, train_score_best_model, test_score_best_model, train_scores, test_scores, avg_train_score / folds, avg_test_score / folds
+        return best_model, train_score_best_model, test_score_best_model, \
+            train_scores, test_scores, avg_train_score / folds, avg_test_score / folds

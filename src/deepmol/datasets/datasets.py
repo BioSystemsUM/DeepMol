@@ -1,6 +1,7 @@
 import uuid
 import warnings
 from abc import ABC, abstractmethod
+from copy import deepcopy
 from typing import Union, List, Tuple
 
 import numpy as np
@@ -9,11 +10,12 @@ from rdkit.Chem import Mol
 
 from deepmol.loggers.logger import Logger
 from deepmol.datasets._utils import merge_arrays, merge_arrays_of_arrays
+from deepmol.utils.cached_properties import deepmol_cached_property
+from deepmol.utils.decorators import inplace_decorator
 from deepmol.utils.utils import smiles_to_mol, mol_to_smiles
 
 
 class Dataset(ABC):
-
     """
     Abstract base class for datasets
     Subclasses need to implement their own methods based on this class.
@@ -22,6 +24,14 @@ class Dataset(ABC):
 
     def __init__(self):
         self.logger = Logger()
+
+    def clear_cached_properties(self):
+        """
+        Clears the cached properties of the class.
+        """
+        for name in dir(type(self)):
+            if isinstance(getattr(type(self), name), deepmol_cached_property):
+                vars(self).pop(name, None)
 
     @abstractmethod
     def __len__(self) -> int:
@@ -86,18 +96,6 @@ class Dataset(ABC):
         -------
         X: np.ndarray
             The features in the dataset.
-        """
-
-    @X.setter
-    @abstractmethod
-    def X(self, value: Union[List, np.ndarray]) -> None:
-        """
-        Set the features in the dataset.
-
-        Parameters
-        ----------
-        value: Union[List, np.ndarray]
-            The features to set in the dataset.
         """
 
     @property
@@ -278,7 +276,7 @@ class Dataset(ABC):
         """
 
     @abstractmethod
-    def select_features_by_index(self, indexes: List[int]) -> None:
+    def select_features_by_index(self, indexes: List[int]) -> 'Dataset':
         """
         Select the features from the dataset.
         Parameters
@@ -370,7 +368,8 @@ class SmilesDataset(Dataset):
         self._X = np.array(X) if X is not None else None
         self._y = np.array(y) if y is not None else None
         self._mols = np.array(mols) if mols is not None else np.array([smiles_to_mol(s) for s in self._smiles])
-        self.remove_elements([self._ids[i] for i, m in enumerate(self._mols) if m is None])
+        invalid = [self._ids[i] for i, m in enumerate(self._mols) if m is None]
+        self.remove_elements(invalid, inplace=True)
         self._feature_names = np.array(feature_names) if feature_names is not None else None
         self._label_names = np.array(label_names) if label_names is not None else None
         self._validate_params()
@@ -479,12 +478,12 @@ class SmilesDataset(Dataset):
         self._y = None
         self._n_tasks = None
         self._mols = np.array([smiles_to_mol(s) for s in self._smiles])
-        self.remove_elements([self._ids[i] for i, m in enumerate(self._mols) if m is None])
+        self.remove_elements([self._ids[i] for i, m in enumerate(self._mols) if m is None], inplace=True)
         self._feature_names = None
         self._label_names = None
         self.mode = None
 
-    def _infer_mode(self) -> Union[str, None]:
+    def _infer_mode(self) -> Union[str, None, List[str]]:
         """
         Infers the mode of the dataset.
 
@@ -498,9 +497,19 @@ class SmilesDataset(Dataset):
         if len(self._y.shape) > 1:
             self.logger.info("Assuming multitask since y has more than one dimension. If otherwise, explicitly set the "
                              "mode to 'classification' or 'regression'!")
-            return 'multitask'
-        classes = np.unique(self.y)
-        if len(classes) > 10:
+            labels_per_task = []
+            for label in range(self._y.shape[1]):
+                label_i = self._y[:, label]
+                classes = np.all(np.isclose(label_i, np.round(label_i), equal_nan=True))
+                if classes:
+                    labels_per_task.append('classification')
+                else:
+                    labels_per_task.append('regression')
+
+            return labels_per_task
+
+        classes = np.all(np.isclose(self.y, np.round(self.y), equal_nan=True))
+        if not classes:
             self.logger.info("Assuming regression since there are more than 10 unique y values. If otherwise, "
                              "explicitly set the mode to 'classification'!")
             return 'regression'
@@ -568,9 +577,14 @@ class SmilesDataset(Dataset):
         if len(self._X.shape) == 1:
             if len(feature_names) != 1:
                 raise ValueError('The number of feature names must be equal to the number of features.')
-        else:
+        elif len(self._X.shape) == 2:
             if len(feature_names) != len(self._X[0]):
                 raise ValueError('The number of feature names must be equal to the number of features.')
+        elif len(self._X.shape) == 3:
+            if len(feature_names) != len(self._X[0][0]):
+                raise ValueError('The number of feature names must be equal to the number of features.')
+        else:
+            raise ValueError('The number of dimensions of X must be 1, 2 or 3.')
         if len(feature_names) != len(set(feature_names)):
             raise ValueError('The feature names must be unique.')
         self._feature_names = np.array([str(fn) for fn in feature_names])
@@ -607,7 +621,7 @@ class SmilesDataset(Dataset):
             raise ValueError('The label names must be unique.')
         self._label_names = np.array([str(ln) for ln in label_names])
 
-    @property
+    @deepmol_cached_property
     def X(self) -> np.ndarray:
         """
         Get the features of the molecules in the dataset.
@@ -688,8 +702,13 @@ class SmilesDataset(Dataset):
         mode: str
             The mode of the dataset.
         """
-        if mode not in ['classification', 'regression', None]:
-            raise ValueError('The mode must be either "classification" or "regression".')
+        if not isinstance(mode, list):
+            if mode not in ['classification', 'regression', None]:
+                raise ValueError('The mode must be either "classification" or "regression".')
+        else:
+            for m in mode:
+                if m not in ['classification', 'regression', None]:
+                    raise ValueError('The mode must be either "classification" or "regression".')
         self._mode = mode
 
     def get_shape(self) -> Tuple[Tuple, Union[Tuple, None], Union[Tuple, None]]:
@@ -714,17 +733,24 @@ class SmilesDataset(Dataset):
         self.logger.info(f'Labels_shape: {y_shape}')
         return smiles_shape, x_shape, y_shape
 
+    @inplace_decorator
     def remove_duplicates(self) -> None:
         """
         Remove molecules with duplicated features from the dataset.
+
+        Parameters
+        ----------
+        inplace: bool, optional (default False)
+            If True, the dataset will be modified in place.
         """
         if self._X is not None:
             if np.isnan(np.stack(self._X)).any():
                 warnings.warn('The dataset contains NaNs. Molecules with NaNs will be ignored.')
             unique, index = np.unique(self.X, return_index=True, axis=0)
             ids = self.ids[index]
-            self.select(ids, axis=0)
+            self.select(ids, axis=0, inplace=True)
 
+    @inplace_decorator
     def remove_elements(self, ids: List[str]) -> None:
         """
         Remove elements with specific IDs from the dataset.
@@ -732,12 +758,15 @@ class SmilesDataset(Dataset):
         ----------
         ids: List[str]
             IDs of the elements to remove.
+        inplace: bool, optional (default False)
+            If True, the dataset will be modified in place.
         """
         if len(ids) != 0:
             all_indexes = self.ids
             indexes_to_keep = list(set(all_indexes) - set(ids))
-            self.select(indexes_to_keep)
+            self.select(indexes_to_keep, inplace=True)
 
+    @inplace_decorator
     def remove_elements_by_index(self, indexes: List[int]) -> None:
         """
         Remove elements with specific indexes from the dataset.
@@ -745,22 +774,32 @@ class SmilesDataset(Dataset):
         ----------
         indexes: List[int]
             Indexes of the elements to remove.
+        inplace: bool, optional (default False)
+            If True, the dataset will be modified in place.
         """
         if len(indexes) > 0:
             indexes = self._ids[indexes]
-            self.remove_elements(indexes)
+            self.remove_elements(indexes, inplace=True)
 
-    def select_features_by_index(self, indexes: List[int]) -> None:
+    @inplace_decorator
+    def select_features_by_index(self, indexes: List[int]) -> 'SmilesDataset':
         """
         Select features with specific indexes from the dataset
         Parameters
         ----------
         indexes: List[int]
             The indexes of the features to select from the dataset.
+        inplace: bool, optional (default False)
+            If True, the dataset will be modified in place.
         """
         if len(indexes) != 0:
-            self.select(indexes, axis=1)
+            self.select(indexes, axis=1, inplace=True)
+            self.clear_cached_properties()
+            return self
+        else:
+            raise ValueError('The list of indexes is empty.')
 
+    @inplace_decorator
     def select_features_by_name(self, names: List[str]) -> None:
         """
         Select features with specific names from the dataset
@@ -768,12 +807,16 @@ class SmilesDataset(Dataset):
         ----------
         names: List[str]
             The names of the features to select from the dataset.
+        inplace: bool, optional (default False)
+            If True, the dataset will be modified in place.
         """
         if len(names) != 0:
             # Get the indexes of the features to select
             indexes = [i for i, name in enumerate(self._feature_names) if name in names]
-            self.select(indexes, axis=1)
+            self.select(indexes, axis=1, inplace=True)
+            self.clear_cached_properties()
 
+    @inplace_decorator
     def remove_nan(self, axis: int = 0) -> None:
         """
         Remove samples with at least one NaN in the features (when axis = 0)
@@ -782,6 +825,8 @@ class SmilesDataset(Dataset):
         ----------
         axis: int
             The axis to remove the NaNs from.
+        inplace: bool, optional (default False)
+            If True, the dataset will be modified in place.
         """
         if self._X is None or len(self._X.shape) == 0:
             return
@@ -791,21 +836,23 @@ class SmilesDataset(Dataset):
             else:
                 indexes = np.where(pd.isna(self._X).any(axis=1))[0]
             # rows with at least one NaN
-            self.remove_elements_by_index(indexes)
+            self.remove_elements_by_index(indexes, inplace=True)
         elif axis == 1:
             if len(self._X.shape) == 1:
                 indexes = np.where(np.isnan(self._X))[0]
-                self.remove_elements_by_index(indexes)
+                self.remove_elements_by_index(indexes, inplace=True)
             else:
                 # rows with all NaNs
                 indexes = np.where(np.isnan(self._X).all(axis=1))[0]
-                self.remove_elements_by_index(indexes)
+                self.remove_elements_by_index(indexes, inplace=True)
                 # columns with at least one NaN
                 columns = list(set(np.where(np.isnan(self._X).any(axis=0))[0]))
                 self._X = np.delete(self._X, columns, axis=1)
                 if len(self._X.shape) <= 2:  # feature names in datasets with more than two dimensions not supported
                     feature_names_to_delete = [self._feature_names[i] for i in columns]
                     self._feature_names = [name for name in self._feature_names if name not in feature_names_to_delete]
+
+                self.clear_cached_properties()
         else:
             raise ValueError('The axis must be 0 or 1.')
 
@@ -831,6 +878,7 @@ class SmilesDataset(Dataset):
         mode = self._mode
         return SmilesDataset(smiles, mols, ids, X, feature_names, y, label_names, mode)
 
+    @inplace_decorator
     def select(self, ids: Union[List[str], List[int]], axis: int = 0) -> None:
         """
         Creates a new sub dataset of self from a selection of indexes.
@@ -842,6 +890,8 @@ class SmilesDataset(Dataset):
           indexes of the columns in case axis = 1.
         axis: int
             Axis to select along. 0 selects along the first axis, 1 selects along the second axis.
+        inplace: bool, optional (default False)
+            If True, the dataset will be modified in place.
         """
         if axis == 0:
             ids_to_delete = sorted(list(set(self._ids) - set(ids)))
@@ -929,6 +979,7 @@ class SmilesDataset(Dataset):
 
         df.to_csv(path, index=False)
 
+    @inplace_decorator
     def load_features(self, path: str, **kwargs) -> None:
         """
         Load features from a csv file.
@@ -936,6 +987,8 @@ class SmilesDataset(Dataset):
         ----------
         path: str
             Path to the csv file.
+        inplace: bool, optional (default False)
+            If True, the dataset will be modified in place.
         kwargs:
             Keyword arguments to pass to pandas.read_csv.
         """

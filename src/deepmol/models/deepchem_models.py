@@ -1,18 +1,24 @@
+import os
+import pickle
+import shutil
+import tempfile
 from typing import List, Sequence, Union
 import numpy as np
+import tensorflow
 
+from deepmol.base import Predictor
 from deepmol.evaluator import Evaluator
 from deepmol.metrics.metrics import Metric
 from deepmol.datasets import Dataset
 from deepchem.models.torch_models import TorchModel
-from deepchem.models import SeqToSeq, WGAN
+from deepchem.models import SeqToSeq, WGAN, KerasModel
 from deepchem.models import Model as BaseDeepChemModel
 from deepchem.data import NumpyDataset
 import deepchem as dc
 
-from deepmol.models._utils import save_to_disk
+from deepmol.models._utils import _get_splitter, save_to_disk, load_from_disk, get_prediction_from_proba
 from deepmol.splitters.splitters import Splitter
-from deepmol.utils.utils import load_from_disk
+from deepmol.utils.utils import normalize_labels_shape
 
 
 def generate_sequences(epochs: int, train_smiles: List[Union[str, int]]):
@@ -36,16 +42,19 @@ def generate_sequences(epochs: int, train_smiles: List[Union[str, int]]):
             yield smile, smile
 
 
-class DeepChemModel(BaseDeepChemModel):
+class DeepChemModel(BaseDeepChemModel, Predictor):
     """
     Wrapper class that wraps deepchem models.
     The `DeepChemModel` class provides a wrapper around deepchem models that allows deepchem models to be trained on
     `Dataset` objects and evaluated with the metrics in Metrics.
     """
 
+    model: BaseDeepChemModel
+
     def __init__(self,
                  model: BaseDeepChemModel,
                  model_dir: str = None,
+                 custom_objects: dict = None,
                  **kwargs):
         """
         Initializes a DeepChemModel.
@@ -56,17 +65,33 @@ class DeepChemModel(BaseDeepChemModel):
           The model instance which inherits a DeepChem `Model` Class.
         model_dir: str, optional (default None)
           If specified the model will be stored in this directory. Else, a temporary directory will be used.
+        custom_objects: dict, optional (default None)
+            Dictionary of custom objects to be passed to the model.
         kwargs:
           additional arguments to be passed to the model.
         """
-        if 'model_instance' in kwargs:
+        # create a temporary file
+        temp_file = tempfile.NamedTemporaryFile(suffix='.pkl', delete=False)
+
+        # Get the path of the temporary file
+        self.model_path_saved = temp_file.name
+
+        save_to_disk(model, self.model_path_saved)
+        self.model_instance = None
+        if 'model_instance' in kwargs and kwargs['model_instance'] is not None:
             self.model_instance = kwargs['model_instance']
             if model is not None:
                 raise ValueError("Can not use both model and model_instance argument at the same time.")
 
             model = self.model_instance
 
-        super(DeepChemModel, self).__init__(model, model_dir, **kwargs)
+        if model_dir is None:
+            model_dir = tempfile.mkdtemp()
+
+        super().__init__(model=model, model_dir=model_dir, **kwargs)
+        super(Predictor, self).__init__()
+        self._model_dir = model_dir
+
         if 'use_weights' in kwargs:
             self.use_weights = kwargs['use_weights']
         else:
@@ -81,6 +106,33 @@ class DeepChemModel(BaseDeepChemModel):
             self.epochs = kwargs['epochs']
         else:
             self.epochs = 30
+
+        self.custom_objects = custom_objects
+
+        self.parameters_to_save = {
+            'use_weights': self.use_weights,
+            'n_tasks': self.n_tasks,
+            'epochs': self.epochs,
+            'model_instance': self.model_instance
+        }
+
+    @property
+    def model_type(self):
+        """
+        Returns the type of the model.
+        """
+        return 'deepchem'
+
+    def fit(self, dataset: Dataset):
+        """
+        Fits the model on a dataset.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The `Dataset` to train this model on.
+        """
+        Predictor.fit(self, dataset)
 
     def fit_on_batch(self, X: Sequence, y: Sequence, w: Sequence):
         """
@@ -116,7 +168,7 @@ class DeepChemModel(BaseDeepChemModel):
             The number of tasks of the model.
         """
 
-    def fit(self, dataset: Dataset) -> None:
+    def _fit(self, dataset: Dataset) -> None:
         """
         Fits DeepChemModel to data.
 
@@ -126,12 +178,21 @@ class DeepChemModel(BaseDeepChemModel):
             The `Dataset` to train this model on.
         """
         # TODO: better way to validate model.mode and dataset.mode
-        if dataset.mode != 'multitask':
-            if self.model.model.mode != dataset.mode:
-                raise ValueError(f"The model mode and the dataset mode must be the same. "
-                                 f"Got model mode: {self.model.model.mode} and dataset mode: {dataset.mode}")
+        if not isinstance(dataset.mode, list):
+            if hasattr(self.model, 'mode'):
+                model_mode = self.model.mode
+                if model_mode != dataset.mode:
+                    raise ValueError(f"The model mode and the dataset mode must be the same. "
+                                     f"Got model mode: {model_mode} and dataset mode: {dataset.mode}")
+            else:
+                model_mode = self.model.model.mode
+                if model_mode != dataset.mode:
+                    raise ValueError(f"The model mode and the dataset mode must be the same. "
+                                     f"Got model mode: {model_mode} and dataset mode: {dataset.mode}")
+        else:
+            model_mode = dataset.mode
         # Afraid of model.fit not recognizes the input dataset as a deepchem.data.datasets.Dataset
-        if isinstance(self.model, TorchModel) and self.model.model.mode == 'regression':
+        if isinstance(self.model, TorchModel) and model_mode == 'regression':
             y = np.expand_dims(dataset.y, axis=-1)  # need to do this so that the loss is calculated correctly
         else:
             y = dataset.y
@@ -167,18 +228,39 @@ class DeepChemModel(BaseDeepChemModel):
         np.ndarray
             The value is a return value of `predict` method of the DeepChem model.
         """
+
+        predictions = self.predict_proba(dataset, transformers)
+        y_pred_rounded = get_prediction_from_proba(dataset, predictions)
+
+        return y_pred_rounded
+
+    def predict_proba(self,
+                      dataset: Dataset,
+                      transformers: List[dc.trans.NormalizationTransformer] = None
+                      ) -> np.ndarray:
+        """
+        Makes predictions on dataset.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to make prediction on.
+
+        transformers: List[Transformer]
+            Transformers that the input data has been transformed by. The output
+            is passed through these transformers to undo the transformations.
+
+        Returns
+        -------
+        np.ndarray
+            The value is a return value of `predict` method of the DeepChem model.
+        """
         if transformers is None:
             transformers = []
         new_dataset = NumpyDataset(X=dataset.X, y=dataset.y, ids=dataset.ids, n_tasks=dataset.n_tasks)
 
         res = self.model.predict(new_dataset, transformers)
 
-        # if isinstance(self.model, (GATModel,GCNModel,AttentiveFPModel,LCNNModel)):
-        #     return res
-        # elif len(res.shape) == 2:
-        #     new_res = np.squeeze(res)
-        # else:
-        #     new_res = np.reshape(res,(res.shape[0],res.shape[2]))
         if isinstance(self.model, TorchModel) and self.model.model.mode == 'classification':
             return res
         else:
@@ -186,6 +268,8 @@ class DeepChemModel(BaseDeepChemModel):
                 res)  # this works for all regression models (Keras and PyTorch) and is more general than the
             # commented code above
 
+        if not dataset.y.shape == np.array(new_res).shape:
+            new_res = normalize_labels_shape(new_res, dataset.n_tasks)
         return new_res
 
     def predict_on_batch(self, dataset: Dataset) -> np.ndarray:
@@ -199,22 +283,81 @@ class DeepChemModel(BaseDeepChemModel):
         """
         return super(DeepChemModel, self).predict(dataset)
 
-    def save(self):
+    def save(self, folder_path: str = None):
         """
-        Saves deepchem model to disk using joblib.
-        """
-        save_to_disk(self.model, self.get_model_filename(self.model_dir))
+        Saves deepchem model to disk.
 
-    def reload(self):
+        Parameters
+        ----------
+        folder_path: str
+            Path to the file where the model will be stored.
         """
-        Loads deepchem model from joblib file on disk.
+        if folder_path is None:
+            if self.model_dir is None:
+                raise ValueError("Please specify folder_path or model_dir")
+            folder_path = self.model_dir
+        else:
+            os.makedirs(folder_path, exist_ok=True)
+
+        # move file
+        shutil.copy(self.model_path_saved, os.path.join(folder_path, 'model.pkl'))
+
+        save_to_disk(self.parameters_to_save, os.path.join(folder_path, "model_parameters.pkl"))
+
+        if self.custom_objects is not None:
+            with open(os.path.join(folder_path, 'custom_objects.pkl'), 'wb') as file:
+                pickle.dump(self.custom_objects, file)
+
+        # write self in pickle format
+        if isinstance(self.model, KerasModel):
+            self.model.model.save_weights(os.path.join(folder_path, 'model_weights'))
+        elif isinstance(self.model, TorchModel):
+            self.model.save_checkpoint(max_checkpoints_to_keep=1, model_dir=folder_path)
+        else:
+            raise ValueError(f"DeepChemModel does not support saving model of type {type(self.model)}")
+
+    @classmethod
+    def load(cls, folder_path: str, **kwargs):
         """
-        self.model = load_from_disk(self.get_model_filename(self.model_dir))
+        Loads deepchem model from disk.
+
+        Parameters
+        ----------
+        folder_path: str
+            Path to the file where the model is stored.
+        kwargs: Dict
+            Additional parameters.
+            custom_objects: Dict
+                Dictionary of custom objects to be passed to `tensorflow.keras.utils.custom_object_scope`.
+        """
+        try:
+            model = load_from_disk(os.path.join(folder_path, "model.pkl"))
+        except ValueError as e:
+            if 'custom_objects' in kwargs:
+                with tensorflow.keras.utils.custom_object_scope(kwargs['custom_objects']):
+                    model = load_from_disk(os.path.join(folder_path, "model.pkl"))
+            elif os.path.exists(os.path.join(folder_path, 'custom_objects.pkl')):
+                with open(os.path.join(folder_path, 'custom_objects.pkl'), 'rb') as file:
+                    custom_objects = pickle.load(file)
+                with tensorflow.keras.utils.custom_object_scope(custom_objects):
+                    model = load_from_disk(os.path.join(folder_path, "model.pkl"))
+            else:
+                raise e
+
+        model_parameters = load_from_disk(os.path.join(folder_path, "model_parameters.pkl"))
+        deepchem_model = cls(model=model, model_dir=folder_path, **model_parameters)
+        # load self from pickle format
+        if isinstance(model, KerasModel):
+            deepchem_model.model.model.load_weights(os.path.join(folder_path, 'model_weights'))
+            return deepchem_model
+        else:
+            deepchem_model.model.restore(model_dir=folder_path)
+            return deepchem_model
 
     def cross_validate(self,
                        dataset: Dataset,
                        metric: Metric,
-                       splitter: Splitter,
+                       splitter: Splitter = None,
                        transformers: List[dc.trans.NormalizationTransformer] = None,
                        folds: int = 3):
         """
@@ -227,7 +370,7 @@ class DeepChemModel(BaseDeepChemModel):
         metric: Metric
             Metric to evaluate the model on.
         splitter: Splitter
-            Splitter to split the dataset into train and test sets.
+            Splitter to use for cross validation.
         transformers: List[Transformer]
             Transformers that the input data has been transformed by.
         folds: int
@@ -240,8 +383,8 @@ class DeepChemModel(BaseDeepChemModel):
             score of the best model, the fourth is the test scores of all models, the fifth is the average train scores
             of all folds and the sixth is the average test score of all folds.
         """
-        # TODO: add option to choose between splitters (later, for now we only have random)
-        # splitter = RandomSplitter()
+        if splitter is None:
+            splitter = _get_splitter(dataset)
         if transformers is None:
             transformers = []
         datasets = splitter.k_fold_split(dataset, folds)
@@ -260,16 +403,16 @@ class DeepChemModel(BaseDeepChemModel):
 
             # TODO: isto está testado ? estes transformers nao é um boleano
             train_score = dummy_model.evaluate(train_ds, [metric], transformers)
-            train_scores.append(train_score[metric.name])
-            avg_train_score += train_score[metric.name]
+            train_scores.append(train_score[0][metric.name])
+            avg_train_score += train_score[0][metric.name]
 
             test_score = dummy_model.evaluate(test_ds, [metric], transformers)
-            test_scores.append(test_score[metric.name])
-            avg_test_score += test_score[metric.name]
+            test_scores.append(test_score[0][metric.name])
+            avg_test_score += test_score[0][metric.name]
 
-            if test_score[metric.name] > test_score_best_model:
-                test_score_best_model = test_score[metric.name]
-                train_score_best_model = train_score[metric.name]
+            if test_score[0][metric.name] > test_score_best_model:
+                test_score_best_model = test_score[0][metric.name]
+                train_score_best_model = train_score[0][metric.name]
                 best_model = dummy_model
 
         return best_model, train_score_best_model, test_score_best_model, train_scores, test_scores, avg_train_score / folds, avg_test_score / folds

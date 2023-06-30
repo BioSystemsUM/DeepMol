@@ -9,6 +9,7 @@ from sklearn.svm import SVC
 from tensorflow.keras import Sequential, regularizers
 from tensorflow.keras.layers import Dense, Dropout, Reshape, Conv1D, Flatten
 from tensorflow.keras import layers
+import tensorflow as tf
 
 
 # TODO: add more pre-defined models
@@ -246,4 +247,3 @@ def basic_multitask_dnn(input_shape, task_names, losses, metrics):
         loss=losses,
         metrics=metrics)
     return model
-

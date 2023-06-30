@@ -5,7 +5,7 @@ from unittest import TestCase
 
 import numpy as np
 from deepchem.models import GraphConvModel
-from sklearn.metrics import roc_auc_score, precision_score, accuracy_score
+from sklearn.metrics import roc_auc_score, precision_score, accuracy_score, recall_score
 
 from deepmol.compound_featurization import MorganFingerprint, ConvMolFeat
 from deepmol.loaders import CSVLoader
@@ -39,23 +39,23 @@ class TestMultitaskDataset(MultitaskBaseTestCase, TestCase):
         md = copy(self.multitask_dataset)
         # replace np.nan in y by 0
         md._y = np.nan_to_num(md.y)
-        ConvMolFeat().featurize(md)
+        ConvMolFeat().featurize(md, inplace=True)
         train, test = RandomSplitter().train_test_split(md, frac_train=0.8, seed=123)
         graph = GraphConvModel(n_tasks=md.n_tasks)
         model_graph = DeepChemModel(graph)
         model_graph.fit(train)
         test_preds = model_graph.predict(test)
         self.assertEqual(len(test_preds), len(test))
-        for pred in test_preds:
-            for p in pred:
-                self.assertAlmostEqual(sum(p), 1, delta=0.0001)
 
-        metrics = [Metric(roc_auc_score)]
+        metrics = [Metric(precision_score, average="macro")]
 
         evaluate = model_graph.evaluate(test, metrics)
         self.assertEqual(len(evaluate[0]), len(metrics))
         self.assertEqual(evaluate[1], {})
-        self.assertTrue('roc_auc_score' in evaluate[0].keys())
+        self.assertTrue('precision_score' in evaluate[0].keys())
+        predictions = model_graph.predict(test)
+        precision_score_value = precision_score(test.y, predictions, average="macro")
+        self.assertEqual(evaluate[0]['precision_score'], precision_score_value)
 
     def test_multitask_keras_model(self):
         md = copy(self.multitask_dataset)
@@ -64,25 +64,27 @@ class TestMultitaskDataset(MultitaskBaseTestCase, TestCase):
         md.label_names = md.label_names[:3]
         # replace np.nan in y by 0
         md._y = np.nan_to_num(md.y)
-        MorganFingerprint(radius=2, size=1024).featurize(md)
+        md.mode = ["classification", "classification", "classification"]
+        MorganFingerprint(radius=2, size=1024).featurize(md, inplace=True)
         train, test = RandomSplitter().train_test_split(md, frac_train=0.8, seed=123)
         mt_model = basic_multitask_dnn(input_shape=(1024,),
                                        task_names=md.label_names,
                                        losses=['binary_crossentropy', 'binary_crossentropy', 'binary_crossentropy'],
                                        metrics=['accuracy', 'accuracy', 'accuracy'])
-        model = KerasModel(mt_model, epochs=2, mode='multitask')
+        model = KerasModel(mt_model, epochs=2, mode=["classification", "classification", "classification"])
         model.fit(train)
 
-        metrics = [Metric(roc_auc_score), Metric(precision_score), Metric(accuracy_score)]
+        metrics = [Metric(precision_score, average="macro"), Metric(recall_score, average="macro")]
         a, b = model.evaluate(test, metrics=metrics)
-        self.assertIn('roc_auc_score', a.keys())
         self.assertIn('precision_score', a.keys())
-        self.assertIn('accuracy_score', a.keys())
+        self.assertIn('recall_score', a.keys())
         self.assertEqual(b, {})
         c, d = model.evaluate(test, metrics=metrics, per_task_metrics=True)
-        self.assertIn('roc_auc_score', c.keys())
         self.assertIn('precision_score', c.keys())
-        self.assertIn('accuracy_score', c.keys())
-        self.assertEqual(len(d['roc_auc_score']), 3)
+        self.assertIn('recall_score', c.keys())
         self.assertEqual(len(d['precision_score']), 3)
-        self.assertEqual(len(d['accuracy_score']), 3)
+        self.assertEqual(len(d['recall_score']), 3)
+
+        predictions = model.predict(test)
+        precision_score_value = precision_score(test.y, predictions, average="macro")
+        self.assertEqual(a['precision_score'], precision_score_value)

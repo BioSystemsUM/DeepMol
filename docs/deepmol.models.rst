@@ -12,6 +12,14 @@ deepmol.models.base\_models module
    :undoc-members:
    :show-inheritance:
 
+deepmol.models.deepchem\_model\_builders module
+-----------------------------------------------
+
+.. automodule:: deepmol.models.deepchem_model_builders
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 deepmol.models.deepchem\_models module
 --------------------------------------
 
@@ -28,6 +36,14 @@ deepmol.models.ensembles module
    :undoc-members:
    :show-inheritance:
 
+deepmol.models.keras\_model\_builders module
+--------------------------------------------
+
+.. automodule:: deepmol.models.keras_model_builders
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 deepmol.models.keras\_models module
 -----------------------------------
 
@@ -40,6 +56,14 @@ deepmol.models.models module
 ----------------------------
 
 .. automodule:: deepmol.models.models
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+deepmol.models.sklearn\_model\_builders module
+----------------------------------------------
+
+.. automodule:: deepmol.models.sklearn_model_builders
    :members:
    :undoc-members:
    :show-inheritance:

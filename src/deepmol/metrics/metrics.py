@@ -120,7 +120,12 @@ class Metric(object):
         try:
             metric_value = self.metric(y_true, y_pred, **kwargs)
         except ValueError as e:
-            # round values in y_ped to 0 or 1
-            y_pred_rounded = np.round(y_pred)
-            metric_value = self.metric(y_true, y_pred_rounded, **kwargs)
+            try:
+                # round values in y_ped to 0 or 1
+                y_pred_rounded = np.round(y_pred)
+                metric_value = self.metric(y_true, y_pred_rounded, **kwargs)
+            except ValueError as e:
+                # transform y_pred [[0, 1], [1, 0]] to [1, 0]
+                y_pred_single = np.argmax(y_pred, axis=1)
+                metric_value = self.metric(y_true, y_pred_single, **kwargs)
         return metric_value

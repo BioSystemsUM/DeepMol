@@ -2,63 +2,27 @@ name: Continuous Delivery
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
-    strategy:
-      matrix:
-        os:
-          - ubuntu-latest
-        python-version:
-          - 3.8
-
+    name: Create Release
+    permissions: write-all
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Get version from setup.cfg
+        id: get-version
+        run: echo "::set-output name=version::$(awk -F "=" '/^version/ {print $2}' setup.cfg | tr -d '[:space:]')"
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          tag_name: v${{ steps.get-version.outputs.version }}
+          release_name: Release v${{ steps.get-version.outputs.version }}
           draft: false
           prerelease: false
-
-      - name: Extract tag name
-        id: get_version
-        run: echo ::set-output name=version::${GITHUB_REF/refs\/tags\//}
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install dependencies
-        run: python -m pip install --upgrade build
-
-      - name: Build package
-        run: |
-          python3 -m build
-          zip -r -j ${{ github.event.repository.name }}-${{ steps.get_version.outputs.version }}.zip dist
-          pip install git+https://github.com/BioSystemsUM/DeepMol.git@v0.0.1-beta#egg=deepmol
-          pip install dist/*.whl
-          python -c "import deepmol"
-
-      - name: Upload Release Asset
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}}
-          asset_path: ./${{ github.event.repository.name }}-${{ steps.get_version.outputs.version }}.zip
-          asset_name: ${{ github.event.repository.name }}-${{ steps.get_version.outputs.version }}.zip
-          asset_content_type: application/zip

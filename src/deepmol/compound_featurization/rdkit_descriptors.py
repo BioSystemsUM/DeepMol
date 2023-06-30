@@ -2,11 +2,13 @@ import inspect
 import sys
 import traceback
 import warnings
+from abc import ABC
 from typing import Union, List
 
 import numpy as np
 from rdkit import Chem
 from rdkit.Chem import Mol, AllChem, MolFromSmiles, Descriptors, rdMolDescriptors
+from rdkit.Chem.GraphDescriptors import Ipc
 from rdkit.Chem.rdForceFieldHelpers import UFFOptimizeMoleculeConfs
 from rdkit.ML.Descriptors import MoleculeDescriptors
 
@@ -389,7 +391,8 @@ def generate_conformers_to_sdf_file(dataset: Dataset,
             m2 = generate_conformers(generator, mol_set[i], etkg_version, optimization_mode)
             signal.alarm(0)
             label = dataset.y[i]
-            m2.SetProp("_Class", "%f" % label)
+            for j, class_name in enumerate(dataset.label_names):
+                m2.SetProp(class_name, "%f" % label[j])
             if dataset.ids is not None and dataset.ids.size > 0:
                 mol_id = dataset.ids[i]
                 m2.SetProp("_ID", f"{mol_id}")
@@ -428,15 +431,22 @@ class TwoDimensionDescriptors(MolecularFeaturizer):
         all_descriptors: np.ndarray
             Array with all 2D descriptors from rdkit.
         """
-        calc = MoleculeDescriptors.MolecularDescriptorCalculator([x[0] for x in Descriptors._descList])
+        calc = MoleculeDescriptors.MolecularDescriptorCalculator(self.feature_names)
+        # Deal with very large/inf values of the Ipc descriptor (https://github.com/rdkit/rdkit/issues/1527)
+        # find position of Ipc
+        pos = self.feature_names.index("Ipc")
+        # calculate AvgIpc
+        avg_ipc = Ipc(mol, avg=1)
 
-        descriptors = calc.CalcDescriptors(mol)
+        descriptors = list(calc.CalcDescriptors(mol))
+        # replace Ipc with AvgIpc
+        descriptors[pos] = avg_ipc
         assert not np.isnan(np.sum(descriptors))
         descriptors = np.array(descriptors, dtype=np.float32)
         return descriptors
 
 
-class ThreeDimensionDescriptor(MolecularFeaturizer):
+class ThreeDimensionDescriptor(MolecularFeaturizer, ABC):
     """
     Class to generate three-dimensional descriptors.
     """
@@ -506,9 +516,6 @@ class ThreeDimensionDescriptor(MolecularFeaturizer):
 
         fp = np.asarray(fp, dtype=np.float32)
         return fp
-
-    def _featurize(self, mol: Mol):
-        raise NotImplementedError
 
 
 class All3DDescriptors(MolecularFeaturizer):
@@ -652,7 +659,7 @@ class PlaneOfBestFit(ThreeDimensionDescriptor):
         """
         super().__init__(mandatory_generation_of_conformers)
         self.descriptor_function = rdMolDescriptors.CalcPBF
-        self.feature_names = ['PBF']
+        self.feature_names = self.feature_names = ['PBF']
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """

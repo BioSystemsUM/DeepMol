@@ -20,8 +20,9 @@ Unsupervised Learning <deepmol_docs/unsupervised_learning>
 Data Split <deepmol_docs/splitters>
 Unbalanced Datasets <deepmol_docs/imbalanced_learn>
 Supervised Learning <deepmol_docs/models>
-Pipelines <deepmol_docs/pipeline>
 Hyperparameter optimization <deepmol_docs/hyperparameter_optimization>
+Pipelines <deepmol_docs/pipeline>
+Pipeline Optimization <deepmol_docs/pipeline_optimization>
 Feature Importance <deepmol_docs/model_explainability>
 About us <deepmol_docs/about_us>
 Related publications <deepmol_docs/publications>

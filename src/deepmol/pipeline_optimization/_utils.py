@@ -88,6 +88,7 @@ def _progressive_multitask_regressor_model_steps(trial, n_tasks):
     scaler = ('scaler', scaler)
     return [featurizer, scaler, model_step[0]]
 
+
 def _robust_multitask_regressor_model_steps(trial, n_tasks):
     featurizer = _get_featurizer(trial, '1D')
     if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
@@ -102,6 +103,7 @@ def _robust_multitask_regressor_model_steps(trial, n_tasks):
     featurizer = ('featurizer', featurizer)
     scaler = ('scaler', scaler)
     return [featurizer, scaler, model_step[0]]
+
 
 def _multitask_regressor_model_steps(trial, n_tasks):
     featurizer = _get_featurizer(trial, '1D')
@@ -334,7 +336,6 @@ def preset_keras_models(trial, data: Dataset) -> list:
     final_steps: list
         List of steps for keras models for hyperparameter optimization.
     """
-    n_tasks = data.n_tasks
     mode = data.mode
     featurizer_type = trial.suggest_categorical('featurizer_type', ['1D', '2D'])
     featurizer = _get_featurizer(trial, featurizer_type)

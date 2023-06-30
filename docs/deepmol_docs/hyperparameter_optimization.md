@@ -62,14 +62,13 @@ Let's see how to perform hyperparameter tuning of a SVM with a validation set.
 
 ```python
 params_dict_svc = {"C": [1.0, 1.2, 0.8], "kernel": ['linear', 'poly', 'rbf']} # The keys are the parameters names and the values are the values to try
-optimizer = HyperparameterOptimizerValidation(SVC)
-best_svm, best_hyperparams, all_results = optimizer.hyperparameter_search(train_dataset=train_dataset,
-                                                                          valid_dataset=valid_dataset,
-                                                                          metric=Metric(accuracy_score),
-                                                                          maximize_metric=True,
-                                                                          n_iter_search=2,
-                                                                          params_dict=params_dict_svc,
-                                                                          )
+optimizer = HyperparameterOptimizerValidation(SVC,
+                                              metric=Metric(accuracy_score),
+                                              maximize_metric=True,
+                                              n_iter_search=2,
+                                              params_dict=params_dict_svc,
+                                              model_type="sklearn")
+best_svm, best_hyperparams, all_results = optimizer.fit(train_dataset=train_dataset, valid_dataset=valid_dataset)
 ```
 
 In the end, we can check the performance of the best model on the test set.
@@ -124,11 +123,10 @@ best_svm.save("my_model")
 
 Bring it back to life and make predictions!
 
-
 ```python
 from deepmol.models import SklearnModel
 
-SklearnModel.load("my_model").predict(test_dataset)
+SklearnModel.load("../../examples/workshop_bod/my_model").predict(test_dataset)
 ```
 
 
@@ -145,15 +143,13 @@ SklearnModel.load("my_model").predict(test_dataset)
 from deepmol.parameter_optimization import HyperparameterOptimizerCV
 
 params_dict_svc = {"C": [1.0, 1.2, 0.8], "kernel": ['linear', 'poly', 'rbf']}
-optimizer = HyperparameterOptimizerCV(SVC)
-best_svm, best_hyperparams, all_results = optimizer.hyperparameter_search(train_dataset=train_dataset,
-                                                                          metric=Metric(accuracy_score),
-                                                                          maximize_metric=True,
-                                                                          cv=3,
-                                                                          n_iter_search=2,
-                                                                          params_dict=params_dict_svc,
-                                                                          model_type="sklearn"
-                                                                          )
+optimizer = HyperparameterOptimizerCV(SVC, metric=Metric(accuracy_score),
+                                          maximize_metric=True,
+                                          cv=3,
+                                          n_iter_search=2,
+                                          params_dict=params_dict_svc,
+                                          model_type="sklearn")
+best_svm, best_hyperparams, all_results = optimizer.fit(train_dataset=train_dataset)
 ```
 
     2023-06-01 16:19:58,650 — INFO — MODEL TYPE: sklearn
@@ -306,21 +302,21 @@ Let's see how to perform hyperparameter tuning of a DNN with a validation set.
 
 
 ```python
-optimizer = HyperparameterOptimizerValidation(create_model)
 params_dict_dense = {
                    "input_dim": [train_dataset.X.shape[1]],
                    "dropout": [0.5, 0.6, 0.7],
                    "optimizer": ["adam"]
                    }
 
-best_dnn, best_hyperparams, all_results = optimizer.hyperparameter_search(train_dataset=train_dataset,
-                                                                          valid_dataset=valid_dataset,
-                                                                          metric=Metric(accuracy_score),
-                                                                          maximize_metric=True,
-                                                                          n_iter_search=2,
-                                                                          params_dict=params_dict_dense,
-                                                                          model_type="keras"
-                                                                          )
+optimizer = HyperparameterOptimizerValidation(create_model,
+                                              metric=Metric(accuracy_score),
+                                              maximize_metric=True,
+                                              n_iter_search=2,
+                                              params_dict=params_dict_dense,
+                                              model_type="keras")
+
+
+best_dnn, best_hyperparams, all_results = optimizer.fit(train_dataset=train_dataset, valid_dataset=valid_dataset)
 ```
 
     2023-06-02 10:14:56,920 — INFO — Fitting 2 random models from a space of 3 possible models.
@@ -432,20 +428,20 @@ best_dnn.predict(test_dataset)
 The hyperparameter tuning is very similar to the previous one, but in this case the hyperparameter tuning is performed with cross validation and as in for Sklearn models!
 
 ```python
-optimizer = HyperparameterOptimizerCV(create_model)
 params_dict_dense = {
                    "input_dim": [train_dataset.X.shape[1]],
                    "dropout": [0.5, 0.6, 0.7],
                    "optimizer": ["adam"]
                    }
-best_dnn, best_hyperparams, all_results = optimizer.hyperparameter_search(train_dataset=train_dataset,
-                                                                          metric=Metric(accuracy_score),
-                                                                          maximize_metric=True,
-                                                                          cv=3,
-                                                                          n_iter_search=2,
-                                                                          params_dict=params_dict_dense,
-                                                                          model_type="keras"
-                                                                          )
+
+optimizer = HyperparameterOptimizerCV(create_model,
+                                      metric=Metric(accuracy_score),
+                                      maximize_metric=True,
+                                      cv=3,
+                                      n_iter_search=2,
+                                      params_dict=params_dict_dense,
+                                      model_type="keras")
+best_dnn, best_hyperparams, all_results = optimizer.fit(train_dataset=train_dataset)
 ```
 
 ## Hyperparameter tuning with DeepChem models
@@ -483,17 +479,14 @@ def graphconv_builder(graph_conv_layers, batch_size=256, epochs=5):
                            mode='classification')
     return DeepChemModel(graph, epochs=epochs)
 
-model_graph = HyperparameterOptimizerValidation(model_builder=graphconv_builder)
+model_graph = HyperparameterOptimizerValidation(model_builder=graphconv_builder,
+                                                metric=Metric(accuracy_score),
+                                                maximize_metric=True,
+                                                n_iter_search=2,
+                                                params_dict={'graph_conv_layers': [[64, 64], [32, 32]]},
+                                                model_type="deepchem")
 
-best_model, best_hyperparams, all_results = model_graph.hyperparameter_search(
-                                                                          train_dataset=train_dataset,
-                                                                          valid_dataset=valid_dataset,
-                                                                          metric=Metric(accuracy_score),
-                                                                          maximize_metric=True,
-                                                                          n_iter_search=2,
-                                                                          params_dict={'graph_conv_layers': [[64, 64], [32, 32]]},
-                                                                          model_type="deepchem"
-                                                                          )
+best_model, best_hyperparams, all_results = model_graph.fit(train_dataset=train_dataset,valid_dataset=valid_dataset)
 ```
 
 In the end, we can check the performance of the best model on the test set.
@@ -580,15 +573,15 @@ def graphconv_builder(graph_conv_layers, batch_size=256, epochs=5):
                            mode='classification')
     return DeepChemModel(graph, epochs=epochs)
 
-model_graph = HyperparameterOptimizerCV(model_builder=graphconv_builder)
+model_graph = HyperparameterOptimizerCV(model_builder=graphconv_builder,
+                                        metric=Metric(roc_auc_score),
+                                        n_iter_search=2,
+                                        maximize_metric=True,
+                                        cv = 2,
+                                        params_dict={'graph_conv_layers': [[64, 64], [32, 32]]},
+                                        model_type="deepchem")
 
-best_model, best_hyperparameters, all_results = model_graph.hyperparameter_search(train_dataset=train_dataset,
-                                                     metric=Metric(roc_auc_score),
-                                                     n_iter_search=2,
-                                                     maximize_metric=True,
-                                                     cv = 2,
-                                                     params_dict={'graph_conv_layers': [[64, 64], [32, 32]]},
-                                                     model_type="deepchem")
+best_model, best_hyperparameters, all_results = model_graph.fit(train_dataset=train_dataset)
 
 ```
 

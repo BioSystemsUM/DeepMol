@@ -17,6 +17,7 @@ from deepmol.feature_selection import LowVarianceFS, KbestFS
 from deepmol.loaders import CSVLoader
 from deepmol.metrics import Metric
 from deepmol.models import SklearnModel, KerasModel, DeepChemModel
+from deepmol.parameter_optimization import HyperparameterOptimizerValidation, HyperparameterOptimizerCV
 from deepmol.pipeline import Pipeline
 from deepmol.scalers import StandardScaler, MinMaxScaler
 from deepmol.standardizer import BasicStandardizer, ChEMBLStandardizer
@@ -83,6 +84,222 @@ class TestPipeline(TestCase):
         e1_p3, e2_p3 = pipeline3.evaluate(self.dataset_descriptors, [Metric(accuracy_score)])
         self.assertEqual(e1, e1_p3)
         self.assertEqual(e2_p3, {})
+
+    def test_hpo_validation_sklearn_models(self):
+        standardizer = BasicStandardizer()
+        featurizer = MorganFingerprint(size=1024)
+        feature_selector = LowVarianceFS(threshold=0.1)
+        svc_model = SVC()
+        svc_model = SklearnModel(model=svc_model, model_dir='sklearn_model')
+
+        steps = [('standardizer', standardizer),
+                 ('featurizer', featurizer),
+                 ('feature_selector', feature_selector),
+                 ('model', svc_model)]
+
+        params_dict_svc = {"C": [1.0, 1.2, 0.8]}
+
+        hpo = HyperparameterOptimizerValidation(SVC, metric=Metric(accuracy_score),
+                                                maximize_metric=True,
+                                                n_iter_search=2,
+                                                params_dict=params_dict_svc,
+                                                model_type="sklearn")
+
+        pipeline = Pipeline(steps=steps, hpo=hpo, path='test_pipeline/')
+        pipeline.fit(self.dataset_smiles, self.dataset_smiles)
+        self.assertTrue(pipeline.is_fitted())
+        self.assertTrue(len(pipeline.hpo_all_results_) == 2)
+        self.assertTrue(len(pipeline.hpo_best_hyperparams_) == 1)
+
+        self.assertEqual(pipeline.predict(self.dataset_smiles).shape, self.dataset_smiles.y.shape)
+        self.assertEqual(pipeline.steps[-1][0], "best_model")
+
+        steps = [('standardizer', standardizer),
+                 ('featurizer', featurizer),
+                 ('feature_selector', feature_selector)]
+        pipeline = Pipeline(steps=steps, hpo=hpo, path='test_pipeline/')
+        pipeline.fit(self.dataset_smiles, self.dataset_smiles)
+        self.assertTrue(pipeline.is_fitted())
+        self.assertTrue(len(pipeline.hpo_all_results_) == 2)
+        self.assertTrue(len(pipeline.hpo_best_hyperparams_) == 1)
+        self.assertEqual(pipeline.steps[-1][0], "best_model")
+
+        predictions = pipeline.predict(self.dataset_smiles)
+        pipeline.save()
+        pipeline = Pipeline.load(pipeline.path)
+        new_predictions = pipeline.predict(self.dataset_smiles)
+        self.assertTrue(np.array_equal(predictions, new_predictions))
+
+    def test_hpo_cv_sklearn_models(self):
+        standardizer = BasicStandardizer()
+        featurizer = MorganFingerprint(size=1024)
+        feature_selector = LowVarianceFS(threshold=0.1)
+        svc_model = SVC()
+        svc_model = SklearnModel(model=svc_model, model_dir='sklearn_model')
+
+        steps = [('standardizer', standardizer),
+                 ('featurizer', featurizer),
+                 ('feature_selector', feature_selector),
+                 ('model', svc_model)]
+
+        params_dict_svc = {"C": [1.0, 1.2, 0.8]}
+
+        hpo = HyperparameterOptimizerCV(SVC, metric=Metric(accuracy_score),
+                                        maximize_metric=True,
+                                        n_iter_search=2,
+                                        cv=3,
+                                        params_dict=params_dict_svc,
+                                        model_type="sklearn")
+
+        pipeline = Pipeline(steps=steps, hpo=hpo, path='test_pipeline/')
+        pipeline.fit(self.dataset_smiles)
+
+        self.assertTrue(pipeline.is_fitted())
+        self.assertTrue(len(pipeline.hpo_all_results_) == 12)
+        self.assertTrue(len(pipeline.hpo_best_hyperparams_) == 1)
+        self.assertEqual(pipeline.steps[-1][0], "best_model")
+        predictions = pipeline.predict(self.dataset_smiles)
+        pipeline.save()
+        pipeline = Pipeline.load(pipeline.path)
+        new_predictions = pipeline.predict(self.dataset_smiles)
+        self.assertTrue(np.array_equal(predictions, new_predictions))
+
+    def test_hpo_validation_keras_models(self):
+        def basic_classification_model_builder(input_shape, layers):
+            model = Sequential()
+            model.add(Input(shape=input_shape))
+            for layer in layers:
+                model.add(Dense(layer, activation='relu'))
+            model.add(Dense(1, activation='sigmoid'))
+            model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+            return model
+
+        keras_model = KerasModel(model_builder=basic_classification_model_builder, epochs=2, input_shape=(1024,))
+        standardizer = BasicStandardizer()
+        featurizer = MorganFingerprint(size=1024)
+
+        steps = [('standardizer', standardizer),
+                 ('featurizer', featurizer),
+                 ('model', keras_model)]
+
+        params_dict_keras = {"layers": [[512, 256], [512, 256, 128]], "input_shape": [(1024,)]}
+        optimizer = HyperparameterOptimizerValidation(basic_classification_model_builder, metric=Metric(accuracy_score),
+                                                      maximize_metric=True,
+                                                      n_iter_search=2,
+                                                      params_dict=params_dict_keras,
+                                                      model_type="keras", epochs=2)
+
+        pipeline = Pipeline(steps=steps, hpo=optimizer, path='test_pipeline/')
+        pipeline.fit(self.dataset_smiles, self.dataset_smiles)
+        self.assertTrue(pipeline.is_fitted())
+        self.assertTrue(len(pipeline.hpo_all_results_) == 2)
+        self.assertTrue(len(pipeline.hpo_best_hyperparams_) == 2)
+        self.assertEqual(pipeline.steps[-1][0], "best_model")
+        predictions = pipeline.predict(self.dataset_smiles)
+        pipeline.save()
+        pipeline = Pipeline.load(pipeline.path)
+        new_predictions = pipeline.predict(self.dataset_smiles)
+        self.assertTrue(np.array_equal(predictions, new_predictions))
+
+    def test_hpo_cv_keras_models(self):
+        def basic_classification_model_builder(input_shape, layers):
+            model = Sequential()
+            model.add(Input(shape=input_shape))
+            for layer in layers:
+                model.add(Dense(layer, activation='relu'))
+            model.add(Dense(1, activation='sigmoid'))
+            model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+            return model
+
+        keras_model = KerasModel(model_builder=basic_classification_model_builder, epochs=2, input_shape=(1024,))
+        standardizer = BasicStandardizer()
+        featurizer = MorganFingerprint(size=1024)
+
+        steps = [('standardizer', standardizer),
+                 ('featurizer', featurizer),
+                 ('model', keras_model)]
+
+        params_dict_keras = {"layers": [[512, 256], [512, 256, 128]], "input_shape": [(1024,)]}
+        optimizer = HyperparameterOptimizerCV(basic_classification_model_builder, metric=Metric(accuracy_score),
+                                              maximize_metric=True,
+                                              n_iter_search=2,
+                                              cv=3,
+                                              params_dict=params_dict_keras,
+                                              model_type="keras", epochs=2)
+        pipeline = Pipeline(steps=steps, hpo=optimizer, path='test_pipeline/')
+        pipeline.fit(self.dataset_smiles, self.dataset_smiles)
+        self.assertTrue(pipeline.is_fitted())
+        self.assertTrue(len(pipeline.hpo_all_results_) == 13)
+        self.assertTrue(len(pipeline.hpo_best_hyperparams_) == 2)
+        self.assertEqual(pipeline.steps[-1][0], "best_model")
+        predictions = pipeline.predict(self.dataset_smiles)
+        pipeline.save()
+        pipeline = Pipeline.load(pipeline.path)
+        new_predictions = pipeline.predict(self.dataset_smiles)
+        self.assertTrue(np.array_equal(predictions, new_predictions))
+
+    def test_hpo_validation_deepchem_models(self):
+        standardizer = BasicStandardizer()
+        featurizer = ConvMolFeat()
+
+        def graphconv_builder(graph_conv_layers, batch_size=256, epochs=5):
+            graph = GraphConvModel(n_tasks=1, graph_conv_layers=graph_conv_layers, batch_size=batch_size,
+                                   mode='classification')
+            return DeepChemModel(graph, model_dir=None, epochs=epochs)
+
+        steps = [('standardizer', standardizer),
+                 ('featurizer', featurizer)]
+
+        params_dict_deepchem = {"graph_conv_layers": [[64, 64], [128, 128]]}
+        optimizer = HyperparameterOptimizerValidation(graphconv_builder, metric=Metric(accuracy_score),
+                                                      maximize_metric=True,
+                                                      n_iter_search=2,
+                                                      params_dict=params_dict_deepchem,
+                                                      model_type="deepchem", epochs=2)
+
+        pipeline = Pipeline(steps=steps, hpo=optimizer, path='test_pipeline/')
+        pipeline.fit(self.dataset_smiles, self.dataset_smiles)
+        self.assertTrue(pipeline.is_fitted())
+        self.assertTrue(len(pipeline.hpo_all_results_) == 2)
+        self.assertTrue(len(pipeline.hpo_best_hyperparams_) == 1)
+        self.assertEqual(pipeline.steps[-1][0], "best_model")
+        predictions = pipeline.predict(self.dataset_smiles)
+        pipeline.save()
+        pipeline = Pipeline.load(pipeline.path)
+        new_predictions = pipeline.predict(self.dataset_smiles)
+        self.assertTrue(np.array_equal(predictions, new_predictions))
+
+    def test_hpo_cv_deepchem_models(self):
+        standardizer = BasicStandardizer()
+        featurizer = ConvMolFeat()
+
+        def graphconv_builder(graph_conv_layers, batch_size=256, epochs=5):
+            graph = GraphConvModel(n_tasks=1, graph_conv_layers=graph_conv_layers, batch_size=batch_size,
+                                   mode='classification')
+            return DeepChemModel(graph, model_dir=None, epochs=epochs)
+
+        steps = [('standardizer', standardizer),
+                 ('featurizer', featurizer)]
+
+        params_dict_deepchem = {"graph_conv_layers": [[64, 64], [128, 128]]}
+        optimizer = HyperparameterOptimizerCV(graphconv_builder, metric=Metric(accuracy_score),
+                                              maximize_metric=True,
+                                              n_iter_search=2,
+                                              cv=3,
+                                              params_dict=params_dict_deepchem,
+                                              model_type="deepchem", epochs=2)
+
+        pipeline = Pipeline(steps=steps, hpo=optimizer, path='test_pipeline/')
+        pipeline.fit(self.dataset_smiles)
+        self.assertTrue(pipeline.is_fitted())
+        self.assertTrue(len(pipeline.hpo_all_results_) == 11)
+        self.assertTrue(len(pipeline.hpo_best_hyperparams_) == 1)
+        self.assertEqual(pipeline.steps[-1][0], "best_model")
+        predictions = pipeline.predict(self.dataset_smiles)
+        pipeline.save()
+        pipeline = Pipeline.load(pipeline.path)
+        new_predictions = pipeline.predict(self.dataset_smiles)
+        self.assertTrue(np.array_equal(predictions, new_predictions))
 
     def test_pipeline(self):
         morgan = MorganFingerprint(size=1024)

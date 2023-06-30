@@ -31,7 +31,7 @@ steps = [('featurizer', featurizer), ('scaler', scaler), ('model', model)]
 The pipeline will first apply the featurizer, then the scaler and finally the model.
 
 
-## Example using a custom objective function:
+## Example using a custom objective function
 
 In the following example we will assume that you already have the data processed (ready for
 training). We will only use DeepMol's PipelineOptimization class to optimize the final
@@ -133,7 +133,7 @@ Information about the importance of the optimized parameters can be retrieved us
 param_importances = po.get_param_importances()
 ```
 
-## Example using a preset:
+## Example using a preset
 
 The following example assumes that you are providing raw SMILES data and respective labels.
 We will use the `'all'` preset.

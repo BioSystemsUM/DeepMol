@@ -38,18 +38,16 @@ def create_model(input_dim, optimizer='adam', dropout=0.5):
 class TestKerasHyperparameterOptimization(ModelsTestCase, TestCase):
 
     def test_fit_predict_evaluate(self):
-        optimizer = HyperparameterOptimizerValidation(create_model)
         params_dict_dense = {
             "input_dim": [self.binary_dataset.X.shape[1]],
             "dropout": [0.5, 0.6, 0.7],
             "optimizer": ['adam']
         }
+        optimizer = HyperparameterOptimizerValidation(create_model, metric=Metric(accuracy_score),
+                                                      maximize_metric=True,
+                                                      n_iter_search=2,
+                                                      params_dict=params_dict_dense,
+                                                      model_type="keras")
 
-        best_dnn, best_hyperparams, all_results = optimizer.hyperparameter_search(train_dataset=self.binary_dataset,
-                                                                                  valid_dataset=self.binary_dataset,
-                                                                                  metric=Metric(accuracy_score),
-                                                                                  maximize_metric=True,
-                                                                                  n_iter_search=2,
-                                                                                  params_dict=params_dict_dense,
-                                                                                  model_type="keras"
-                                                                                  )
+        best_dnn, best_hyperparams, all_results = optimizer.fit(train_dataset=self.binary_dataset,
+                                                                valid_dataset=self.binary_dataset)

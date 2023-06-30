@@ -37,13 +37,14 @@ class TestDeepChemHyperparameterOptimization(ModelsTestCase, TestCase):
                                    mode='classification')
             return DeepChemModel(graph, model_dir=None, epochs=epochs)
 
-        model_graph = HyperparameterOptimizerCV(model_builder=graphconv_builder)
+        model_graph = HyperparameterOptimizerCV(model_builder=graphconv_builder,
+                                                metric=Metric(roc_auc_score),
+                                                n_iter_search=2,
+                                                cv=2, params_dict={'graph_conv_layers': [[64, 64],
+                                                                                         [32, 32]]},
+                                                model_type="deepchem", maximize_metric=True)
 
-        best_model, _, _ = model_graph.hyperparameter_search(train_dataset=ds_train, metric=Metric(roc_auc_score),
-                                                             n_iter_search=2,
-                                                             cv=2, params_dict={'graph_conv_layers': [[64, 64],
-                                                                                                      [32, 32]]},
-                                                             model_type="deepchem")
+        best_model, _, _ = model_graph.fit(train_dataset=ds_train)
 
         test_preds = best_model.predict(ds_test)
         self.assertEqual(len(test_preds), len(ds_test))
@@ -70,14 +71,16 @@ class TestDeepChemHyperparameterOptimization(ModelsTestCase, TestCase):
                                    mode='classification')
             return DeepChemModel(graph, epochs=epochs)
 
-        model_graph = HyperparameterOptimizerValidation(model_builder=graphconv_builder)
+        model_graph = HyperparameterOptimizerValidation(model_builder=graphconv_builder,
+                                                        metric=Metric(accuracy_score),
+                                                        maximize_metric=True,
+                                                        n_iter_search=2,
+                                                        params_dict={'graph_conv_layers': [[64, 64], [32, 32]]},
+                                                        model_type="deepchem"
+                                                        )
 
-        best_model, best_hyperparams, all_results = model_graph.hyperparameter_search(
+        best_model, best_hyperparams, all_results = model_graph.fit(
             train_dataset=self.binary_dataset,
             valid_dataset=self.binary_dataset,
-            metric=Metric(accuracy_score),
-            maximize_metric=True,
-            n_iter_search=2,
-            params_dict={'graph_conv_layers': [[64, 64], [32, 32]]},
-            model_type="deepchem"
+
         )

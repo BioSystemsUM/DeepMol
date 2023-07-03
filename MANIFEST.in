@@ -1,1 +1,2 @@
 include extra-requirements.txt
+include src/deepmol/compound_featurization/mol2vec_models/model_300dim.pkl

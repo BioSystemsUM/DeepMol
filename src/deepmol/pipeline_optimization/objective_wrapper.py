@@ -1,5 +1,6 @@
 import os
 import shutil
+import warnings
 from copy import copy
 
 from optuna import Trial
@@ -87,5 +88,8 @@ class Objective:
             self.study.set_user_attr('best_scores', best_scores)
             return score
         except ValueError as e:
-            print(e)
+            warnings.warn(e)
+            return float('inf') if self.direction == 'minimize' else float('-inf')
+        except Exception as e:
+            warnings.warn(e)
             return float('inf') if self.direction == 'minimize' else float('-inf')

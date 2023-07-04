@@ -17,7 +17,8 @@ from .mixed_descriptors import MixedFeaturizer
 try:
     from .mol2vec import Mol2Vec
 except ImportError:
-    warnings.warn("Mol2Vec not available. Please install it to use it.")
+    warnings.warn("Mol2Vec not available. Please install it to use it. "
+                  "(pip install git+https://github.com/samoturk/mol2vec#egg=mol2vec)")
 
 try:
     from .deepchem_featurizers import WeaveFeat, CoulombFeat, CoulombEigFeat, ConvMolFeat, MolGraphConvFeat, \

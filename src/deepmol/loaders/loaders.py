@@ -2,7 +2,7 @@
 Classes for processing input data into a format suitable for machine learning.
 """
 
-from typing import Optional, List
+from typing import Optional, List, Union
 
 from deepmol.datasets import SmilesDataset
 import numpy as np
@@ -24,7 +24,7 @@ class CSVLoader(object):
                  labels_fields: List[str] = None,
                  features_fields: List[str] = None,
                  shard_size: int = None,
-                 mode: str = 'auto') -> None:
+                 mode: Union[str, List[str]] = 'auto') -> None:
         """
         Initialize the CSVLoader.
 
@@ -42,10 +42,11 @@ class CSVLoader(object):
             field containing the features
         shard_size: int
             size of the shard to load
-        mode: str
+        mode: Union[str, List[str]]
             The mode of the dataset.
             If 'auto', the mode is inferred from the labels. If 'classification', the dataset is treated as a
-            classification dataset. If 'regression', the dataset is treated as a regression dataset.
+            classification dataset. If 'regression', the dataset is treated as a regression dataset. If a list of
+            modes is passed, the dataset is treated as a multi-task dataset.
         """
         self.dataset_path = dataset_path
         self.mols_field = smiles_field
@@ -152,7 +153,7 @@ class SDFLoader(object):
                  labels_fields: List[str] = None,
                  features_fields: List[str] = None,
                  shard_size: Optional[int] = None,
-                 mode: str = 'auto') -> None:
+                 mode: Union[str, List[str]] = 'auto') -> None:
         """
         Initialize the SDFLoader.
 
@@ -168,10 +169,11 @@ class SDFLoader(object):
             field containing the features
         shard_size: int
             size of the shard to load
-        mode: str
+        mode: Union[str, List[str]]
             The mode of the dataset.
             If 'auto', the mode is inferred from the labels. If 'classification', the dataset is treated as a
-            classification dataset. If 'regression', the dataset is treated as a regression dataset.
+            classification dataset. If 'regression', the dataset is treated as a regression dataset. If a list of
+            modes is passed, the dataset is treated as a multi-task dataset.
         """
         self.dataset_path = dataset_path
         self.id_field = id_field

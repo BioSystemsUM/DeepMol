@@ -221,24 +221,24 @@ class Dataset(ABC):
 
     @property
     @abstractmethod
-    def mode(self) -> str:
+    def mode(self) -> Union[str, List[str]]:
         """
         Get the mode of the dataset.
 
         Returns
         -------
-        mode: str
+        mode: Union[str, List[str]]
             The mode of the dataset.
         """
 
     @mode.setter
-    def mode(self, value: str) -> None:
+    def mode(self, value: Union[str, List[str]]) -> None:
         """
         Set the mode of the dataset.
 
         Parameters
         ----------
-        value: str
+        value: Union[str, List[str]]
             The mode of the dataset.
         """
 
@@ -335,7 +335,7 @@ class SmilesDataset(Dataset):
                  feature_names: Union[List, np.ndarray] = None,
                  y: Union[List, np.ndarray] = None,
                  label_names: Union[List, np.ndarray] = None,
-                 mode: str = 'auto') -> None:
+                 mode: Union[str, List[str]] = 'auto') -> None:
         """
         Initialize a dataset from SMILES strings.
 
@@ -355,11 +355,11 @@ class SmilesDataset(Dataset):
             Labels of the molecules.
         label_names: Union[List, np.ndarray]
             Names of the labels.
-        mode: str
+        mode: Union[str, List[str]]
             The mode of the dataset.
             If 'auto', the mode is inferred from the labels. If 'classification', the dataset is treated as a
-            classification dataset. If 'regression', the dataset is treated as a regression dataset. If 'multitask',
-            the dataset is treated as a multitask dataset.
+            classification dataset. If 'regression', the dataset is treated as a regression dataset. If list, the
+            dataset is treated as a multi-task dataset.
         """
         super().__init__()
         self._smiles = np.array(smiles)
@@ -583,6 +583,9 @@ class SmilesDataset(Dataset):
         elif len(self._X.shape) == 3:
             if len(feature_names) != len(self._X[0][0]):
                 raise ValueError('The number of feature names must be equal to the number of features.')
+        elif len(self._X.shape) == 4:
+            if len(feature_names) != len(self._X[0][0]):  # SmileImageFeat
+                raise ValueError('The number of feature names must be equal to the number of features.')
         else:
             raise ValueError('The number of dimensions of X must be 1, 2 or 3.')
         if len(feature_names) != len(set(feature_names)):
@@ -682,24 +685,24 @@ class SmilesDataset(Dataset):
         return self._n_tasks
 
     @property
-    def mode(self) -> str:
+    def mode(self) -> Union[str, List[str]]:
         """
         Get the mode of the dataset.
         Returns
         -------
-        str
+        mode: Union[str, List[str]]
             The mode of the dataset.
         """
         return self._mode
 
     @mode.setter
-    def mode(self, mode: str) -> None:
+    def mode(self, mode: Union[str, List[str]]) -> None:
         """
         Set the mode of the dataset.
 
         Parameters
         ----------
-        mode: str
+        mode: Union[str, List[str]]
             The mode of the dataset.
         """
         if not isinstance(mode, list):

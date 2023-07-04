@@ -304,9 +304,7 @@ def preset_sklearn_models(trial, data: Dataset) -> list:
     final_steps: list
         List of tuples, where each tuple is a step in the sklearn pipeline.
     """
-    n_tasks = data.n_tasks
     mode = data.mode
-    print(mode)
     featurizer = _get_featurizer(trial, '1D')
     if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
             featurizer.__class__.__name__ == 'All3DDescriptors':
@@ -314,7 +312,11 @@ def preset_sklearn_models(trial, data: Dataset) -> list:
     else:
         scaler = PassThroughTransformer()
     feature_selector = _get_feature_selector(trial, task_type=mode)
-    sk_model = _get_sk_model(trial, task_type=mode)
+    if mode == 'classification':
+        sk_mode = 'classification_binary' if set(data.y) == {0, 1} else 'classification_multiclass'
+    else:
+        sk_mode = mode
+    sk_model = _get_sk_model(trial, task_type=sk_mode)
     final_steps = [('standardizer', _get_standardizer(trial)), ('featurizer', featurizer), ('scaler', scaler),
                    ('feature_selector', feature_selector), ('model', sk_model)]
     return final_steps

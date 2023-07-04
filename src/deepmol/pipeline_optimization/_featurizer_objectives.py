@@ -52,6 +52,9 @@ def _get_featurizer(trial: Trial, feat_type: Literal['1D', '2D']) -> Transformer
             available_feats.remove('mixed')
             f1 = trial.suggest_categorical('f1', available_feats)
             f2 = trial.suggest_categorical('f2', available_feats)
+            if f1 == f2:
+                while f1 == f2:
+                    f2 = trial.suggest_categorical('f2', available_feats)
             return MixedFeaturizer([_1D_FEATURIZERS[f1](), _1D_FEATURIZERS[f2]()])
         return _1D_FEATURIZERS[feat]()
     elif feat_type == '2D':

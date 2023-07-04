@@ -1,7 +1,12 @@
 import os
 import shutil
+import warnings
+from copy import copy
+from datetime import datetime
+from random import randint, random
 from unittest import TestCase
 
+import numpy as np
 import optuna
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, mean_squared_error
@@ -49,18 +54,37 @@ class TestPipelineOptimization(TestCase):
                            shard_size=100)
         self.dataset_regression = loader.create_dataset(sep=",")
 
+        self.dataset_multiclass = copy(self.dataset_smiles)
+        # change dataset.y to multiclass
+        self.dataset_multiclass._y = np.array([randint(0, 3) for _ in range(len(self.dataset_multiclass))])
+
+        multilabel_dataset_path = os.path.join(TEST_DIR, 'data')
+        dataset_multilabel = os.path.join(multilabel_dataset_path, "multilabel_classification_dataset.csv")
+        loader = CSVLoader(dataset_multilabel,
+                           smiles_field='smiles',
+                           labels_fields=['C00341', 'C01789', 'C00078'],
+                           mode=['classification', 'classification', 'classification'])
+        self.dataset_multilabel = loader.create_dataset(sep=",")
+
+        self.dataset_multilabel_regression = copy(self.dataset_multilabel)
+        # change dataset.y to regression (3 labels with random float values between 0 and 10)
+        self.dataset_multilabel_regression._y = np.array([[random() * 10 for _ in range(3)] for _ in
+                                                          range(len(self.dataset_multilabel_regression))])
+        self.dataset_multilabel_regression._mode = ['regression', 'regression', 'regression']
+
     def tearDown(self) -> None:
-        if os.path.exists('test_predictor_pipeline'):
-            shutil.rmtree('test_predictor_pipeline')
-        if os.path.exists('test_pipeline'):
-            shutil.rmtree('test_pipeline')
         # remove logs (files with .log extension)
         for file in os.listdir():
             if file.endswith('.log'):
                 os.remove(file)
+
         # remove model directories (ending with _model)
         for file in os.listdir():
             if file.endswith('_model'):
+                shutil.rmtree(file)
+            elif file.startswith('test_pipeline_'):
+                shutil.rmtree(file)
+            elif file.startswith('test_predictor_pipeline_'):
                 shutil.rmtree(file)
         # remove study rdbm
         try:
@@ -86,7 +110,8 @@ class TestPipelineOptimization(TestCase):
             steps = [('model', model)]
             return steps
 
-        po = PipelineOptimization(direction='maximize', study_name='test_predictor_pipeline')
+        study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        po = PipelineOptimization(direction='maximize', study_name=study_name)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_descriptors, seed=123)
         po.optimize(train_dataset=train, test_dataset=test, objective_steps=objective, metric=metric, n_trials=5,
@@ -96,16 +121,17 @@ class TestPipelineOptimization(TestCase):
 
         self.assertEqual(len(po.trials), 5)
         # assert that 3 pipelines were saved
-        self.assertEqual(len(os.listdir('test_predictor_pipeline')), 3)
+        self.assertEqual(len(os.listdir(study_name)), 3)
 
         df = po.trials_dataframe()
         self.assertEqual(len(df), 5)
         df2 = po.trials_dataframe(cols=['number', 'value'])
         self.assertEqual(df2.shape, (5, 2))
 
-    def test_classification_preset(self):
+    def test_binary_classification_preset(self):
         storage_name = "sqlite:///test_pipeline.db"
-        po = PipelineOptimization(direction='maximize', study_name='test_pipeline', storage=storage_name)
+        study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        po = PipelineOptimization(direction='maximize', study_name=study_name, storage=storage_name)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_smiles, seed=123)
         po.optimize(train_dataset=train, test_dataset=test, objective_steps='all', metric=metric, n_trials=3,
@@ -115,7 +141,7 @@ class TestPipelineOptimization(TestCase):
 
         self.assertEqual(len(po.trials), 3)
         # assert that 2 pipelines were saved
-        self.assertEqual(len(os.listdir('test_pipeline')), 2)
+        self.assertEqual(len(os.listdir(study_name)), 2)
 
         best_pipeline = po.best_pipeline
         new_predictions = best_pipeline.evaluate(test, [metric])[0][metric.name]
@@ -126,8 +152,60 @@ class TestPipelineOptimization(TestCase):
             for param in param_importance:
                 self.assertTrue(param in po.best_params.keys())
 
+    def test_multiclass_classification_preset(self):
+        warnings.filterwarnings("ignore")
+        storage_name = "sqlite:///test_pipeline.db"
+        study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        po = PipelineOptimization(direction='maximize', study_name=study_name, storage=storage_name)
+        metric = Metric(accuracy_score)
+        train, test = RandomSplitter().train_test_split(self.dataset_multiclass, seed=123)
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps='all', metric=metric, n_trials=3,
+                    data=train, save_top_n=2)
+        self.assertEqual(po.best_params, po.best_trial.params)
+        self.assertIsInstance(po.best_value, float)
+
+        self.assertEqual(len(po.trials), 3)
+        # assert that 2 pipelines were saved
+        self.assertEqual(len(os.listdir(study_name)), 2)
+
+        best_pipeline = po.best_pipeline
+        new_predictions = best_pipeline.evaluate(test, [metric])[0][metric.name]
+        self.assertEqual(new_predictions, po.best_value)
+
+        param_importance = po.get_param_importances()
+        if param_importance is not None:
+            for param in param_importance:
+                self.assertTrue(param in po.best_params.keys())
+
+    def test_multilabel_classification_preset(self):
+        warnings.filterwarnings("ignore")
+        storage_name = "sqlite:///test_pipeline.db"
+        study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        po = PipelineOptimization(direction='maximize', study_name=study_name, storage=storage_name)
+        metric = Metric(accuracy_score)
+        train, test = RandomSplitter().train_test_split(self.dataset_multilabel, seed=123)
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps='sklearn', metric=metric, n_trials=3,
+                    data=train, save_top_n=2)
+        self.assertEqual(po.best_params, po.best_trial.params)
+        self.assertIsInstance(po.best_value, float)
+
+        self.assertEqual(len(po.trials), 3)
+        # assert that 2 pipelines were saved
+        self.assertEqual(len(os.listdir(study_name)), 2)
+        print(train.y)
+        print(po.best_pipeline.predict(train))
+        best_pipeline = po.best_pipeline
+        new_predictions = best_pipeline.evaluate(test, [metric])[0][metric.name]
+        self.assertEqual(new_predictions, po.best_value)
+
+        param_importance = po.get_param_importances()
+        if param_importance is not None:
+            for param in param_importance:
+                self.assertTrue(param in po.best_params.keys())
+
     def test_regression_preset(self):
-        po = PipelineOptimization(direction='minimize', study_name='test_pipeline')
+        study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        po = PipelineOptimization(direction='maximize', study_name=study_name)
         metric = Metric(mean_squared_error)
         train, test = RandomSplitter().train_test_split(self.dataset_regression, seed=123)
         po.optimize(train_dataset=train, test_dataset=test, objective_steps='all', metric=metric, n_trials=3,
@@ -138,7 +216,7 @@ class TestPipelineOptimization(TestCase):
 
         self.assertEqual(len(po.trials), 3)
         # assert that 2 pipelines were saved
-        self.assertEqual(len(os.listdir('test_pipeline')), 2)
+        self.assertEqual(len(os.listdir(study_name)), 2)
 
         best_pipeline = po.best_pipeline
         new_predictions = best_pipeline.evaluate(test, [metric])[0][metric.name]

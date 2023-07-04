@@ -1360,7 +1360,32 @@ def gradient_boosting_classifier_step(trial):
     loss = trial.suggest_categorical('loss', ['deviance', 'exponential'])
     n_estimators = trial.suggest_int('n_estimators', 50, 500, step=50)
     learning_rate = trial.suggest_float('learning_rate', 0.01, 1.0)
-    criterion = trial.suggest_categorical('criterion', ['friedman_mse', 'mse', 'mae'])
+    criterion = trial.suggest_categorical('criterion', ['friedman_mse', 'mse'])
+    max_features = trial.suggest_categorical('max_features', ['auto', 'sqrt', 'log2'])
+    gradient_boosting_classifier_kwargs = {'loss': loss, 'n_estimators': n_estimators,
+                                           'learning_rate': learning_rate, 'criterion': criterion,
+                                           'max_features': max_features}
+    return gradient_boosting_classifier_model(gradient_boosting_classifier_kwargs=gradient_boosting_classifier_kwargs)
+
+
+def gradient_boosting_multiclass_classifier_step(trial):
+    """
+    Get a GradientBoostingClassifier object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The GradientBoostingClassifier object step.
+    """
+    loss = trial.suggest_categorical('loss', ['deviance', 'log_loss'])
+    n_estimators = trial.suggest_int('n_estimators', 50, 500, step=50)
+    learning_rate = trial.suggest_float('learning_rate', 0.01, 1.0)
+    criterion = trial.suggest_categorical('criterion', ['friedman_mse', 'mse'])
     max_features = trial.suggest_categorical('max_features', ['auto', 'sqrt', 'log2'])
     gradient_boosting_classifier_kwargs = {'loss': loss, 'n_estimators': n_estimators,
                                            'learning_rate': learning_rate, 'criterion': criterion,
@@ -1956,7 +1981,6 @@ _CLASSIFICATION_MODELS = {'ridge_classifier_model': ridge_classifier_step,
 # | Multioutput Regression                | >1                | Continuous         | 'continuous-multioutput' |
 #############################################################################################################
 
-# TODO: test these models
 # MULTICLASS
 _MULTICLASS_CLASSIFICATION_MODELS = {'bernoulli_nb_model': bernoulli_nb_step,
                                      'decision_tree_classifier_model': decision_tree_classifier_step,
@@ -1980,7 +2004,7 @@ _MULTICLASS_CLASSIFICATION_MODELS = {'bernoulli_nb_model': bernoulli_nb_step,
                                      'nu_svc_model': nu_svc_step,
                                      'svc_model': svc_step,
                                      'gaussian_process_classifier_model': gaussian_process_multiclass_classifier_step,
-                                     'gradient_boosting_classifier_model': gradient_boosting_classifier_step,
+                                     'gradient_boosting_classifier_model': gradient_boosting_multiclass_classifier_step,
                                      'sgd_classifier_model': sgd_classifier_step,
                                      'perceptron_model': perceptron_step,
                                      'passive_aggressive_classifier_model': passive_aggressive_classifier_step,

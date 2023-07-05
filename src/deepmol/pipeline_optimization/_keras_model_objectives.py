@@ -3,93 +3,35 @@ from optuna import Trial
 from deepmol.models.keras_model_builders import *
 
 
-def keras_dense_classification_step(trial: Trial, input_shape: tuple, last_layer_units: int = 1,
-                                    last_activation: str = 'sigmoid', loss: str = 'binary_crossentropy',
-                                    metrics: list = ['accuracy']):
-    """
-    Optuna model step for a dense Keras model for classification.
-
-    Parameters
-    ----------
-    trial : optuna.Trial
-        An Optuna trial object.
-    input_shape : tuple
-        The shape of the input data.
-    last_layer_units : int, optional
-        The number of units of the last layer, by default 1.
-    last_activation : str, optional
-        The activation function of the last layer, by default 'sigmoid'.
-    loss : str, optional
-        The loss function, by default 'binary_crossentropy'.
-    metrics : list, optional
-        The metrics, by default ['accuracy'].
-
-    Returns
-    -------
-    keras_dense_model
-        A dense Keras model.
-    """
+def keras_fcnn_step(trial: Trial, input_shape: tuple, label_names: List[str] = None,
+                    last_layers_units: List[int] = None, last_layers_activations: List[str] = None,
+                    losses: Union[List[str], Dict[str, str]] = None, metrics: List[str] = None,
+                    mode: str = 'classification'):
     input_dim = input_shape[0]
     n_hidden_layers = trial.suggest_int('n_hidden_layers', 1, 5)
-    layers_units = [trial.suggest_int(f'layer_units_{i}', 8, 64) for i in range(n_hidden_layers + 1)]
-    layers_units[-1] = last_layer_units
-    dropouts = [trial.suggest_float(f'dropout_{i}', 0.0, 0.8) for i in range(n_hidden_layers + 1)]
-    activations = [trial.suggest_categorical(f'activation_{i}', ['relu', 'tanh']) for i in
-                   range(n_hidden_layers + 1)]
-    activations[-1] = last_activation
+    hidden_units = [trial.suggest_int(f'hidden_layer_units_{i}', 8, 64) for i in range(n_hidden_layers)]
+    hidden_dropouts = [trial.suggest_float(f'hidden_dropout_{i}', 0.0, 0.8) for i in range(n_hidden_layers)]
+    hidden_activations = [trial.suggest_categorical(f'hidden_activation_{i}', ['relu', 'tanh']) for i in
+                          range(n_hidden_layers)]
     batch_normalization = [trial.suggest_categorical(f'batch_normalization_{i}', [True, False]) for i in
-                           range(n_hidden_layers + 1)]
+                           range(n_hidden_layers)]
     l1_l2 = [(trial.suggest_float(f'l1_{i}', 1e-6, 1e-2, log=True),
               trial.suggest_float(f'l2_{i}', 1e-6, 1e-2, log=True)) for i in range(n_hidden_layers)]
     optimizer = trial.suggest_categorical('optimizer', ['adam', 'sgd'])
-    model_kwargs = {'input_dim': input_dim, 'n_hidden_layers': n_hidden_layers, 'layers_units': layers_units,
-                    'dropouts': dropouts, 'activations': activations, 'batch_normalization': batch_normalization,
-                    'l1_l2': l1_l2, 'loss': loss, 'optimizer': optimizer, 'metrics': metrics}
-    return keras_dense_model(model_kwargs=model_kwargs)
-
-
-def keras_dense_regression_step(trial: Trial, input_shape: tuple):
-    """
-    Optuna model step for a dense Keras model for regression.
-
-    Parameters
-    ----------
-    trial : optuna.Trial
-        An Optuna trial object.
-    input_shape : tuple
-        The shape of the input data.
-
-    Returns
-    -------
-    keras_dense_model
-        A dense Keras model.
-    """
-    input_dim = input_shape[0]
-    n_hidden_layers = trial.suggest_int('n_hidden_layers', 1, 5)
-    layers_units = [trial.suggest_int(f'layer_units_{i}', 8, 64) for i in range(n_hidden_layers + 1)]
-    layers_units[-1] = 1
-    dropouts = [trial.suggest_float(f'dropout_{i}', 0.0, 0.8) for i in range(n_hidden_layers + 1)]
-    activations = [trial.suggest_categorical(f'activation_{i}', ['relu', 'tanh']) for i in
-                   range(n_hidden_layers + 1)]
-    activations[-1] = 'linear'
-    batch_normalization = [trial.suggest_categorical(f'batch_normalization_{i}', [True, False]) for i in
-                           range(n_hidden_layers + 1)]
-    l1_l2 = [(trial.suggest_float(f'l1_{i}', 1e-6, 1e-2, log=True),
-              trial.suggest_float(f'l2_{i}', 1e-6, 1e-2, log=True)) for i in range(n_hidden_layers)]
-    # TODO: loss and metrics shoud be dynamic and metric the same as in the pipeline
-    loss = 'mean_squared_error'
-    optimizer = trial.suggest_categorical('optimizer', ['adam', 'sgd'])
-    metrics = ['mse']
-    model_kwargs = {'input_dim': input_dim, 'n_hidden_layers': n_hidden_layers, 'layers_units': layers_units,
-                    'dropouts': dropouts, 'activations': activations, 'batch_normalization': batch_normalization,
-                    'l1_l2': l1_l2, 'loss': loss, 'optimizer': optimizer, 'metrics': metrics}
-    keras_kwargs = {'mode': 'regression'}
-    return keras_dense_model(model_kwargs=model_kwargs, keras_kwargs=keras_kwargs)
+    n_tasks = len(last_layers_units)
+    model_kwargs = {'input_dim': input_dim, 'n_tasks': n_tasks, 'label_names': label_names,
+                    'n_hidden_layers': n_hidden_layers, 'hidden_units': hidden_units,
+                    'hidden_activations': hidden_activations, 'hidden_regularizers': l1_l2,
+                    'hidden_dropouts': hidden_dropouts, 'batch_normalization': batch_normalization,
+                    'last_layers_units': last_layers_units, 'last_layers_activations': last_layers_activations,
+                    'optimizer': optimizer, 'losses': losses, 'metrics': metrics}
+    keras_kwargs = {'mode': mode}
+    return keras_fcnn_model(model_kwargs=model_kwargs, keras_kwargs=keras_kwargs)
 
 
 def keras_1D_cnn_classification_step(trial: Trial, input_shape: tuple, last_layer_units: int = 1,
-                                        last_activation: str = 'sigmoid', loss: str = 'binary_crossentropy',
-                                        metrics: list = ['accuracy']):
+                                     last_activation: str = 'sigmoid', loss: str = 'binary_crossentropy',
+                                     metrics: list = ['accuracy']):
     """
     Optuna model step for a 1D CNN Keras model for classification.
 
@@ -252,8 +194,8 @@ def keras_tabular_transformer_regression_step(trial: Trial, input_shape: tuple):
 
 
 def keras_simple_rnn_classification_step(trial: Trial, input_shape: tuple, last_layer_units: int = 1,
-                                            last_activation: str = 'sigmoid', loss: str = 'binary_crossentropy',
-                                            metrics: list = ['accuracy']):
+                                         last_activation: str = 'sigmoid', loss: str = 'binary_crossentropy',
+                                         metrics: list = ['accuracy']):
     """
     Optuna model step for a Simple RNN Keras model for classification.
 
@@ -326,8 +268,8 @@ def keras_simple_rnn_regression_step(trial: Trial, input_shape: tuple):
 
 
 def keras_rnn_classification_step(trial: Trial, input_shape: tuple, last_layer_units: int = 1,
-                                    last_activation: str = 'sigmoid', loss: str = 'binary_crossentropy',
-                                    metrics: list = ['accuracy']):
+                                  last_activation: str = 'sigmoid', loss: str = 'binary_crossentropy',
+                                  metrics: list = ['accuracy']):
     """
     Optuna model step for a RNN Keras model for classification.
 
@@ -490,25 +432,37 @@ def keras_bidirectional_rnn_regression_step(trial: Trial, input_shape: tuple):
     return keras_bidirectional_rnn_model(model_kwargs=model_kwargs, keras_kwargs=keras_kwargs)
 
 
-_TABULAR_CLASSIFICATION_MODELS = {'keras_dense': keras_dense_classification_step,
-                                  'keras_1D_cnn': keras_1D_cnn_classification_step,
-                                  'keras_tabular_transformer': keras_tabular_transformer_classification_step,
-                                  }
+# _TABULAR_CLASSIFICATION_MODELS = {'keras_dense': keras_dense_classification_step,
+#                                   'keras_1D_cnn': keras_1D_cnn_classification_step,
+#                                   'keras_tabular_transformer': keras_tabular_transformer_classification_step,
+#                                   }
+#
+# _TABULAR_KERAS_MODELS = {'keras_dense': keras_dense_classification_step,
+#                          }
+#
+# _TABULAR_MULTITASK_CLASSIFICATION_MODELS = {'keras_dense': multitask_classification_keras_model_step,
+#                                             }
 
 _2D_CLASSIFICATION_MODELS = {'keras_simple_rnn': keras_simple_rnn_classification_step,
                              'keras_rnn': keras_rnn_classification_step,
                              'keras_bidirectional_rnn': keras_bidirectional_rnn_classification_step,
                              }
 
-_TABULAR_REGRESSION_MODELS = {'keras_dense': keras_dense_regression_step,
-                              'keras_1D_cnn': keras_1D_cnn_regression_step,
-                              'keras_tabular_transformer': keras_tabular_transformer_regression_step,
-                              }
+_2D_MULTITASK_CLASSIFICATION_MODELS = {}  # TODO: add multitask classification models
+
+# _TABULAR_REGRESSION_MODELS = {'keras_dense': keras_dense_regression_step,
+#                               'keras_1D_cnn': keras_1D_cnn_regression_step,
+#                               'keras_tabular_transformer': keras_tabular_transformer_regression_step,
+#                               }
+
+_TABULAR_MULTITASK_REGRESSION_MODELS = {}  # TODO: add multitask regression models
 
 _2D_REGRESSION_MODELS = {'keras_simple_rnn': keras_simple_rnn_regression_step,
                          'keras_rnn': keras_rnn_regression_step,
                          'keras_bidirectional_rnn': keras_bidirectional_rnn_regression_step,
                          }
+
+_2D_MULTITASK_REGRESSION_MODELS = {}  # TODO: add multitask regression models
 
 
 def _get_keras_model(trial, task_type: str, n_classes: int, featurizer_type: str, input_shape: tuple):
@@ -533,29 +487,60 @@ def _get_keras_model(trial, task_type: str, n_classes: int, featurizer_type: str
     keras_model
         A Keras model step for Optuna.
     """
-    if task_type == 'classification':
-        if n_classes > 2:
-            loss = 'categorical_crossentropy'
-            last_layer_activation = 'softmax'
-            last_layer_units = n_classes
-        else:
-            loss = 'binary_crossentropy'
-            last_layer_activation = 'sigmoid'
-            last_layer_units = 1
-        if featurizer_type == '1D':
-            model_name = trial.suggest_categorical('1d_model', list(_TABULAR_CLASSIFICATION_MODELS.keys()))
-            return _TABULAR_CLASSIFICATION_MODELS[model_name](trial, input_shape, last_layer_units=last_layer_units,
+    if n_classes > 2:
+        loss = 'categorical_crossentropy'
+        last_layer_activation = 'softmax'
+        last_layer_units = n_classes
+    else:
+        loss = 'binary_crossentropy'
+        last_layer_activation = 'sigmoid'
+        last_layer_units = 1
+    if isinstance(task_type, str):
+        if task_type == 'classification':
+            if featurizer_type == '1D':
+                model_name = trial.suggest_categorical('1d_model', list(_TABULAR_CLASSIFICATION_MODELS.keys()))
+                return _TABULAR_CLASSIFICATION_MODELS[model_name](trial, input_shape, last_layer_units=last_layer_units,
+                                                                  last_activation=last_layer_activation, loss=loss)
+            elif featurizer_type == '2D':
+                model_name = trial.suggest_categorical('2d_model', list(_2D_CLASSIFICATION_MODELS.keys()))
+                return _2D_CLASSIFICATION_MODELS[model_name](trial, input_shape, last_layer_units=last_layer_units,
+                                                             last_activation=last_layer_activation, loss=loss)
+        elif task_type == 'regression':
+            if featurizer_type == '1D':
+                model_name = trial.suggest_categorical('1d_model', list(_TABULAR_REGRESSION_MODELS.keys()))
+                return _TABULAR_REGRESSION_MODELS[model_name](trial, input_shape, last_layer_units=last_layer_units,
                                                               last_activation=last_layer_activation, loss=loss)
-        elif featurizer_type == '2D':
-            model_name = trial.suggest_categorical('2d_model', list(_2D_CLASSIFICATION_MODELS.keys()))
-            return _2D_CLASSIFICATION_MODELS[model_name](trial, input_shape, last_layer_units=last_layer_units,
+            elif featurizer_type == '2D':
+                model_name = trial.suggest_categorical('2d_model', list(_2D_REGRESSION_MODELS.keys()))
+                return _2D_REGRESSION_MODELS[model_name](trial, input_shape, last_layer_units=last_layer_units,
                                                          last_activation=last_layer_activation, loss=loss)
-    elif task_type == 'regression':
+    elif isinstance(task_type, list):
+        task_type_sig = list(set(task_type))
         if featurizer_type == '1D':
-            model_name = trial.suggest_categorical('1d_model', list(_TABULAR_REGRESSION_MODELS.keys()))
-            return _TABULAR_REGRESSION_MODELS[model_name](trial, input_shape)
+            if len(task_type_sig) == 1 and task_type_sig[0] == "classification":
+                model_name = trial.suggest_categorical("1d_multiclass_model",
+                                                       list(_TABULAR_MULTITASK_CLASSIFICATION_MODELS.keys()))
+                return _TABULAR_MULTITASK_CLASSIFICATION_MODELS[model_name](trial, input_shape, n_tasks=len(task_type),
+                                                                            last_layer_units=last_layer_units,
+                                                                            last_activation=last_layer_activation,
+                                                                            loss=loss)
+            elif len(task_type_sig) == 1 and task_type_sig[0] == "regression":
+                model = trial.suggest_categorical("multiregression_model",
+                                                  list(_TABULAR_MULTITASK_REGRESSION_MODELS.keys()))
+                return _TABULAR_MULTITASK_REGRESSION_MODELS[model](trial)
         elif featurizer_type == '2D':
-            model_name = trial.suggest_categorical('2d_model', list(_2D_REGRESSION_MODELS.keys()))
-            return _2D_REGRESSION_MODELS[model_name](trial, input_shape)
+            if len(task_type_sig) == 1 and task_type_sig[0] == "classification":
+                model_name = trial.suggest_categorical("2d_multiclass_model",
+                                                       list(_2D_MULTITASK_CLASSIFICATION_MODELS.keys()))
+                return _2D_MULTITASK_CLASSIFICATION_MODELS[model_name](trial, input_shape, n_tasks=len(task_type),
+                                                                       last_layer_units=last_layer_units,
+                                                                       last_activation=last_layer_activation,
+                                                                       loss=loss)
+            elif len(task_type_sig) == 1 and task_type_sig[0] == "regression":
+                model = trial.suggest_categorical("2d_multiregression_model",
+                                                  list(_2D_MULTITASK_REGRESSION_MODELS.keys()))
+                return _2D_MULTITASK_REGRESSION_MODELS[model](trial)
+        else:
+            raise ValueError(f'Unknown task type: {task_type_sig}')
     else:
         raise ValueError(f'Unknown task type: {task_type}')

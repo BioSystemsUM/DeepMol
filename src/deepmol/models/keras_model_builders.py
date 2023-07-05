@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Union, Tuple, Dict
 
 from tensorflow.keras import Sequential, regularizers, Model
 from tensorflow.keras.layers import Dense, Dropout, BatchNormalization, GaussianNoise, Reshape, Conv1D, Flatten, \
@@ -7,96 +7,67 @@ from tensorflow.keras.layers import Dense, Dropout, BatchNormalization, Gaussian
 from deepmol.models import KerasModel
 
 
-def baseline_dense_model_builder(input_dim: int = 1024,
-                                 n_hidden_layers: int = 1,
-                                 layers_units: List[int] = None,
-                                 dropouts: List[float] = None,
-                                 activations: List[str] = None,
-                                 batch_normalization: List[bool] = None,
-                                 l1_l2: List[float] = None,
-                                 loss: str = 'binary_crossentropy',
-                                 optimizer: str = 'adam',
-                                 metrics: List[str] = None):
-    """
-    Builds a dense neural network model.
-
-    Parameters
-    ----------
-    input_dim : int
-        Number of features.
-    n_hidden_layers : int
-        Number of hidden layers.
-    layers_units : List[int]
-        Number of units in each hidden layer.
-    dropouts : List[float]
-        Dropout rate in each hidden layer.
-    activations : List[str]
-        Activation function in each hidden layer.
-    batch_normalization : List[bool]
-        Whether to use batch normalization in each hidden layer.
-    l1_l2 : List[float]
-        L1 and L2 regularization in each hidden layer.
-    loss : str
-        Loss function.
-    optimizer : str
-        Optimizer.
-    metrics : List[str]
-        Metrics to be evaluated by the model during training and testing.
-
-    Returns
-    -------
-    model : Sequential
-        Dense neural network model.
-    """
-    metrics = ['accuracy'] if metrics is None else metrics
-    l1_l2 = [(0, 0)] if l1_l2 is None else l1_l2
-    batch_normalization = [True, True] if batch_normalization is None else batch_normalization
-    activations = ['relu', 'relu', 'sigmoid'] if activations is None else activations
-    layers_units = [12, 8, 1] if layers_units is None else layers_units
-    dropouts = [0.5, 0.5] if dropouts is None else dropouts
-    model = Sequential()
-    model.add(Dense(layers_units[0], input_dim=input_dim, activation=activations[0]))
-    if batch_normalization[0]:
-        model.add(BatchNormalization())
-    model.add(Dropout(dropouts[0]))
+def keras_fcnn_model_builder(input_dim: int, n_tasks: int = 1, label_names: List[str] = None, n_hidden_layers: int = 1,
+                             hidden_units: List[int] = None, hidden_activations: List[str] = None,
+                             hidden_regularizers: List[Tuple[float, float]] = None,
+                             hidden_dropouts: List[float] = None, batch_normalization: List[bool] = None,
+                             last_layers_units: List[int] = None, last_layers_activations: List[str] = None,
+                             optimizer: str = 'adam', losses: Union[List[str], Dict[str, str]] = None,
+                             metrics: Union[List[str], Dict[str, str]] = None) -> Model:
+    label_names = label_names if label_names is not None else ['y']
+    hidden_units = hidden_units if hidden_units is not None else [64]
+    hidden_activations = hidden_activations if hidden_activations is not None else ['relu']
+    hidden_dropouts = hidden_dropouts if hidden_dropouts is not None else [0.0]
+    batch_normalization = batch_normalization if batch_normalization is not None else [False]
+    hidden_regularizers = hidden_regularizers if hidden_regularizers is not None else [(0.0, 0.0)]
+    last_layers_units = last_layers_units if last_layers_units is not None else [1]
+    last_layers_activations = last_layers_activations if last_layers_activations is not None else ['sigmoid']
+    metrics = metrics if metrics is not None else ['accuracy']
+    losses = losses if losses is not None else ['binary_crossentropy']
+    assert n_hidden_layers == len(hidden_units) == len(hidden_activations) == len(hidden_dropouts) \
+           == len(batch_normalization) == len(hidden_regularizers)
+    assert n_tasks == len(last_layers_units) == len(last_layers_activations) == len(label_names)
+    # Input layer
+    input_layer = Input(shape=(input_dim,))
+    shared_layers = input_layer
+    # Hidden layers
     for i in range(n_hidden_layers):
-        model.add(Dense(layers_units[i + 1], activation=activations[i + 1],
-                        kernel_regularizer=regularizers.l1_l2(l1=l1_l2[i][0], l2=l1_l2[i][1])))
-        if batch_normalization[i + 1]:
-            model.add(BatchNormalization())
-        model.add(Dropout(dropouts[i + 1]))
-    model.add(Dense(layers_units[-1], activation=activations[-1]))
+        shared_layers = Dense(hidden_units[i], activation=hidden_activations[i],
+                              kernel_regularizer=regularizers.l1_l2(*hidden_regularizers[i]))(shared_layers)
+        shared_layers = Dropout(hidden_dropouts[i])(shared_layers)
+        if batch_normalization[i]:
+            shared_layers = BatchNormalization()(shared_layers)
+
+    # Output layers
+    outputs = []
+    for i in range(n_tasks):
+        task_layer = Dense(hidden_units[-1] / 2, activation=hidden_activations[-1],
+                           kernel_regularizer=regularizers.l1_l2(*hidden_regularizers[-1]))(shared_layers)
+        task_layer = Dropout(hidden_dropouts[-1])(task_layer)
+        if batch_normalization[-1]:
+            task_layer = BatchNormalization()(task_layer)
+
+        task_output = Dense(last_layers_units[i], activation=last_layers_activations[i],
+                            name=label_names[i])(task_layer)
+        outputs.append(task_output)
+
+    # Create model
+    model = Model(inputs=input_layer, outputs=outputs)
+
     # Compile model
-    model.compile(loss=loss, optimizer=optimizer, metrics=metrics)
+    model.compile(optimizer=optimizer, loss=losses, metrics=metrics)
     return model
 
 
-def keras_dense_model(model_dir: str = 'keras_model/', model_kwargs: dict = None,
-                      keras_kwargs: dict = None) -> KerasModel:
-    """
-    Builds a dense neural network model using DeepMol's KerasModel wrapper.
-
-    Parameters
-    ----------
-    model_dir : str
-        Path to save the model.
-    model_kwargs : dict
-        Keyword arguments for the model builder.
-    keras_kwargs : dict
-        Keyword arguments for the KerasModel wrapper.
-
-    Returns
-    -------
-    model : KerasModel
-        Dense neural network model.
-    """
+def keras_fcnn_model(model_dir: str = 'keras_model/', model_kwargs: dict = None,
+                     keras_kwargs: dict = None) -> KerasModel:
     keras_kwargs = {} if keras_kwargs is None else keras_kwargs
     mode = 'classification' if 'mode' not in keras_kwargs else keras_kwargs['mode']
     epochs = 150 if 'epochs' not in keras_kwargs else keras_kwargs['epochs']
     batch_size = 10 if 'batch_size' not in keras_kwargs else keras_kwargs['batch_size']
     verbose = 0 if 'verbose' not in keras_kwargs else keras_kwargs['verbose']
     model_kwargs = {} if model_kwargs is None else model_kwargs
-    return KerasModel(model_builder=baseline_dense_model_builder, mode=mode, model_dir=model_dir, epochs=epochs,
+    return KerasModel(model_builder=keras_fcnn_model_builder, mode=mode, model_dir=model_dir, epochs=epochs,
                       batch_size=batch_size, verbose=verbose, **model_kwargs)
 
 

@@ -21,36 +21,29 @@ DeepMol provides a number of featurization methods for generating features from 
 
 The following featurization methods are currently available in DeepMol:
    - MorganFingerprint
-    - AtomPairFingerprint
-    - LayeredFingerprint
-    - RDKFingerprint
-    - MACCSkeysFingerprint
-    - TwoDimensionDescriptors
-    - WeaveFeat
-    - CoulombFeat
-    - CoulombEigFeat
-    - ConvMolFeat
-    - MolGraphConvFeat
-    - SmileImageFeat
-    - SmilesSeqFeat
-    - MolGanFeat
-    - All3DDescriptors
+   - AtomPairFingerprint
+   - LayeredFingerprint
+   - RDKFingerprint
+   - MACCSkeysFingerprint
+   - TwoDimensionDescriptors
+   - All3DDescriptors
+   - WeaveFeat
+   - CoulombFeat
+   - CoulombEigFeat
+   - ConvMolFeat
+   - MolGraphConvFeat
+   - SmileImageFeat
+   - SmilesSeqFeat
+   - MolGanFeat
+   - SmilesOneHotEncoder
+   
 
 
 <font size="5"> **Load the dataset** </font>
 
 ```python
-from deepmol.loaders import CSVLoader, SDFLoader
-from deepmol.compound_featurization import MorganFingerprint, TwoDimensionDescriptors, MACCSkeysFingerprint, \
-    AtomPairFingerprint, LayeredFingerprint, RDKFingerprint
+from deepmol.loaders import CSVLoader
 
-from deepmol.compound_featurization import WeaveFeat, CoulombFeat, CoulombEigFeat, ConvMolFeat, MolGraphConvFeat, \
-        SmileImageFeat, SmilesSeqFeat, MolGanFeat, All3DDescriptors, generate_conformers_to_sdf_file
-
-import numpy as np
-```
-
-```python
 dataset = CSVLoader("../data/CHEMBL217_reduced.csv", id_field="Original_Entry_ID",
                     smiles_field="SMILES", labels_fields=["Activity_Flag"]).create_dataset()
 ```
@@ -100,6 +93,8 @@ Morgan fingerprints are widely used in cheminformatics and computational chemist
 
 
 ```python
+from deepmol.compound_featurization import MorganFingerprint
+
 MorganFingerprint(n_jobs=10).featurize(dataset, inplace=True)
 ```
 
@@ -147,6 +142,8 @@ The method involves dividing a molecule into atom pairs and then counting the fr
 
 
 ```python
+from deepmol.compound_featurization import AtomPairFingerprint
+
 AtomPairFingerprint(n_jobs=10).featurize(dataset, inplace=True)
 ```
 
@@ -176,6 +173,8 @@ dataset.X[0]
 
 
 ```python
+import numpy as np
+
 np.unique(dataset.X[0], return_counts=True)
 ```
 
@@ -194,6 +193,8 @@ The method involves dividing a molecule into a series of layers, where each laye
 
 
 ```python
+from deepmol.compound_featurization import LayeredFingerprint
+
 LayeredFingerprint(n_jobs=10).featurize(dataset, inplace=True)
 ```
 
@@ -223,6 +224,8 @@ dataset.X[0]
 
 
 ```python
+import numpy as np
+
 np.unique(dataset.X[0], return_counts=True)
 ```
 
@@ -239,6 +242,8 @@ Fingerprints from rdkit
 
 
 ```python
+from deepmol.compound_featurization import RDKFingerprint
+
 RDKFingerprint(n_jobs=10).featurize(dataset, inplace=True)
 ```
 
@@ -268,6 +273,8 @@ dataset.X[0]
 
 
 ```python
+import numpy as np
+
 np.unique(dataset.X[0], return_counts=True)
 ```
 
@@ -288,6 +295,8 @@ The MACCS keys consist of 166 bit positions, with each bit representing the pres
 
 
 ```python
+from deepmol.compound_featurization import MACCSkeysFingerprint
+
 MACCSkeysFingerprint(n_jobs=10).featurize(dataset, inplace=True)
 ```
 
@@ -327,6 +336,8 @@ dataset.X[0]
 
 
 ```python
+import numpy as np
+
 np.unique(dataset.X[0], return_counts=True)
 ```
 
@@ -394,6 +405,8 @@ We provide all 0D, 2D descriptors and some 1D descriptors from rdkit in only one
 
 
 ```python
+from deepmol.compound_featurization import TwoDimensionDescriptors
+
 TwoDimensionDescriptors(n_jobs=10).featurize(dataset, inplace=True)
 ```
 
@@ -540,6 +553,9 @@ You can generate conformers and export them to a SDF files as follow:
 
 
 ```python
+from deepmol.loaders import CSVLoader
+from deepmol.compound_featurization import generate_conformers_to_sdf_file
+
 dataset = CSVLoader("../data/CHEMBL217_reduced.csv", id_field="Original_Entry_ID",
                     smiles_field="SMILES", labels_fields=["Activity_Flag"]).create_dataset()
 generate_conformers_to_sdf_file(dataset, "CHEMBL217_conformers.sdf", n_conformations=1, threads=15,max_iterations=3)
@@ -549,6 +565,8 @@ If you rather want to read directly from a SDF file, you can use the SDFLoader c
 
 
 ```python
+from deepmol.loaders import SDFLoader
+
 dataset = SDFLoader("../data/CHEMBL217_conformers.sdf", id_field="_ID", labels_fields=["_Class"]).create_dataset()
 ```
 
@@ -573,6 +591,8 @@ You can either generate the conformers or read them from a SDF file as shown abo
 
 
 ```python
+from deepmol.compound_featurization import All3DDescriptors
+
 All3DDescriptors(mandatory_generation_of_conformers=False).featurize(dataset, inplace=True)
 ```
 
@@ -740,6 +760,7 @@ In DeepMol, we also can use different featurizers for the same dataset, in case 
 
 ```python
 from deepmol.compound_featurization import MixedFeaturizer
+from deepmol.compound_featurization import All3DDescriptors, TwoDimensionDescriptors
 
 MixedFeaturizer(featurizers=[All3DDescriptors(mandatory_generation_of_conformers=False), TwoDimensionDescriptors()]).featurize(dataset, inplace=True)
 ```
@@ -793,6 +814,8 @@ Weave convolutions were introduced in [1]_. Unlike Duvenaud graph convolutions, 
 
 
 ```python
+from deepmol.compound_featurization import WeaveFeat
+
 WeaveFeat(n_jobs=10).featurize(dataset, inplace=True)
 ```
 
@@ -834,6 +857,8 @@ Coulomb matrices provide a representation of the electronic structure of a molec
 
 
 ```python
+from deepmol.compound_featurization import CoulombFeat
+
 CoulombFeat(n_jobs=10,max_atoms=10).featurize(dataset, inplace=True)
 ```
 
@@ -847,6 +872,8 @@ This featurizer computes the eigenvalues of the Coulomb matrices for provided mo
 
 
 ```python
+from deepmol.compound_featurization import CoulombEigFeat
+
 CoulombEigFeat(n_jobs=10,max_atoms=10).featurize(dataset, inplace=True)
 ```
 
@@ -858,6 +885,8 @@ Duvenaud graph convolutions [1]_ construct a vector of descriptors for each atom
 
 
 ```python
+from deepmol.compound_featurization import ConvMolFeat
+
 ConvMolFeat(n_jobs=10).featurize(dataset, inplace=True)
 ```
 
@@ -869,6 +898,8 @@ The default node(atom) and edge(bond) representations are based on WeaveNet pape
 
 
 ```python
+from deepmol.compound_featurization import MolGraphConvFeat
+
 MolGraphConvFeat(n_jobs=10).featurize(dataset, inplace=True)
 ```
 
@@ -884,6 +915,8 @@ The coordinates of all atoms are computed, and lines are drawn between atoms to 
 
 
 ```python
+from deepmol.compound_featurization import SmileImageFeat
+
 SmileImageFeat(n_jobs=10).featurize(dataset, inplace=True)
 ```
 
@@ -897,6 +930,8 @@ SMILES strings smaller than a specified max length (max_len) are padded using th
 
 
 ```python
+from deepmol.compound_featurization import SmilesSeqFeat
+
 SmilesSeqFeat().featurize(dataset, inplace=True)
 ```
 
@@ -908,6 +943,8 @@ Featurizer for MolGAN de-novo molecular generation [1]_. The default representat
 
 
 ```python
+from deepmol.compound_featurization import MolGanFeat
+
 MolGanFeat(n_jobs=10).featurize(dataset, inplace=True)
 ```
 
@@ -1057,6 +1094,7 @@ You can also use a k-mer tokenizer that splits SMILES strings into k-mers. This 
 
 ```python
 from deepmol.tokenizers import KmerSmilesTokenizer
+from deepmol.compound_featurization import SmilesOneHotEncoder
 
 ohe = SmilesOneHotEncoder(tokenizer=KmerSmilesTokenizer(size=2, stride=1)).fit(dataset)
 ```

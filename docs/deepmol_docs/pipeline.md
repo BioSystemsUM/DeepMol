@@ -30,15 +30,11 @@ We will use the following steps:
 ```python
 from deepmol.pipeline import Pipeline
 
-from deepmol.metrics import Metric
-from sklearn.metrics import roc_auc_score, accuracy_score, precision_score, recall_score, f1_score
 from sklearn.ensemble import RandomForestClassifier
 from deepmol.models import SklearnModel
-from deepmol.splitters import SingletaskStratifiedSplitter
 from deepmol.feature_selection import LowVarianceFS
 from deepmol.compound_featurization import MorganFingerprint
 from deepmol.standardizer import BasicStandardizer
-from deepmol.loaders import CSVLoader
 
 steps = [('basic standardizing', BasicStandardizer()),
          ('morgan fingerprints', MorganFingerprint(radius=2, size=1024)),
@@ -58,6 +54,9 @@ The steps of the pipeline have to be defined as a list of tuples. The first elem
 <font size="4"> **Let us load the data** </font>
 
 ```python
+from deepmol.splitters import SingletaskStratifiedSplitter
+from deepmol.loaders import CSVLoader
+
 loader = CSVLoader(dataset_path='../data/CHEMBL217_reduced.csv',
                    smiles_field='SMILES',
                    id_field='Original_Entry_ID',
@@ -93,6 +92,9 @@ y_pred = pipeline.predict(test)
 ### Evaluate 
 
 ```python
+from deepmol.metrics import Metric
+from sklearn.metrics import roc_auc_score, accuracy_score, precision_score, recall_score, f1_score
+
 pipeline.evaluate(test, metrics=[Metric(roc_auc_score), Metric(accuracy_score), Metric(precision_score), Metric(recall_score), Metric(f1_score)])
 ```
 
@@ -118,11 +120,16 @@ pipeline.save()
 
 
 ```python
+from deepmol.pipeline import Pipeline
+
 pipeline = Pipeline.load(path="DRD2")
 ```
 
 
 ```python
+from deepmol.metrics import Metric
+from sklearn.metrics import roc_auc_score, accuracy_score, precision_score, recall_score, f1_score
+
 pipeline.evaluate(test, metrics=[Metric(roc_auc_score), Metric(accuracy_score), Metric(precision_score), Metric(recall_score), Metric(f1_score)])
 ```
 
@@ -142,6 +149,11 @@ pipeline.evaluate(test, metrics=[Metric(roc_auc_score), Metric(accuracy_score), 
 
 
 ```python
+from deepmol.pipeline import Pipeline
+from deepmol.compound_featurization import MorganFingerprint
+from deepmol.standardizer import BasicStandardizer
+from deepmol.feature_selection import LowVarianceFS
+
 steps = [('basic standardizing', BasicStandardizer()),
          ('morgan fingerprints', MorganFingerprint(radius=2, size=1024)),
          ('low variance feature selection', LowVarianceFS(threshold=0.1)),
@@ -209,6 +221,12 @@ Let us define a pipeline to predict drug activity against DRD2 receptor and opti
 
 ```python
 from sklearn.svm import SVC
+from deepmol.pipeline import Pipeline
+from deepmol.compound_featurization import MorganFingerprint
+from deepmol.standardizer import BasicStandardizer
+from deepmol.feature_selection import LowVarianceFS
+from deepmol.metrics import Metric
+from sklearn.metrics import accuracy_score
 
 steps = [('basic standardizing', BasicStandardizer()),
          ('morgan fingerprints', MorganFingerprint(radius=2, size=1024)),
@@ -296,6 +314,9 @@ pipeline.hpo_best_hyperparams_
 
 
 ```python
+from sklearn.metrics import roc_auc_score, accuracy_score, precision_score, recall_score, f1_score
+from deepmol.metrics import Metric
+
 pipeline.evaluate(test, metrics=[Metric(roc_auc_score), Metric(accuracy_score), Metric(precision_score), Metric(recall_score), Metric(f1_score)])
 ```
 
@@ -316,6 +337,13 @@ Now let us try to optimize the hyperparameters of the SVM model with a validatio
 
 ```python
 from deepmol.parameter_optimization import HyperparameterOptimizerValidation
+from sklearn.svm import SVC
+from deepmol.pipeline import Pipeline
+from deepmol.compound_featurization import MorganFingerprint
+from deepmol.standardizer import BasicStandardizer
+from deepmol.feature_selection import LowVarianceFS
+from deepmol.metrics import Metric
+from sklearn.metrics import accuracy_score
 
 steps = [('basic standardizing', BasicStandardizer()),
          ('morgan fingerprints', MorganFingerprint(radius=2, size=1024)),
@@ -381,6 +409,9 @@ pipeline.hpo_best_hyperparams_
 
 
 ```python
+from sklearn.metrics import roc_auc_score, accuracy_score, precision_score, recall_score, f1_score
+from deepmol.metrics import Metric
+
 pipeline.evaluate(test, metrics=[Metric(roc_auc_score), Metric(accuracy_score), Metric(precision_score), Metric(recall_score), Metric(f1_score)])
 ```
 

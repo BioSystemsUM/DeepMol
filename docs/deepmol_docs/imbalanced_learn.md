@@ -69,6 +69,7 @@ The values correspond to the desired number of samples for each class.
 ```python
 from copy import deepcopy
 from deepmol.imbalanced_learn import RandomOverSampler
+from collections import Counter
 
 d1 = deepcopy(data)
 sampler = RandomOverSampler(sampling_strategy=0.75, random_state=123)
@@ -109,6 +110,8 @@ The values correspond to the desired number of samples for each class.
 
 ```python
 from deepmol.imbalanced_learn import SMOTE
+from collections import Counter
+from copy import deepcopy
 
 d2 = deepcopy(data)
 sampler = SMOTE(sampling_strategy=0.8, random_state=123, k_neighbors=5, n_jobs=-1)
@@ -150,6 +153,8 @@ The values correspond to the desired number of samples for each class.
 
 ```python
 from deepmol.imbalanced_learn import RandomUnderSampler
+from collections import Counter
+from copy import deepcopy
 
 d3 = deepcopy(data)
 sampler = RandomUnderSampler(sampling_strategy=0.5, random_state=123, replacement=True)
@@ -190,6 +195,8 @@ The values correspond to the desired number of samples for each class.
 ```python
 from sklearn.cluster import KMeans
 from deepmol.imbalanced_learn import ClusterCentroids
+from collections import Counter
+from copy import deepcopy
 
 d4 = deepcopy(data)
 sampler = ClusterCentroids(sampling_strategy=1, random_state=123, estimator=KMeans(), voting='hard')
@@ -233,6 +240,8 @@ The values correspond to the desired number of samples for each class.
 
 ```python
 from deepmol.imbalanced_learn import SMOTEENN
+from collections import Counter
+from copy import deepcopy
 
 d5 = deepcopy(data)
 sampler = SMOTEENN(sampling_strategy=0.8, random_state=123, n_jobs=-1)
@@ -272,6 +281,8 @@ The values correspond to the desired number of samples for each class.
 
 ```python
 from deepmol.imbalanced_learn import SMOTETomek
+from collections import Counter
+from copy import deepcopy
 
 d6 = deepcopy(data)
 sampler = SMOTETomek(sampling_strategy=0.7, random_state=123, n_jobs=-1)

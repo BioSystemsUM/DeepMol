@@ -2,9 +2,9 @@
 
 Standardization is the process of converting a chemical structure to a standardized format using a set of rules. The standardized format enables the chemical structure to be easily compared with other chemical structures and used in various computational applications.
 
-It is possible to standardize the loaded molecules using three option. Using a basic standardizer that only does sanitization (Kekulize, check valencies, set aromaticity, conjugation and hybridization). A more complex standardizer can be customized by choosing or not to perform specific tasks such as sanitization, remove isotope information, neutralize charges, remove stereochemistry and remove smaller fragments. Another possibility is to use the ChEMBL Standardizer.
+It is possible to standardize the loaded molecules using three options. Using a basic standardizer one will only do sanitization (Kekulize, check valencies, set aromaticity, conjugation and hybridization). A more complex standardizer can be customized by choosing or not to perform specific tasks such as removing isotope information, neutralizing charges, removing stereochemistry and removing smaller fragments. Another possibility is to use the ChEMBL Standardizer.
 
-Standardizing molecules is important in machine learning pipelines because it helps to **ensure that the data is consistent and comparable across different samples**. In the context of molecular data, standardization typically involves removing salts and fragments and/or neutralizing charges.
+Standardizing molecules is important in machine learning pipelines because it helps to **ensure that the data is consistent and comparable across different samples**.
 
 
 ```python
@@ -74,6 +74,9 @@ Some visible changes were mainly due to the conversion of all chiral centers to 
 
 
 ```python
+from rdkit.Chem import Draw
+from IPython.display import SVG, display
+
 # Standardized molecules
 mols_standardized = d1.mols
 # Draw the molecules to a grid image
@@ -104,6 +107,7 @@ In the custom standardizer you can choose which tasks to perform. The default ta
 
 ```python
 from deepmol.standardizer import CustomStandardizer
+from copy import deepcopy
 
 # Let's create a copy of our dataset
 d2 = deepcopy(df)
@@ -128,6 +132,9 @@ As we can see the standadized molecules do not contain any isotopic information,
 
 
 ```python
+from rdkit.Chem import Draw
+from IPython.display import SVG, display
+
 # Standardized molecules
 mols_standardized = d2.mols
 # Draw the molecules to a grid image
@@ -153,6 +160,7 @@ The ChEMBLStandardizer uses ChEMBL protocols used to standardise and salt strip 
 
 ```python
 from deepmol.standardizer import ChEMBLStandardizer
+from copy import deepcopy
 
 # Let's create a copy of our dataset
 d3 = deepcopy(df)
@@ -168,6 +176,9 @@ As we can see these molecules also underwent a more complex standardization proc
 
 
 ```python
+from rdkit.Chem import Draw
+from IPython.display import SVG, display
+
 # Standardized molecules
 mols_standardized = d3.mols
 # Draw the molecules to a grid image

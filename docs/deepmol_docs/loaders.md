@@ -7,11 +7,14 @@ It is possible to read data from CSV and SDF files or directly from numpy arrays
 The CSVLoader class can be used to load tabular data from files. It accepts the following arguments:
 - dataset_path: path to the CSV file (mandatory)
 - smiles_field: name of the field with the SMILES strings (mandatory)
-- id_field: name of the field with the molecules' ids (optional)
+- id_field: name of the field with the molecules' identifiers (optional, if not provided, an arbitrary, unique identifier will be assigned to each molecule)
 - labels_fields: list with the name(s) of the field(s) of the label(s) (optional)
 - features_fields: list with the name(s) of the field(s) of the feature(s) (optional)
 - shard_size: if you don't want to load the entire data you can define a number of rows to read (optional)
-- mode: mode of the dataset, it can be 'classification', 'regression' and 'multitask'. 'auto' will try to automatically infer the mode. (optional)
+- mode: mode of the dataset, it can be 'classification', 'regression',
+and list of tasks for multitask ML, e.g. ['classification', 'classification'] 
+when the two labels are for classification. 'auto' will try to automatically infer the mode. 
+(optional)
 
 To create the dataset you can use the create_dataset method. It accepts the same arguments as pandas.read_csv().
 
@@ -42,14 +45,14 @@ SDF files typically contain information such as the atom and bond types, atom po
 
 The SDFLoader class can be used to load data from SDF files. It accepts the following arguments:
 - dataset_path: path to the SDF file (mandatory)
-- id_field: name of the field with the molecules' ids (optional)
+- id_field: name of the field with the molecules' identifier (optional, if not provided, an arbitrary, unique identifier will be assigned to each molecule)
 - labels_fields: list with the name(s) of the field(s) of the label(s) (optional)
 - features_fields: list with the name(s) of the field(s) of the feature(s) (optional)
 - shard_size: if you don't want to load the entire data you can define a number of rows to read (optional)
-- mode: mode of the dataset, it can be 'classification', 'regression' and 'multitask'. 'auto' will try to automatically infer the mode. (optional)
+- mode: mode of the dataset, it can be 'classification', 'regression' and list of 
+tasks for multitask ML, e.g. ['classification', 'classification'] when the two labels are for classification. 'auto' will try to automatically infer the mode. (optional)
 
-To create the dataset you can use the create_dataset method. It accepts the same arguments as pandas.read_csv().
-
+To create the dataset you can use the create_dataset method.
 
 ```python
 from deepmol.loaders import SDFLoader
@@ -72,12 +75,13 @@ Directly from numpy arrays / lists as a SmilesDataset (both CSVLoader and SDFLoa
 A SmilesDataset can be initialized with SMILES strings or RDKit molecules (through the from_mols class method). It accepts the following arguments:
 - smiles: list of SMILES strings (mandatory)
 - mols: list of RDKit molecules (optional)
-- ids: list of molecules' ids (optional)
+- ids: list of molecules' identifiers (optional, if not provided, an arbitrary, unique identifier will be assigned to each molecule)
 - X: numpy array with the features (optional)
 - feature_names: numpy array of feature names (optional)
 - y: numpy array with the labels (optional)
 - label_names: numpy array of label names (optional)
-- mode: mode of the dataset, it can be 'classification', 'regression' and 'multitask'. 'auto' will try to automatically infer the mode. (optional)
+- mode: mode of the dataset, it can be 'classification', 'regression', and list of tasks for multitask ML, 
+e.g. ['classification', 'classification'] when the two labels are for classification. 'auto' will try to automatically infer the mode. (optional)
 
 In the case of using the from_mols class method, the smiles argument is not used and the mols argument is mandatory.
 
@@ -119,11 +123,13 @@ df_mols = SmilesDataset.from_mols(mols=mols, # only mandatory argument, a list o
 - dataset.y: numpy array with the labels
 - dataset.feature_names: numpy array of feature names
 - dataset.label_names: numpy array of label names
-- dataset.mode: mode of the dataset, it can be 'classification', 'regression' and 'multitask'
+- dataset.mode: mode of the dataset, it can be 'classification', 'regression' and list of tasks for multitask ML, 
+e.g. ['classification', 'classification'] when the two labels are for classification.
 - dataset.n_tasks: number of tasks
 
 
 ```python
+from deepmol.loaders import CSVLoader
 # Load data from CSV file
 loader = CSVLoader(dataset_path='../data/example_data_with_features.csv',
                    smiles_field='mols',

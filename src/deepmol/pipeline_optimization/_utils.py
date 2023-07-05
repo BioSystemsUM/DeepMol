@@ -6,8 +6,10 @@ from deepchem.models import TextCNNModel
 from deepmol.base import DatasetTransformer, PassThroughTransformer
 from deepmol.compound_featurization import CoulombFeat
 from deepmol.datasets import Dataset
+from deepmol.encoders.label_one_hot_encoder import LabelOneHotEncoder
 from deepmol.pipeline_optimization._feature_selector_objectives import _get_feature_selector
 from deepmol.pipeline_optimization._featurizer_objectives import _get_featurizer
+from deepmol.pipeline_optimization._keras_mo_2 import _get_keras_model_2
 from deepmol.pipeline_optimization._keras_model_objectives import _get_keras_model
 from deepmol.pipeline_optimization._scaler_objectives import _get_scaler
 from deepmol.pipeline_optimization._sklearn_model_objectives import _get_sk_model
@@ -156,16 +158,18 @@ def preset_deepchem_models(trial, data: Dataset) -> list:
     final_steps = [('standardizer', _get_standardizer(trial))]
     models = ["gat_model", "gcn_model", "attentive_fp_model", "pagtn_model", "chem_ception_model", "dag_model",
               "graph_conv_model", "smiles_to_vec_model", "text_cnn_model", "weave_model", "dmpnn_model"]
-    if mode == 'classification':
+    if mode == 'classification' or (len(set(mode)) == 1 and mode[0] == 'classification'):
         models.extend(["multitask_classifier_model"])  # , "multitask_irv_classifier_model",
         # "progressive_multitask_classifier_model", "robust_multitask_classifier_model", "sc_score_model"])
         if n_classes > 2:
             models.remove("text_cnn_model")
-    elif mode == 'regression':
+        mode = 'classification'
+    elif mode == 'regression' or (len(set(mode)) == 1 and mode[0] == 'regression'):
         models.extend(["dtnn_model", "mat_model", "multitask_regressor_model"])  # ,
         # "progressive_multitask_regressor_model", "robust_multitask_regressor_model"])
+        mode = 'regression'
     else:
-        raise ValueError("data mode must be either 'classification' or 'regression'")
+        raise ValueError("data mode must be either 'classification' or 'regression' or a list of both")
     model_steps = trial.suggest_categorical("model_steps", models)
     if model_steps == "gat_model":
         gat_kwargs = {'n_tasks': n_tasks, 'mode': mode, 'n_classes': n_classes}
@@ -308,13 +312,14 @@ def preset_sklearn_models(trial, data: Dataset) -> list:
         List of tuples, where each tuple is a step in the sklearn pipeline.
     """
     mode = data.mode
+    multitask = True if data.n_tasks > 1 else False
     featurizer = _get_featurizer(trial, '1D')
     if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
             featurizer.__class__.__name__ == 'All3DDescriptors':
         scaler = _get_scaler(trial)
     else:
         scaler = PassThroughTransformer()
-    feature_selector = _get_feature_selector(trial, task_type=mode)
+    feature_selector = _get_feature_selector(trial, task_type=mode, multitask=multitask)
     if mode == 'classification':
         sk_mode = 'classification_binary' if set(data.y) == {0, 1} else 'classification_multiclass'
     else:
@@ -343,7 +348,8 @@ def preset_keras_models(trial, data: Dataset) -> list:
     """
     mode = data.mode
     n_classes = len(set(data.y)) if mode == 'classification' else 1
-    featurizer_type = trial.suggest_categorical('featurizer_type', ['1D', '2D'])
+    label_encoder = LabelOneHotEncoder() if mode == 'classification' and n_classes > 2 else PassThroughTransformer()
+    featurizer_type = trial.suggest_categorical('featurizer_type', ['1D'])#, '2D']) # TODO: remove comment
     featurizer = _get_featurizer(trial, featurizer_type)
     if featurizer_type == '1D':
         if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
@@ -356,10 +362,11 @@ def preset_keras_models(trial, data: Dataset) -> list:
         scaler = PassThroughTransformer()
         input_shape = featurizer.fit(data).shape
     # TODO: adjust input size for one hot encoding etc
-    keras_model = _get_keras_model(trial, task_type=mode, n_classes=n_classes, featurizer_type=featurizer_type,
-                                   input_shape=input_shape)
-    final_steps = [('standardizer', _get_standardizer(trial)), ('featurizer', featurizer), ('scaler', scaler),
-                   ('model', keras_model)]
+    #keras_model = _get_keras_model(trial, task_type=mode, n_classes=n_classes, featurizer_type=featurizer_type,
+    #                               input_shape=input_shape)
+    keras_model = _get_keras_model_2(trial, input_shape, data)
+    final_steps = [('label_encoder', label_encoder), ('standardizer', _get_standardizer(trial)),
+                   ('featurizer', featurizer), ('scaler', scaler), ('model', keras_model)]
     return final_steps
 
 

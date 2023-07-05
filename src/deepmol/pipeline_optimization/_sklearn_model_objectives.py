@@ -2013,7 +2013,6 @@ _MULTICLASS_CLASSIFICATION_MODELS = {'bernoulli_nb_model': bernoulli_nb_step,
                                      'output_code_classifier_model': output_code_classifier_step,
                                      }
 
-# TODO: test these models
 # MULTITASK
 _MULTILABEL_CLASSIFICATION_MODELS = {'decision_tree_classifier_model': decision_tree_classifier_step,
                                      'extra_tree_classifier_model': extra_tree_classifier_step,
@@ -2028,17 +2027,6 @@ _MULTILABEL_CLASSIFICATION_MODELS = {'decision_tree_classifier_model': decision_
                                      'classifier_chain_model': classifier_chain_step,
                                      }
 
-# TODO: test these models
-# MULTITASK and MULTICLASS
-_MULTICLASS_MULTIOUTPUT_CLASSIFICATION_MODELS = {'decision_tree_classifier_model': decision_tree_classifier_step,
-                                                 'extra_tree_classifier_model': extra_tree_classifier_step,
-                                                 'extra_trees_classifier_model': extra_trees_classifier_step,
-                                                 'knneighbors_classifier_model': kneighbors_classifier_step,
-                                                 'radius_neighbors_classifier_model': radius_neighbors_classifier_step,
-                                                 'random_forest_classifier_model': random_forest_classifier_step,
-                                                 }
-
-# TODO: test these models
 # MULTITASK
 _MULTILABEL_REGRESSION_MODELS = {'multi_output_regressor_model': multi_output_regressor_step,
                                  'regressor_chain_model': regressor_chain_step,
@@ -2074,7 +2062,7 @@ def _get_sk_model(trial, task_type: str) -> Predictor:
     elif isinstance(task_type, list):
         task_type_sig = list(set(task_type))
         if len(task_type_sig) == 1 and task_type_sig[0] == "classification":
-            model = trial.suggest_categorical("multiclass_model", list(_MULTILABEL_CLASSIFICATION_MODELS.keys()))
+            model = trial.suggest_categorical("multiask_model", list(_MULTILABEL_CLASSIFICATION_MODELS.keys()))
             return _MULTILABEL_CLASSIFICATION_MODELS[model](trial)
         elif len(task_type_sig) == 1 and task_type_sig[0] == "regression":
             model = trial.suggest_categorical("multiregression_model", list(_MULTILABEL_REGRESSION_MODELS.keys()))

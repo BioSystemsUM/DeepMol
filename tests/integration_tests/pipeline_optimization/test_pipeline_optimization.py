@@ -70,7 +70,7 @@ class TestPipelineOptimization(TestCase):
         # change dataset.y to regression (3 labels with random float values between 0 and 10)
         self.dataset_multilabel_regression._y = np.array([[random() * 10 for _ in range(3)] for _ in
                                                           range(len(self.dataset_multilabel_regression))])
-        self.dataset_multilabel_regression._mode = ['regression', 'regression', 'regression']
+        self.dataset_multilabel_regression.mode = ['regression', 'regression', 'regression']
 
     def tearDown(self) -> None:
         # remove logs (files with .log extension)
@@ -184,7 +184,7 @@ class TestPipelineOptimization(TestCase):
         po = PipelineOptimization(direction='maximize', study_name=study_name, storage=storage_name)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_multilabel, seed=123)
-        po.optimize(train_dataset=train, test_dataset=test, objective_steps='sklearn', metric=metric, n_trials=3,
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps='keras', metric=metric, n_trials=3,
                     data=train, save_top_n=2)
         self.assertEqual(po.best_params, po.best_trial.params)
         self.assertIsInstance(po.best_value, float)
@@ -192,8 +192,6 @@ class TestPipelineOptimization(TestCase):
         self.assertEqual(len(po.trials), 3)
         # assert that 2 pipelines were saved
         self.assertEqual(len(os.listdir(study_name)), 2)
-        print(train.y)
-        print(po.best_pipeline.predict(train))
         best_pipeline = po.best_pipeline
         new_predictions = best_pipeline.evaluate(test, [metric])[0][metric.name]
         self.assertEqual(new_predictions, po.best_value)
@@ -205,12 +203,11 @@ class TestPipelineOptimization(TestCase):
 
     def test_regression_preset(self):
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        po = PipelineOptimization(direction='maximize', study_name=study_name)
+        po = PipelineOptimization(direction='minimize', study_name=study_name)
         metric = Metric(mean_squared_error)
         train, test = RandomSplitter().train_test_split(self.dataset_regression, seed=123)
         po.optimize(train_dataset=train, test_dataset=test, objective_steps='all', metric=metric, n_trials=3,
-                    data=train,
-                    save_top_n=2)
+                    data=train, save_top_n=2)
         self.assertEqual(po.best_params, po.best_trial.params)
         self.assertIsInstance(po.best_value, float)
 
@@ -221,3 +218,27 @@ class TestPipelineOptimization(TestCase):
         best_pipeline = po.best_pipeline
         new_predictions = best_pipeline.evaluate(test, [metric])[0][metric.name]
         self.assertEqual(new_predictions, po.best_value)
+
+    def test_multilabel_regression_preset(self):
+        warnings.filterwarnings("ignore")
+        storage_name = "sqlite:///test_pipeline.db"
+        study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        po = PipelineOptimization(direction='minimize', study_name=study_name, storage=storage_name)
+        metric = Metric(mean_squared_error)
+        train, test = RandomSplitter().train_test_split(self.dataset_multilabel_regression, seed=123)
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps='keras', metric=metric, n_trials=3,
+                    data=train, save_top_n=2)
+        self.assertEqual(po.best_params, po.best_trial.params)
+        self.assertIsInstance(po.best_value, float)
+
+        self.assertEqual(len(po.trials), 3)
+        # assert that 2 pipelines were saved
+        self.assertEqual(len(os.listdir(study_name)), 2)
+        best_pipeline = po.best_pipeline
+        new_predictions = best_pipeline.evaluate(test, [metric])[0][metric.name]
+        self.assertEqual(new_predictions, po.best_value)
+
+        param_importance = po.get_param_importances()
+        if param_importance is not None:
+            for param in param_importance:
+                self.assertTrue(param in po.best_params.keys())

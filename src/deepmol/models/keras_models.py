@@ -69,7 +69,7 @@ class KerasModel(Model):
             self.model = KerasRegressor(build_fn=model_builder, nb_epoch=epochs, batch_size=batch_size, verbose=verbose,
                                         **kwargs)
         else:
-            self.model = model_builder
+            self.model = model_builder(**kwargs)
 
         super().__init__(self.model, model_dir, **kwargs)
 
@@ -214,11 +214,19 @@ class KerasModel(Model):
             if self.model_dir is None:
                 raise ValueError('No model directory specified.')
             else:
-                # write self in pickle format
-                _save_keras_model(self.model_dir, self.model.model, self.parameters_to_save, self.model_builder)
+                try:
+                    # write self in pickle format
+                    _save_keras_model(self.model_dir, self.model.model, self.parameters_to_save, self.model_builder)
+                except AttributeError:
+                    # write self in pickle format
+                    _save_keras_model(self.model_dir, self.model, self.parameters_to_save, self.model_builder)
         else:
-            # write self in pickle format
-            _save_keras_model(file_path, self.model.model, self.parameters_to_save, self.model_builder)
+            try:
+                # write self in pickle format
+                _save_keras_model(file_path, self.model.model, self.parameters_to_save, self.model_builder)
+            except AttributeError:
+                # write self in pickle format
+                _save_keras_model(file_path, self.model, self.parameters_to_save, self.model_builder)
 
     def get_task_type(self) -> str:
         """

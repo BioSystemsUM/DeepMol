@@ -2238,7 +2238,8 @@ def classifier_chain_model(model_dir: str = 'classifier_chain_model/', classifie
     classifier_chain_kwargs = classifier_chain_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
-    model = ClassifierChain(**classifier_chain_kwargs)
+    estimator = classifier_chain_kwargs.pop('estimator', None)
+    model = ClassifierChain(estimator, **classifier_chain_kwargs)
     return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
 
 
@@ -2293,7 +2294,8 @@ def regressor_chain_model(model_dir: str = 'regressor_chain_model/', regressor_c
     regressor_chain_kwargs = regressor_chain_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
-    model = RegressorChain(**regressor_chain_kwargs)
+    estimator = regressor_chain_kwargs.pop('estimator', None)
+    model = RegressorChain(estimator, **regressor_chain_kwargs)
     return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
 
 

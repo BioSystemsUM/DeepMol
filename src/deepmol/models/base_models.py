@@ -1,15 +1,10 @@
 from typing import Union, List
 
-from keras.optimizers import Adam
-from tensorflow import keras
-from keras.dtensor.optimizers import Adadelta, RMSprop
-from keras.layers import BatchNormalization, GaussianNoise
+from tensorflow.keras.optimizers import Adadelta, RMSprop, Adam
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
-from tensorflow.keras import Sequential, regularizers
-from tensorflow.keras.layers import Dense, Dropout, Reshape, Conv1D, Flatten
-from tensorflow.keras import layers
-import tensorflow as tf
+from tensorflow.keras import Sequential, regularizers, Model
+from tensorflow.keras.layers import Dense, Dropout, Reshape, Conv1D, Flatten, Input, BatchNormalization, GaussianNoise
 
 
 # TODO: add more pre-defined models
@@ -220,30 +215,26 @@ def make_cnn_model(input_dim: int = 1024,
 
 def basic_multitask_dnn(input_shape, task_names, losses, metrics):
     # Define the inputs
-    inputs = layers.Input(shape=input_shape)
+    inputs = Input(shape=input_shape)
 
     # Define the shared layers
-    shared_layer_1 = layers.Dense(64, activation="relu")
-    shared_layer_2 = layers.Dense(32, activation="relu")
-
-    # Define the shared layers for the inputs
-    x = shared_layer_1(inputs)
-    x = shared_layer_2(x)
+    x = Dense(64, activation="relu")(inputs)
+    x = Dense(32, activation="relu")(x)
 
     output_layers = []
     for i in range(len(task_names)):
-        task_layer = layers.Dense(16, activation="relu")(x)
+        task_layer = Dense(16, activation="relu")(x)
         # Define the outputs for each task
-        task_output = layers.Dense(1, activation="sigmoid", name=f"{task_names[i]}")(task_layer)
+        task_output = Dense(1, activation="sigmoid", name=f"{task_names[i]}")(task_layer)
         output_layers.append(task_output)
 
     # Define the model that outputs the predictions for each task
-    model = keras.Model(inputs=inputs, outputs=output_layers)
+    model = Model(inputs=inputs, outputs=output_layers)
     losses = {task_names[i]: losses[i] for i in range(len(task_names))}
     metrics = {task_names[i]: metrics[i] for i in range(len(task_names))}
     # Compile the model with different loss functions and metrics for each task
     model.compile(
-        optimizer=keras.optimizers.Adam(learning_rate=0.001),
+        optimizer=Adam(learning_rate=0.001),
         loss=losses,
         metrics=metrics)
     return model

@@ -499,8 +499,8 @@ def keras_simple_rnn_model(model_dir: str = 'keras_model/', model_kwargs: dict =
 
 
 def keras_rnn_model_builder(input_dim: int, n_tasks: int = 1, label_names: List[str] = None,
-                            n_lstm_layers: int = 1, lstm_units: int = 32, lstm_dropout: float = 0.0,
-                            n_gru_layers: int = 0, gru_units: int = 32, gru_dropout: float = 0.0,
+                            n_lstm_layers: int = 1, lstm_units: List[int] = None, lstm_dropout: List[float] = None,
+                            n_gru_layers: int = 0, gru_units: List[int] = None, gru_dropout: List[float] = None,
                             dense_units: int = 64, dense_dropout: float = 0.0, dense_activation: str = 'relu',
                             last_layers_units: List[int] = None, last_layers_activations: List[str] = None,
                             optimizer: str = 'adam', losses: Union[List[str], Dict[str, str]] = None,
@@ -619,8 +619,9 @@ def keras_rnn_model(model_dir: str = 'keras_model/', model_kwargs: dict = None,
 
 
 def keras_bidirectional_rnn_model_builder(input_dim: int, n_tasks: int = 1, label_names: List[str] = None,
-                                          n_lstm_layers: int = 1, lstm_units: int = 32, lstm_dropout: float = 0.0,
-                                          n_gru_layers: int = 0, gru_units: int = 32, gru_dropout: float = 0.0,
+                                          n_lstm_layers: int = 1, lstm_units: List[int] = None,
+                                          lstm_dropout: List[float] = None, n_gru_layers: int = 0,
+                                          gru_units: List[int] = None, gru_dropout: List[float] = None,
                                           dense_units: int = 64, dense_dropout: float = 0.0,
                                           dense_activation: str = 'relu', last_layers_units: List[int] = None,
                                           last_layers_activations: List[str] = None,

@@ -6,6 +6,7 @@ from deepchem.models import TextCNNModel
 from deepmol.base import DatasetTransformer, PassThroughTransformer
 from deepmol.compound_featurization import CoulombFeat
 from deepmol.datasets import Dataset
+from deepmol.datasets._utils import _get_n_classes
 from deepmol.encoders.label_one_hot_encoder import LabelOneHotEncoder
 from deepmol.pipeline_optimization._feature_selector_objectives import _get_feature_selector
 from deepmol.pipeline_optimization._featurizer_objectives import _get_featurizer
@@ -346,8 +347,10 @@ def preset_keras_models(trial, data: Dataset) -> list:
         List of steps for keras models for hyperparameter optimization.
     """
     mode = data.mode
-    n_classes = len(set(data.y)) if mode == 'classification' else 1
-    label_encoder = LabelOneHotEncoder() if mode == 'classification' and n_classes > 2 else PassThroughTransformer()
+    n_classes = _get_n_classes(data)
+    # TODO: in multitask when n_classes > 2 for different tasks, this will not work (LabelOneHotEncoder needs to work
+    #  on different y columns)
+    label_encoder = LabelOneHotEncoder() if mode == 'classification' and n_classes[0] > 2 else PassThroughTransformer()
     featurizer_type = trial.suggest_categorical('featurizer_type', ['1D', '2D'])
     featurizer = _get_featurizer(trial, featurizer_type)
     if featurizer_type == '1D':

@@ -9,7 +9,6 @@ from deepmol.datasets import Dataset
 from deepmol.encoders.label_one_hot_encoder import LabelOneHotEncoder
 from deepmol.pipeline_optimization._feature_selector_objectives import _get_feature_selector
 from deepmol.pipeline_optimization._featurizer_objectives import _get_featurizer
-from deepmol.pipeline_optimization._keras_mo_2 import _get_keras_model_2
 from deepmol.pipeline_optimization._keras_model_objectives import _get_keras_model
 from deepmol.pipeline_optimization._scaler_objectives import _get_scaler
 from deepmol.pipeline_optimization._sklearn_model_objectives import _get_sk_model
@@ -349,7 +348,7 @@ def preset_keras_models(trial, data: Dataset) -> list:
     mode = data.mode
     n_classes = len(set(data.y)) if mode == 'classification' else 1
     label_encoder = LabelOneHotEncoder() if mode == 'classification' and n_classes > 2 else PassThroughTransformer()
-    featurizer_type = trial.suggest_categorical('featurizer_type', ['1D'])#, '2D']) # TODO: remove comment
+    featurizer_type = trial.suggest_categorical('featurizer_type', ['1D', '2D'])
     featurizer = _get_featurizer(trial, featurizer_type)
     if featurizer_type == '1D':
         if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
@@ -361,10 +360,7 @@ def preset_keras_models(trial, data: Dataset) -> list:
     else:
         scaler = PassThroughTransformer()
         input_shape = featurizer.fit(data).shape
-    # TODO: adjust input size for one hot encoding etc
-    #keras_model = _get_keras_model(trial, task_type=mode, n_classes=n_classes, featurizer_type=featurizer_type,
-    #                               input_shape=input_shape)
-    keras_model = _get_keras_model_2(trial, input_shape, data)
+    keras_model = _get_keras_model(trial, input_shape, data)
     final_steps = [('label_encoder', label_encoder), ('standardizer', _get_standardizer(trial)),
                    ('featurizer', featurizer), ('scaler', scaler), ('model', keras_model)]
     return final_steps

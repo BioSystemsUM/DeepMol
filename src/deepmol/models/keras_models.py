@@ -69,7 +69,7 @@ class KerasModel(Model):
             self.model = KerasRegressor(build_fn=model_builder, nb_epoch=epochs, batch_size=batch_size, verbose=verbose,
                                         **kwargs)
         else:
-            self.model = model_builder(**kwargs)
+            self.model = model_builder
 
         super().__init__(self.model, model_dir, **kwargs)
 

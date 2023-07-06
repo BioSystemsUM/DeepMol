@@ -213,7 +213,6 @@ def megnet_model_steps(trial: Trial, model_dir: str = 'megnet_model/', megnet_kw
     List[Tuple[str, Union[Predictor, Transformer]]]
         List of tuples (steps) with the featurizer and the model.
     """
-    # TODO: add "pip install torch_geometric" to requirements.txt
     # Classifier/ Regressor
     # MolGraphConvFeat
     featurizer = MolGraphConvFeat()

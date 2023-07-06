@@ -1,6 +1,8 @@
 from optuna import Trial
 
 from deepmol.datasets import Dataset
+from deepmol.datasets._utils import _get_n_classes
+from deepmol.models._utils import _get_last_layer_info_based_on_mode
 from deepmol.models.keras_model_builders import *
 
 
@@ -325,38 +327,6 @@ _2D_KERAS_MODELS = {'keras_simple_rnn': keras_simple_rnn_step,
                     }
 
 
-def _get_last_layer_info_based_on_mode(mode: str, n_classes: int):
-    """
-    Get the last layer info based on the mode and the number of classes.
-
-    Parameters
-    ----------
-    mode : str
-        Mode of the model (classification or regression).
-    n_classes : int
-        Number of classes.
-
-    Returns
-    -------
-    list of str
-        Loss functions.
-    list of str
-        Activation functions of the last layers.
-    list of int
-        Number of units in the last layers.
-    """
-    if mode == 'classification':
-        loss = ['binary_crossentropy'] if n_classes == 2 else ['categorical_crossentropy']
-        last_layer_activations = ['sigmoid'] if n_classes == 2 else ['softmax']
-    elif mode == 'regression':
-        loss = ['mean_squared_error']
-        last_layer_activations = ['linear']
-    else:
-        raise ValueError(f'Unknown mode {mode}')
-    last_layer_units = [n_classes] if n_classes > 2 else [1]
-    return loss, last_layer_activations, last_layer_units
-
-
 def _get_keras_model(trial, input_shape: tuple, dataset: Dataset):
     """
     Get the Keras model based on the trial and the dataset.
@@ -377,22 +347,22 @@ def _get_keras_model(trial, input_shape: tuple, dataset: Dataset):
     """
     mode = dataset.mode
     label_names = dataset.label_names
-    n_classes = len(set(dataset.y)) if mode == 'classification' else 1  # TODO: what about multi-task?
+    n_classes = _get_n_classes(dataset)
     if isinstance(mode, str):
-        loss, last_layer_activations, last_layer_units = _get_last_layer_info_based_on_mode(mode, n_classes)
+        loss, last_layer_activations, last_layer_units = _get_last_layer_info_based_on_mode(mode, n_classes[0])
         metric = ['accuracy'] if mode == 'classification' else ['mean_squared_error']
     elif isinstance(mode, list):
         unique_mode = set(mode)
         if len(unique_mode) > 1:
-            metric = {f'output_{i}': ['accuracy'] if mode[i] == 'classification' else ['mean_squared_error'] for i in
-                      range(len(mode))}  # TODO: this does not work
+            metric = {label_names[i]: ['accuracy'] if mode[i] == 'classification' else ['mean_squared_error'] for i in
+                      range(len(mode))}
         else:
             metric = ['accuracy'] if mode[0] == 'classification' else ['mean_squared_error']
         loss = []
         last_layer_activations = []
         last_layer_units = []
-        for m in mode:
-            m_loss, m_last_layer_activations, m_last_layer_units = _get_last_layer_info_based_on_mode(m, n_classes)
+        for i, m in enumerate(mode):
+            m_loss, m_last_layer_activations, m_last_layer_units = _get_last_layer_info_based_on_mode(m, n_classes[i])
             loss.extend(m_loss)
             last_layer_activations.extend(m_last_layer_activations)
             last_layer_units.extend(m_last_layer_units)

@@ -174,7 +174,9 @@ class Dataset(ABC):
     @abstractmethod
     def label_names(self) -> np.ndarray:
         """
-        Get the labels names of the molecules in the dataset.
+        Get the labels names of the dataset.
+        If you have a single task this will be a list of length 1 with the name of the label.
+        If you have a multi-task dataset this will be a list of length n_tasks with the names of the labels.
 
         Returns
         -------
@@ -186,7 +188,9 @@ class Dataset(ABC):
     @abstractmethod
     def label_names(self, value: Union[List, np.ndarray]) -> None:
         """
-        Set the labels names of the molecules in the dataset.
+        Set the labels names of the dataset.
+        If you have a single task this will be a list of length 1 with the name of the label.
+        If you have a multi-task dataset this will be a list of length n_tasks with the names of the labels.
 
         Parameters
         ----------
@@ -354,7 +358,8 @@ class SmilesDataset(Dataset):
         y: Union[List, np.ndarray]
             Labels of the molecules.
         label_names: Union[List, np.ndarray]
-            Names of the labels.
+            Names of the labels. If you have a single task this will be a list of length 1 with the name of the label.
+            If you have a multi-task dataset this will be a list of length n_tasks with the names of the labels.
         mode: Union[str, List[str]]
             The mode of the dataset.
             If 'auto', the mode is inferred from the labels. If 'classification', the dataset is treated as a
@@ -402,7 +407,8 @@ class SmilesDataset(Dataset):
         y: Union[List, np.ndarray]
             Labels of the molecules.
         label_names: Union[List, np.ndarray]
-            Names of the labels.
+            Names of the labels. If you have a single task this will be a list of length 1 with the name of the label.
+            If you have a multi-task dataset this will be a list of length n_tasks with the names of the labels.
         mode: str
             The mode of the dataset.
             If 'auto', the mode is inferred from the labels. If 'classification', the dataset is treated as a
@@ -596,21 +602,27 @@ class SmilesDataset(Dataset):
     def label_names(self) -> np.ndarray:
         """
         Get the label names of the molecules in the dataset.
+        If you have a single task this will be a list of length 1 with the name of the label.
+        If you have a multi-task dataset this will be a list of length n_tasks with the names of the labels.
+
         Returns
         -------
         np.ndarray
-            Label names of the molecules in the dataset.
+            Label names in the dataset.
         """
         return self._label_names
 
     @label_names.setter
     def label_names(self, label_names: Union[List, np.ndarray]) -> None:
         """
-        Set the label names of the molecules in the dataset.
+        Set the label names of the dataset.
+        If you have a single task this will be a list of length 1 with the name of the label.
+        If you have a multi-task dataset this will be a list of length n_tasks with the names of the labels.
+
         Parameters
         ----------
         label_names: Union[List, np.ndarray]
-            Label names of the molecules.
+            Label names of the dataset.
         """
         if self._y is None:
             raise ValueError('The labels must be set before setting the label names.')

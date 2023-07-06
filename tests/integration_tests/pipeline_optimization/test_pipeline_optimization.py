@@ -26,6 +26,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = ""
 class TestPipelineOptimization(TestCase):
 
     def setUp(self) -> None:
+        warnings.filterwarnings("ignore")
         data_descriptors_path = os.path.join(TEST_DIR, 'data')
         dataset_descriptors = os.path.join(data_descriptors_path, "small_train_dataset.csv")
         features = [f'feat_{i}' for i in range(1, 2049)]
@@ -184,7 +185,7 @@ class TestPipelineOptimization(TestCase):
         po = PipelineOptimization(direction='maximize', study_name=study_name, storage=storage_name)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_multilabel, seed=123)
-        po.optimize(train_dataset=train, test_dataset=test, objective_steps='keras', metric=metric, n_trials=3,
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps='all', metric=metric, n_trials=3,
                     data=train, save_top_n=2)
         self.assertEqual(po.best_params, po.best_trial.params)
         self.assertIsInstance(po.best_value, float)
@@ -220,13 +221,12 @@ class TestPipelineOptimization(TestCase):
         self.assertEqual(new_predictions, po.best_value)
 
     def test_multilabel_regression_preset(self):
-        warnings.filterwarnings("ignore")
         storage_name = "sqlite:///test_pipeline.db"
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         po = PipelineOptimization(direction='minimize', study_name=study_name, storage=storage_name)
         metric = Metric(mean_squared_error)
         train, test = RandomSplitter().train_test_split(self.dataset_multilabel_regression, seed=123)
-        po.optimize(train_dataset=train, test_dataset=test, objective_steps='keras', metric=metric, n_trials=3,
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps='all', metric=metric, n_trials=3,
                     data=train, save_top_n=2)
         self.assertEqual(po.best_params, po.best_trial.params)
         self.assertIsInstance(po.best_value, float)

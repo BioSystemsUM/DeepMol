@@ -227,7 +227,7 @@ class TestPipelineOptimization(TestCase):
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         po = PipelineOptimization(direction='minimize', study_name=study_name, storage=storage_name)
         metric = Metric(mean_squared_error)
-        train, test = RandomSplitter().train_test_split(self.dataset_multilabel_regression, seed=123)
+        train, test = RandomSplitter().train_test_split(self.dataset_multilabel_regression, seed=124)
         po.optimize(train_dataset=train, test_dataset=test, objective_steps='all', metric=metric, n_trials=3,
                     data=train, save_top_n=2)
         self.assertEqual(po.best_params, po.best_trial.params)

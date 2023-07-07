@@ -35,7 +35,8 @@ class TestPipelineOptimization(TestCase):
                            id_field='ids',
                            labels_fields=['y'],
                            features_fields=features,
-                           mode='classification')
+                           mode='classification',
+                           shard_size=100)
         self.dataset_descriptors = loader.create_dataset(sep=",")
 
         smiles_dataset_path = os.path.join(TEST_DIR, 'data')
@@ -64,7 +65,8 @@ class TestPipelineOptimization(TestCase):
         loader = CSVLoader(dataset_multilabel,
                            smiles_field='smiles',
                            labels_fields=['C00341', 'C01789', 'C00078'],
-                           mode=['classification', 'classification', 'classification'])
+                           mode=['classification', 'classification', 'classification'],
+                           shard_size=100)
         self.dataset_multilabel = loader.create_dataset(sep=",")
 
         self.dataset_multilabel_regression = copy(self.dataset_multilabel)

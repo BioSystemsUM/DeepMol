@@ -186,13 +186,13 @@ class TestPipelineOptimization(TestCase):
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_multilabel, seed=123)
         po.optimize(train_dataset=train, test_dataset=test, objective_steps='all', metric=metric, n_trials=3,
-                    data=train, save_top_n=2)
+                    data=train, save_top_n=1)
         self.assertEqual(po.best_params, po.best_trial.params)
         self.assertIsInstance(po.best_value, float)
 
         self.assertEqual(len(po.trials), 3)
         # assert that 2 pipelines were saved
-        self.assertEqual(len(os.listdir(study_name)), 2)
+        self.assertEqual(len(os.listdir(study_name)), 1)
         best_pipeline = po.best_pipeline
         new_predictions = best_pipeline.evaluate(test, [metric])[0][metric.name]
         self.assertEqual(new_predictions, po.best_value)

@@ -378,7 +378,7 @@ We provide all 0D, 2D descriptors and some 1D descriptors from rdkit in only one
     - **FpDensityMorgan2**: Fingerprint Density for Morgan Radius 2.
     - **FpDensityMorgan3**: Fingerprint Density for Morgan Radius 3.
 - **BCUT2D descriptors**: BCUT2D descriptors are based on the Burden matrix, which encodes bond strengths between atoms in the molecule. 
-The diagonal elements of the matrix to include the atom properties and then performs eigenvalue decomposition to obtain the highest and lowest eigenvalues.
+It changes the diagonal elements of the matrix to include the atom properties and then performs eigenvalue decomposition to obtain the highest and lowest eigenvalues.
 
     - **BCUT2D_MWHI**: Incorporates atom masses in the Burden matrix - returns the highest eigenvalue. 
 

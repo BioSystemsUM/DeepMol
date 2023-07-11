@@ -580,7 +580,7 @@ dataset.X[0]
 
 3D structures can be generated with DeepMol and being exported to a file.
 
-We start by generating conformers with **ETKDG** (Efficient Conformer Generation) algorithm. The ETKDG method is a widely used algorithm for generating low-energy conformers of small organic molecules. It is an extension of the original **KDG** (Knowledge-Embedded Stochastic Conformer Generation) method and incorporates additional efficiency enhancements. 
+We start by generating conformers with **ETKDG** (Experimental-Torsion basic Knowledge Distance Geometry) algorithm. The ETKDG method is a widely used algorithm for generating low-energy conformers of small organic molecules. It is an extension of the original **KDG** (Knowledge Distance Geometry) method and incorporates additional efficiency enhancements. 
 
 The **ETKDG** method combines random sampling with knowledge-based rules and efficient energy evaluations to generate a diverse set of low-energy conformers for small organic molecules. It strikes a balance between computational efficiency and conformational coverage, making it a popular choice for various molecular modeling and drug discovery applications.
 
@@ -837,7 +837,7 @@ As you see, the dataset has now 2D and 3D descriptors.
 
 ### Weave Featurization
 
-Weave convolutions were introduced in [1]_. Unlike Duvenaud graph convolutions, weave convolutions require a quadratic matrix of interaction descriptors for each pair of atoms. These extra descriptors may provide for additional descriptive power but at the cost of a larger featurized dataset. Weave convolutions are implemented in DeepChem as the WeaveFeaturizer class.
+Weave convolutions were introduced in [1]_. Unlike Duvenaud graph convolutions, weave convolutions require a quadratic matrix of interaction descriptors for each pair of atoms. These extra descriptors may provide for additional descriptive power but at the cost of a larger featurized dataset. Weave convolutions are implemented in DeepChem as the WeaveFeat class.
 
 [1] Kearnes, Steven, et al. "Molecular graph convolutions: moving beyond fingerprints." Journal of computer-aided molecular design 30.8 (2016): 595-608.
 
@@ -902,7 +902,8 @@ CoulombEigFeat(n_jobs=10,max_atoms=10).featurize(dataset, inplace=True)
 
 ### ConvMolFeat
 
-Duvenaud graph convolutions [1]_ construct a vector of descriptors for each atom in a molecule. The featurizer computes that vector of local descriptors.
+Duvenaud graph convolutions [1] construct a vector of descriptors for each atom in a molecule. 
+The featurizer computes that vector of local descriptors.
 
     [1] Duvenaud, David K., et al. “Convolutional networks on graphs for learning molecular fingerprints.” Advances in neural information processing systems. 2015.
 
@@ -915,7 +916,10 @@ ConvMolFeat(n_jobs=10).featurize(dataset, inplace=True)
 
 This class is a featurizer of general graph convolution networks for molecules.
 
-The default node(atom) and edge(bond) representations are based on WeaveNet paper. If you want to use your own representations
+The default node(atom) and edge(bond) representations are based on WeaveNet paper. For more information, 
+consult [the DeepChem documentation](https://deepchem.readthedocs.io/en/latest/api_reference/featurizers.html?highlight=MolGraphConvFeaturizer#molgraphconvfeaturizer).
+
+
 
 
 ```python

@@ -165,16 +165,22 @@ def normalize_labels_shape(y_pred: Union[List, np.ndarray], n_tasks: int) -> np.
     labels
         Array of predictions in the format [0, 1, 0, ...]/[[0, 1, 0, ...], [0, 1, 1, ...], ...]
     """
+    if not isinstance(y_pred, np.ndarray):
+        y_pred = np.array(y_pred)
+
     if n_tasks == 1:
         labels = _normalize_singletask_labels_shape(y_pred)
     else:
-        if isinstance(y_pred, np.ndarray):
-            if len(y_pred.shape) == 3:
-                y_pred = np.array([np.array([j[1] for j in i]) for i in y_pred]).T
+        if len(y_pred.shape) == 3:
+            if y_pred.shape[2] > 1:
+                y_pred = np.array([np.array([j[1] for j in i]) for i in y_pred])
+            else:
+                y_pred = y_pred.reshape(y_pred.shape[0], y_pred.shape[1])
         labels = []
         for task in y_pred:
             labels.append(_normalize_singletask_labels_shape(task))
-        labels = np.array(labels).T
+
+    labels = np.array(labels)
     return labels
 
 
@@ -195,6 +201,8 @@ def _normalize_singletask_labels_shape(y_pred: Union[List, np.ndarray]) -> np.nd
     labels = []
     # list of probabilities in the format [0.1, 0.9, 0.2, ...]
     if isinstance(y_pred[0], (np.floating, float)):
+        return np.array(y_pred)
+    elif isinstance(y_pred[0], (np.integer, int)):
         return np.array(y_pred)
     # list of lists of probabilities in the format [[0.1], [0.2], ...]
     elif len(y_pred[0]) == 1:

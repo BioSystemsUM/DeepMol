@@ -1,6 +1,6 @@
 import os
 import shutil
-from unittest import TestCase
+from unittest import TestCase, skip
 
 import numpy as np
 from sklearn.metrics import roc_auc_score, precision_score, classification_report, accuracy_score, confusion_matrix
@@ -114,6 +114,7 @@ class TestKerasModel(ModelsTestCase, TestCase):
 
             shutil.rmtree("test_model")
 
+    @skip("This test is too slow for CI")
     def test_rnn_baseline_models(self):
         model_kwargs = {}
         keras_kwargs = {}

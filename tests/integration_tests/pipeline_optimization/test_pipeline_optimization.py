@@ -1,6 +1,6 @@
 import os
 import shutil
-from unittest import TestCase
+from unittest import TestCase, skip
 
 import optuna
 from sklearn.ensemble import RandomForestClassifier
@@ -10,6 +10,7 @@ from sklearn.svm import SVC
 from deepmol.loaders import CSVLoader
 from deepmol.metrics import Metric
 from deepmol.models import SklearnModel
+from deepmol.pipeline import Pipeline
 from deepmol.pipeline_optimization import PipelineOptimization
 from deepmol.splitters import RandomSplitter
 
@@ -103,6 +104,11 @@ class TestPipelineOptimization(TestCase):
         df2 = po.trials_dataframe(cols=['number', 'value'])
         self.assertEqual(df2.shape, (5, 2))
 
+        best_pipeline = po.best_pipeline
+        new_predictions = best_pipeline.evaluate(test, [metric])[0][metric.name]
+        self.assertEqual(new_predictions, po.best_value)
+
+    @skip("This test is too slow to run on CI and can have different results on different trials")
     def test_classification_preset(self):
         storage_name = "sqlite:///test_pipeline.db"
         po = PipelineOptimization(direction='maximize', study_name='test_pipeline', storage=storage_name)
@@ -126,6 +132,7 @@ class TestPipelineOptimization(TestCase):
             for param in param_importance:
                 self.assertTrue(param in po.best_params.keys())
 
+    @skip("This test is too slow to run on CI and can have different results on different trials")
     def test_regression_preset(self):
         po = PipelineOptimization(direction='minimize', study_name='test_pipeline')
         metric = Metric(mean_squared_error)

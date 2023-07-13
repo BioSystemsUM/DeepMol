@@ -44,7 +44,7 @@ class Objective:
         self.test_dataset = test_dataset
         self.metric = metric
         self.save_top_n = save_top_n
-        self.save_dir = os.path.join(os.getcwd(), study.study_name)
+        self.save_dir = study.study_name
         self.kwargs = kwargs
 
     def __call__(self, trial: Trial):

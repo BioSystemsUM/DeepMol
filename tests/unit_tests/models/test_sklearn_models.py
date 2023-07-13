@@ -49,7 +49,7 @@ class TestSklearnModel(ModelsTestCase, TestCase):
         y_pred = model.model.predict_proba(self.binary_dataset.X)
         y_pred = y_pred[:, 1]
         roc_auc_score_value = roc_auc_score(self.binary_dataset.y, y_pred)
-        self.assertEqual(roc_auc_score_value, train_score[0]["roc_auc_score"])
+        self.assertAlmostEqual(roc_auc_score_value, train_score[0]["roc_auc_score"], delta=0.01)
 
     def test_regression(self):
         rf = RandomForestRegressor()

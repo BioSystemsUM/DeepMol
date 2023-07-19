@@ -1,7 +1,8 @@
 # Unsupervised Learning
 
-It is possible to do unsupervised exploration of the datasets using PCA, tSNE, KMeans and UMAP.
-
+It is possible to do unsupervised exploration of the datasets using PCA, tSNE, KMeans and UMAP. 
+Before using these methods, it is necessary to featurize the data and scale it. 
+If you don't know how to do it, please check the [Featurization](featurization.md) and [Scaling](scaling.md) sections.
 
 ```python
 from deepmol.scalers import MinMaxScaler
@@ -19,7 +20,7 @@ loader = CSVLoader(dataset_path='../data/CHEMBL217_reduced.csv',
 data = loader.create_dataset(sep=',', header=0)
 TwoDimensionDescriptors().featurize(data, inplace=True)
 scaler = MinMaxScaler()
-scaler.scale(data, inplace=True)
+scaler.fit_transform(data)
 ```
 
 ## PCA
@@ -85,6 +86,8 @@ tsne.plot(tsne_df.X, path='tsne_output_2.png')
 ![png](unsupervised_learning_files/tsne_output_2.png)
 
 ```python
+from deepmol.unsupervised import TSNE
+
 tsne = TSNE(n_components=3)
 tsne_df = tsne.run(data)
 tsne.plot(tsne_df.X, path='tsne_output_3.png')
@@ -93,6 +96,8 @@ tsne.plot(tsne_df.X, path='tsne_output_3.png')
 ![png](unsupervised_learning_files/tsne_output_3.png)
 
 ```python
+from deepmol.unsupervised import TSNE
+
 tsne = TSNE(n_components=4, method='exact')
 tsne_df = tsne.run(data)
 tsne.plot(tsne_df.X, path='tsne_output_4.png')
@@ -122,6 +127,8 @@ kmeans.plot(kmeans_df.X, path='kmeans_output_2.png')
 ![png](unsupervised_learning_files/kmeans_output_2.png)
 
 ```python
+from deepmol.unsupervised import KMeans
+
 kmeans = KMeans(n_clusters=3)
 kmeans_df = kmeans.run(data)
 kmeans.plot(kmeans_df.X, path='kmeans_output_3.png')
@@ -130,6 +137,8 @@ kmeans.plot(kmeans_df.X, path='kmeans_output_3.png')
 ![png](unsupervised_learning_files/kmeans_output_3.png)
 
 ```python
+from deepmol.unsupervised import KMeans
+
 kmeans = KMeans(n_clusters=6)
 kmeans_df = kmeans.run(data)
 kmeans.plot(kmeans_df.X, path='kmeans_output_6.png')
@@ -159,6 +168,8 @@ ump.plot(umap_df.X, path='umap_output_2.png')
 ![png](unsupervised_learning_files/umap_output_2.png)
 
 ```python
+from deepmol.unsupervised import UMAP
+
 ump = UMAP(n_components=3)
 umap_df = ump.run(data)
 ump.plot(umap_df.X, path='umap_output_3.png')
@@ -167,6 +178,8 @@ ump.plot(umap_df.X, path='umap_output_3.png')
 ![png](unsupervised_learning_files/umap_output_3.png)
 
 ```python
+from deepmol.unsupervised import UMAP
+
 ump = UMAP(n_components=6)
 umap_df = ump.run(data)
 ump.plot(umap_df.X, path='umap_output_6.png')

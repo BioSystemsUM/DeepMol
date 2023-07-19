@@ -118,9 +118,6 @@ class KerasModel(Model):
           scikit-learn model has both methods, the value is always a return value of `predict_proba`.
         """
         predictions = self.predict_proba(dataset)
-        if not dataset.y.shape == np.array(predictions).shape:
-            predictions = normalize_labels_shape(predictions, dataset.n_tasks)
-
         y_pred_rounded = get_prediction_from_proba(dataset, predictions)
         return y_pred_rounded
 
@@ -146,8 +143,13 @@ class KerasModel(Model):
             self.logger.info(str(type(self.model)))
             predictions = self.model.predict(dataset.X.astype('float32'))
 
-        if not dataset.y.shape == np.array(predictions).shape:
+        predictions = np.array(predictions)
+        if predictions.shape != (len(dataset.mols), dataset.n_tasks):
             predictions = normalize_labels_shape(predictions, dataset.n_tasks)
+
+        if len(predictions.shape) > 1:
+            if predictions.shape[1] == len(dataset.mols) and predictions.shape[0] == dataset.n_tasks:
+                predictions = predictions.T
 
         return predictions
 

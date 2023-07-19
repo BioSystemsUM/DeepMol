@@ -2,32 +2,15 @@
 
 Splitting your data in a Machine Learning pipeline is a crucial step. It is important to make sure that the data is split in a way that the model is not overfitting. In this tutorial we will show you how to use the splitters in DeepMol. Some splitters allow us to have an easier task for a model to learn, while others allow us to have a more difficult task for a model to learn. We will show you how to use the splitters and how to use them in a pipeline.
 
- <font size="5"> **Import data** </font>
-
-
-```python
-from deepmol.splitters import SingletaskStratifiedSplitter
-from deepmol.loaders import CSVLoader
-from deepmol.splitters import SimilaritySplitter
-
-from deepmol.compound_featurization import MorganFingerprint
-
-from deepmol.models import SklearnModel
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score
-from deepmol.metrics import Metric
-import pandas as pd
-import numpy as np
-from rdkit import Chem, DataStructs
-from rdkit.Chem import AllChem
-from sklearn.manifold import TSNE
-import matplotlib.pyplot as plt
-```
-
 <font size="5"> **Create function to generate t-SNE embeddings** </font>
 
 
 ```python
+from rdkit import Chem, DataStructs
+from rdkit.Chem import AllChem
+import numpy as np
+from sklearn.manifold import TSNE
+import matplotlib.pyplot as plt
 
 def generate_tsne_molecular_similarities(train_dataset, valid_dataset, test_dataset):
     # Create a function to compute molecular fingerprints
@@ -73,6 +56,8 @@ def generate_tsne_molecular_similarities(train_dataset, valid_dataset, test_data
 
 
 ```python
+from deepmol.loaders import CSVLoader
+
 dataset = CSVLoader("../data/CHEMBL217_reduced.csv", id_field="Original_Entry_ID",
                     smiles_field="SMILES", labels_fields=["Activity_Flag"]).create_dataset()
 ```
@@ -80,10 +65,13 @@ dataset = CSVLoader("../data/CHEMBL217_reduced.csv", id_field="Original_Entry_ID
 
 ## SingletaskStratifiedSplitter
 
-A single task stratified splitter splits the data into train, validation and test sets. The data is split in a way that the distribution of the labels is the same in each set. This is useful when we have a dataset with a large number of classes and we want to make sure that the distribution of the classes is the same in each set.
+A single task stratified splitter splits the data into train, validation and test sets. The data is split in a way that the distribution of the labels is the same in each set. 
+This is useful when we have a dataset with a large number of classes or a highly unbalanced dataset, and we want to make sure that the distribution of the classes is the same in each set.
 
 
 ```python
+from deepmol.splitters import SingletaskStratifiedSplitter
+
 splitter = SingletaskStratifiedSplitter()
 train_dataset, valid_dataset, test_dataset = splitter.train_valid_test_split(dataset, frac_train=0.8, frac_valid=0.1, frac_test=0.1)
 ```
@@ -103,6 +91,8 @@ train_dataset.get_shape()
 
 
 ```python
+import pandas as pd
+
 pd.Series(train_dataset.y).value_counts()
 ```
 
@@ -126,6 +116,8 @@ valid_dataset.get_shape()
 
 
 ```python
+import pandas as pd
+
 pd.Series(valid_dataset.y).value_counts()
 ```
 
@@ -150,6 +142,8 @@ test_dataset.get_shape()
 
 
 ```python
+import pandas as pd
+
 pd.Series(test_dataset.y).value_counts()
 ```
 
@@ -179,6 +173,12 @@ Then you can train them with a model. Here we use a random forest classifier.
 
 
 ```python
+from deepmol.compound_featurization import MorganFingerprint
+from deepmol.models import SklearnModel
+from deepmol.metrics import Metric
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+
 MorganFingerprint().featurize(train_dataset, inplace=True)
 MorganFingerprint().featurize(valid_dataset, inplace=True)
 MorganFingerprint().featurize(test_dataset, inplace=True)
@@ -198,6 +198,8 @@ model.evaluate(test_dataset, [Metric(accuracy_score, name="accuracy")])
 
 
 ```python
+from deepmol.metrics import Metric
+
 model.evaluate(valid_dataset, [Metric(accuracy_score, name="accuracy")])
 ```
 
@@ -221,6 +223,8 @@ train_dataset, valid_dataset, test_dataset = RandomSplitter().train_valid_test_s
 
 
 ```python
+from deepmol.loaders import CSVLoader
+
 dataset = CSVLoader("../data/tox21.csv", id_field="mol_id",
                     smiles_field="smiles", labels_fields=["NR-AR","NR-AR-LBD","NR-AhR",
                                                           "NR-Aromatase", "NR-ER", "NR-ER-LBD",
@@ -236,6 +240,7 @@ dataset = CSVLoader("../data/tox21.csv", id_field="mol_id",
 
 ```python
 from deepmol.splitters import MultiTaskStratifiedSplitter
+
 train_dataset, test_dataset = MultiTaskStratifiedSplitter().train_test_split(dataset, frac_train=0.8)
 ```
 
@@ -266,11 +271,14 @@ print("The average percentage of the tasks labels in the test set is :", np.mean
 
 ```python
 from deepmol.splitters import RandomSplitter
+
 train_dataset, test_dataset = RandomSplitter().train_test_split(dataset, frac_train=0.8)
 ```
 
 
 ```python
+import numpy as np
+
 num_ones_per_column_train_dataset = np.sum(train_dataset.y == 1, axis=0)
 num_ones_per_column_test_dataset = np.sum(test_dataset.y == 1, axis=0)
 total = num_ones_per_column_train_dataset + num_ones_per_column_test_dataset
@@ -304,6 +312,8 @@ Moreover, this method tries to ensure the stratification of classes.
 
 
 ```python
+from deepmol.splitters import SimilaritySplitter
+
 similarity_splitter = SimilaritySplitter()
 
 train_dataset, valid_dataset, test_dataset = similarity_splitter.train_valid_test_split(dataset, frac_train=0.8, frac_valid=0.1, frac_test=0.1, homogenous_threshold=0.7)
@@ -313,6 +323,8 @@ train_dataset, valid_dataset, test_dataset = similarity_splitter.train_valid_tes
 
 
 ```python
+import pandas as pd
+
 pd.Series(train_dataset.y).value_counts()
 ```
 
@@ -327,6 +339,8 @@ pd.Series(train_dataset.y).value_counts()
 
 
 ```python
+import pandas as pd
+
 pd.Series(valid_dataset.y).value_counts()
 ```
 
@@ -341,6 +355,8 @@ pd.Series(valid_dataset.y).value_counts()
 
 
 ```python
+import pandas as pd
+
 pd.Series(test_dataset.y).value_counts()
 ```
 
@@ -369,6 +385,12 @@ Then you can train them with a model. Here we use a random forest classifier. Th
 
 
 ```python
+from deepmol.compound_featurization import MorganFingerprint
+from deepmol.models import SklearnModel
+from deepmol.metrics import Metric
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+
 MorganFingerprint().featurize(train_dataset, inplace=True)
 MorganFingerprint().featurize(valid_dataset, inplace=True)
 MorganFingerprint().featurize(test_dataset, inplace=True)
@@ -408,6 +430,12 @@ Molecules don't look as separated as before, and of course, the performance is b
 
 
 ```python
+from deepmol.compound_featurization import MorganFingerprint
+from deepmol.models import SklearnModel
+from deepmol.metrics import Metric
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+
 MorganFingerprint().featurize(train_dataset, inplace=True)
 MorganFingerprint().featurize(valid_dataset, inplace=True)
 MorganFingerprint().featurize(test_dataset, inplace=True)
@@ -460,6 +488,12 @@ generate_tsne_molecular_similarities(train_dataset, valid_dataset, test_dataset)
 
 
 ```python
+from deepmol.compound_featurization import MorganFingerprint
+from deepmol.models import SklearnModel
+from deepmol.metrics import Metric
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+
 MorganFingerprint().featurize(train_dataset, inplace=True)
 MorganFingerprint().featurize(valid_dataset, inplace=True)
 MorganFingerprint().featurize(test_dataset, inplace=True)
@@ -498,6 +532,12 @@ generate_tsne_molecular_similarities(train_dataset, valid_dataset, test_dataset)
 
 
 ```python
+from deepmol.compound_featurization import MorganFingerprint
+from deepmol.models import SklearnModel
+from deepmol.metrics import Metric
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+
 MorganFingerprint().featurize(train_dataset, inplace=True)
 MorganFingerprint().featurize(valid_dataset, inplace=True)
 MorganFingerprint().featurize(test_dataset, inplace=True)
@@ -547,6 +587,12 @@ generate_tsne_molecular_similarities(train_dataset, valid_dataset, test_dataset)
 
 
 ```python
+from deepmol.compound_featurization import MorganFingerprint
+from deepmol.models import SklearnModel
+from deepmol.metrics import Metric
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+
 MorganFingerprint().featurize(train_dataset, inplace=True)
 MorganFingerprint().featurize(valid_dataset, inplace=True)
 MorganFingerprint().featurize(test_dataset, inplace=True)
@@ -567,6 +613,8 @@ model.evaluate(test_dataset, [Metric(accuracy_score, name="accuracy")])
 
 
 ```python
+from deepmol.splitters import ButinaSplitter
+
 butina_splitter = ButinaSplitter()
 
 train_dataset, valid_dataset, test_dataset = butina_splitter.train_valid_test_split(dataset, frac_train=0.8, frac_valid=0.1, frac_test=0.1, homogenous_datasets = True)
@@ -588,6 +636,12 @@ generate_tsne_molecular_similarities(train_dataset, valid_dataset, test_dataset)
 
 
 ```python
+from deepmol.compound_featurization import MorganFingerprint
+from deepmol.models import SklearnModel
+from deepmol.metrics import Metric
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+
 MorganFingerprint().featurize(train_dataset, inplace=True)
 MorganFingerprint().featurize(valid_dataset, inplace=True)
 MorganFingerprint().featurize(test_dataset, inplace=True)

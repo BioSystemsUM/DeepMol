@@ -1,37 +1,12 @@
 # Hyperparameter optimization
 
-<font size="4"> **Import packages** </font>
-
-
-```python
-from rdkit import RDLogger
-import logging
-import warnings
-
-warnings.filterwarnings("ignore")
-logger = logging.getLogger()
-logger.setLevel(logging.CRITICAL)
-RDLogger.DisableLog('rdApp.*')
-
-from sklearn.metrics import accuracy_score
-from deepmol.metrics import Metric
-from sklearn.svm import SVC
-from deepmol.parameter_optimization import HyperparameterOptimizerValidation
-
-from deepmol.splitters import RandomSplitter
-from deepmol.compound_featurization import MorganFingerprint
-from deepmol.loaders import SDFLoader
-
-
-from tensorflow.keras.layers import Dropout
-from tensorflow import keras
-from tensorflow.keras import layers
-```
-
 <font size="4"> **First of all, let's load the data** </font>
 
 
 ```python
+from deepmol.loaders import SDFLoader
+from deepmol.splitters import RandomSplitter
+
 dataset = SDFLoader("../data/CHEMBL217_conformers.sdf", id_field="_ID", labels_fields=["_Class"]).create_dataset()
 train_dataset, valid_dataset, test_dataset = RandomSplitter().train_valid_test_split(dataset, frac_train=0.8, frac_valid=0.1, frac_test=0.1)
 ```
@@ -41,6 +16,8 @@ train_dataset, valid_dataset, test_dataset = RandomSplitter().train_valid_test_s
 <font size="4"> **Let's featurize the data** </font>
 
 ```python
+from deepmol.compound_featurization import MorganFingerprint
+
 morgan_fingerprints = MorganFingerprint()
 morgan_fingerprints.featurize(train_dataset, inplace=True)
 morgan_fingerprints.featurize(valid_dataset, inplace=True)
@@ -61,6 +38,11 @@ The parameters must be specified as a dictionary, where the keys are the paramet
 Let's see how to perform hyperparameter tuning of a SVM with a validation set.
 
 ```python
+from deepmol.parameter_optimization import HyperparameterOptimizerValidation
+from sklearn.svm import SVC
+from deepmol.metrics import Metric
+from sklearn.metrics import accuracy_score
+
 params_dict_svc = {"C": [1.0, 1.2, 0.8], "kernel": ['linear', 'poly', 'rbf']} # The keys are the parameters names and the values are the values to try
 optimizer = HyperparameterOptimizerValidation(SVC,
                                               metric=Metric(accuracy_score),
@@ -141,6 +123,9 @@ SklearnModel.load("../../examples/workshop_bod/my_model").predict(test_dataset)
 
 ```python
 from deepmol.parameter_optimization import HyperparameterOptimizerCV
+from sklearn.svm import SVC
+from deepmol.metrics import Metric
+from sklearn.metrics import accuracy_score
 
 params_dict_svc = {"C": [1.0, 1.2, 0.8], "kernel": ['linear', 'poly', 'rbf']}
 optimizer = HyperparameterOptimizerCV(SVC, metric=Metric(accuracy_score),
@@ -270,6 +255,10 @@ As explained in the models section, to create a Keras model one have to define a
 
 
 ```python
+from tensorflow.keras.layers import Dropout
+from tensorflow import keras
+from tensorflow.keras import layers
+
 def create_model(input_dim, optimizer='adam', dropout=0.5):
     # create model
     inputs = layers.Input(shape=input_dim)
@@ -302,6 +291,10 @@ Let's see how to perform hyperparameter tuning of a DNN with a validation set.
 
 
 ```python
+from deepmol.parameter_optimization import HyperparameterOptimizerValidation
+from deepmol.metrics import Metric
+from sklearn.metrics import accuracy_score
+
 params_dict_dense = {
                    "input_dim": [train_dataset.X.shape[1]],
                    "dropout": [0.5, 0.6, 0.7],
@@ -428,6 +421,10 @@ best_dnn.predict(test_dataset)
 The hyperparameter tuning is very similar to the previous one, but in this case the hyperparameter tuning is performed with cross validation and as in for Sklearn models!
 
 ```python
+from deepmol.parameter_optimization import HyperparameterOptimizerCV
+from deepmol.metrics import Metric
+from sklearn.metrics import accuracy_score
+
 params_dict_dense = {
                    "input_dim": [train_dataset.X.shape[1]],
                    "dropout": [0.5, 0.6, 0.7],
@@ -468,11 +465,10 @@ ConvMolFeat().featurize(test_dataset, inplace=True)
 
 ```python
 from deepmol.parameter_optimization import HyperparameterOptimizerValidation
-from deepmol.parameter_optimization import HyperparameterOptimizerCV
-
-from sklearn.metrics import roc_auc_score, precision_score
 from deepmol.models import DeepChemModel
 from deepchem.models import GraphConvModel
+from deepmol.metrics import Metric
+from sklearn.metrics import accuracy_score
 
 def graphconv_builder(graph_conv_layers, batch_size=256, epochs=5):
     graph = GraphConvModel(n_tasks=1, graph_conv_layers=graph_conv_layers, batch_size=batch_size,
@@ -568,6 +564,12 @@ best_model.predict(test_dataset)
 
 
 ```python
+from deepmol.parameter_optimization import HyperparameterOptimizerCV
+from deepmol.models import DeepChemModel
+from deepchem.models import GraphConvModel
+from deepmol.metrics import Metric
+from sklearn.metrics import roc_auc_score
+
 def graphconv_builder(graph_conv_layers, batch_size=256, epochs=5):
     graph = GraphConvModel(n_tasks=1, graph_conv_layers=graph_conv_layers, batch_size=batch_size,
                            mode='classification')
@@ -589,6 +591,9 @@ In the end, we can check the performance of the best model on the test set.
 
 
 ```python
+from sklearn.metrics import roc_auc_score, precision_score, accuracy_score
+from deepmol.metrics import Metric
+
 test_preds = best_model.predict(test_dataset)
 
 metrics = [Metric(roc_auc_score), Metric(precision_score), Metric(accuracy_score)]
@@ -668,6 +673,8 @@ Bring it back to life and make predictions!
 
 
 ```python
+from deepmol.models import DeepChemModel
+
 best_model = DeepChemModel.load("my_model")
 ```
 

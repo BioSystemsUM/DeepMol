@@ -1,22 +1,5 @@
 # Machine Learning models
 
-<font size="4"> **Import packages** </font>
-
-
-```python
-from rdkit import RDLogger
-import logging
-import warnings
-from deepmol.loaders import SDFLoader
-from sklearn.metrics import roc_auc_score, accuracy_score
-from deepmol.metrics import Metric
-
-warnings.filterwarnings("ignore")
-logger = logging.getLogger()
-logger.setLevel(logging.CRITICAL)
-RDLogger.DisableLog('rdApp.*')
-```
-
 ## Scikit-learn models
 
 <font size="4"> **Let's start by loading the data and splitting it into train and test sets** </font>
@@ -24,6 +7,7 @@ RDLogger.DisableLog('rdApp.*')
 
 ```python
 from deepmol.splitters import RandomSplitter
+from deepmol.loaders import SDFLoader
 
 dataset = SDFLoader("../data/CHEMBL217_conformers.sdf", id_field="_ID", labels_fields=["_Class"]).create_dataset()
 random_splitter = RandomSplitter()
@@ -88,6 +72,9 @@ model.predict(test_dataset)
 ### Evaluate
 
 ```python
+from deepmol.metrics import Metric
+from sklearn.metrics import roc_auc_score, accuracy_score
+
 model.evaluate(test_dataset, metrics=[Metric(metric=roc_auc_score), Metric(metric=accuracy_score)])
 ```
 
@@ -109,6 +96,10 @@ model.save("my_model")
 Load them back is also very simple.
 
 ```python
+from deepmol.models import SklearnModel
+from deepmol.metrics import Metric
+from sklearn.metrics import roc_auc_score, accuracy_score
+
 model = SklearnModel.load("my_model")
 model.evaluate(test_dataset, metrics=[Metric(metric=roc_auc_score), Metric(metric=accuracy_score)])
 ```
@@ -129,6 +120,8 @@ As you see in the previous example, DeepMol allows you to train and evaluate you
 
 
 ```python
+from deepmol.compound_featurization import MorganFingerprint
+
 MorganFingerprint(n_jobs=10).featurize(train_dataset, inplace=True)
 MorganFingerprint(n_jobs=10).featurize(test_dataset, inplace=True)
 ```
@@ -217,6 +210,10 @@ model.save("my_model")
 
 
 ```python
+from deepmol.models import KerasModel
+from deepmol.metrics import Metric
+from sklearn.metrics import roc_auc_score, accuracy_score
+
 model = KerasModel.load("my_model")
 model.evaluate(test_dataset, metrics=[Metric(metric=roc_auc_score), Metric(metric=accuracy_score)])
 ```
@@ -270,6 +267,9 @@ model.predict(test_dataset)
 
 ### Evaluate
 ```python
+from deepmol.metrics import Metric
+from sklearn.metrics import roc_auc_score, accuracy_score
+
 model.evaluate(test_dataset, metrics=[Metric(metric=roc_auc_score), Metric(metric=accuracy_score)])
 ```
 
@@ -289,6 +289,10 @@ model.save("my_model")
 
 
 ```python
+from deepmol.models import DeepChemModel
+from deepmol.metrics import Metric
+from sklearn.metrics import roc_auc_score, accuracy_score
+
 model = DeepChemModel.load("my_model")
 model.evaluate(test_dataset, metrics=[Metric(metric=roc_auc_score), Metric(metric=accuracy_score)])
 ```

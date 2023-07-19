@@ -208,6 +208,8 @@ It is possible to plot the ON bits (or some of them) in a molecule for MACCS Key
 
 
 ```python
+from deepmol.compound_featurization import MACCSkeysFingerprint
+
 maccs_keys = MACCSkeysFingerprint()
 # draw the relevant bits for a specific molecule
 # lets check for the feature 59 (feature maccs_136) and the molecule 0
@@ -261,6 +263,8 @@ MorganFingerprint().draw_bit(smi, patt_number)
 
 
 ```python
+from deepmol.compound_featurization import MorganFingerprint
+
 MorganFingerprint().draw_bits(smi, [41, 80, 90])
 ```
 
@@ -295,6 +299,8 @@ RDKFingerprint().draw_bit(smi, patt_number)
 
 
 ```python
+from deepmol.compound_featurization import RDKFingerprint
+
 RDKFingerprint().draw_bits(smi, [412, 413, 417])
 ```
 

@@ -93,6 +93,7 @@ Transform features by scaling each feature to a given range.
 
 ```python
 from deepmol.scalers import MinMaxScaler
+from copy import deepcopy
 
 d2 = deepcopy(data)
 scaler = MinMaxScaler(feature_range=(-2, 2))
@@ -126,6 +127,7 @@ Scale each feature by its maximum absolute value.
 
 ```python
 from deepmol.scalers import MaxAbsScaler
+from copy import deepcopy
 
 d3 = deepcopy(data)
 scaler = MaxAbsScaler()
@@ -159,6 +161,7 @@ Scale features using statistics that are robust to outliers.
 
 ```python
 from deepmol.scalers import RobustScaler
+from copy import deepcopy
 
 d4 = deepcopy(data)
 scaler = RobustScaler()
@@ -192,6 +195,7 @@ Normalize samples individually to unit norm.
 
 ```python
 from deepmol.scalers import Normalizer
+from copy import deepcopy
 
 d5 = deepcopy(data)
 scaler = Normalizer(norm='l2') # One of 'l1', 'l2' or 'max'. The norm to use to normalize each non-zero sample.
@@ -225,6 +229,7 @@ Binarize data (set feature values to 0 or 1) according to a threshold.
 
 ```python
 from deepmol.scalers import Binarizer
+from copy import deepcopy
 
 d6 = deepcopy(data)
 scaler = Binarizer(threshold=1) # features higher than 10 are set to 1, features lower than 10 are set to 0
@@ -254,6 +259,7 @@ This transformer is often useful when working with machine learning algorithms t
 
 ```python
 from deepmol.scalers import QuantileTransformer
+from copy import deepcopy
 
 d7 = deepcopy(data)
 scaler = QuantileTransformer()
@@ -289,6 +295,7 @@ The PowerTransformer applies either a Box-Cox transformation or a Yeo-Johnson tr
 
 ```python
 from deepmol.scalers import PowerTransformer
+from copy import deepcopy
 
 d8 = deepcopy(data)
 scaler = PowerTransformer(method='yeo-johnson', # The power transform method. Available methods are: 'yeo-johnson', works with positive and negative values; box-cox', only works with strictly positive values

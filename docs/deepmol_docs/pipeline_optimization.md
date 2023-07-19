@@ -139,6 +139,12 @@ The following example assumes that you are providing raw SMILES data and respect
 We will use the `'all'` preset.
 
 ```python
+from deepmol.loaders import CSVLoader
+from deepmol.metrics import Metric
+from deepmol.pipeline_optimization import PipelineOptimization
+from deepmol.splitters import RandomSplitter
+from sklearn.metrics import mean_squared_error
+
 # LOAD THE DATA
 loader = CSVLoader('dataset_regression_path',
                    smiles_field='smiles',

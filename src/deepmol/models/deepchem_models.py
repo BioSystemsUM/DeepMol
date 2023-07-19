@@ -268,8 +268,13 @@ class DeepChemModel(BaseDeepChemModel, Predictor):
                 res)  # this works for all regression models (Keras and PyTorch) and is more general than the
             # commented code above
 
-        if not dataset.y.shape == np.array(new_res).shape:
+        if new_res.shape != (len(dataset.mols), dataset.n_tasks):
             new_res = normalize_labels_shape(new_res, dataset.n_tasks)
+
+        if len(new_res.shape) > 1:
+            if new_res.shape[1] == len(dataset.mols) and new_res.shape[0] == dataset.n_tasks:
+                new_res = new_res.T
+
         return new_res
 
     def predict_on_batch(self, dataset: Dataset) -> np.ndarray:

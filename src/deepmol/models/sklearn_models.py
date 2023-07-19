@@ -105,8 +105,9 @@ class SklearnModel(Model):
         """
         predictions = self.model.predict(dataset.X)
 
-        if not dataset.y.shape == np.array(predictions).shape:
-            predictions = normalize_labels_shape(predictions, dataset.n_tasks)
+        if len(predictions.shape) > 1:
+            if predictions.shape != (len(dataset.mols), dataset.n_tasks):
+                predictions = normalize_labels_shape(predictions, dataset.n_tasks)
 
         return predictions
 
@@ -124,9 +125,12 @@ class SklearnModel(Model):
         np.ndarray
         """
         predictions = self.model.predict_proba(dataset.X)
-
-        if not dataset.y.shape == np.array(predictions).shape:
+        if predictions.shape != (len(dataset.mols), dataset.n_tasks):
             predictions = normalize_labels_shape(predictions, dataset.n_tasks)
+
+        if len(predictions.shape) > 1:
+            if predictions.shape != (len(dataset.mols), dataset.n_tasks):
+                predictions = normalize_labels_shape(predictions, dataset.n_tasks)
 
         return predictions
 

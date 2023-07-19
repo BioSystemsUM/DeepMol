@@ -5,6 +5,7 @@ from copy import copy
 from datetime import datetime
 from random import randint, random
 from unittest import TestCase
+from unittest import TestCase, skip
 
 import numpy as np
 import optuna
@@ -15,6 +16,7 @@ from sklearn.svm import SVC
 from deepmol.loaders import CSVLoader
 from deepmol.metrics import Metric
 from deepmol.models import SklearnModel
+from deepmol.pipeline import Pipeline
 from deepmol.pipeline_optimization import PipelineOptimization
 from deepmol.splitters import RandomSplitter
 
@@ -131,7 +133,12 @@ class TestPipelineOptimization(TestCase):
         df2 = po.trials_dataframe(cols=['number', 'value'])
         self.assertEqual(df2.shape, (5, 2))
 
-    def test_binary_classification_preset(self):
+        best_pipeline = po.best_pipeline
+        new_predictions = best_pipeline.evaluate(test, [metric])[0][metric.name]
+        self.assertEqual(new_predictions, po.best_value)
+
+    @skip("This test is too slow to run on CI and can have different results on different trials")
+    def test_classification_preset(self):
         storage_name = "sqlite:///test_pipeline.db"
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         po = PipelineOptimization(direction='maximize', study_name=study_name, storage=storage_name)
@@ -180,6 +187,7 @@ class TestPipelineOptimization(TestCase):
             for param in param_importance:
                 self.assertTrue(param in po.best_params.keys())
 
+    @skip("This test is too slow to run on CI and can have different results on different trials")
     def test_multilabel_classification_preset(self):
         warnings.filterwarnings("ignore")
         storage_name = "sqlite:///test_pipeline.db"

@@ -203,7 +203,11 @@ class KerasModel(Model):
         model = keras.models.load_model(file_path_model)
         model_parameters = load_from_disk(os.path.join(folder_path, 'model_parameters.pkl'))
         keras_model_class = cls(model_builder=model_builder, **model_parameters)
-        keras_model_class.model.model = model
+        if isinstance(keras_model_class.model, KerasClassifier) or isinstance(keras_model_class.model,
+                                                                              KerasRegressor):
+            keras_model_class.model.model = model
+        else:
+            keras_model_class.model = model
         return keras_model_class
 
     def save(self, file_path: str = None) -> None:

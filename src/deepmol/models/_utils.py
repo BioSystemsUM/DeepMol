@@ -231,8 +231,8 @@ def _get_last_layer_info_based_on_mode(mode: str, n_classes: int):
         Number of units in the last layers.
     """
     if mode == 'classification':
-        loss = ['binary_crossentropy'] if n_classes == 2 else ['categorical_crossentropy']
-        last_layer_activations = ['sigmoid'] if n_classes == 2 else ['softmax']
+        loss = ['binary_crossentropy'] if n_classes <= 2 else ['categorical_crossentropy']
+        last_layer_activations = ['sigmoid'] if n_classes <= 2 else ['softmax']
     elif mode == 'regression':
         loss = ['mean_squared_error']
         last_layer_activations = ['linear']

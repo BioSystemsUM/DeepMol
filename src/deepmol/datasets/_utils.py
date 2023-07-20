@@ -1,6 +1,7 @@
 from typing import Union
 
 import numpy as np
+import pandas as pd
 
 from deepmol.loggers.logger import Logger
 
@@ -85,7 +86,9 @@ def _get_n_classes(dataset):
         n_classes = []
         for i in range(len(dataset.mode)):
             if dataset.mode[i] == 'classification':
-                n_classes.append(len(set(dataset.y[i])))
+                class_set = set(dataset.y[i])
+                class_set = {x for x in class_set if pd.notna(x)}
+                n_classes.append(len(class_set))
             elif dataset.mode[i] == 'regression':
                 n_classes.append(1)
             else:

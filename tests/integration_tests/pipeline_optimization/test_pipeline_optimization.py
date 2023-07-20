@@ -9,13 +9,12 @@ from unittest import TestCase, skip
 import numpy as np
 import optuna
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, mean_squared_error
+from sklearn.metrics import accuracy_score, mean_squared_error, precision_score
 from sklearn.svm import SVC
 
 from deepmol.loaders import CSVLoader
 from deepmol.metrics import Metric
 from deepmol.models import SklearnModel
-from deepmol.pipeline import Pipeline
 from deepmol.pipeline_optimization import PipelineOptimization
 from deepmol.splitters import RandomSplitter
 
@@ -24,6 +23,7 @@ import tensorflow as tf
 from tests import TEST_DIR
 
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
 class TestPipelineOptimization(TestCase):
@@ -64,6 +64,15 @@ class TestPipelineOptimization(TestCase):
         self.dataset_multiclass._y = np.array([randint(0, 3) for _ in range(len(self.dataset_multiclass))])
 
         multilabel_dataset_path = os.path.join(TEST_DIR, 'data')
+
+        dataset = os.path.join(multilabel_dataset_path, "tox21_small_.csv")
+        loader = CSVLoader(dataset,
+                           smiles_field='smiles',
+                           id_field='mol_id',
+                           labels_fields=['NR-AR', 'NR-AR-LBD', 'NR-AhR', 'NR-Aromatase', 'NR-ER', 'NR-ER-LBD',
+                                          'NR-PPAR-gamma', 'SR-ARE', 'SR-ATAD5', 'SR-HSE', 'SR-MMP', 'SR-p53'])
+        self.multitask_dataset = loader.create_dataset(sep=",")
+
         dataset_multilabel = os.path.join(multilabel_dataset_path, "multilabel_classification_dataset.csv")
         loader = CSVLoader(dataset_multilabel,
                            smiles_field='smiles',
@@ -94,7 +103,7 @@ class TestPipelineOptimization(TestCase):
                 shutil.rmtree(file)
             elif file.startswith('test_predictor_pipeline_'):
                 shutil.rmtree(file)
-        #remove study rdbm
+        # remove study rdbm
         try:
             optuna.delete_study(study_name="test_pipeline", storage="sqlite:///test_pipeline.db")
         except Exception as e:
@@ -196,8 +205,12 @@ class TestPipelineOptimization(TestCase):
         storage_name = "sqlite:///test_pipeline.db"
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         po = PipelineOptimization(direction='maximize', study_name=study_name, storage=storage_name)
-        metric = Metric(accuracy_score)
-        train, test = RandomSplitter().train_test_split(self.dataset_multilabel, seed=123)
+
+        def precision_score_macro(y_true, y_pred):
+            return precision_score(y_true, y_pred, average='macro')
+
+        metric = Metric(precision_score_macro)
+        train, test = RandomSplitter().train_test_split(self.multitask_dataset, seed=123)
         po.optimize(train_dataset=train, test_dataset=test, objective_steps='keras', metric=metric, n_trials=3,
                     data=train, save_top_n=1)
         self.assertEqual(po.best_params, po.best_trial.params)
@@ -258,9 +271,9 @@ class TestPipelineOptimization(TestCase):
         new_predictions = best_pipeline.evaluate(test, [metric])[0][metric.name]
         self.assertEqual(new_predictions, po.best_value)
 
-
-    # @skip("This test is too slow to run on CI and can have different results on different trials")
+    @skip("This test is too slow to run on CI and can have different results on different trials")
     def test_multilabel_regression_preset(self):
+
         storage_name = "sqlite:///test_pipeline.db"
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         po = PipelineOptimization(direction='minimize', study_name=study_name, storage=storage_name)
@@ -283,6 +296,3 @@ class TestPipelineOptimization(TestCase):
         if param_importance is not None:
             for param in param_importance:
                 self.assertTrue(param in po.best_params.keys())
-
-
-

@@ -68,8 +68,11 @@ class KerasModel(Model):
         elif mode == 'regression':
             self.model = KerasRegressor(build_fn=model_builder, nb_epoch=epochs, batch_size=batch_size, verbose=verbose,
                                         **kwargs)
-        else:
+        elif isinstance(model_builder, keras.models.Model):
             self.model = model_builder
+
+        else:
+            self.model = model_builder(**kwargs)
 
         super().__init__(self.model, model_dir, **kwargs)
 

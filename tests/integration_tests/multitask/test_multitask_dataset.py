@@ -1,11 +1,12 @@
 import os
 from abc import ABC
 from copy import copy
+from random import random
 from unittest import TestCase
 
 import numpy as np
 from deepchem.models import GraphConvModel
-from sklearn.metrics import roc_auc_score, precision_score, accuracy_score, recall_score
+from sklearn.metrics import precision_score, recall_score
 
 from deepmol.compound_featurization import MorganFingerprint, ConvMolFeat
 from deepmol.loaders import CSVLoader
@@ -14,6 +15,10 @@ from deepmol.models import DeepChemModel, KerasModel
 from deepmol.models.base_models import basic_multitask_dnn
 from deepmol.splitters import RandomSplitter
 from tests import TEST_DIR
+
+import tensorflow as tf
+
+import shutil
 
 
 class MultitaskBaseTestCase(ABC):
@@ -28,9 +33,22 @@ class MultitaskBaseTestCase(ABC):
                                           'NR-PPAR-gamma', 'SR-ARE', 'SR-ATAD5', 'SR-HSE', 'SR-MMP', 'SR-p53'])
         self.multitask_dataset = loader.create_dataset(sep=",")
 
+        self.dataset_multilabel_regression = copy(self.multitask_dataset)
+        # change dataset.y to regression (3 labels with random float values between 0 and 10)
+        self.dataset_multilabel_regression._y = np.array([[random() * 10 for _ in range(3)] for _ in
+                                                          range(len(self.dataset_multilabel_regression))])
+        self.dataset_multilabel_regression.mode = ['regression', 'regression', 'regression']
+
+        tf.config.set_visible_devices([], 'GPU')
+
     def tearDown(self):
         if os.path.exists('deepmol.log'):
             os.remove('deepmol.log')
+
+        if os.path.exists('test_multitask_keras_model'):
+            # remove directory recursively
+
+            shutil.rmtree('test_multitask_keras_model')
 
 
 class TestMultitaskDataset(MultitaskBaseTestCase, TestCase):
@@ -56,6 +74,19 @@ class TestMultitaskDataset(MultitaskBaseTestCase, TestCase):
         predictions = model_graph.predict(test)
         precision_score_value = precision_score(test.y, predictions, average="macro")
         self.assertEqual(evaluate[0]['precision_score'], precision_score_value)
+
+    def test_multitask_keras_model_regression(self):
+        md = copy(self.multitask_dataset)
+        # keep only the first 3 tasks
+        md._y = md.y[:, :3]
+        md.label_names = md.label_names[:3]
+        # replace np.nan in y by 0
+        md._y = np.nan_to_num(md.y)
+        md.mode = ["classification", "classification", "classification"]
+        MorganFingerprint(radius=2, size=1024).featurize(md, inplace=True)
+        train, test = RandomSplitter().train_test_split(md, frac_train=0.8, seed=123)
+
+
 
     def test_multitask_keras_model(self):
         md = copy(self.multitask_dataset)
@@ -88,3 +119,10 @@ class TestMultitaskDataset(MultitaskBaseTestCase, TestCase):
         predictions = model.predict(test)
         precision_score_value = precision_score(test.y, predictions, average="macro")
         self.assertEqual(a['precision_score'], precision_score_value)
+
+        predictions1 = model.predict(test)
+        model.save('test_multitask_keras_model')
+
+        model_loaded = KerasModel.load('test_multitask_keras_model')
+        predictions2 = model_loaded.predict(test)
+        assert np.array_equal(predictions1, predictions2)

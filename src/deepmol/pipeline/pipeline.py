@@ -1,5 +1,6 @@
 import json
 import os
+import time
 from datetime import datetime
 from typing import List, Tuple, Union, Dict
 
@@ -180,7 +181,11 @@ class Pipeline(Transformer):
             steps = self.steps
 
         for step in steps:
+            print("vou transformar", step[0])
+            start = time.time()
             dataset = step[1].transform(dataset)
+            end = time.time()
+            print("passei", step[0], end - start)
         return dataset
 
     def predict(self, dataset: Dataset) -> np.ndarray:
@@ -199,8 +204,12 @@ class Pipeline(Transformer):
         """
         if not self.is_prediction_pipeline:
             raise ValueError("Pipeline is not a prediction pipeline.")
+
         dataset = self.transform(dataset)
+        start = time.time()
         y_pred = self.steps[-1][1].predict(dataset)
+        end = time.time()
+        print("previsões feitas", end - start)
         return y_pred
 
     def predict_proba(self, dataset: Dataset) -> np.ndarray:
@@ -266,7 +275,7 @@ class Pipeline(Transformer):
             steps_to_save[i] = {'name': name,
                                 'type': 'transformer',
                                 'is_fitted': transformer.is_fitted(),
-                                'path': transformer_path}
+                                'path': f'{name}.pkl'}
 
         if self.is_prediction_pipeline():
             predictor_path = os.path.join(self.path, f'{self.steps[-1][1].model_dir}')
@@ -275,14 +284,14 @@ class Pipeline(Transformer):
                                                   'type': 'predictor',
                                                   'model_type': self.steps[-1][1].model_type,
                                                   'is_fitted': self.steps[-1][1].is_fitted(),
-                                                  'path': predictor_path}
+                                                  'path': f'{self.steps[-1][1].model_dir}'}
         else:
             transformer_path = os.path.join(self.path, f'{self.steps[-1][0]}.pkl')
             self.steps[-1][1].to_pickle(transformer_path)
             steps_to_save[len(self.steps) - 1] = {'name': self.steps[-1][0],
                                                   'type': 'transformer',
                                                   'is_fitted': self.steps[-1][1].is_fitted(),
-                                                  'path': transformer_path}
+                                                  'path': f'{self.steps[-1][0]}.pkl'}
         # Save config
         config_path = os.path.join(self.path, 'config.json')
         with open(config_path, 'w') as f:
@@ -324,7 +333,7 @@ class Pipeline(Transformer):
         steps = []
         for _, step in config:
             step_name = step['name']
-            step_path = step['path']
+            step_path = os.path.join(path, step['path'])
             step_is_fitted = step['is_fitted']
             if step['type'] == 'transformer':
                 transformer = Transformer.from_pickle(step_path)

@@ -4,7 +4,10 @@ from typing import Tuple, Union, List
 
 import PIL
 import numpy as np
-from IPython.core.display_functions import display
+try:
+    from IPython.display import display
+except ImportError:
+    print("IPython not found. Unable to display molecule images.")
 from rdkit.Chem import MACCSkeys, Draw
 from rdkit.Chem.rdMolDescriptors import GetAtomPairAtomCode
 

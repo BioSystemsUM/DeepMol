@@ -15,7 +15,7 @@ kneed==0.8.2: machine_learning
 kaleido==0.2.1: machine_learning
 plotly==5.13.1: machine_learning
 chembl_structure_pipeline==1.1.0: preprocessing
-torch==2.0.0: deep_learning
+torch==2.0.1: deep_learning
 dgl==0.9.1: deep_learning
 dgllife==0.3.2: deep_learning
 deepchem==2.7.1: deep_learning

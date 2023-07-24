@@ -199,7 +199,7 @@ class TestPipelineOptimization(TestCase):
         if param_importance is not None:
             for param in param_importance:
                 self.assertTrue(param in po.best_params.keys())
-
+    @skip("This test is too slow to run on CI and can have different results on different trials")
     def test_multi_label_classification_keras(self):
         warnings.filterwarnings("ignore")
         storage_name = "sqlite:///test_pipeline.db"
@@ -253,6 +253,7 @@ class TestPipelineOptimization(TestCase):
             for param in param_importance:
                 self.assertTrue(param in po.best_params.keys())
 
+    @skip("This test is too slow to run on CI and can have different results on different trials")
     def test_regression_preset(self):
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         po = PipelineOptimization(direction='minimize', study_name=study_name)

@@ -1,6 +1,7 @@
 from typing import Union
 
 import numpy as np
+import pandas as pd
 
 from deepmol.loggers.logger import Logger
 
@@ -61,3 +62,37 @@ def merge_arrays_of_arrays(array1: np.ndarray, array2: np.ndarray) -> Union[np.n
         return None
     merged = np.concatenate([array1, array2], axis=0)
     return merged
+
+
+def _get_n_classes(dataset):
+    """
+    Get the number of classes of the dataset for each task.
+
+    Parameters
+    ----------
+    dataset : Dataset
+        Dataset object.
+
+    Returns
+    -------
+    list of int
+        Number of classes for each task.
+    """
+    if dataset.mode == 'classification':
+        n_classes = [len(set(dataset.y))]
+    elif dataset.mode == 'regression':
+        n_classes = [1]
+    elif isinstance(dataset.mode, list):
+        n_classes = []
+        for i in range(len(dataset.mode)):
+            if dataset.mode[i] == 'classification':
+                class_set = set(dataset.y[i])
+                class_set = {x for x in class_set if pd.notna(x)}
+                n_classes.append(len(class_set))
+            elif dataset.mode[i] == 'regression':
+                n_classes.append(1)
+            else:
+                raise ValueError(f'Unknown mode {dataset.mode[i]}')
+    else:
+        raise ValueError(f'Unknown mode {dataset.mode}')
+    return n_classes

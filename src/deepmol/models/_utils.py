@@ -194,10 +194,11 @@ def get_prediction_from_proba(dataset: Dataset, y_pred_proba: np.ndarray) -> np.
                 else:
                     y_pred = multi_label_binarize(y_pred_proba)
             else:
-                y_pred = []
-                if not len(y_pred_proba) == 0:
+                if not len(y_pred_proba) == 0 and len(y_pred_proba.shape) > 1:
                     y_pred = np.argmax(y_pred_proba, axis=1)
                     return y_pred
+                else:
+                    return y_pred_proba  # case of multiclass ([2, 3, 1])
         elif dataset.mode == "regression":
             y_pred = y_pred_proba
         else:
@@ -207,3 +208,35 @@ def get_prediction_from_proba(dataset: Dataset, y_pred_proba: np.ndarray) -> np.
                 return y_pred
 
         return y_pred
+
+
+def _get_last_layer_info_based_on_mode(mode: str, n_classes: int):
+    """
+    Get the last layer info based on the mode and the number of classes.
+
+    Parameters
+    ----------
+    mode : str
+        Mode of the model (classification or regression).
+    n_classes : int
+        Number of classes.
+
+    Returns
+    -------
+    list of str
+        Loss functions.
+    list of str
+        Activation functions of the last layers.
+    list of int
+        Number of units in the last layers.
+    """
+    if mode == 'classification':
+        loss = ['binary_crossentropy'] if n_classes <= 2 else ['categorical_crossentropy']
+        last_layer_activations = ['sigmoid'] if n_classes <= 2 else ['softmax']
+    elif mode == 'regression':
+        loss = ['mean_squared_error']
+        last_layer_activations = ['linear']
+    else:
+        raise ValueError(f'Unknown mode {mode}')
+    last_layer_units = [n_classes] if n_classes > 2 else [1]
+    return loss, last_layer_activations, last_layer_units

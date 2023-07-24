@@ -270,6 +270,26 @@ def logistic_regression_step(trial):
     return logistic_regression_model(logistic_regression_kwargs=logistic_regression_kwargs)
 
 
+def logistic_regression_multiclass_step(trial):
+    """
+    Get a LogisticRegressionMulticlass object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The LogisticRegressionMulticlass object step.
+    """
+    C = trial.suggest_float('C', 0.01, 10.0, log=True)
+    multiclass_type = trial.suggest_categorical('multiclass_type', ['ovr', 'multinomial'])
+    logistic_regression_multiclass_kwargs = {'C': C, 'multi_class': multiclass_type}
+    return logistic_regression_model(logistic_regression_kwargs=logistic_regression_multiclass_kwargs)
+
+
 def logistic_regression_cv_step(trial):
     """
     Get a LogisticRegressionCV object for the Optuna optimization.
@@ -287,6 +307,26 @@ def logistic_regression_cv_step(trial):
     Cs = trial.suggest_int('Cs', 1, 10)
     logistic_regression_cv_kwargs = {'Cs': Cs}
     return logistic_regression_cv_model(logistic_regression_cv_kwargs=logistic_regression_cv_kwargs)
+
+
+def logistic_regression_cv_multiclass_step(trial):
+    """
+    Get a LogisticRegressionMulticlassCV object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The LogisticRegressionMulticlassCV object step.
+    """
+    Cs = trial.suggest_int('Cs', 1, 10)
+    multiclass_type = trial.suggest_categorical('multiclass_type', ['ovr', 'multinomial'])
+    logistic_regression_cv_multiclass_kwargs = {'Cs': Cs, 'multi_class': multiclass_type}
+    return logistic_regression_cv_model(logistic_regression_cv_kwargs=logistic_regression_cv_multiclass_kwargs)
 
 
 def tweedie_regressor_step(trial):
@@ -612,6 +652,26 @@ def linear_svc_step(trial):
     return linear_svc_model(linear_svc_kwargs=linear_svc_kwargs)
 
 
+def linear_svc_multiclass_step(trial):
+    """
+    Get a LinearSVC object for the Optuna optimization for multiclass classification.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The LinearSVC object step.
+    """
+    C = trial.suggest_float('C', 0.1, 10.0)
+    multiclass_type = trial.suggest_categorical('multiclass_type', ['ovr', 'crammer_singer'])
+    linear_svc_multiclass_kwargs = {'C': C, 'multi_class': multiclass_type}
+    return linear_svc_model(linear_svc_kwargs=linear_svc_multiclass_kwargs)
+
+
 def svr_step(trial):
     """
     Get a SVR object for the Optuna optimization.
@@ -897,6 +957,26 @@ def gaussian_process_regressor_step(trial):
     return gaussian_process_regressor_model(gaussian_process_regressor_kwargs=gaussian_process_regressor_kwargs)
 
 
+def gaussian_process_multiclass_classifier_step(trial):
+    """
+    Get a GaussianProcessClassifier object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The GaussianProcessClassifier object step.
+    """
+    multiclass_type = trial.suggest_categorical('multiclass_type', ['one_vs_rest', 'one_vs_one'])
+    gaussian_process_multiclass_classifier_kwargs = {'multi_class': multiclass_type}
+    return gaussian_process_classifier_model(
+        gaussian_process_classifier_kwargs=gaussian_process_multiclass_classifier_kwargs)
+
+
 def gaussian_process_classifier_step(trial):
     """
     Get a GaussianProcessClassifier object for the Optuna optimization.
@@ -1064,6 +1144,43 @@ def decision_tree_classifier_step(trial):
     criterion = trial.suggest_categorical('criterion', ['gini', 'entropy'])
     decision_tree_classifier_kwargs = {'criterion': criterion}
     return decision_tree_classifier_model(decision_tree_classifier_kwargs=decision_tree_classifier_kwargs)
+
+
+def extra_tree_classifier_step(trial):
+    """
+    Get a ExtraTreeClassifier object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The ExtraTreeClassifier object step.
+    """
+    criterion = trial.suggest_categorical('criterion', ['gini', 'entropy'])
+    extra_tree_classifier_kwargs = {'criterion': criterion}
+    return extra_tree_classifier_model(extra_tree_classifier_kwargs=extra_tree_classifier_kwargs)
+
+
+def extra_tree_regressor_step(trial):
+    """
+    Get a ExtraTreeRegressor object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Predictor
+        The ExtraTreeRegressor object step.
+    """
+    extra_tree_regressor_kwargs = {}
+    return extra_tree_regressor_model(extra_tree_regressor_kwargs=extra_tree_regressor_kwargs)
 
 
 def random_forest_regressor_step(trial):
@@ -1243,7 +1360,32 @@ def gradient_boosting_classifier_step(trial):
     loss = trial.suggest_categorical('loss', ['deviance', 'exponential'])
     n_estimators = trial.suggest_int('n_estimators', 50, 500, step=50)
     learning_rate = trial.suggest_float('learning_rate', 0.01, 1.0)
-    criterion = trial.suggest_categorical('criterion', ['friedman_mse', 'mse', 'mae'])
+    criterion = trial.suggest_categorical('criterion', ['friedman_mse', 'mse'])
+    max_features = trial.suggest_categorical('max_features', ['auto', 'sqrt', 'log2'])
+    gradient_boosting_classifier_kwargs = {'loss': loss, 'n_estimators': n_estimators,
+                                           'learning_rate': learning_rate, 'criterion': criterion,
+                                           'max_features': max_features}
+    return gradient_boosting_classifier_model(gradient_boosting_classifier_kwargs=gradient_boosting_classifier_kwargs)
+
+
+def gradient_boosting_multiclass_classifier_step(trial):
+    """
+    Get a GradientBoostingClassifier object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The GradientBoostingClassifier object step.
+    """
+    loss = trial.suggest_categorical('loss', ['deviance', 'log_loss'])
+    n_estimators = trial.suggest_int('n_estimators', 50, 500, step=50)
+    learning_rate = trial.suggest_float('learning_rate', 0.01, 1.0)
+    criterion = trial.suggest_categorical('criterion', ['friedman_mse', 'mse'])
     max_features = trial.suggest_categorical('max_features', ['auto', 'sqrt', 'log2'])
     gradient_boosting_classifier_kwargs = {'loss': loss, 'n_estimators': n_estimators,
                                            'learning_rate': learning_rate, 'criterion': criterion,
@@ -1716,6 +1858,44 @@ def mlp_classifier_step(trial):
     return mlp_classifier_model(mlp_classifier_kwargs=mlp_classifier_kwargs)
 
 
+def label_propagation_step(trial):
+    """
+    Get a LabelPropagation object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The LabelPropagation object step.
+    """
+    kernel = trial.suggest_categorical("kernel", ["knn", "rbf"])
+    label_propagation_kwargs = {'kernel': kernel}
+    return label_propagation_model(label_propagation_kwargs=label_propagation_kwargs)
+
+
+def label_spreading_step(trial):
+    """
+    Get a LabelSpreading object for the Optuna optimization.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial object.
+
+    Returns
+    -------
+    Classifier
+        The LabelSpreading object step.
+    """
+    kernel = trial.suggest_categorical("kernel", ["knn", "rbf"])
+    label_spreading_kwargs = {'kernel': kernel}
+    return label_spreading_model(label_spreading_kwargs=label_spreading_kwargs)
+
+
 _REGRESSION_MODELS = {'linear_regression_model': linear_regression_step,
                       'ridge_model': ridge_step,
                       'ridge_cv_model': ridge_cv_step,
@@ -1792,18 +1972,65 @@ _CLASSIFICATION_MODELS = {'ridge_classifier_model': ridge_classifier_step,
                           'mlp_classifier_model': mlp_classifier_step,
                           }
 
-# TODO: test these models
-_MULTITASK_CLASSIFICATION_MODELS = {'one_vs_rest_classifier_model': one_vs_rest_classifier_step,
-                                    'one_vs_one_classifier_model': one_vs_one_classifier_step,
-                                    'output_code_classifier_model': output_code_classifier_step,
-                                    'multi_output_classifier_model': multi_output_classifier_step,
-                                    'classifier_chain_model': classifier_chain_step,
-                                    }
+#############################################################################################################
+# |                                       | Number of Targets | Target Cardinality | Valid Type of Target     |
+# |---------------------------------------|-------------------|--------------------|--------------------------|
+# | Multiclass Classification             | 1                 | >2                 | 'multiclass'             |
+# | Multilabel Classification             | >1                | 2 (0 or 1)         | 'multilabel'             |
+# | Multiclass-Multioutput Classification | >1                | >2                 | 'multiclass-multioutput' |
+# | Multioutput Regression                | >1                | Continuous         | 'continuous-multioutput' |
+#############################################################################################################
 
-# TODO: test these models
-_MULTITASK_REGRESSION_MODELS = {'multi_output_regressor_model': multi_output_regressor_step,
-                                'regressor_chain_model': regressor_chain_step,
-                                }
+# MULTICLASS
+_MULTICLASS_CLASSIFICATION_MODELS = {'bernoulli_nb_model': bernoulli_nb_step,
+                                     'decision_tree_classifier_model': decision_tree_classifier_step,
+                                     'extra_trees_classifier_model': extra_trees_classifier_step,
+                                     'extra_tree_classifier_model': extra_tree_classifier_step,
+                                     'gaussian_nb_model': gaussian_nb_step,
+                                     'knneighbors_classifier_model': kneighbors_classifier_step,
+                                     'label_propagation_model': label_propagation_step,
+                                     'label_spreading_model': label_spreading_step,
+                                     'linear_discriminant_analysis_model': linear_discriminat_analysis_step,
+                                     'linear_svc_model': linear_svc_multiclass_step,
+                                     'logistic_regression_model': logistic_regression_multiclass_step,
+                                     'logistic_regression_cv_model': logistic_regression_cv_multiclass_step,
+                                     'mlp_classifier_model': mlp_classifier_step,
+                                     'nearest_centroid_model': nearest_centroid_step,
+                                     'quadradic_discriminant_analysis_model': quadratic_discriminant_analysis_step,
+                                     'radius_neighbors_classifier_model': radius_neighbors_classifier_step,
+                                     'random_forest_classifier_model': random_forest_classifier_step,
+                                     'ridge_classifier_model': ridge_classifier_step,
+                                     'ridge_classifier_cv_model': ridge_classifier_cv_step,
+                                     'nu_svc_model': nu_svc_step,
+                                     'svc_model': svc_step,
+                                     'gaussian_process_classifier_model': gaussian_process_multiclass_classifier_step,
+                                     'gradient_boosting_classifier_model': gradient_boosting_multiclass_classifier_step,
+                                     'sgd_classifier_model': sgd_classifier_step,
+                                     'perceptron_model': perceptron_step,
+                                     'passive_aggressive_classifier_model': passive_aggressive_classifier_step,
+                                     'one_vs_rest_classifier_model': one_vs_rest_classifier_step,
+                                     'one_vs_one_classifier_model': one_vs_one_classifier_step,
+                                     'output_code_classifier_model': output_code_classifier_step,
+                                     }
+
+# MULTITASK
+_MULTILABEL_CLASSIFICATION_MODELS = {'decision_tree_classifier_model': decision_tree_classifier_step,
+                                     'extra_tree_classifier_model': extra_tree_classifier_step,
+                                     'extra_trees_classifier_model': extra_trees_classifier_step,
+                                     'knneighbors_classifier_model': kneighbors_classifier_step,
+                                     'mlp_classifier_model': mlp_classifier_step,
+                                     'radius_neighbors_classifier_model': radius_neighbors_classifier_step,
+                                     'random_forest_classifier_model': random_forest_classifier_step,
+                                     'ridge_classifier_model': ridge_classifier_step,
+                                     'ridge_classifier_cv_model': ridge_classifier_cv_step,
+                                     'multi_output_classifier_model': multi_output_classifier_step,
+                                     'classifier_chain_model': classifier_chain_step,
+                                     }
+
+# MULTITASK
+_MULTILABEL_REGRESSION_MODELS = {'multi_output_regressor_model': multi_output_regressor_step,
+                                 'regressor_chain_model': regressor_chain_step,
+                                 }
 
 
 def _get_sk_model(trial, task_type: str) -> Predictor:
@@ -1822,17 +2049,25 @@ def _get_sk_model(trial, task_type: str) -> Predictor:
     Predictor
         The sklearn model step.
     """
-    if task_type == "regression":
-        model = trial.suggest_categorical("regression_model", list(_REGRESSION_MODELS.keys()))
-        return _REGRESSION_MODELS[model](trial)
-    elif task_type == "classification":
-        model = trial.suggest_categorical("classification_model", list(_CLASSIFICATION_MODELS.keys()))
-        return _CLASSIFICATION_MODELS[model](trial)
-    elif task_type == "multitask_classification":
-        model = trial.suggest_categorical("multiclass_model", list(_MULTITASK_CLASSIFICATION_MODELS.keys()))
-        return _MULTITASK_CLASSIFICATION_MODELS[model](trial)
-    elif task_type == "multitask_regression":
-        model = trial.suggest_categorical("multiregression_model", list(_MULTITASK_REGRESSION_MODELS.keys()))
-        return _MULTITASK_REGRESSION_MODELS[model](trial)
+    if isinstance(task_type, str):
+        if task_type == "regression":
+            model = trial.suggest_categorical("regression_model", list(_REGRESSION_MODELS.keys()))
+            return _REGRESSION_MODELS[model](trial)
+        elif task_type == "classification_binary":
+            model = trial.suggest_categorical("classification_model", list(_CLASSIFICATION_MODELS.keys()))
+            return _CLASSIFICATION_MODELS[model](trial)
+        elif task_type == "classification_multiclass":
+            model = trial.suggest_categorical("multiclass_model", list(_MULTICLASS_CLASSIFICATION_MODELS.keys()))
+            return _MULTICLASS_CLASSIFICATION_MODELS[model](trial)
+    elif isinstance(task_type, list):
+        task_type_sig = list(set(task_type))
+        if len(task_type_sig) == 1 and task_type_sig[0] == "classification":
+            model = trial.suggest_categorical("multiask_model", list(_MULTILABEL_CLASSIFICATION_MODELS.keys()))
+            return _MULTILABEL_CLASSIFICATION_MODELS[model](trial)
+        elif len(task_type_sig) == 1 and task_type_sig[0] == "regression":
+            model = trial.suggest_categorical("multiregression_model", list(_MULTILABEL_REGRESSION_MODELS.keys()))
+            return _MULTILABEL_REGRESSION_MODELS[model](trial)
+        else:
+            raise ValueError(f'Unknown task type: {task_type_sig}')
     else:
         raise ValueError(f'Unknown task type: {task_type}')

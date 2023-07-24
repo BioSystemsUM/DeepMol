@@ -1,27 +1,35 @@
 import os
 import shutil
+import warnings
+from copy import copy
+from datetime import datetime
+from random import randint, random
 from unittest import TestCase, skip
 
+import numpy as np
 import optuna
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, mean_squared_error
+from sklearn.metrics import accuracy_score, mean_squared_error, precision_score
 from sklearn.svm import SVC
 
 from deepmol.loaders import CSVLoader
 from deepmol.metrics import Metric
 from deepmol.models import SklearnModel
-from deepmol.pipeline import Pipeline
 from deepmol.pipeline_optimization import PipelineOptimization
 from deepmol.splitters import RandomSplitter
+
+import tensorflow as tf
 
 from tests import TEST_DIR
 
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
 class TestPipelineOptimization(TestCase):
 
     def setUp(self) -> None:
+        warnings.filterwarnings("ignore")
         data_descriptors_path = os.path.join(TEST_DIR, 'data')
         dataset_descriptors = os.path.join(data_descriptors_path, "small_train_dataset.csv")
         features = [f'feat_{i}' for i in range(1, 2049)]
@@ -30,7 +38,8 @@ class TestPipelineOptimization(TestCase):
                            id_field='ids',
                            labels_fields=['y'],
                            features_fields=features,
-                           mode='classification')
+                           mode='classification',
+                           shard_size=100)
         self.dataset_descriptors = loader.create_dataset(sep=",")
 
         smiles_dataset_path = os.path.join(TEST_DIR, 'data')
@@ -50,18 +59,49 @@ class TestPipelineOptimization(TestCase):
                            shard_size=100)
         self.dataset_regression = loader.create_dataset(sep=",")
 
+        self.dataset_multiclass = copy(self.dataset_smiles)
+        # change dataset.y to multiclass
+        self.dataset_multiclass._y = np.array([randint(0, 3) for _ in range(len(self.dataset_multiclass))])
+
+        multilabel_dataset_path = os.path.join(TEST_DIR, 'data')
+
+        dataset = os.path.join(multilabel_dataset_path, "tox21_small_.csv")
+        loader = CSVLoader(dataset,
+                           smiles_field='smiles',
+                           id_field='mol_id',
+                           labels_fields=['NR-AR', 'NR-AR-LBD', 'NR-AhR', 'NR-Aromatase', 'NR-ER', 'NR-ER-LBD',
+                                          'NR-PPAR-gamma', 'SR-ARE', 'SR-ATAD5', 'SR-HSE', 'SR-MMP', 'SR-p53'])
+        self.multitask_dataset = loader.create_dataset(sep=",")
+
+        dataset_multilabel = os.path.join(multilabel_dataset_path, "multilabel_classification_dataset.csv")
+        loader = CSVLoader(dataset_multilabel,
+                           smiles_field='smiles',
+                           labels_fields=['C00341', 'C01789', 'C00078'],
+                           mode=['classification', 'classification', 'classification'],
+                           shard_size=100)
+        self.dataset_multilabel = loader.create_dataset(sep=",")
+
+        self.dataset_multilabel_regression = copy(self.dataset_multilabel)
+        # change dataset.y to regression (3 labels with random float values between 0 and 10)
+        self.dataset_multilabel_regression._y = np.array([[random() * 10 for _ in range(3)] for _ in
+                                                          range(len(self.dataset_multilabel_regression))])
+        self.dataset_multilabel_regression.mode = ['regression', 'regression', 'regression']
+
+        tf.config.set_visible_devices([], 'GPU')
+
     def tearDown(self) -> None:
-        if os.path.exists('test_predictor_pipeline'):
-            shutil.rmtree('test_predictor_pipeline')
-        if os.path.exists('test_pipeline'):
-            shutil.rmtree('test_pipeline')
         # remove logs (files with .log extension)
         for file in os.listdir():
             if file.endswith('.log'):
                 os.remove(file)
+
         # remove model directories (ending with _model)
         for file in os.listdir():
             if file.endswith('_model'):
+                shutil.rmtree(file)
+            elif file.startswith('test_pipeline_'):
+                shutil.rmtree(file)
+            elif file.startswith('test_predictor_pipeline_'):
                 shutil.rmtree(file)
         # remove study rdbm
         try:
@@ -87,7 +127,8 @@ class TestPipelineOptimization(TestCase):
             steps = [('model', model)]
             return steps
 
-        po = PipelineOptimization(direction='maximize', study_name='test_predictor_pipeline')
+        study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        po = PipelineOptimization(direction='maximize', study_name=study_name)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_descriptors, seed=123)
         po.optimize(train_dataset=train, test_dataset=test, objective_steps=objective, metric=metric, n_trials=5,
@@ -97,7 +138,7 @@ class TestPipelineOptimization(TestCase):
 
         self.assertEqual(len(po.trials), 5)
         # assert that 3 pipelines were saved
-        self.assertEqual(len(os.listdir('test_predictor_pipeline')), 3)
+        self.assertEqual(len(os.listdir(study_name)), 3)
 
         df = po.trials_dataframe()
         self.assertEqual(len(df), 5)
@@ -111,17 +152,18 @@ class TestPipelineOptimization(TestCase):
     @skip("This test is too slow to run on CI and can have different results on different trials")
     def test_classification_preset(self):
         storage_name = "sqlite:///test_pipeline.db"
-        po = PipelineOptimization(direction='maximize', study_name='test_pipeline', storage=storage_name)
+        study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        po = PipelineOptimization(direction='maximize', study_name=study_name, storage=storage_name)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_smiles, seed=123)
-        po.optimize(train_dataset=train, test_dataset=test, objective_steps='all', metric=metric, n_trials=3,
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps='keras', metric=metric, n_trials=3,
                     data=train, save_top_n=2)
         self.assertEqual(po.best_params, po.best_trial.params)
         self.assertIsInstance(po.best_value, float)
 
         self.assertEqual(len(po.trials), 3)
         # assert that 2 pipelines were saved
-        self.assertEqual(len(os.listdir('test_pipeline')), 2)
+        self.assertEqual(len(os.listdir(study_name)), 2)
 
         best_pipeline = po.best_pipeline
         new_predictions = best_pipeline.evaluate(test, [metric])[0][metric.name]
@@ -133,20 +175,125 @@ class TestPipelineOptimization(TestCase):
                 self.assertTrue(param in po.best_params.keys())
 
     @skip("This test is too slow to run on CI and can have different results on different trials")
-    def test_regression_preset(self):
-        po = PipelineOptimization(direction='minimize', study_name='test_pipeline')
-        metric = Metric(mean_squared_error)
-        train, test = RandomSplitter().train_test_split(self.dataset_regression, seed=123)
+    def test_multiclass_classification_preset(self):
+        warnings.filterwarnings("ignore")
+        storage_name = "sqlite:///test_pipeline.db"
+        study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        po = PipelineOptimization(direction='maximize', study_name=study_name, storage=storage_name)
+        metric = Metric(accuracy_score)
+        train, test = RandomSplitter().train_test_split(self.dataset_multiclass, seed=123)
         po.optimize(train_dataset=train, test_dataset=test, objective_steps='all', metric=metric, n_trials=3,
-                    data=train,
-                    save_top_n=2)
+                    data=train, save_top_n=2)
         self.assertEqual(po.best_params, po.best_trial.params)
         self.assertIsInstance(po.best_value, float)
 
         self.assertEqual(len(po.trials), 3)
         # assert that 2 pipelines were saved
-        self.assertEqual(len(os.listdir('test_pipeline')), 2)
+        self.assertEqual(len(os.listdir(study_name)), 2)
 
         best_pipeline = po.best_pipeline
         new_predictions = best_pipeline.evaluate(test, [metric])[0][metric.name]
         self.assertEqual(new_predictions, po.best_value)
+
+        param_importance = po.get_param_importances()
+        if param_importance is not None:
+            for param in param_importance:
+                self.assertTrue(param in po.best_params.keys())
+    @skip("This test is too slow to run on CI and can have different results on different trials")
+    def test_multi_label_classification_keras(self):
+        warnings.filterwarnings("ignore")
+        storage_name = "sqlite:///test_pipeline.db"
+        study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        po = PipelineOptimization(direction='maximize', study_name=study_name, storage=storage_name)
+
+        def precision_score_macro(y_true, y_pred):
+            return precision_score(y_true, y_pred, average='macro')
+
+        metric = Metric(precision_score_macro)
+        train, test = RandomSplitter().train_test_split(self.multitask_dataset, seed=123)
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps='keras', metric=metric, n_trials=3,
+                    data=train, save_top_n=1)
+        self.assertEqual(po.best_params, po.best_trial.params)
+        self.assertIsInstance(po.best_value, float)
+
+        self.assertEqual(len(po.trials), 3)
+        # assert that 2 pipelines were saved
+        self.assertEqual(len(os.listdir(study_name)), 1)
+        best_pipeline = po.best_pipeline
+        new_predictions = best_pipeline.evaluate(test, [metric])[0][metric.name]
+        self.assertEqual(new_predictions, po.best_value)
+
+        param_importance = po.get_param_importances()
+        if param_importance is not None:
+            for param in param_importance:
+                self.assertTrue(param in po.best_params.keys())
+
+    @skip("This test is too slow to run on CI and can have different results on different trials")
+    def test_multilabel_classification_preset(self):
+        warnings.filterwarnings("ignore")
+        storage_name = "sqlite:///test_pipeline.db"
+        study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        po = PipelineOptimization(direction='maximize', study_name=study_name, storage=storage_name)
+        metric = Metric(accuracy_score)
+        train, test = RandomSplitter().train_test_split(self.dataset_multilabel, seed=123)
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps='all', metric=metric, n_trials=3,
+                    data=train, save_top_n=1)
+        self.assertEqual(po.best_params, po.best_trial.params)
+        self.assertIsInstance(po.best_value, float)
+
+        self.assertEqual(len(po.trials), 3)
+        # assert that 2 pipelines were saved
+        self.assertEqual(len(os.listdir(study_name)), 1)
+        best_pipeline = po.best_pipeline
+        new_predictions = best_pipeline.evaluate(test, [metric])[0][metric.name]
+        self.assertEqual(new_predictions, po.best_value)
+
+        param_importance = po.get_param_importances()
+        if param_importance is not None:
+            for param in param_importance:
+                self.assertTrue(param in po.best_params.keys())
+
+    @skip("This test is too slow to run on CI and can have different results on different trials")
+    def test_regression_preset(self):
+        study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        po = PipelineOptimization(direction='minimize', study_name=study_name)
+        metric = Metric(mean_squared_error)
+        train, test = RandomSplitter().train_test_split(self.dataset_regression, seed=123)
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps='all', metric=metric, n_trials=3,
+                    data=train, save_top_n=2)
+        self.assertEqual(po.best_params, po.best_trial.params)
+        self.assertIsInstance(po.best_value, float)
+
+        self.assertEqual(len(po.trials), 3)
+        # assert that 2 pipelines were saved
+        self.assertEqual(len(os.listdir(study_name)), 2)
+
+        best_pipeline = po.best_pipeline
+        new_predictions = best_pipeline.evaluate(test, [metric])[0][metric.name]
+        self.assertEqual(new_predictions, po.best_value)
+
+    @skip("This test is too slow to run on CI and can have different results on different trials")
+    def test_multilabel_regression_preset(self):
+
+        storage_name = "sqlite:///test_pipeline.db"
+        study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        po = PipelineOptimization(direction='minimize', study_name=study_name, storage=storage_name)
+        metric = Metric(mean_squared_error)
+        train, test = RandomSplitter().train_test_split(self.dataset_multilabel_regression, seed=124)
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps='keras', metric=metric, n_trials=3,
+                    data=train, save_top_n=2)
+        self.assertEqual(po.best_params, po.best_trial.params)
+        self.assertIsInstance(po.best_value, float)
+
+        self.assertEqual(len(po.trials), 3)
+        # assert that 2 pipelines were saved
+        self.assertEqual(len(os.listdir(study_name)), 2)
+        best_value = po.best_value
+        best_pipeline = po.best_pipeline
+        new_predictions = best_pipeline.evaluate(test, [metric])[0][metric.name]
+        self.assertEqual(new_predictions, best_value)
+
+        param_importance = po.get_param_importances()
+        if param_importance is not None:
+            for param in param_importance:
+                self.assertTrue(param in po.best_params.keys())

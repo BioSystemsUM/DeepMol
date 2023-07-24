@@ -162,10 +162,9 @@ def pass_through_transformer(trial: Trial, task_type: str):
 _FEATURE_SELECTORS = {"k_best": k_best_fs, "low_variance_fs": low_variance_fs, "percentil_fs": percentil_fs,
                       "select_from_model_fs": select_from_model_fs,
                       "boruta_algorithm": boruta_algorithm_fs, "pass_through_transformer": pass_through_transformer}
-# TODO: add ("rfecvfs": rfecv_fs)
 
 
-def _get_feature_selector(trial: Trial, task_type: str) -> Transformer:
+def _get_feature_selector(trial: Trial, task_type: str, multitask: bool) -> Transformer:
     """
     Get a feature selector object for the Optuna optimization.
 
@@ -175,11 +174,17 @@ def _get_feature_selector(trial: Trial, task_type: str) -> Transformer:
         An Optuna trial object.
     task_type : str
         The type of the task. Either 'classification' or 'regression'.
+    multitask : bool
+        Whether the task is multitask or not.
 
     Returns
     -------
     Transformer
         A feature selector object.
     """
-    feature_selector = trial.suggest_categorical("feature_selector", list(_FEATURE_SELECTORS.keys()))
+    if multitask:
+        feature_selector = trial.suggest_categorical("feature_selector", ["pass_through_transformer",
+                                                                          "low_variance_fs"])
+    else:
+        feature_selector = trial.suggest_categorical("feature_selector", list(_FEATURE_SELECTORS.keys()))
     return _FEATURE_SELECTORS[feature_selector](trial, task_type)

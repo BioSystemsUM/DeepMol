@@ -7,7 +7,7 @@ from sklearn.metrics import roc_auc_score, precision_score, classification_repor
 
 from deepmol.metrics import Metric
 from deepmol.models import KerasModel
-from deepmol.models.keras_model_builders import keras_dense_model, keras_1D_cnn_model, keras_tabular_transformer_model, \
+from deepmol.models.keras_model_builders import keras_fcnn_model, keras_1d_cnn_model, keras_tabular_transformer_model, \
     keras_simple_rnn_model, keras_rnn_model, keras_bidirectional_rnn_model
 from unit_tests.models.test_models import ModelsTestCase
 
@@ -98,7 +98,7 @@ class TestKerasModel(ModelsTestCase, TestCase):
     def test_baseline_models(self):
         model_kwargs = {'input_dim': 50}
         keras_kwargs = {}
-        models = [keras_dense_model, keras_1D_cnn_model, keras_tabular_transformer_model]
+        models = [keras_fcnn_model, keras_1d_cnn_model, keras_tabular_transformer_model]
         for f_model in models:
             model = f_model(model_dir='test_model', model_kwargs=model_kwargs, keras_kwargs=keras_kwargs)
 
@@ -116,7 +116,7 @@ class TestKerasModel(ModelsTestCase, TestCase):
 
     @skip("This test is too slow for CI")
     def test_rnn_baseline_models(self):
-        model_kwargs = {}
+        model_kwargs = {'input_dim': (50, 10)}
         keras_kwargs = {}
         models = [keras_rnn_model, keras_simple_rnn_model, keras_bidirectional_rnn_model]
         for f_model in models:
@@ -133,5 +133,3 @@ class TestKerasModel(ModelsTestCase, TestCase):
 
             assert np.array_equal(first_predictions, loaded_model_predictions)
             shutil.rmtree("test_model")
-
-            model_kwargs = {'input_dim': (50, 10)}

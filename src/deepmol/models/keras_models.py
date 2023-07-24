@@ -68,8 +68,11 @@ class KerasModel(Model):
         elif mode == 'regression':
             self.model = KerasRegressor(build_fn=model_builder, nb_epoch=epochs, batch_size=batch_size, verbose=verbose,
                                         **kwargs)
-        else:
+        elif isinstance(model_builder, keras.models.Model):
             self.model = model_builder
+
+        else:
+            self.model = model_builder(**kwargs)
 
         super().__init__(self.model, model_dir, **kwargs)
 
@@ -200,7 +203,11 @@ class KerasModel(Model):
         model = keras.models.load_model(file_path_model)
         model_parameters = load_from_disk(os.path.join(folder_path, 'model_parameters.pkl'))
         keras_model_class = cls(model_builder=model_builder, **model_parameters)
-        keras_model_class.model.model = model
+        if isinstance(keras_model_class.model, KerasClassifier) or isinstance(keras_model_class.model,
+                                                                              KerasRegressor):
+            keras_model_class.model.model = model
+        else:
+            keras_model_class.model = model
         return keras_model_class
 
     def save(self, file_path: str = None) -> None:
@@ -216,11 +223,19 @@ class KerasModel(Model):
             if self.model_dir is None:
                 raise ValueError('No model directory specified.')
             else:
-                # write self in pickle format
-                _save_keras_model(self.model_dir, self.model.model, self.parameters_to_save, self.model_builder)
+                try:
+                    # write self in pickle format
+                    _save_keras_model(self.model_dir, self.model.model, self.parameters_to_save, self.model_builder)
+                except AttributeError:
+                    # write self in pickle format
+                    _save_keras_model(self.model_dir, self.model, self.parameters_to_save, self.model_builder)
         else:
-            # write self in pickle format
-            _save_keras_model(file_path, self.model.model, self.parameters_to_save, self.model_builder)
+            try:
+                # write self in pickle format
+                _save_keras_model(file_path, self.model.model, self.parameters_to_save, self.model_builder)
+            except AttributeError:
+                # write self in pickle format
+                _save_keras_model(file_path, self.model, self.parameters_to_save, self.model_builder)
 
     def get_task_type(self) -> str:
         """

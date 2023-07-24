@@ -19,8 +19,9 @@ from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB, Categori
 from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier, RadiusNeighborsRegressor, \
     RadiusNeighborsClassifier, NearestCentroid
 from sklearn.neural_network import MLPRegressor, MLPClassifier
+from sklearn.semi_supervised import LabelPropagation, LabelSpreading
 from sklearn.svm import SVC, NuSVC, LinearSVC, SVR, NuSVR, LinearSVR, OneClassSVM
-from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
+from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier, ExtraTreeRegressor, ExtraTreeClassifier
 
 from deepmol.models import SklearnModel
 
@@ -1599,6 +1600,60 @@ def decision_tree_classifier_model(model_dir: str = 'decision_tree_classifier_mo
     return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
 
 
+def extra_tree_regressor_model(model_dir: str = 'extra_tree_regressor_model/', extra_tree_regressor_kwargs: dict = None,
+                               sklearn_kwargs: dict = None) -> SklearnModel:
+    """
+    DeepMol wrapper for sklearn.tree.ExtraTreeRegressor.
+    Reference: https://scikit-learn.org/stable/modules/generated/sklearn.tree.ExtraTreeRegressor.html
+
+    Parameters
+    ----------
+    model_dir : str
+        Directory where the model will be saved, by default 'extra_tree_regressor_model/'
+    extra_tree_regressor_kwargs : dict
+        Keyword arguments for sklearn.tree.ExtraTreeRegressor
+    sklearn_kwargs : dict
+        Keyword arguments for SklearnModel
+
+    Returns
+    -------
+    SklearnModel
+        Wrapped sklearn.tree.ExtraTreeRegressor
+    """
+    extra_tree_regressor_kwargs = extra_tree_regressor_kwargs or {}
+    sklearn_kwargs = sklearn_kwargs or {}
+    # Regression model
+    model = ExtraTreeRegressor(**extra_tree_regressor_kwargs)
+    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+
+
+def extra_tree_classifier_model(model_dir: str = 'extra_tree_classifier_model/',
+                                extra_tree_classifier_kwargs: dict = None, sklearn_kwargs: dict = None) -> SklearnModel:
+    """
+    DeepMol wrapper for sklearn.tree.ExtraTreeClassifier.
+    Reference: https://scikit-learn.org/stable/modules/generated/sklearn.tree.ExtraTreeClassifier.html
+
+    Parameters
+    ----------
+    model_dir : str
+        Directory where the model will be saved, by default 'extra_tree_classifier_model/'
+    extra_tree_classifier_kwargs : dict
+        Keyword arguments for sklearn.tree.ExtraTreeClassifier
+    sklearn_kwargs : dict
+        Keyword arguments for SklearnModel
+
+    Returns
+    -------
+    SklearnModel
+        Wrapped sklearn.tree.ExtraTreeClassifier
+    """
+    extra_tree_classifier_kwargs = extra_tree_classifier_kwargs or {}
+    sklearn_kwargs = sklearn_kwargs or {}
+    # Classification model
+    model = ExtraTreeClassifier(**extra_tree_classifier_kwargs)
+    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+
+
 ########################
 ### Ensemble methods ###
 ########################
@@ -2183,7 +2238,8 @@ def classifier_chain_model(model_dir: str = 'classifier_chain_model/', classifie
     classifier_chain_kwargs = classifier_chain_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
-    model = ClassifierChain(**classifier_chain_kwargs)
+    estimator = classifier_chain_kwargs.pop('estimator', None)
+    model = ClassifierChain(estimator, **classifier_chain_kwargs)
     return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
 
 
@@ -2238,7 +2294,8 @@ def regressor_chain_model(model_dir: str = 'regressor_chain_model/', regressor_c
     regressor_chain_kwargs = regressor_chain_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
-    model = RegressorChain(**regressor_chain_kwargs)
+    estimator = regressor_chain_kwargs.pop('estimator', None)
+    model = RegressorChain(estimator, **regressor_chain_kwargs)
     return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
 
 
@@ -2330,4 +2387,58 @@ def mlp_classifier_model(model_dir: str = 'mlp_classifier_model/', mlp_classifie
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = MLPClassifier(**mlp_classifier_kwargs)
+    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+
+
+def label_propagation_model(model_dir: str = 'label_propagation_model/', label_propagation_kwargs: dict = None,
+                            sklearn_kwargs: dict = None) -> SklearnModel:
+    """
+    DeepMol wrapper for sklearn.semi_supervised.LabelPropagation.
+    Reference: https://scikit-learn.org/stable/modules/generated/sklearn.semi_supervised.LabelPropagation.html
+
+    Parameters
+    ----------
+    model_dir : str
+        Directory where the model will be saved, by default 'label_propagation_model/'
+    label_propagation_kwargs : dict
+        Keyword arguments for sklearn.semi_supervised.LabelPropagation
+    sklearn_kwargs : dict
+        Keyword arguments for SklearnModel
+
+    Returns
+    -------
+    SklearnModel
+        Wrapped sklearn.semi_supervised.LabelPropagation
+    """
+    label_propagation_kwargs = label_propagation_kwargs or {}
+    sklearn_kwargs = sklearn_kwargs or {}
+    # Classification model
+    model = LabelPropagation(**label_propagation_kwargs)
+    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+
+
+def label_spreading_model(model_dir: str = 'label_spreading_model/', label_spreading_kwargs: dict = None,
+                          sklearn_kwargs: dict = None) -> SklearnModel:
+    """
+        DeepMol wrapper for sklearn.semi_supervised.LabelSpreading.
+        Reference: https://scikit-learn.org/stable/modules/generated/sklearn.semi_supervised.LabelSpreading.html
+
+        Parameters
+        ----------
+        model_dir : str
+            Directory where the model will be saved, by default 'label_spreading_model/'
+        label_spreading_kwargs : dict
+            Keyword arguments for sklearn.semi_supervised.LabelSpreading
+        sklearn_kwargs : dict
+            Keyword arguments for SklearnModel
+
+        Returns
+        -------
+        SklearnModel
+            Wrapped sklearn.semi_supervised.LabelSpreading
+        """
+    label_spreading_kwargs = label_spreading_kwargs or {}
+    sklearn_kwargs = sklearn_kwargs or {}
+    # Classification model
+    model = LabelSpreading(**label_spreading_kwargs)
     return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)

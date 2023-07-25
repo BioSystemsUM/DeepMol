@@ -55,8 +55,8 @@ test_dataset_low_variance_fs = deepcopy(test_dataset)
 # instantiate our feature selector
 fs = LowVarianceFS(threshold=0.15)
 # perform feature selection
-fs.fit_transform(train_dataset_low_variance_fs)
-fs.transform(test_dataset_low_variance_fs)
+train_dataset_low_variance_fs = fs.fit_transform(train_dataset_low_variance_fs)
+test_dataset_low_variance_fs = fs.transform(test_dataset_low_variance_fs)
 
 train_dataset_low_variance_fs.get_shape()
 test_dataset_low_variance_fs.get_shape()
@@ -94,8 +94,8 @@ test_dataset_kbest_fs = deepcopy(test_dataset)
 fs = KbestFS(k=250, score_func=chi2) # the top k features with the highest predictive power will be kept
 # perform feature selection
 
-fs.fit_transform(train_dataset_kbest_fs)
-fs.transform(test_dataset_kbest_fs)
+train_dataset_kbest_fs = fs.fit_transform(train_dataset_kbest_fs)
+test_dataset_kbest_fs = fs.transform(test_dataset_kbest_fs)
 
 train_dataset_kbest_fs.get_shape()
 test_dataset_kbest_fs.get_shape()
@@ -128,8 +128,8 @@ train_dataset_percentil_fs = deepcopy(train_dataset)
 test_dataset_percentil_fs = deepcopy(test_dataset)
 
 fs = PercentilFS(percentil=10, score_func=chi2) # keep the 10 percent top predictive features
-fs.fit_transform(train_dataset_percentil_fs)
-fs.transform(test_dataset_percentil_fs)
+train_dataset_percentil_fs = fs.fit_transform(train_dataset_percentil_fs)
+test_dataset_percentil_fs = fs.transform(test_dataset_percentil_fs)
 
 train_dataset_percentil_fs.get_shape()
 test_dataset_percentil_fs.get_shape()
@@ -169,8 +169,8 @@ fs = RFECVFS(estimator=RandomForestClassifier(n_jobs=-1), # model to use
              cv=2, # number of folds in the cross validation
              verbose=3) # verbosity level
 
-fs.fit_transform(train_dataset_RFECVFS)
-fs.transform(test_dataset_RFECVFS)
+train_dataset_RFECVFS = fs.fit_transform(train_dataset_RFECVFS)
+test_dataset_RFECVFS = fs.transform(test_dataset_RFECVFS)
 
 train_dataset_RFECVFS.get_shape()
 test_dataset_RFECVFS.get_shape()
@@ -206,8 +206,8 @@ test_dataset_SelectFromModelFS = deepcopy(test_dataset)
 fs = SelectFromModelFS(estimator=RandomForestClassifier(n_jobs=-1), # model to use
                        threshold="mean") # Features whose importance is greater or equal are kept while the others are discarded. A percentil can also be used
                                          # In this case ("mean") will keep the features with importance higher than the mean and remove the others
-fs.fit_transform(train_dataset_SelectFromModelFS)
-fs.transform(test_dataset_SelectFromModelFS)
+train_dataset_SelectFromModelFS = fs.fit_transform(train_dataset_SelectFromModelFS)
+test_dataset_SelectFromModelFS = fs.transform(test_dataset_SelectFromModelFS)
 
 train_dataset_SelectFromModelFS.get_shape()
 test_dataset_SelectFromModelFS.get_shape()
@@ -244,8 +244,8 @@ test_dataset_boruta = deepcopy(test_dataset)
 fs = BorutaAlgorithm(estimator=RandomForestClassifier(n_jobs=-1), # model to use
                      task='classification') # classification or regression
 
-fs.fit_transform(train_dataset_boruta)
-fs.transform(test_dataset_boruta)
+train_dataset_boruta = fs.fit_transform(train_dataset_boruta)
+test_dataset_boruta = fs.transform(test_dataset_boruta)
 
 train_dataset_boruta.get_shape()
 test_dataset_boruta.get_shape()

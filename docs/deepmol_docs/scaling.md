@@ -63,7 +63,7 @@ from deepmol.scalers import StandardScaler
 
 d1 = deepcopy(data)
 scaler = StandardScaler() # Standardize features by removing the mean and scaling to unit variance.
-scaler.fit_transform(d1, inplace=True) # you can scale only a portion of the data by passing a columns argument with the indexes of the columns to scale
+d1 = scaler.fit_transform(d1) # you can scale only a portion of the data by passing a columns argument with the indexes of the columns to scale
 d1.X # the data is much more homogeneous
 ```
 
@@ -97,7 +97,7 @@ from copy import deepcopy
 
 d2 = deepcopy(data)
 scaler = MinMaxScaler(feature_range=(-2, 2))
-scaler.fit_transform(d2, inplace=True)
+d2 = scaler.fit_transform(d2)
 d2.X # data is scaled between -2 and 2
 ```
 
@@ -131,7 +131,7 @@ from copy import deepcopy
 
 d3 = deepcopy(data)
 scaler = MaxAbsScaler()
-scaler.fit_transform(d3, inplace=True)
+d3 = scaler.fit_transform(d3)
 d3.X
 ```
 
@@ -165,7 +165,7 @@ from copy import deepcopy
 
 d4 = deepcopy(data)
 scaler = RobustScaler()
-scaler.fit_transform(d4, inplace=True)
+d4 = scaler.fit_transform(d4)
 d4.X # scaled data
 ```
 
@@ -199,7 +199,7 @@ from copy import deepcopy
 
 d5 = deepcopy(data)
 scaler = Normalizer(norm='l2') # One of 'l1', 'l2' or 'max'. The norm to use to normalize each non-zero sample.
-scaler.fit_transform(d5, inplace=True)
+d5 = scaler.fit_transform(d5)
 d5.X # scaled data
 ```
 
@@ -233,7 +233,7 @@ from copy import deepcopy
 
 d6 = deepcopy(data)
 scaler = Binarizer(threshold=1) # features higher than 10 are set to 1, features lower than 10 are set to 0
-scaler.fit_transform(d6, inplace=True)
+d6 = scaler.fit_transform(d6)
 d6.X
 ```
 
@@ -263,7 +263,7 @@ from copy import deepcopy
 
 d7 = deepcopy(data)
 scaler = QuantileTransformer()
-scaler.fit_transform(d7, inplace=True)
+d7 = scaler.fit_transform(d7)
 d7.X # scale data
 ```
 
@@ -300,7 +300,7 @@ from copy import deepcopy
 d8 = deepcopy(data)
 scaler = PowerTransformer(method='yeo-johnson', # The power transform method. Available methods are: 'yeo-johnson', works with positive and negative values; box-cox', only works with strictly positive values
                           standardize=True) # apply zero mean, unit variance normalization to the transformed output
-scaler.fit_transform(d8, inplace=True)
+d8 = scaler.fit_transform(d8)
 d8.X # scaled data
 ```
 

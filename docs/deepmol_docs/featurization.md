@@ -423,8 +423,9 @@ for a molecule by assigning atom contributions to predefined bins based on their
 - **SMR_VSA1, SMR_VSA2, SMR_VSA3, etc.**: Calculates the SMR (Molar Refractivity) VSA for a molecule by assigning 
 atom contributions to predefined bins based on their Labute ASA and MR values.
 
-- **SlogP_VSA1, SlogP_VSA2, SlogP_VSA3, etc.**: Calculates the SlogP (log of the octanol/water partition coefficient)
-VSA for a molecule by assigning atom contributions to predefined bins based on their Labute ASA and SlogP values.
+- **SlogP_VSA1, SlogP_VSA2, SlogP_VSA3, etc.**: Calculates the SlogP (Atomic contribution model developed by Crippen
+et. al. 1999 using 7000 molecular structures with the correct protonated state as training set) VSA 
+for a molecule by assigning atom contributions to predefined bins based on their Labute ASA and SlogP values.
 
 - **EState_VSA1, EState_VSA2, EState_VSA3, etc.**: Calculates the EState (E-State) VSA for a molecule by assigning
 atom contributions to predefined bins based on their Labute ASA and EState values.
@@ -440,8 +441,6 @@ atom contributions to predefined bins based on their Labute ASA and EState value
 - **RingCount**: Number of rings in the molecule. It indicates the level of molecular complexity and rigidity.
 
 - **fr_Al_COO, fr_ArN, fr_COO, fr_Ph_OH, etc**.: These descriptors represent the count of specific functional groups or substructures in the molecule. They provide information about the presence of particular chemical moieties.
-
-More information about the descriptors can be found [here](https://datagrok.ai/help/domains/chem/descriptors).
 
 ```python
 TwoDimensionDescriptors(n_jobs=10).featurize(dataset, inplace=True)

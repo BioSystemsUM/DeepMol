@@ -1,83 +1,52 @@
-FROM tensorflow/tensorflow:2.4.1-gpu
+FROM ubuntu:focal
 
-# Install system packages
-RUN apt-get update && apt-get install -y --no-install-recommends \
-      bzip2 \
-      g++ \
-      git \
-      graphviz \
-      libgl1-mesa-glx \
-      libhdf5-dev \
-      openmpi-bin \
-      wget && \
-    rm -rf /var/lib/apt/lists/*
+RUN adduser deepmol
+USER deepmol
+WORKDIR /home
 
+ENV HOME_DIR="/home/deepmol"
 
-# Install conda
-ENV CONDA_DIR /opt/conda
-ENV PATH $CONDA_DIR/bin:$PATH
+ENV PATH="/home/deepmol/.local/bin:${PATH}"
 
-RUN wget --quiet --no-check-certificate https://repo.continuum.io/miniconda/Miniconda3-4.7.12.1-Linux-x86_64.sh && \
-    echo "bfe34e1fa28d6d75a7ad05fd02fa5472275673d5f5621b77380898dee1be15d2 *Miniconda3-4.7.12.1-Linux-x86_64.sh" | sha256sum -c - && \
-    /bin/bash /Miniconda3-4.7.12.1-Linux-x86_64.sh -f -b -p $CONDA_DIR && \
-    rm Miniconda3-4.7.12.1-Linux-x86_64.sh && \
+ENV CONDA_DIR=/opt/conda \
+    SHELL=/bin/bash \
+    NB_USER=deepmol \
+    NB_UID=1000 \
+    NB_GID=100 \
+    LC_ALL=en_US.UTF-8 \
+    LANG=en_US.UTF-8 \
+    LANGUAGE=en_US.UTF-8
+
+ENV PATH=$CONDA_DIR/bin:$PATH \
+    HOME=$HOME_DIR
+
+USER root
+
+ARG DEBIAN_FRONTEND=noninteractive
+ARG TZ=Etc/UTC
+RUN apt-get update
+
+RUN apt-get install -y git wget && \
+    apt-get install --no-install-recommends --yes build-essential ffmpeg libsm6 libxext6
+
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-py310_23.5.2-0-Linux-x86_64.sh
+#    echo "bfe34e1fa28d6d75a7ad05fd02fa5472275673d5f5621b77380898dee1be15d2 *Miniconda3-4.7.12.1-Linux-x86_64.sh" | sha256sum -c - && \
+RUN /bin/bash /home/Miniconda3-py310_23.5.2-0-Linux-x86_64.sh -f -b -p $CONDA_DIR && \
+    rm Miniconda3-py310_23.5.2-0-Linux-x86_64.sh && \
     echo export PATH=$CONDA_DIR/bin:'$PATH' > /etc/profile.d/conda.sh
 
+RUN conda config --add pkgs_dirs $HOME_DIR
 
-# Install Python packages and keras
-ENV NB_USER keras
-ENV NB_UID 1000
 
-RUN useradd -m -s /bin/bash -N -u $NB_UID $NB_USER && \
-    chown $NB_USER $CONDA_DIR -R && \
-    mkdir -p /src && \
-    chown $NB_USER /src
-
-USER $NB_USER
-
-ARG python_version=3.6
+ARG python_version=3.10
 
 #RUN apt-get install build-essential swig
 
-RUN conda config --append channels conda-forge
-RUN conda install -y python=${python_version} && \
-    pip install --upgrade pip --ignore-installed six --upgrade cython && \
-    pip install \
-      joblib \
-      pillow \
-      #tensorflow-gpu==2.4.1 \
-      h5py \
-      keras==2.4.0 \
-      plotly \
-      seaborn \
-      kneed \
-      deepchem==2.5.0 \
-      && \
-    conda install \
-      scikit-learn==0.23.2 \
-      chembl_structure_pipeline \
-      matplotlib \
-      notebook \
-      pandas \
-      pydot \
-      pyyaml \
-      rdkit==2021.03.1 \
-      tqdm \
-      joblib \
-      imbalanced-learn \
-      shap==0.39.0 \
-      umap-learn==0.5.1 \
-      && \
-    conda clean -yt
+RUN pip install deepmol[all]
+
+RUN pip install git+https://github.com/samoturk/mol2vec#egg=mol2vec
 
 
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 
-ENV PYTHONPATH='/src/:$PYTHONPATH'
-
-WORKDIR /data3
-
-EXPOSE 8882
-
-CMD jupyter notebook --port=8882 --ip=0.0.0.0

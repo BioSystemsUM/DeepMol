@@ -181,11 +181,9 @@ class Pipeline(Transformer):
             steps = self.steps
 
         for step in steps:
-            print("vou transformar", step[0])
             start = time.time()
             dataset = step[1].transform(dataset)
             end = time.time()
-            print("passei", step[0], end - start)
         return dataset
 
     def predict(self, dataset: Dataset) -> np.ndarray:
@@ -209,7 +207,6 @@ class Pipeline(Transformer):
         start = time.time()
         y_pred = self.steps[-1][1].predict(dataset)
         end = time.time()
-        print("previsões feitas", end - start)
         return y_pred
 
     def predict_proba(self, dataset: Dataset) -> np.ndarray:

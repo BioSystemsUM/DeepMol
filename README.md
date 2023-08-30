@@ -67,30 +67,6 @@ Also, you should install mol2vec and its dependencies:
 pip install git+https://github.com/samoturk/mol2vec#egg=mol2vec
 ```
 
-<!---
-### Docker
-
-(IN PREPARATION - NOT FUNCTIONAL YET!)
-1. Install [docker](https://docs.docker.com/install/).
-2. Pull an existing image (X.XGb to download) from DockerHub:
-
-```bash
-docker pull XXX
-```
-
-or clone the repository and build it manually:
-
-```bash
-git clone https://github.com/BioSystemsUM/DeepMol.git
-docker build ...
-```
-
-3. Create a container:
-```bash
-docker run ...
-```
---->
-
 ### Manually
 
 
@@ -117,9 +93,6 @@ and data splitting. It also provides  methods to deal with unbalanced datasets,
 do unsupervised exploration of the data and compute feature importance as 
 shap values.
 
-The DeepMol framework is still under development, and it is currently at a 
-pre-release version. New models and features will be added in the future.
-
 
 ### Load a dataset from a CSV
 
@@ -143,15 +116,15 @@ loader = CSVLoader(dataset_path='../../data/train_dataset.csv',
 
 dataset = loader.create_dataset()
 
-# print shape of the dataset (molecules, X, y)
+# print the shape of the dataset (molecules, X, y)
 dataset.get_shape()
 
 ((1000,), None, (1000,))
 ```
 
-### Load a dataset from a SDF
+### Load a dataset from an SDF
 
-If you want to load a dataset from a SDF file with 3D structures, it is only required to provide
+If you want to load a dataset from an SDF file with 3D structures, it is only required to provide
 the path to the file. Optionally, it is also possible to provide a field with some ids,
 the labels fields.
 
@@ -172,11 +145,11 @@ dataset.get_shape()
 
 ### Compound Standardization
 
-It is possible to standardize the loaded molecules using three option. Using
+It is possible to standardize the loaded molecules using three options. Using
 a basic standardizer that only does sanitization (Kekulize, check valencies, 
 set aromaticity, conjugation and hybridization). A more complex standardizer can
 be customized by choosing or not to perform specific tasks such as sanitization, 
-remove isotope information, neutralize charges, remove stereochemistry and remove
+removing isotope information, neutralizing charges, removing stereochemistry and removing
 smaller fragments. Another possibility is to use the ChEMBL Standardizer.
 
 ```python
@@ -210,7 +183,7 @@ Seq2Seq and transformer-based are in  development and will be added soon.
 ```python
 from deepmol.compound_featurization import MorganFingerprint
 
-# Compute morgan fingerprints for molecules in the previous loaded dataset
+# Compute morgan fingerprints for molecules in the previously loaded dataset
 MorganFingerprint(radius=2, size=1024).featurize(dataset, inplace=True)
 # view the computed features (dataset.X)
 dataset.X
@@ -218,7 +191,7 @@ dataset.X
 
 
 ```python
-#print shape of the dataset to see difference in the X shape
+#print shape of the dataset to see the difference in the X shape
 dataset.get_shape()
 
 ((1000,), (1000, 1024), (1000,))
@@ -237,7 +210,7 @@ from deepmol.feature_selection import LowVarianceFS
 # Feature Selection to remove features with low variance across molecules
 LowVarianceFS(0.15).select_features(dataset, inplace=True)
 
-# print shape of the dataset to see difference in the X shape (fewer features)
+# print shape of the dataset to see the difference in the X shape (fewer features)
 dataset.get_shape()
 
 ((1000,), (1000, 35), (1000,))
@@ -285,7 +258,7 @@ test_dataset.get_shape()
 
 ### Build, train and evaluate a model
 
-It is possible use pre-built models from Scikit-Learn and DeepChem or build new
+It is possible to use pre-built models from Scikit-Learn and DeepChem or build new
 ones using keras layers. Wrappers for Scikit-Learn, Keras and DeepChem were 
 implemented allowing evaluation of the models under a common workspace.
 
@@ -533,7 +506,7 @@ shap_calc.feature_explanation_plot(1)
 #### Draw relevant features
 
 It is possible to plot the ON bits (or some of them) in a molecule for MACCS Keys,
-Morgan and RDK Fingeprints. IT is also possible to draw those bits on the 
+Morgan and RDK Fingeprints. It is also possible to draw those bits on the 
 respective molecule. This can be allied with the Shap Values calculation to 
 highlight the zone of the molecule that most contributed to a certain prediction,
 for instance, the substructure in the molecule that most contributed to its 
@@ -576,7 +549,7 @@ train_dataset = SMOTEENN().sample(train_dataset)
 
 DeepMol provides a pipeline to perform almost all the steps above in a sequence without
 having to worry about the details of each step. The pipeline can be used to perform
-a prediction pipeline (last step is a data predictor) or a data transformation pipeline
+a prediction pipeline (the last step is a data predictor) or a data transformation pipeline
 (all steps are data transformers). Transformers must implement the _fit and _transform
 methods and predictors must implement the _fit and _predict methods.
 
@@ -722,9 +695,6 @@ Baptista, Delora, Correia, João, Pereira, Bruno and Rocha, Miguel. "Evaluating 
 
 J. Capela, J. Correia, V. Pereira and M. Rocha, "Development of Deep Learning approaches to predict relationships between chemical structures and sweetness," 2022 International Joint Conference on Neural Networks (IJCNN), 2022, pp. 1-8, doi: 10.1109/IJCNN55064.2022.9891992. https://ieeexplore.ieee.org/abstract/document/9891992
 
-<!---
-DeepSweet (POSTER) ...
---->
 
 ## Licensing
 

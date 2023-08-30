@@ -241,7 +241,6 @@ class SklearnModel(Model):
         best_model = None
         split = 1
 
-        print("Computing K-fold cross validation")
         for train_ds, test_ds in datasets:
             split += 1
             dummy_model = clone(SklearnModel(model=self.model))

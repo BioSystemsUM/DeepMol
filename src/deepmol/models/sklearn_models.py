@@ -163,8 +163,8 @@ class SklearnModel(Model):
         if folder_path is None:
             model_path = self.get_model_filename(self.model_dir)
         else:
-            if "." in folder_path:
-                raise ValueError("folder_path should be a folder, not a file")
+            # if "." in folder_path:
+            #     raise ValueError("folder_path should be a folder, not a file")
             os.makedirs(folder_path, exist_ok=True)
             model_path = self.get_model_filename(folder_path)
 

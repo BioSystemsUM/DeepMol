@@ -190,8 +190,8 @@ class SklearnModel(Model):
         SklearnModel
             The loaded scikit-learn model.
         """
-        if "." in folder_path:
-            raise ValueError("model_path should be a folder, not a file")
+        # if "." in folder_path:
+        #     raise ValueError("model_path should be a folder, not a file")
         model_path = cls.get_model_filename(folder_path)
         model = load_from_disk(model_path)
         # change file path to keep the extension but add _params

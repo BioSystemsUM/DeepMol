@@ -123,6 +123,7 @@ class UMAP(UnsupervisedLearn):
         self: TSNE
             The fitted model.
         """
+        self.dataset = dataset
         self.umap.fit(dataset.X)
         return self
 

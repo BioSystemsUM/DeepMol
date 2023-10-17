@@ -248,6 +248,7 @@ class PCA(UnsupervisedLearn):
         self: PCA
             The fitted model.
         """
+        self.dataset = dataset
         self.pca.fit(dataset.X)
         return self
 
@@ -419,6 +420,7 @@ class TSNE(UnsupervisedLearn):
         self: TSNE
             The fitted model.
         """
+        self.dataset = dataset
         self.tsne.fit(dataset.X)
         return self
 
@@ -643,6 +645,7 @@ class KMeans(UnsupervisedLearn):
         self: KMeans
             The fitted model.
         """
+        self.dataset = dataset
         # Using fit does not allow to pass additional arguments to the elbow method
         self._get_kmeans_instance(dataset)
         self.k_means.fit(dataset.X)

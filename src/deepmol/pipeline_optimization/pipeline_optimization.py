@@ -92,7 +92,7 @@ class PipelineOptimization:
 
     def optimize(self, train_dataset: Dataset, test_dataset: Dataset, objective_steps: Union[callable, str],
                  metric: Metric, n_trials: int, save_top_n: int = 1, objective: Objective = ObjectiveTrainEval,
-                 **kwargs) -> None:
+                 trial_timeout: int = 86400, **kwargs) -> None:
         """
         Optimize the pipeline.
 
@@ -112,6 +112,8 @@ class PipelineOptimization:
             Number of best pipelines to save.
         objective : deepmol.pipeline_optimization.objective_wrapper.Objective
             Objective class.
+        trial_timeout : int
+            Timeout for each trial in seconds.
         **kwargs
             Additional arguments to be passed to the objective function.
         """
@@ -120,7 +122,7 @@ class PipelineOptimization:
                 'objective_steps must be one of the following: keras, deepchem, sklearn, all'
             objective_steps = _get_preset(objective_steps)
         objective = objective(objective_steps, self.study, self.direction, train_dataset, test_dataset, metric,
-                                       save_top_n, **kwargs)
+                                       save_top_n, trial_timeout, **kwargs)
         self.study.optimize(objective, n_trials=n_trials)
 
     @property

@@ -19,15 +19,13 @@ class Objective:
     ----------
     """
 
-    def __init__(self, objective_steps, study, direction, train_dataset, test_dataset, metric, save_top_n):
+    def __init__(self, objective_steps, study, direction, metric, save_top_n):
         """
         Initialize the objective function.
         """
         self.objective_steps = objective_steps
         self.study = study
         self.direction = direction
-        self.train_dataset = train_dataset
-        self.test_dataset = test_dataset
         self.metric = metric
         self.save_top_n = save_top_n
         self.save_dir = study.study_name
@@ -74,7 +72,9 @@ class ObjectiveTrainEval(Objective):
         """
         Initialize the objective function.
         """
-        super().__init__(objective_steps, study, direction, train_dataset, test_dataset, metric, save_top_n)
+        super().__init__(objective_steps, study, direction, metric, save_top_n)
+        self.train_dataset = train_dataset
+        self.test_dataset = test_dataset
         self.trial_timeout = trial_timeout
         self.kwargs = kwargs
 

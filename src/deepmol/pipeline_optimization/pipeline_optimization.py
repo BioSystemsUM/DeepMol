@@ -12,7 +12,7 @@ from deepmol.datasets import Dataset
 from deepmol.metrics import Metric
 from deepmol.pipeline import Pipeline
 from deepmol.pipeline_optimization._utils import _get_preset
-from deepmol.pipeline_optimization.objective_wrapper import Objective
+from deepmol.pipeline_optimization.objective_wrapper import ObjectiveTrainEval, Objective
 
 
 class PipelineOptimization:
@@ -91,7 +91,8 @@ class PipelineOptimization:
         self.study.set_user_attr("best_scores", {})
 
     def optimize(self, train_dataset: Dataset, test_dataset: Dataset, objective_steps: Union[callable, str],
-                 metric: Metric, n_trials: int, save_top_n: int = 1, **kwargs) -> None:
+                 metric: Metric, n_trials: int, save_top_n: int = 1, objective: Objective = ObjectiveTrainEval,
+                 **kwargs) -> None:
         """
         Optimize the pipeline.
 
@@ -109,6 +110,8 @@ class PipelineOptimization:
             Number of trials.
         save_top_n : int
             Number of best pipelines to save.
+        objective : deepmol.pipeline_optimization.objective_wrapper.Objective
+            Objective class.
         **kwargs
             Additional arguments to be passed to the objective function.
         """
@@ -116,8 +119,8 @@ class PipelineOptimization:
             assert objective_steps in ['keras', 'deepchem', 'sklearn', 'all'], \
                 'objective_steps must be one of the following: keras, deepchem, sklearn, all'
             objective_steps = _get_preset(objective_steps)
-        objective = Objective(objective_steps, self.study, self.direction, train_dataset, test_dataset, metric,
-                              save_top_n, **kwargs)
+        objective = objective(objective_steps, self.study, self.direction, train_dataset, test_dataset, metric,
+                                       save_top_n, **kwargs)
         self.study.optimize(objective, n_trials=n_trials)
 
     @property

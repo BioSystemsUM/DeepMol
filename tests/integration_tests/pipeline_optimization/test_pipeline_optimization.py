@@ -183,7 +183,7 @@ class TestPipelineOptimization(TestCase):
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_multiclass, seed=123)
         po.optimize(train_dataset=train, test_dataset=test, objective_steps='all', metric=metric, n_trials=3,
-                    data=train, save_top_n=2)
+                    data=train, save_top_n=2, trial_timeout=10)
         self.assertEqual(po.best_params, po.best_trial.params)
         self.assertIsInstance(po.best_value, float)
 
@@ -199,6 +199,7 @@ class TestPipelineOptimization(TestCase):
         if param_importance is not None:
             for param in param_importance:
                 self.assertTrue(param in po.best_params.keys())
+
     @skip("This test is too slow to run on CI and can have different results on different trials")
     def test_multi_label_classification_keras(self):
         warnings.filterwarnings("ignore")

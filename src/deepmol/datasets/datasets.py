@@ -911,8 +911,6 @@ class SmilesDataset(Dataset):
         if axis == 0:
             ids_to_delete = sorted(list(set(self._ids) - set(ids)))
             raw_indexes = [i for i, mol_index in enumerate(self._ids) if mol_index in ids_to_delete]
-            for idx in raw_indexes:
-                self.logger.error(f"Molecule with smiles: {self._smiles[idx]} removed from dataset.")
             self._smiles = np.delete(self._smiles, raw_indexes, axis)
             self._mols = np.delete(self._mols, raw_indexes, axis)
             self._y = np.delete(self._y, raw_indexes, axis) if self._y is not None else self._y

@@ -19,14 +19,13 @@ class Objective:
     ----------
     """
 
-    def __init__(self, objective_steps, study, direction, metric, save_top_n):
+    def __init__(self, objective_steps, study, direction, save_top_n):
         """
         Initialize the objective function.
         """
         self.objective_steps = objective_steps
         self.study = study
         self.direction = direction
-        self.metric = metric
         self.save_top_n = save_top_n
         self.save_dir = study.study_name
 
@@ -67,14 +66,17 @@ class ObjectiveTrainEval(Objective):
         Additional keyword arguments passed to the objective_steps function.
     """
 
-    def __init__(self, objective_steps, study, direction, train_dataset, test_dataset, metric, save_top_n,
+    def __init__(self, objective_steps, study, direction, save_top_n,
                  trial_timeout=86400, **kwargs):
         """
         Initialize the objective function.
         """
-        super().__init__(objective_steps, study, direction, metric, save_top_n)
-        self.train_dataset = train_dataset
-        self.test_dataset = test_dataset
+        super().__init__(objective_steps, study, direction, save_top_n)
+        if "train_dataset" not in kwargs or "test_dataset" not in kwargs or "metric" not in kwargs:
+            raise ValueError("train_dataset, test_dataset and metric must be passed as keyword arguments.")
+        self.train_dataset = kwargs.pop('train_dataset')
+        self.test_dataset = kwargs.pop('test_dataset')
+        self.metric = kwargs.pop('metric')
         self.trial_timeout = trial_timeout
         self.kwargs = kwargs
 

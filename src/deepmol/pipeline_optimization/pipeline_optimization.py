@@ -90,22 +90,16 @@ class PipelineOptimization:
                                          direction=direction, load_if_exists=load_if_exists, directions=directions)
         self.study.set_user_attr("best_scores", {})
 
-    def optimize(self, train_dataset: Dataset, test_dataset: Dataset, objective_steps: Union[callable, str],
-                 metric: Metric, n_trials: int, save_top_n: int = 1, objective: Objective = ObjectiveTrainEval,
+    def optimize(self, objective_steps: Union[callable, str], n_trials: int, save_top_n: int = 1,
+                 objective: Objective = ObjectiveTrainEval,
                  trial_timeout: int = 86400, **kwargs) -> None:
         """
         Optimize the pipeline.
 
         Parameters
         ----------
-        train_dataset : deepmol.datasets.Dataset
-            Training dataset.
-        test_dataset : deepmol.datasets.Dataset
-            Test dataset.
         objective_steps : callable or str
             Objective function. If a string is passed, a preset objective function is used.
-        metric : deepmol.metrics.Metric
-            Metric to be used.
         n_trials : int
             Number of trials.
         save_top_n : int
@@ -121,7 +115,7 @@ class PipelineOptimization:
             assert objective_steps in ['keras', 'deepchem', 'sklearn', 'all'], \
                 'objective_steps must be one of the following: keras, deepchem, sklearn, all'
             objective_steps = _get_preset(objective_steps)
-        objective = objective(objective_steps, self.study, self.direction, train_dataset, test_dataset, metric,
+        objective = objective(objective_steps, self.study, self.direction,
                                        save_top_n, trial_timeout, **kwargs)
         self.study.optimize(objective, n_trials=n_trials)
 

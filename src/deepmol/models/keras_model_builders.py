@@ -98,15 +98,13 @@ def keras_fcnn_model_builder(input_dim: int, n_tasks: int = 1, label_names: List
     return model
 
 
-def keras_fcnn_model(model_dir: str = 'keras_model/', model_kwargs: dict = None,
+def keras_fcnn_model(model_kwargs: dict = None,
                      keras_kwargs: dict = None) -> KerasModel:
     """
     Build a fully connected neural network model using Keras.
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved.
     model_kwargs : dict
         Keyword arguments for the model builder.
     keras_kwargs : dict
@@ -123,7 +121,7 @@ def keras_fcnn_model(model_dir: str = 'keras_model/', model_kwargs: dict = None,
     batch_size = keras_kwargs.get('batch_size', 10)
     verbose = keras_kwargs.get('verbose', 0)
     model_kwargs = {} if model_kwargs is None else model_kwargs
-    return KerasModel(model_builder=keras_fcnn_model_builder, mode=mode, model_dir=model_dir, epochs=epochs,
+    return KerasModel(model_builder=keras_fcnn_model_builder, mode=mode, epochs=epochs,
                       batch_size=batch_size, verbose=verbose, **model_kwargs)
 
 
@@ -236,15 +234,13 @@ def keras_1d_cnn_model_builder(input_dim: int, n_tasks: int = 1, label_names: Li
     return model
 
 
-def keras_1d_cnn_model(model_dir: str = 'keras_model/', model_kwargs: dict = None,
+def keras_1d_cnn_model(model_kwargs: dict = None,
                        keras_kwargs: dict = None) -> KerasModel:
     """
     Build a 1D convolutional neural network model using Keras.
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved.
     model_kwargs : dict
         Keyword arguments for the model builder.
     keras_kwargs : dict
@@ -261,7 +257,7 @@ def keras_1d_cnn_model(model_dir: str = 'keras_model/', model_kwargs: dict = Non
     epochs = keras_kwargs.get('epochs', 150)
     batch_size = keras_kwargs.get('batch_size', 10)
     verbose = keras_kwargs.get('verbose', 0)
-    return KerasModel(model_builder=keras_1d_cnn_model_builder, model_dir=model_dir, mode=mode, epochs=epochs,
+    return KerasModel(model_builder=keras_1d_cnn_model_builder, mode=mode, epochs=epochs,
                       batch_size=batch_size, verbose=verbose, **model_kwargs)
 
 
@@ -362,15 +358,13 @@ def keras_tabular_transformer_model_builder(input_dim: int, n_tasks: int = 1, la
     return model
 
 
-def keras_tabular_transformer_model(model_dir: str = 'keras_model/', model_kwargs: dict = None,
+def keras_tabular_transformer_model(model_kwargs: dict = None,
                                     keras_kwargs: dict = None) -> KerasModel:
     """
     Build a transformer model using Keras.
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved.
     model_kwargs : dict
         Keyword arguments for the model builder.
     keras_kwargs : dict
@@ -387,7 +381,7 @@ def keras_tabular_transformer_model(model_dir: str = 'keras_model/', model_kwarg
     epochs = keras_kwargs.get('epochs', 150)
     batch_size = keras_kwargs.get('batch_size', 10)
     verbose = keras_kwargs.get('verbose', 0)
-    return KerasModel(model_builder=keras_tabular_transformer_model_builder, mode=mode, model_dir=model_dir,
+    return KerasModel(model_builder=keras_tabular_transformer_model_builder, mode=mode,
                       epochs=epochs, batch_size=batch_size, verbose=verbose, **model_kwargs)
 
 
@@ -469,15 +463,13 @@ def keras_simple_rnn_model_builder(input_dim: int, n_tasks: int = 1, label_names
     return model
 
 
-def keras_simple_rnn_model(model_dir: str = 'keras_model/', model_kwargs: dict = None,
+def keras_simple_rnn_model(model_kwargs: dict = None,
                            keras_kwargs: dict = None) -> KerasModel:
     """
     Build a simple RNN model using Keras.
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved.
     model_kwargs : dict
         Keyword arguments for the model builder.
     keras_kwargs : dict
@@ -494,7 +486,7 @@ def keras_simple_rnn_model(model_dir: str = 'keras_model/', model_kwargs: dict =
     epochs = keras_kwargs.get('epochs', 150)
     batch_size = keras_kwargs.get('batch_size', 10)
     verbose = keras_kwargs.get('verbose', 0)
-    return KerasModel(model_builder=keras_simple_rnn_model_builder, mode=mode, model_dir=model_dir,
+    return KerasModel(model_builder=keras_simple_rnn_model_builder, mode=mode,
                       epochs=epochs, batch_size=batch_size, verbose=verbose, **model_kwargs)
 
 
@@ -589,15 +581,13 @@ def keras_rnn_model_builder(input_dim: int, n_tasks: int = 1, label_names: List[
     return model
 
 
-def keras_rnn_model(model_dir: str = 'keras_model/', model_kwargs: dict = None,
+def keras_rnn_model(model_kwargs: dict = None,
                     keras_kwargs: dict = None) -> KerasModel:
     """
     Build a RNN model using Keras.
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved.
     model_kwargs : dict
         Keyword arguments for the model builder.
     keras_kwargs : dict
@@ -614,7 +604,7 @@ def keras_rnn_model(model_dir: str = 'keras_model/', model_kwargs: dict = None,
     epochs = keras_kwargs.get('epochs', 150)
     batch_size = keras_kwargs.get('batch_size', 10)
     verbose = keras_kwargs.get('verbose', 0)
-    return KerasModel(model_builder=keras_rnn_model_builder, mode=mode, model_dir=model_dir,
+    return KerasModel(model_builder=keras_rnn_model_builder, mode=mode,
                       epochs=epochs, batch_size=batch_size, verbose=verbose, **model_kwargs)
 
 
@@ -718,15 +708,13 @@ def keras_bidirectional_rnn_model_builder(input_dim: int, n_tasks: int = 1, labe
     return model
 
 
-def keras_bidirectional_rnn_model(model_dir: str = 'keras_model/', model_kwargs: dict = None,
+def keras_bidirectional_rnn_model(model_kwargs: dict = None,
                                   keras_kwargs: dict = None) -> KerasModel:
     """
     Build a bidirectional RNN model using Keras.
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved.
     model_kwargs : dict
         Keyword arguments for the model builder.
     keras_kwargs : dict
@@ -743,5 +731,5 @@ def keras_bidirectional_rnn_model(model_dir: str = 'keras_model/', model_kwargs:
     epochs = keras_kwargs.get('epochs', 150)
     batch_size = keras_kwargs.get('batch_size', 10)
     verbose = keras_kwargs.get('verbose', 0)
-    return KerasModel(model_builder=keras_bidirectional_rnn_model_builder, mode=mode, model_dir=model_dir,
+    return KerasModel(model_builder=keras_bidirectional_rnn_model_builder, mode=mode,
                       epochs=epochs, batch_size=batch_size, verbose=verbose, **model_kwargs)

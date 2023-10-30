@@ -163,8 +163,6 @@ class SklearnModel(Model):
         if folder_path is None:
             model_path = self.get_model_filename(self.model_dir)
         else:
-            # if "." in folder_path:
-            #     raise ValueError("folder_path should be a folder, not a file")
             os.makedirs(folder_path, exist_ok=True)
             model_path = self.get_model_filename(folder_path)
 
@@ -190,12 +188,10 @@ class SklearnModel(Model):
         SklearnModel
             The loaded scikit-learn model.
         """
-        # if "." in folder_path:
-        #     raise ValueError("model_path should be a folder, not a file")
         model_path = cls.get_model_filename(folder_path)
         model = load_from_disk(model_path)
         # change file path to keep the extension but add _params
-        parameters_file_path = model_path.split('.')[0] + '_params.' + model_path.split('.')[1]
+        parameters_file_path = ".".join(model_path.split('.')[:-1]) + '_params.' + model_path.split('.')[-1]
         params = load_from_disk(parameters_file_path)
         instance = cls(model=model, model_dir=model_path, **params)
         return instance

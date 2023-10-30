@@ -30,7 +30,7 @@ from deepmol.models import SklearnModel
 ### LINEAR MODELS ###
 #####################
 
-def linear_regression_model(model_dir: str = 'linear_regression_model/', linear_regression_kwargs: dict = None,
+def linear_regression_model(linear_regression_kwargs: dict = None,
                             sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.LinearRegression.
@@ -38,8 +38,6 @@ def linear_regression_model(model_dir: str = 'linear_regression_model/', linear_
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'linear_regression_model/'
     linear_regression_kwargs : dict
         Keyword arguments for sklearn.linear_model.LinearRegression
     sklearn_kwargs : dict
@@ -54,10 +52,10 @@ def linear_regression_model(model_dir: str = 'linear_regression_model/', linear_
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = LinearRegression(**linear_regression_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def ridge_model(model_dir: str = 'ridge_model/', ridge_kwargs: dict = None,
+def ridge_model(ridge_kwargs: dict = None,
                 sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.Ridge.
@@ -65,8 +63,6 @@ def ridge_model(model_dir: str = 'ridge_model/', ridge_kwargs: dict = None,
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'ridge_model/'
     ridge_kwargs : dict
         Keyword arguments for sklearn.linear_model.Ridge
     sklearn_kwargs : dict
@@ -81,10 +77,10 @@ def ridge_model(model_dir: str = 'ridge_model/', ridge_kwargs: dict = None,
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = Ridge(**ridge_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def ridge_classifier_model(model_dir: str = 'ridge_classifier_model/', ridge_classifier_kwargs: dict = None,
+def ridge_classifier_model(ridge_classifier_kwargs: dict = None,
                            sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.RidgeClassifier.
@@ -92,8 +88,6 @@ def ridge_classifier_model(model_dir: str = 'ridge_classifier_model/', ridge_cla
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'ridge_classifier_model/'
     ridge_classifier_kwargs : dict
         Keyword arguments for sklearn.linear_model.RidgeClassifier
     sklearn_kwargs : dict
@@ -108,10 +102,10 @@ def ridge_classifier_model(model_dir: str = 'ridge_classifier_model/', ridge_cla
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = RidgeClassifier(**ridge_classifier_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def ridge_cv_model(model_dir: str = 'ridge_cv_model/', ridge_cv_kwargs: dict = None,
+def ridge_cv_model(ridge_cv_kwargs: dict = None,
                    sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.RidgeCV.
@@ -119,8 +113,6 @@ def ridge_cv_model(model_dir: str = 'ridge_cv_model/', ridge_cv_kwargs: dict = N
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'ridge_cv_model/'
     ridge_cv_kwargs : dict
         Keyword arguments for sklearn.linear_model.RidgeCV
     sklearn_kwargs : dict
@@ -135,10 +127,10 @@ def ridge_cv_model(model_dir: str = 'ridge_cv_model/', ridge_cv_kwargs: dict = N
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = RidgeCV(**ridge_cv_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def ridge_classifier_cv_model(model_dir: str = 'ridge_classifier_cv_model/', ridge_classifier_cv_kwargs: dict = None,
+def ridge_classifier_cv_model(ridge_classifier_cv_kwargs: dict = None,
                               sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.RidgeClassifierCV.
@@ -146,8 +138,6 @@ def ridge_classifier_cv_model(model_dir: str = 'ridge_classifier_cv_model/', rid
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'ridge_classifier_cv_model/'
     ridge_classifier_cv_kwargs : dict
         Keyword arguments for sklearn.linear_model.RidgeClassifierCV
     sklearn_kwargs : dict
@@ -162,10 +152,10 @@ def ridge_classifier_cv_model(model_dir: str = 'ridge_classifier_cv_model/', rid
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = RidgeClassifierCV(**ridge_classifier_cv_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def lasso_model(model_dir: str = 'lasso_model/', lasso_kwargs: dict = None,
+def lasso_model(lasso_kwargs: dict = None,
                 sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.Lasso.
@@ -173,8 +163,6 @@ def lasso_model(model_dir: str = 'lasso_model/', lasso_kwargs: dict = None,
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'lasso_model/'
     lasso_kwargs : dict
         Keyword arguments for sklearn.linear_model.Lasso
     sklearn_kwargs : dict
@@ -189,10 +177,10 @@ def lasso_model(model_dir: str = 'lasso_model/', lasso_kwargs: dict = None,
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = Lasso(**lasso_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def lasso_cv_model(model_dir: str = 'lasso_cv_model/', lasso_cv_kwargs: dict = None,
+def lasso_cv_model(lasso_cv_kwargs: dict = None,
                    sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.LassoCV.
@@ -200,8 +188,6 @@ def lasso_cv_model(model_dir: str = 'lasso_cv_model/', lasso_cv_kwargs: dict = N
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'lasso_cv_model/'
     lasso_cv_kwargs : dict
         Keyword arguments for sklearn.linear_model.LassoCV
     sklearn_kwargs : dict
@@ -216,10 +202,10 @@ def lasso_cv_model(model_dir: str = 'lasso_cv_model/', lasso_cv_kwargs: dict = N
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = LassoCV(**lasso_cv_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def lasso_lars_cv_model(model_dir: str = 'lasso_lars_cv_model/', lasso_lars_cv_kwargs: dict = None,
+def lasso_lars_cv_model(lasso_lars_cv_kwargs: dict = None,
                         sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.LassoLarsCV.
@@ -227,8 +213,6 @@ def lasso_lars_cv_model(model_dir: str = 'lasso_lars_cv_model/', lasso_lars_cv_k
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'lasso_lars_cv_model/'
     lasso_lars_cv_kwargs : dict
         Keyword arguments for sklearn.linear_model.LassoLarsCV
     sklearn_kwargs : dict
@@ -243,10 +227,10 @@ def lasso_lars_cv_model(model_dir: str = 'lasso_lars_cv_model/', lasso_lars_cv_k
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = LassoLarsCV(**lasso_lars_cv_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def lasso_lars_ic_model(model_dir: str = 'lasso_lars_ic_model/', lasso_lars_ic_kwargs: dict = None,
+def lasso_lars_ic_model(lasso_lars_ic_kwargs: dict = None,
                         sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.LassoLarsIC.
@@ -254,8 +238,6 @@ def lasso_lars_ic_model(model_dir: str = 'lasso_lars_ic_model/', lasso_lars_ic_k
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'lasso_lars_ic_model/'
     lasso_lars_ic_kwargs : dict
         Keyword arguments for sklearn.linear_model.LassoLarsIC
     sklearn_kwargs : dict
@@ -270,10 +252,10 @@ def lasso_lars_ic_model(model_dir: str = 'lasso_lars_ic_model/', lasso_lars_ic_k
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = LassoLarsIC(**lasso_lars_ic_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def multitask_lasso_model(model_dir: str = 'multitask_lasso_model/', multitask_lasso_kwargs: dict = None,
+def multitask_lasso_model(multitask_lasso_kwargs: dict = None,
                           sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.MultiTaskLasso.
@@ -281,8 +263,6 @@ def multitask_lasso_model(model_dir: str = 'multitask_lasso_model/', multitask_l
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'multitask_lasso_model/'
     multitask_lasso_kwargs : dict
         Keyword arguments for sklearn.linear_model.MultiTaskLasso
     sklearn_kwargs : dict
@@ -297,10 +277,10 @@ def multitask_lasso_model(model_dir: str = 'multitask_lasso_model/', multitask_l
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = MultiTaskLasso(**multitask_lasso_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def elastic_net_model(model_dir: str = 'elastic_net_model/', elastic_net_kwargs: dict = None,
+def elastic_net_model(elastic_net_kwargs: dict = None,
                       sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.ElasticNet.
@@ -308,8 +288,6 @@ def elastic_net_model(model_dir: str = 'elastic_net_model/', elastic_net_kwargs:
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'elastic_net_model/'
     elastic_net_kwargs : dict
         Keyword arguments for sklearn.linear_model.ElasticNet
     sklearn_kwargs : dict
@@ -324,19 +302,16 @@ def elastic_net_model(model_dir: str = 'elastic_net_model/', elastic_net_kwargs:
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = ElasticNet(**elastic_net_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def multitask_elastic_net_model(model_dir: str = 'multitask_elastic_net_model/',
-                                multitask_elastic_net_kwargs: dict = None, sklearn_kwargs: dict = None) -> SklearnModel:
+def multitask_elastic_net_model(multitask_elastic_net_kwargs: dict = None, sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.MultiTaskElasticNet.
     Reference: https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.MultiTaskElasticNet.html
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'multitask_elastic_net_model/'
     multitask_elastic_net_kwargs : dict
         Keyword arguments for sklearn.linear_model.MultiTaskElasticNet
     sklearn_kwargs : dict
@@ -351,11 +326,10 @@ def multitask_elastic_net_model(model_dir: str = 'multitask_elastic_net_model/',
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = MultiTaskElasticNet(**multitask_elastic_net_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def multitask_elastic_net_cv_model(model_dir: str = 'multitask_elastic_net_cv_model/',
-                                   multitask_elastic_net_cv_kwargs: dict = None,
+def multitask_elastic_net_cv_model(multitask_elastic_net_cv_kwargs: dict = None,
                                    sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.MultiTaskElasticNetCV.
@@ -363,8 +337,6 @@ def multitask_elastic_net_cv_model(model_dir: str = 'multitask_elastic_net_cv_mo
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'multitask_elastic_net_cv_model/'
     multitask_elastic_net_cv_kwargs : dict
         Keyword arguments for sklearn.linear_model.MultiTaskElasticNetCV
     sklearn_kwargs : dict
@@ -379,11 +351,10 @@ def multitask_elastic_net_cv_model(model_dir: str = 'multitask_elastic_net_cv_mo
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = MultiTaskElasticNetCV(**multitask_elastic_net_cv_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def ortogonal_matching_pursuit_model(model_dir: str = 'ortogonal_matching_pursuit_model/',
-                                     ortogonal_matching_pursuit_kwargs: dict = None,
+def ortogonal_matching_pursuit_model(ortogonal_matching_pursuit_kwargs: dict = None,
                                      sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.OrthogonalMatchingPursuit.
@@ -391,8 +362,6 @@ def ortogonal_matching_pursuit_model(model_dir: str = 'ortogonal_matching_pursui
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'ortogonal_matching_pursuit_model/'
     ortogonal_matching_pursuit_kwargs : dict
         Keyword arguments for sklearn.linear_model.OrthogonalMatchingPursuit
     sklearn_kwargs : dict
@@ -407,10 +376,10 @@ def ortogonal_matching_pursuit_model(model_dir: str = 'ortogonal_matching_pursui
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = OrthogonalMatchingPursuit(**ortogonal_matching_pursuit_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def bayesian_ridge_model(model_dir: str = 'bayesian_ridge_model/', bayesian_ridge_kwargs: dict = None,
+def bayesian_ridge_model(bayesian_ridge_kwargs: dict = None,
                          sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.BayesianRidge.
@@ -418,8 +387,6 @@ def bayesian_ridge_model(model_dir: str = 'bayesian_ridge_model/', bayesian_ridg
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'bayesian_ridge_model/'
     bayesian_ridge_kwargs : dict
         Keyword arguments for sklearn.linear_model.BayesianRidge
     sklearn_kwargs : dict
@@ -434,10 +401,10 @@ def bayesian_ridge_model(model_dir: str = 'bayesian_ridge_model/', bayesian_ridg
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = BayesianRidge(**bayesian_ridge_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def ard_regression_model(model_dir: str = 'ard_regression_model/', ard_regression_kwargs: dict = None,
+def ard_regression_model(ard_regression_kwargs: dict = None,
                          sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.ARDRegression.
@@ -445,8 +412,6 @@ def ard_regression_model(model_dir: str = 'ard_regression_model/', ard_regressio
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'ard_regression_model/'
     ard_regression_kwargs : dict
         Keyword arguments for sklearn.linear_model.ARDRegression
     sklearn_kwargs : dict
@@ -461,10 +426,10 @@ def ard_regression_model(model_dir: str = 'ard_regression_model/', ard_regressio
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = ARDRegression(**ard_regression_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def logistic_regression_model(model_dir: str = 'logistic_regression_model/', logistic_regression_kwargs: dict = None,
+def logistic_regression_model(logistic_regression_kwargs: dict = None,
                               sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.LogisticRegression.
@@ -472,8 +437,6 @@ def logistic_regression_model(model_dir: str = 'logistic_regression_model/', log
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'logistic_regression_model/'
     logistic_regression_kwargs : dict
         Keyword arguments for sklearn.linear_model.LogisticRegression
     sklearn_kwargs : dict
@@ -488,11 +451,10 @@ def logistic_regression_model(model_dir: str = 'logistic_regression_model/', log
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = LogisticRegression(**logistic_regression_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def logistic_regression_cv_model(model_dir: str = 'logistic_regression_cv_model/',
-                                 logistic_regression_cv_kwargs: dict = None,
+def logistic_regression_cv_model(logistic_regression_cv_kwargs: dict = None,
                                  sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.LogisticRegressionCV.
@@ -500,8 +462,6 @@ def logistic_regression_cv_model(model_dir: str = 'logistic_regression_cv_model/
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'logistic_regression_cv_model/'
     logistic_regression_cv_kwargs : dict
         Keyword arguments for sklearn.linear_model.LogisticRegressionCV
     sklearn_kwargs : dict
@@ -516,10 +476,10 @@ def logistic_regression_cv_model(model_dir: str = 'logistic_regression_cv_model/
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = LogisticRegressionCV(**logistic_regression_cv_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def tweedie_regressor_model(model_dir: str = 'tweedie_regressor_model/', tweedie_regressor_kwargs: dict = None,
+def tweedie_regressor_model(tweedie_regressor_kwargs: dict = None,
                             sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.TweedieRegressor.
@@ -527,8 +487,6 @@ def tweedie_regressor_model(model_dir: str = 'tweedie_regressor_model/', tweedie
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'tweedie_regressor_model/'
     tweedie_regressor_kwargs : dict
         Keyword arguments for sklearn.linear_model.TweedieRegressor
     sklearn_kwargs : dict
@@ -543,10 +501,10 @@ def tweedie_regressor_model(model_dir: str = 'tweedie_regressor_model/', tweedie
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = TweedieRegressor(**tweedie_regressor_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def poisson_regressor_model(model_dir: str = 'poison_regressor_model/', poisson_regressor_kwargs: dict = None,
+def poisson_regressor_model(poisson_regressor_kwargs: dict = None,
                             sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.PoissonRegressor.
@@ -554,8 +512,6 @@ def poisson_regressor_model(model_dir: str = 'poison_regressor_model/', poisson_
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'poisson_regressor_model/'
     poisson_regressor_kwargs : dict
         Keyword arguments for sklearn.linear_model.PoissonRegressor
     sklearn_kwargs : dict
@@ -570,10 +526,10 @@ def poisson_regressor_model(model_dir: str = 'poison_regressor_model/', poisson_
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = PoissonRegressor(**poisson_regressor_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def gamma_regressor_model(model_dir: str = 'gamma_regressor_model/', gamma_regressor_kwargs: dict = None,
+def gamma_regressor_model(gamma_regressor_kwargs: dict = None,
                           sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.GammaRegressor.
@@ -581,8 +537,6 @@ def gamma_regressor_model(model_dir: str = 'gamma_regressor_model/', gamma_regre
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'gamma_regressor_model/'
     gamma_regressor_kwargs : dict
         Keyword arguments for sklearn.linear_model.GammaRegressor
     sklearn_kwargs : dict
@@ -597,10 +551,10 @@ def gamma_regressor_model(model_dir: str = 'gamma_regressor_model/', gamma_regre
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = GammaRegressor(**gamma_regressor_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def perceptron_model(model_dir: str = 'perceptron_model/', perceptron_kwargs: dict = None,
+def perceptron_model(perceptron_kwargs: dict = None,
                      sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.Perceptron.
@@ -608,8 +562,6 @@ def perceptron_model(model_dir: str = 'perceptron_model/', perceptron_kwargs: di
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'perceptron_model/'
     perceptron_kwargs : dict
         Keyword arguments for sklearn.linear_model.Perceptron
     sklearn_kwargs : dict
@@ -624,11 +576,10 @@ def perceptron_model(model_dir: str = 'perceptron_model/', perceptron_kwargs: di
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = Perceptron(**perceptron_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def passive_aggressive_regressor_model(model_dir: str = 'passive_aggressive_regressor_model/',
-                                       passive_aggressive_regressor_kwargs: dict = None,
+def passive_aggressive_regressor_model(passive_aggressive_regressor_kwargs: dict = None,
                                        sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.PassiveAggressiveRegressor.
@@ -636,8 +587,6 @@ def passive_aggressive_regressor_model(model_dir: str = 'passive_aggressive_regr
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'passive_aggressive_regressor_model/'
     passive_aggressive_regressor_kwargs : dict
         Keyword arguments for sklearn.linear_model.PassiveAggressiveRegressor
     sklearn_kwargs : dict
@@ -652,11 +601,10 @@ def passive_aggressive_regressor_model(model_dir: str = 'passive_aggressive_regr
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = PassiveAggressiveRegressor(**passive_aggressive_regressor_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def passive_aggressive_classifier_model(model_dir: str = 'passive_aggressive_classifier_model/',
-                                        passive_aggressive_classifier_kwargs: dict = None,
+def passive_aggressive_classifier_model(passive_aggressive_classifier_kwargs: dict = None,
                                         sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.PassiveAggressiveClassifier.
@@ -664,8 +612,6 @@ def passive_aggressive_classifier_model(model_dir: str = 'passive_aggressive_cla
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'passive_aggressive_classifier_model/'
     passive_aggressive_classifier_kwargs : dict
         Keyword arguments for sklearn.linear_model.PassiveAggressiveClassifier
     sklearn_kwargs : dict
@@ -680,10 +626,10 @@ def passive_aggressive_classifier_model(model_dir: str = 'passive_aggressive_cla
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = PassiveAggressiveClassifier(**passive_aggressive_classifier_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def huber_regressor_model(model_dir: str = 'huber_regressor_model/', huber_regressor_kwargs: dict = None,
+def huber_regressor_model(huber_regressor_kwargs: dict = None,
                           sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.HuberRegressor.
@@ -691,8 +637,6 @@ def huber_regressor_model(model_dir: str = 'huber_regressor_model/', huber_regre
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'huber_regressor_model/'
     huber_regressor_kwargs : dict
         Keyword arguments for sklearn.linear_model.HuberRegressor
     sklearn_kwargs : dict
@@ -707,10 +651,10 @@ def huber_regressor_model(model_dir: str = 'huber_regressor_model/', huber_regre
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = HuberRegressor(**huber_regressor_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def ransac_regressor_model(model_dir: str = 'ransac_regressor_model/', ransac_regressor_kwargs: dict = None,
+def ransac_regressor_model(ransac_regressor_kwargs: dict = None,
                            sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.RANSACRegressor.
@@ -718,8 +662,6 @@ def ransac_regressor_model(model_dir: str = 'ransac_regressor_model/', ransac_re
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'ransac_regressor_model/'
     ransac_regressor_kwargs : dict
         Keyword arguments for sklearn.linear_model.RANSACRegressor
     sklearn_kwargs : dict
@@ -734,10 +676,10 @@ def ransac_regressor_model(model_dir: str = 'ransac_regressor_model/', ransac_re
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = RANSACRegressor(**ransac_regressor_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def theil_sen_regressor_model(model_dir: str = 'theil_sen_regressor_model/', theil_sen_regressor_kwargs: dict = None,
+def theil_sen_regressor_model(theil_sen_regressor_kwargs: dict = None,
                               sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.TheilSenRegressor.
@@ -745,8 +687,6 @@ def theil_sen_regressor_model(model_dir: str = 'theil_sen_regressor_model/', the
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'theil_sen_regressor_model/'
     theil_sen_regressor_kwargs : dict
         Keyword arguments for sklearn.linear_model.TheilSenRegressor
     sklearn_kwargs : dict
@@ -761,10 +701,10 @@ def theil_sen_regressor_model(model_dir: str = 'theil_sen_regressor_model/', the
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = TheilSenRegressor(**theil_sen_regressor_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def quantile_regressor_model(model_dir: str = 'quantile_regressor_model/', quantile_regressor_kwargs: dict = None,
+def quantile_regressor_model(quantile_regressor_kwargs: dict = None,
                              sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.QuantileRegressor.
@@ -772,8 +712,6 @@ def quantile_regressor_model(model_dir: str = 'quantile_regressor_model/', quant
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'quantile_regressor_model/'
     quantile_regressor_kwargs : dict
         Keyword arguments for sklearn.linear_model.QuantileRegressor
     sklearn_kwargs : dict
@@ -788,7 +726,7 @@ def quantile_regressor_model(model_dir: str = 'quantile_regressor_model/', quant
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = QuantileRegressor(**quantile_regressor_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
 ##################################################
@@ -796,8 +734,7 @@ def quantile_regressor_model(model_dir: str = 'quantile_regressor_model/', quant
 ##################################################
 
 
-def linear_discriminant_analysis_model(model_dir: str = 'linear_discriminant_analysis_model/',
-                                       linear_discriminant_analysis_kwargs: dict = None,
+def linear_discriminant_analysis_model(linear_discriminant_analysis_kwargs: dict = None,
                                        sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.discriminant_analysis.LinearDiscriminantAnalysis.
@@ -806,8 +743,6 @@ def linear_discriminant_analysis_model(model_dir: str = 'linear_discriminant_ana
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'linear_discriminant_analysis_model/'
     linear_discriminant_analysis_kwargs : dict
         Keyword arguments for sklearn.discriminant_analysis.LinearDiscriminantAnalysis
     sklearn_kwargs : dict
@@ -822,11 +757,10 @@ def linear_discriminant_analysis_model(model_dir: str = 'linear_discriminant_ana
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = LinearDiscriminantAnalysis(**linear_discriminant_analysis_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def quadratic_discriminant_analysis_model(model_dir: str = 'quadratic_discriminant_analysis_model/',
-                                          quadratic_discriminant_analysis_kwargs: dict = None,
+def quadratic_discriminant_analysis_model(quadratic_discriminant_analysis_kwargs: dict = None,
                                           sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.discriminant_analysis.QuadraticDiscriminantAnalysis.
@@ -835,8 +769,6 @@ def quadratic_discriminant_analysis_model(model_dir: str = 'quadratic_discrimina
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'quadratic_discriminant_analysis_model/'
     quadratic_discriminant_analysis_kwargs : dict
         Keyword arguments for sklearn.discriminant_analysis.QuadraticDiscriminantAnalysis
     sklearn_kwargs : dict
@@ -851,7 +783,7 @@ def quadratic_discriminant_analysis_model(model_dir: str = 'quadratic_discrimina
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = QuadraticDiscriminantAnalysis(**quadratic_discriminant_analysis_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
 ###############################
@@ -859,8 +791,7 @@ def quadratic_discriminant_analysis_model(model_dir: str = 'quadratic_discrimina
 ###############################
 
 
-def kernel_ridge_regressor_model(model_dir: str = 'kernel_ridge_regressor_model/',
-                                 kernel_ridge_regressor_kwargs: dict = None,
+def kernel_ridge_regressor_model(kernel_ridge_regressor_kwargs: dict = None,
                                  sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.kernel_ridge.KernelRidge.
@@ -868,8 +799,6 @@ def kernel_ridge_regressor_model(model_dir: str = 'kernel_ridge_regressor_model/
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'kernel_ridge_regressor_model/'
     kernel_ridge_regressor_kwargs : dict
         Keyword arguments for sklearn.kernel_ridge.KernelRidge
     sklearn_kwargs : dict
@@ -884,7 +813,7 @@ def kernel_ridge_regressor_model(model_dir: str = 'kernel_ridge_regressor_model/
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = KernelRidge(**kernel_ridge_regressor_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
 ###############################
@@ -892,15 +821,13 @@ def kernel_ridge_regressor_model(model_dir: str = 'kernel_ridge_regressor_model/
 ###############################
 
 
-def svc_model(model_dir: str = 'svc_model/', svc_kwargs: dict = None, sklearn_kwargs: dict = None) -> SklearnModel:
+def svc_model(svc_kwargs: dict = None, sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.svm.SVC.
     Reference: https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'svc_model/'
     svc_kwargs : dict
         Keyword arguments for sklearn.svm.SVC
     sklearn_kwargs : dict
@@ -915,10 +842,10 @@ def svc_model(model_dir: str = 'svc_model/', svc_kwargs: dict = None, sklearn_kw
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = SVC(**svc_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def nu_svc_model(model_dir: str = 'nu_svc_model/', nu_svc_kwargs: dict = None,
+def nu_svc_model(nu_svc_kwargs: dict = None,
                  sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.svm.NuSVC.
@@ -926,8 +853,6 @@ def nu_svc_model(model_dir: str = 'nu_svc_model/', nu_svc_kwargs: dict = None,
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'nu_svc_model/'
     nu_svc_kwargs : dict
         Keyword arguments for sklearn.svm.NuSVC
     sklearn_kwargs : dict
@@ -942,10 +867,10 @@ def nu_svc_model(model_dir: str = 'nu_svc_model/', nu_svc_kwargs: dict = None,
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = NuSVC(**nu_svc_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def linear_svc_model(model_dir: str = 'linear_svc_model/', linear_svc_kwargs: dict = None,
+def linear_svc_model(linear_svc_kwargs: dict = None,
                      sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.svm.LinearSVC.
@@ -953,8 +878,6 @@ def linear_svc_model(model_dir: str = 'linear_svc_model/', linear_svc_kwargs: di
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'linear_svc_model/'
     linear_svc_kwargs : dict
         Keyword arguments for sklearn.svm.LinearSVC
     sklearn_kwargs : dict
@@ -969,18 +892,16 @@ def linear_svc_model(model_dir: str = 'linear_svc_model/', linear_svc_kwargs: di
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = LinearSVC(**linear_svc_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def svr_model(model_dir: str = 'svr_model/', svr_kwargs: dict = None, sklearn_kwargs: dict = None) -> SklearnModel:
+def svr_model(svr_kwargs: dict = None, sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.svm.SVR.
     Reference: https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVR.html
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'svr_model/'
     svr_kwargs : dict
         Keyword arguments for sklearn.svm.SVR
     sklearn_kwargs : dict
@@ -995,10 +916,10 @@ def svr_model(model_dir: str = 'svr_model/', svr_kwargs: dict = None, sklearn_kw
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = SVR(**svr_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def nu_svr_model(model_dir: str = 'nu_svr_model/', nu_svr_kwargs: dict = None,
+def nu_svr_model(nu_svr_kwargs: dict = None,
                  sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.svm.NuSVR.
@@ -1006,8 +927,6 @@ def nu_svr_model(model_dir: str = 'nu_svr_model/', nu_svr_kwargs: dict = None,
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'nu_svr_model/'
     nu_svr_kwargs : dict
         Keyword arguments for sklearn.svm.NuSVR
     sklearn_kwargs : dict
@@ -1022,10 +941,10 @@ def nu_svr_model(model_dir: str = 'nu_svr_model/', nu_svr_kwargs: dict = None,
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = NuSVR(**nu_svr_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def linear_svr_model(model_dir: str = 'linear_svr_model/', linear_svr_kwargs: dict = None,
+def linear_svr_model(linear_svr_kwargs: dict = None,
                      sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.svm.LinearSVR.
@@ -1033,8 +952,6 @@ def linear_svr_model(model_dir: str = 'linear_svr_model/', linear_svr_kwargs: di
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'linear_svr_model/'
     linear_svr_kwargs : dict
         Keyword arguments for sklearn.svm.LinearSVR
     sklearn_kwargs : dict
@@ -1049,10 +966,10 @@ def linear_svr_model(model_dir: str = 'linear_svr_model/', linear_svr_kwargs: di
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = LinearSVR(**linear_svr_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def one_class_svm_model(model_dir: str = 'one_class_svm_model/', one_class_svm_kwargs: dict = None,
+def one_class_svm_model(one_class_svm_kwargs: dict = None,
                         sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.svm.OneClassSVM.
@@ -1060,8 +977,6 @@ def one_class_svm_model(model_dir: str = 'one_class_svm_model/', one_class_svm_k
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'one_class_svm_model/'
     one_class_svm_kwargs : dict
         Keyword arguments for sklearn.svm.OneClassSVM
     sklearn_kwargs : dict
@@ -1076,7 +991,7 @@ def one_class_svm_model(model_dir: str = 'one_class_svm_model/', one_class_svm_k
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = OneClassSVM(**one_class_svm_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
 ###################################
@@ -1084,7 +999,7 @@ def one_class_svm_model(model_dir: str = 'one_class_svm_model/', one_class_svm_k
 ###################################
 
 
-def sgd_regressor_model(model_dir: str = 'sgd_regressor_model/', sgd_regressor_kwargs: dict = None,
+def sgd_regressor_model(sgd_regressor_kwargs: dict = None,
                         sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.SGDRegressor.
@@ -1092,8 +1007,6 @@ def sgd_regressor_model(model_dir: str = 'sgd_regressor_model/', sgd_regressor_k
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'sgd_regressor_model/'
     sgd_regressor_kwargs : dict
         Keyword arguments for sklearn.linear_model.SGDRegressor
     sklearn_kwargs : dict
@@ -1108,10 +1021,10 @@ def sgd_regressor_model(model_dir: str = 'sgd_regressor_model/', sgd_regressor_k
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = SGDRegressor(**sgd_regressor_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def sgd_classifier_model(model_dir: str = 'sgd_classifier_model/', sgd_classifier_kwargs: dict = None,
+def sgd_classifier_model(sgd_classifier_kwargs: dict = None,
                          sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.SGDClassifier.
@@ -1119,8 +1032,6 @@ def sgd_classifier_model(model_dir: str = 'sgd_classifier_model/', sgd_classifie
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'sgd_classifier_model/'
     sgd_classifier_kwargs : dict
         Keyword arguments for sklearn.linear_model.SGDClassifier
     sklearn_kwargs : dict
@@ -1135,10 +1046,10 @@ def sgd_classifier_model(model_dir: str = 'sgd_classifier_model/', sgd_classifie
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = SGDClassifier(**sgd_classifier_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def sgd_one_class_svm_model(model_dir: str = 'sgd_one_class_svm/', sgd_one_class_svm_kwargs: dict = None,
+def sgd_one_class_svm_model(sgd_one_class_svm_kwargs: dict = None,
                             sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.linear_model.SGDOneClassSVM.
@@ -1146,8 +1057,6 @@ def sgd_one_class_svm_model(model_dir: str = 'sgd_one_class_svm/', sgd_one_class
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'sgd_one_class_svm/'
     sgd_one_class_svm_kwargs : dict
         Keyword arguments for sklearn.linear_model.SGDOneClassSVM
     sklearn_kwargs : dict
@@ -1162,7 +1071,7 @@ def sgd_one_class_svm_model(model_dir: str = 'sgd_one_class_svm/', sgd_one_class
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = SGDOneClassSVM(**sgd_one_class_svm_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
 #########################
@@ -1170,7 +1079,7 @@ def sgd_one_class_svm_model(model_dir: str = 'sgd_one_class_svm/', sgd_one_class
 #########################
 
 
-def kneighbors_regressor_model(model_dir: str = 'kneighbors_regressor_model/', kneighbors_regressor_kwargs: dict = None,
+def kneighbors_regressor_model(kneighbors_regressor_kwargs: dict = None,
                                sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.neighbors.KNeighborsRegressor.
@@ -1178,8 +1087,6 @@ def kneighbors_regressor_model(model_dir: str = 'kneighbors_regressor_model/', k
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'kneighbors_regressor_model/'
     kneighbors_regressor_kwargs : dict
         Keyword arguments for sklearn.neighbors.KNeighborsRegressor
     sklearn_kwargs : dict
@@ -1194,19 +1101,16 @@ def kneighbors_regressor_model(model_dir: str = 'kneighbors_regressor_model/', k
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = KNeighborsRegressor(**kneighbors_regressor_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def kneighbors_classifier_model(model_dir: str = 'kneighbors_classifier_model/',
-                                kneighbors_classifier_kwargs: dict = None, sklearn_kwargs: dict = None) -> SklearnModel:
+def kneighbors_classifier_model(kneighbors_classifier_kwargs: dict = None, sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.neighbors.KNeighborsClassifier.
     Reference: https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'kneighbors_classifier_model/'
     kneighbors_classifier_kwargs : dict
         Keyword arguments for sklearn.neighbors.KNeighborsClassifier
     sklearn_kwargs : dict
@@ -1221,11 +1125,10 @@ def kneighbors_classifier_model(model_dir: str = 'kneighbors_classifier_model/',
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = KNeighborsClassifier(**kneighbors_classifier_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def radius_neighbors_regressor_model(model_dir: str = 'radius_neighbors_regressor_model/',
-                                     radius_neighbors_regressor_kwargs: dict = None,
+def radius_neighbors_regressor_model(radius_neighbors_regressor_kwargs: dict = None,
                                      sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.neighbors.RadiusNeighborsRegressor.
@@ -1233,8 +1136,6 @@ def radius_neighbors_regressor_model(model_dir: str = 'radius_neighbors_regresso
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'radius_neighbors_regressor_model/'
     radius_neighbors_regressor_kwargs : dict
         Keyword arguments for sklearn.neighbors.RadiusNeighborsRegressor
     sklearn_kwargs : dict
@@ -1249,11 +1150,10 @@ def radius_neighbors_regressor_model(model_dir: str = 'radius_neighbors_regresso
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = RadiusNeighborsRegressor(**radius_neighbors_regressor_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def radius_neighbors_classifier_model(model_dir: str = 'radius_neighbors_classifier_model/',
-                                      radius_neighbors_classifier_kwargs: dict = None,
+def radius_neighbors_classifier_model(radius_neighbors_classifier_kwargs: dict = None,
                                       sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.neighbors.RadiusNeighborsClassifier.
@@ -1261,8 +1161,6 @@ def radius_neighbors_classifier_model(model_dir: str = 'radius_neighbors_classif
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'radius_neighbors_classifier_model/'
     radius_neighbors_classifier_kwargs : dict
         Keyword arguments for sklearn.neighbors.RadiusNeighborsClassifier
     sklearn_kwargs : dict
@@ -1277,10 +1175,10 @@ def radius_neighbors_classifier_model(model_dir: str = 'radius_neighbors_classif
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = RadiusNeighborsClassifier(**radius_neighbors_classifier_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def nearest_centroid_model(model_dir: str = 'nearest_centroid_model/', nearest_centroid_kwargs: dict = None,
+def nearest_centroid_model(nearest_centroid_kwargs: dict = None,
                            sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.neighbors.NearestCentroid.
@@ -1288,8 +1186,6 @@ def nearest_centroid_model(model_dir: str = 'nearest_centroid_model/', nearest_c
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'nearest_centroid_model/'
     nearest_centroid_kwargs : dict
         Keyword arguments for sklearn.neighbors.NearestCentroid
     sklearn_kwargs : dict
@@ -1304,15 +1200,14 @@ def nearest_centroid_model(model_dir: str = 'nearest_centroid_model/', nearest_c
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = NearestCentroid(**nearest_centroid_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
 ##########################
 ### Gaussian Processes ###
 ##########################
 
-def gaussian_process_regressor_model(model_dir: str = 'gaussian_process_regressor_model/',
-                                     gaussian_process_regressor_kwargs: dict = None,
+def gaussian_process_regressor_model(gaussian_process_regressor_kwargs: dict = None,
                                      sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.gaussian_process.GaussianProcessRegressor.
@@ -1320,8 +1215,6 @@ def gaussian_process_regressor_model(model_dir: str = 'gaussian_process_regresso
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'gaussian_process_regressor_model/'
     gaussian_process_regressor_kwargs : dict
         Keyword arguments for sklearn.gaussian_process.GaussianProcessRegressor
     sklearn_kwargs : dict
@@ -1336,11 +1229,10 @@ def gaussian_process_regressor_model(model_dir: str = 'gaussian_process_regresso
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = GaussianProcessRegressor(**gaussian_process_regressor_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def gaussian_process_classifier_model(model_dir: str = 'gaussian_process_classifier_model/',
-                                      gaussian_process_classifier_kwargs: dict = None,
+def gaussian_process_classifier_model(gaussian_process_classifier_kwargs: dict = None,
                                       sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.gaussian_process.GaussianProcessClassifier.
@@ -1348,8 +1240,6 @@ def gaussian_process_classifier_model(model_dir: str = 'gaussian_process_classif
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'gaussian_process_classifier_model/'
     gaussian_process_classifier_kwargs : dict
         Keyword arguments for sklearn.gaussian_process.GaussianProcessClassifier
     sklearn_kwargs : dict
@@ -1364,7 +1254,7 @@ def gaussian_process_classifier_model(model_dir: str = 'gaussian_process_classif
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = GaussianProcessClassifier(**gaussian_process_classifier_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
 ###########################
@@ -1372,7 +1262,7 @@ def gaussian_process_classifier_model(model_dir: str = 'gaussian_process_classif
 ###########################
 
 
-def pls_regression_model(model_dir: str = 'pls_regression_model/', pls_regression_kwargs: dict = None,
+def pls_regression_model(pls_regression_kwargs: dict = None,
                          sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.cross_decomposition.PLSRegression.
@@ -1380,8 +1270,6 @@ def pls_regression_model(model_dir: str = 'pls_regression_model/', pls_regressio
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'pls_regression_model/'
     pls_regression_kwargs : dict
         Keyword arguments for sklearn.cross_decomposition.PLSRegression
     sklearn_kwargs : dict
@@ -1396,7 +1284,7 @@ def pls_regression_model(model_dir: str = 'pls_regression_model/', pls_regressio
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = PLSRegression(**pls_regression_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
 ###################
@@ -1404,7 +1292,7 @@ def pls_regression_model(model_dir: str = 'pls_regression_model/', pls_regressio
 ###################
 
 
-def gaussian_nb_model(model_dir: str = 'gaussian_nb_model/', gaussian_nb_kwargs: dict = None,
+def gaussian_nb_model(gaussian_nb_kwargs: dict = None,
                       sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.naive_bayes.GaussianNB.
@@ -1412,8 +1300,6 @@ def gaussian_nb_model(model_dir: str = 'gaussian_nb_model/', gaussian_nb_kwargs:
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'gaussian_nb_model/'
     gaussian_nb_kwargs : dict
         Keyword arguments for sklearn.naive_bayes.GaussianNB
     sklearn_kwargs : dict
@@ -1428,10 +1314,10 @@ def gaussian_nb_model(model_dir: str = 'gaussian_nb_model/', gaussian_nb_kwargs:
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = GaussianNB(**gaussian_nb_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def multinomial_nb_model(model_dir: str = 'multinomial_nb_model/', multinomial_nb_kwargs: dict = None,
+def multinomial_nb_model(multinomial_nb_kwargs: dict = None,
                          sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.naive_bayes.MultinomialNB.
@@ -1439,8 +1325,6 @@ def multinomial_nb_model(model_dir: str = 'multinomial_nb_model/', multinomial_n
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'multinomial_nb_model/'
     multinomial_nb_kwargs : dict
         Keyword arguments for sklearn.naive_bayes.MultinomialNB
     sklearn_kwargs : dict
@@ -1455,10 +1339,10 @@ def multinomial_nb_model(model_dir: str = 'multinomial_nb_model/', multinomial_n
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = MultinomialNB(**multinomial_nb_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def bernoulli_nb_model(model_dir: str = 'bernoulli_nb_model/', bernoulli_nb_kwargs: dict = None,
+def bernoulli_nb_model(bernoulli_nb_kwargs: dict = None,
                        sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.naive_bayes.BernoulliNB.
@@ -1466,8 +1350,6 @@ def bernoulli_nb_model(model_dir: str = 'bernoulli_nb_model/', bernoulli_nb_kwar
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'bernoulli_nb_model/'
     bernoulli_nb_kwargs : dict
         Keyword arguments for sklearn.naive_bayes.BernoulliNB
     sklearn_kwargs : dict
@@ -1482,10 +1364,10 @@ def bernoulli_nb_model(model_dir: str = 'bernoulli_nb_model/', bernoulli_nb_kwar
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = BernoulliNB(**bernoulli_nb_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def categorical_nb_model(model_dir: str = 'categorical_nb_model/', categorical_nb_kwargs: dict = None,
+def categorical_nb_model(categorical_nb_kwargs: dict = None,
                          sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.naive_bayes.CategoricalNB.
@@ -1493,8 +1375,6 @@ def categorical_nb_model(model_dir: str = 'categorical_nb_model/', categorical_n
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'categorical_nb_model/'
     categorical_nb_kwargs : dict
         Keyword arguments for sklearn.naive_bayes.CategoricalNB
     sklearn_kwargs : dict
@@ -1509,10 +1389,10 @@ def categorical_nb_model(model_dir: str = 'categorical_nb_model/', categorical_n
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = CategoricalNB(**categorical_nb_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def complement_nb_model(model_dir: str = 'complement_nb_model/', complement_nb_kwargs: dict = None,
+def complement_nb_model(complement_nb_kwargs: dict = None,
                         sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.naive_bayes.ComplementNB.
@@ -1520,8 +1400,6 @@ def complement_nb_model(model_dir: str = 'complement_nb_model/', complement_nb_k
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'complement_nb_model/'
     complement_nb_kwargs : dict
         Keyword arguments for sklearn.naive_bayes.ComplementNB
     sklearn_kwargs : dict
@@ -1536,7 +1414,7 @@ def complement_nb_model(model_dir: str = 'complement_nb_model/', complement_nb_k
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = ComplementNB(**complement_nb_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
 ######################
@@ -1544,8 +1422,7 @@ def complement_nb_model(model_dir: str = 'complement_nb_model/', complement_nb_k
 ######################
 
 
-def decision_tree_regressor_model(model_dir: str = 'decision_tree_regressor_model/',
-                                  decision_tree_regressor_kwargs: dict = None,
+def decision_tree_regressor_model(decision_tree_regressor_kwargs: dict = None,
                                   sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.tree.DecisionTreeRegressor.
@@ -1553,8 +1430,6 @@ def decision_tree_regressor_model(model_dir: str = 'decision_tree_regressor_mode
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'decision_tree_regressor_model/'
     decision_tree_regressor_kwargs : dict
         Keyword arguments for sklearn.tree.DecisionTreeRegressor
     sklearn_kwargs : dict
@@ -1569,11 +1444,10 @@ def decision_tree_regressor_model(model_dir: str = 'decision_tree_regressor_mode
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = DecisionTreeRegressor(**decision_tree_regressor_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def decision_tree_classifier_model(model_dir: str = 'decision_tree_classifier_model/',
-                                   decision_tree_classifier_kwargs: dict = None,
+def decision_tree_classifier_model(decision_tree_classifier_kwargs: dict = None,
                                    sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.tree.DecisionTreeClassifier.
@@ -1581,8 +1455,6 @@ def decision_tree_classifier_model(model_dir: str = 'decision_tree_classifier_mo
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'decision_tree_classifier_model/'
     decision_tree_classifier_kwargs : dict
         Keyword arguments for sklearn.tree.DecisionTreeClassifier
     sklearn_kwargs : dict
@@ -1597,10 +1469,10 @@ def decision_tree_classifier_model(model_dir: str = 'decision_tree_classifier_mo
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = DecisionTreeClassifier(**decision_tree_classifier_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def extra_tree_regressor_model(model_dir: str = 'extra_tree_regressor_model/', extra_tree_regressor_kwargs: dict = None,
+def extra_tree_regressor_model(extra_tree_regressor_kwargs: dict = None,
                                sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.tree.ExtraTreeRegressor.
@@ -1608,8 +1480,6 @@ def extra_tree_regressor_model(model_dir: str = 'extra_tree_regressor_model/', e
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'extra_tree_regressor_model/'
     extra_tree_regressor_kwargs : dict
         Keyword arguments for sklearn.tree.ExtraTreeRegressor
     sklearn_kwargs : dict
@@ -1624,19 +1494,16 @@ def extra_tree_regressor_model(model_dir: str = 'extra_tree_regressor_model/', e
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = ExtraTreeRegressor(**extra_tree_regressor_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def extra_tree_classifier_model(model_dir: str = 'extra_tree_classifier_model/',
-                                extra_tree_classifier_kwargs: dict = None, sklearn_kwargs: dict = None) -> SklearnModel:
+def extra_tree_classifier_model(extra_tree_classifier_kwargs: dict = None, sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.tree.ExtraTreeClassifier.
     Reference: https://scikit-learn.org/stable/modules/generated/sklearn.tree.ExtraTreeClassifier.html
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'extra_tree_classifier_model/'
     extra_tree_classifier_kwargs : dict
         Keyword arguments for sklearn.tree.ExtraTreeClassifier
     sklearn_kwargs : dict
@@ -1651,7 +1518,7 @@ def extra_tree_classifier_model(model_dir: str = 'extra_tree_classifier_model/',
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = ExtraTreeClassifier(**extra_tree_classifier_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
 ########################
@@ -1659,8 +1526,7 @@ def extra_tree_classifier_model(model_dir: str = 'extra_tree_classifier_model/',
 ########################
 
 
-def random_forest_regressor_model(model_dir: str = 'random_forest_regressor_model/',
-                                  random_forest_regressor_kwargs: dict = None,
+def random_forest_regressor_model(random_forest_regressor_kwargs: dict = None,
                                   sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.ensemble.RandomForestRegressor.
@@ -1668,8 +1534,6 @@ def random_forest_regressor_model(model_dir: str = 'random_forest_regressor_mode
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'random_forest_regressor_model/'
     random_forest_regressor_kwargs : dict
         Keyword arguments for sklearn.ensemble.RandomForestRegressor
     sklearn_kwargs : dict
@@ -1684,11 +1548,10 @@ def random_forest_regressor_model(model_dir: str = 'random_forest_regressor_mode
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = RandomForestRegressor(**random_forest_regressor_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def random_forest_classifier_model(model_dir: str = 'random_forest_classifier_model/',
-                                   random_forest_classifier_kwargs: dict = None,
+def random_forest_classifier_model(random_forest_classifier_kwargs: dict = None,
                                    sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.ensemble.RandomForestClassifier.
@@ -1696,8 +1559,6 @@ def random_forest_classifier_model(model_dir: str = 'random_forest_classifier_mo
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'random_forest_classifier_model/'
     random_forest_classifier_kwargs : dict
         Keyword arguments for sklearn.ensemble.RandomForestClassifier
     sklearn_kwargs : dict
@@ -1712,11 +1573,10 @@ def random_forest_classifier_model(model_dir: str = 'random_forest_classifier_mo
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = RandomForestClassifier(**random_forest_classifier_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def extra_trees_regressor_model(model_dir: str = 'extra_trees_regressor_model/',
-                                extra_trees_regressor_kwargs: dict = None,
+def extra_trees_regressor_model(extra_trees_regressor_kwargs: dict = None,
                                 sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.ensemble.ExtraTreesRegressor.
@@ -1724,8 +1584,6 @@ def extra_trees_regressor_model(model_dir: str = 'extra_trees_regressor_model/',
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'extra_trees_regressor_model/'
     extra_trees_regressor_kwargs : dict
         Keyword arguments for sklearn.ensemble.ExtraTreesRegressor
     sklearn_kwargs : dict
@@ -1740,11 +1598,10 @@ def extra_trees_regressor_model(model_dir: str = 'extra_trees_regressor_model/',
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = ExtraTreesRegressor(**extra_trees_regressor_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def extra_trees_classifier_model(model_dir: str = 'extra_trees_classifier_model/',
-                                 extra_trees_classifier_kwargs: dict = None,
+def extra_trees_classifier_model(extra_trees_classifier_kwargs: dict = None,
                                  sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.ensemble.ExtraTreesClassifier.
@@ -1752,8 +1609,6 @@ def extra_trees_classifier_model(model_dir: str = 'extra_trees_classifier_model/
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'extra_trees_classifier_model/'
     extra_trees_classifier_kwargs : dict
         Keyword arguments for sklearn.ensemble.ExtraTreesClassifier
     sklearn_kwargs : dict
@@ -1768,10 +1623,10 @@ def extra_trees_classifier_model(model_dir: str = 'extra_trees_classifier_model/
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = ExtraTreesClassifier(**extra_trees_classifier_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def ada_boost_regressor_model(model_dir: str = 'ada_boost_regressor_model/', ada_boost_regressor_kwargs: dict = None,
+def ada_boost_regressor_model(ada_boost_regressor_kwargs: dict = None,
                               sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.ensemble.AdaBoostRegressor.
@@ -1779,8 +1634,6 @@ def ada_boost_regressor_model(model_dir: str = 'ada_boost_regressor_model/', ada
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'ada_boost_regressor_model/'
     ada_boost_regressor_kwargs : dict
         Keyword arguments for sklearn.ensemble.AdaBoostRegressor
     sklearn_kwargs : dict
@@ -1795,10 +1648,10 @@ def ada_boost_regressor_model(model_dir: str = 'ada_boost_regressor_model/', ada
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = AdaBoostRegressor(**ada_boost_regressor_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def ada_boost_classifier_model(model_dir: str = 'ada_boost_classifier_model/', ada_boost_classifier_kwargs: dict = None,
+def ada_boost_classifier_model(ada_boost_classifier_kwargs: dict = None,
                                sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.ensemble.AdaBoostClassifier.
@@ -1806,8 +1659,6 @@ def ada_boost_classifier_model(model_dir: str = 'ada_boost_classifier_model/', a
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'ada_boost_classifier_model/'
     ada_boost_classifier_kwargs : dict
         Keyword arguments for sklearn.ensemble.AdaBoostClassifier
     sklearn_kwargs : dict
@@ -1822,11 +1673,10 @@ def ada_boost_classifier_model(model_dir: str = 'ada_boost_classifier_model/', a
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = AdaBoostClassifier(**ada_boost_classifier_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def gradient_boosting_regressor_model(model_dir: str = 'gradient_boosting_regressor_model/',
-                                      gradient_boosting_regressor_kwargs: dict = None,
+def gradient_boosting_regressor_model(gradient_boosting_regressor_kwargs: dict = None,
                                       sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.ensemble.GradientBoostingRegressor.
@@ -1834,8 +1684,6 @@ def gradient_boosting_regressor_model(model_dir: str = 'gradient_boosting_regres
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'gradient_boosting_regressor_model/'
     gradient_boosting_regressor_kwargs : dict
         Keyword arguments for sklearn.ensemble.GradientBoostingRegressor
     sklearn_kwargs : dict
@@ -1850,11 +1698,10 @@ def gradient_boosting_regressor_model(model_dir: str = 'gradient_boosting_regres
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = GradientBoostingRegressor(**gradient_boosting_regressor_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def gradient_boosting_classifier_model(model_dir: str = 'gradient_boosting_classifier_model/',
-                                       gradient_boosting_classifier_kwargs: dict = None,
+def gradient_boosting_classifier_model(gradient_boosting_classifier_kwargs: dict = None,
                                        sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.ensemble.GradientBoostingClassifier.
@@ -1862,8 +1709,6 @@ def gradient_boosting_classifier_model(model_dir: str = 'gradient_boosting_class
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'gradient_boosting_classifier_model/'
     gradient_boosting_classifier_kwargs : dict
         Keyword arguments for sklearn.ensemble.GradientBoostingClassifier
     sklearn_kwargs : dict
@@ -1878,11 +1723,10 @@ def gradient_boosting_classifier_model(model_dir: str = 'gradient_boosting_class
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = GradientBoostingClassifier(**gradient_boosting_classifier_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def hist_gradient_boosting_regressor_model(model_dir: str = 'hist_gradient_boosting_regressor_model/',
-                                           hist_gradient_boosting_regressor_kwargs: dict = None,
+def hist_gradient_boosting_regressor_model(hist_gradient_boosting_regressor_kwargs: dict = None,
                                            sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.ensemble.HistGradientBoostingRegressor.
@@ -1890,8 +1734,6 @@ def hist_gradient_boosting_regressor_model(model_dir: str = 'hist_gradient_boost
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'hist_gradient_boosting_regressor_model/'
     hist_gradient_boosting_regressor_kwargs : dict
         Keyword arguments for sklearn.ensemble.HistGradientBoostingRegressor
     sklearn_kwargs : dict
@@ -1906,11 +1748,10 @@ def hist_gradient_boosting_regressor_model(model_dir: str = 'hist_gradient_boost
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = HistGradientBoostingRegressor(**hist_gradient_boosting_regressor_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def hist_gradient_boosting_classifier_model(model_dir: str = 'hist_gradient_boosting_classifier_model/',
-                                            hist_gradient_boosting_classifier_kwargs: dict = None,
+def hist_gradient_boosting_classifier_model(hist_gradient_boosting_classifier_kwargs: dict = None,
                                             sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.ensemble.HistGradientBoostingClassifier.
@@ -1918,8 +1759,6 @@ def hist_gradient_boosting_classifier_model(model_dir: str = 'hist_gradient_boos
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'hist_gradient_boosting_classifier_model/'
     hist_gradient_boosting_classifier_kwargs : dict
         Keyword arguments for sklearn.ensemble.HistGradientBoostingClassifier
     sklearn_kwargs : dict
@@ -1934,10 +1773,10 @@ def hist_gradient_boosting_classifier_model(model_dir: str = 'hist_gradient_boos
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = HistGradientBoostingClassifier(**hist_gradient_boosting_classifier_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def voting_regressor_model(model_dir: str = 'voting_regressor_model/', voting_regressor_kwargs: dict = None,
+def voting_regressor_model(voting_regressor_kwargs: dict = None,
                            sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.ensemble.VotingRegressor.
@@ -1945,8 +1784,6 @@ def voting_regressor_model(model_dir: str = 'voting_regressor_model/', voting_re
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'voting_regressor_model/'
     voting_regressor_kwargs : dict
         Keyword arguments for sklearn.ensemble.VotingRegressor
     sklearn_kwargs : dict
@@ -1961,10 +1798,10 @@ def voting_regressor_model(model_dir: str = 'voting_regressor_model/', voting_re
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = VotingRegressor(**voting_regressor_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def voting_classifier_model(model_dir: str = 'voting_classifier_model/', voting_classifier_kwargs: dict = None,
+def voting_classifier_model(voting_classifier_kwargs: dict = None,
                             sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.ensemble.VotingClassifier.
@@ -1972,8 +1809,6 @@ def voting_classifier_model(model_dir: str = 'voting_classifier_model/', voting_
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'voting_classifier_model/'
     voting_classifier_kwargs : dict
         Keyword arguments for sklearn.ensemble.VotingClassifier
     sklearn_kwargs : dict
@@ -1988,10 +1823,10 @@ def voting_classifier_model(model_dir: str = 'voting_classifier_model/', voting_
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = VotingClassifier(**voting_classifier_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def stacking_regressor_model(model_dir: str = 'stacking_regressor_model/', stacking_regressor_kwargs: dict = None,
+def stacking_regressor_model(stacking_regressor_kwargs: dict = None,
                              sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.ensemble.StackingRegressor.
@@ -1999,8 +1834,6 @@ def stacking_regressor_model(model_dir: str = 'stacking_regressor_model/', stack
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'stacking_regressor_model/'
     stacking_regressor_kwargs : dict
         Keyword arguments for sklearn.ensemble.StackingRegressor
     sklearn_kwargs : dict
@@ -2015,10 +1848,10 @@ def stacking_regressor_model(model_dir: str = 'stacking_regressor_model/', stack
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = StackingRegressor(**stacking_regressor_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def stacking_classifier_model(model_dir: str = 'stacking_classifier_model/', stacking_classifier_kwargs: dict = None,
+def stacking_classifier_model(stacking_classifier_kwargs: dict = None,
                               sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.ensemble.StackingClassifier.
@@ -2026,8 +1859,6 @@ def stacking_classifier_model(model_dir: str = 'stacking_classifier_model/', sta
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'stacking_classifier_model/'
     stacking_classifier_kwargs : dict
         Keyword arguments for sklearn.ensemble.StackingClassifier
     sklearn_kwargs : dict
@@ -2042,10 +1873,10 @@ def stacking_classifier_model(model_dir: str = 'stacking_classifier_model/', sta
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = StackingClassifier(**stacking_classifier_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def bagging_regressor_model(model_dir: str = 'bagging_regressor_model/', bagging_regressor_kwargs: dict = None,
+def bagging_regressor_model(bagging_regressor_kwargs: dict = None,
                             sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.ensemble.BaggingRegressor.
@@ -2053,8 +1884,6 @@ def bagging_regressor_model(model_dir: str = 'bagging_regressor_model/', bagging
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'bagging_regressor_model/'
     bagging_regressor_kwargs : dict
         Keyword arguments for sklearn.ensemble.BaggingRegressor
     sklearn_kwargs : dict
@@ -2069,10 +1898,10 @@ def bagging_regressor_model(model_dir: str = 'bagging_regressor_model/', bagging
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = BaggingRegressor(**bagging_regressor_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def bagging_classifier_model(model_dir: str = 'bagging_classifier_model/', bagging_classifier_kwargs: dict = None,
+def bagging_classifier_model(bagging_classifier_kwargs: dict = None,
                              sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.ensemble.BaggingClassifier.
@@ -2080,8 +1909,6 @@ def bagging_classifier_model(model_dir: str = 'bagging_classifier_model/', baggi
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'bagging_classifier_model/'
     bagging_classifier_kwargs : dict
         Keyword arguments for sklearn.ensemble.BaggingClassifier
     sklearn_kwargs : dict
@@ -2096,7 +1923,7 @@ def bagging_classifier_model(model_dir: str = 'bagging_classifier_model/', baggi
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = BaggingClassifier(**bagging_classifier_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
 #############################################
@@ -2104,8 +1931,7 @@ def bagging_classifier_model(model_dir: str = 'bagging_classifier_model/', baggi
 #############################################
 
 
-def one_vs_rest_classifier_model(model_dir: str = 'one_vs_rest_classifier_model/',
-                                 one_vs_rest_classifier_kwargs: dict = None,
+def one_vs_rest_classifier_model(one_vs_rest_classifier_kwargs: dict = None,
                                  sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.multiclass.OneVsRestClassifier.
@@ -2113,8 +1939,6 @@ def one_vs_rest_classifier_model(model_dir: str = 'one_vs_rest_classifier_model/
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'one_vs_rest_classifier_model/'
     one_vs_rest_classifier_kwargs : dict
         Keyword arguments for sklearn.multiclass.OneVsRestClassifier
     sklearn_kwargs : dict
@@ -2129,19 +1953,16 @@ def one_vs_rest_classifier_model(model_dir: str = 'one_vs_rest_classifier_model/
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = OneVsRestClassifier(**one_vs_rest_classifier_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def one_vs_one_classifier_model(model_dir: str = 'one_vs_one_classifier_model/',
-                                one_vs_one_classifier_kwargs: dict = None, sklearn_kwargs: dict = None) -> SklearnModel:
+def one_vs_one_classifier_model(one_vs_one_classifier_kwargs: dict = None, sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.multiclass.OneVsOneClassifier.
     Reference: https://scikit-learn.org/stable/modules/generated/sklearn.multiclass.OneVsOneClassifier.html
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'one_vs_one_classifier_model/'
     one_vs_one_classifier_kwargs : dict
         Keyword arguments for sklearn.multiclass.OneVsOneClassifier
     sklearn_kwargs : dict
@@ -2156,11 +1977,10 @@ def one_vs_one_classifier_model(model_dir: str = 'one_vs_one_classifier_model/',
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = OneVsOneClassifier(**one_vs_one_classifier_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def output_code_classifier_model(model_dir: str = 'output_code_classifier_model/',
-                                 output_code_classifier_kwargs: dict = None,
+def output_code_classifier_model(output_code_classifier_kwargs: dict = None,
                                  sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.multiclass.OutputCodeClassifier.
@@ -2168,8 +1988,6 @@ def output_code_classifier_model(model_dir: str = 'output_code_classifier_model/
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'output_code_classifier_model/'
     output_code_classifier_kwargs : dict
         Keyword arguments for sklearn.multiclass.OutputCodeClassifier
     sklearn_kwargs : dict
@@ -2184,11 +2002,10 @@ def output_code_classifier_model(model_dir: str = 'output_code_classifier_model/
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = OutputCodeClassifier(**output_code_classifier_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def multi_output_classifier_model(model_dir: str = 'multi_output_classifier_model/',
-                                  multi_output_classifier_kwargs: dict = None,
+def multi_output_classifier_model(multi_output_classifier_kwargs: dict = None,
                                   sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.multioutput.MultiOutputClassifier.
@@ -2196,8 +2013,6 @@ def multi_output_classifier_model(model_dir: str = 'multi_output_classifier_mode
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'multi_output_classifier_model/'
     multi_output_classifier_kwargs : dict
         Keyword arguments for sklearn.multioutput.MultiOutputClassifier
     sklearn_kwargs : dict
@@ -2212,10 +2027,10 @@ def multi_output_classifier_model(model_dir: str = 'multi_output_classifier_mode
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = MultiOutputClassifier(**multi_output_classifier_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def classifier_chain_model(model_dir: str = 'classifier_chain_model/', classifier_chain_kwargs: dict = None,
+def classifier_chain_model(classifier_chain_kwargs: dict = None,
                            sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.multioutput.ClassifierChain.
@@ -2223,8 +2038,6 @@ def classifier_chain_model(model_dir: str = 'classifier_chain_model/', classifie
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'classifier_chain_model/'
     classifier_chain_kwargs : dict
         Keyword arguments for sklearn.multioutput.ClassifierChain
     sklearn_kwargs : dict
@@ -2240,11 +2053,10 @@ def classifier_chain_model(model_dir: str = 'classifier_chain_model/', classifie
     # Classification model
     estimator = classifier_chain_kwargs.pop('estimator', None)
     model = ClassifierChain(estimator, **classifier_chain_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def multi_output_regressor_model(model_dir: str = 'multi_output_regressor_model/',
-                                 multi_output_regressor_kwargs: dict = None,
+def multi_output_regressor_model(multi_output_regressor_kwargs: dict = None,
                                  sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.multioutput.MultiOutputRegressor.
@@ -2252,8 +2064,6 @@ def multi_output_regressor_model(model_dir: str = 'multi_output_regressor_model/
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'multi_output_regressor_model/'
     multi_output_regressor_kwargs : dict
         Keyword arguments for sklearn.multioutput.MultiOutputRegressor
     sklearn_kwargs : dict
@@ -2268,10 +2078,10 @@ def multi_output_regressor_model(model_dir: str = 'multi_output_regressor_model/
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = MultiOutputRegressor(**multi_output_regressor_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def regressor_chain_model(model_dir: str = 'regressor_chain_model/', regressor_chain_kwargs: dict = None,
+def regressor_chain_model(regressor_chain_kwargs: dict = None,
                           sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.multioutput.RegressorChain.
@@ -2279,8 +2089,6 @@ def regressor_chain_model(model_dir: str = 'regressor_chain_model/', regressor_c
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'regressor_chain_model/'
     regressor_chain_kwargs : dict
         Keyword arguments for sklearn.multioutput.RegressorChain
     sklearn_kwargs : dict
@@ -2296,7 +2104,7 @@ def regressor_chain_model(model_dir: str = 'regressor_chain_model/', regressor_c
     # Regression model
     estimator = regressor_chain_kwargs.pop('estimator', None)
     model = RegressorChain(estimator, **regressor_chain_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
 ###########################
@@ -2304,7 +2112,7 @@ def regressor_chain_model(model_dir: str = 'regressor_chain_model/', regressor_c
 ###########################
 
 
-def isotonic_regression_model(model_dir: str = 'isotonic_regression_model/', isotonic_regression_kwargs: dict = None,
+def isotonic_regression_model(isotonic_regression_kwargs: dict = None,
                               sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.isotonic.IsotonicRegression.
@@ -2312,8 +2120,6 @@ def isotonic_regression_model(model_dir: str = 'isotonic_regression_model/', iso
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'isotonic_regression_model/'
     isotonic_regression_kwargs : dict
         Keyword arguments for sklearn.isotonic.IsotonicRegression
     sklearn_kwargs : dict
@@ -2328,7 +2134,7 @@ def isotonic_regression_model(model_dir: str = 'isotonic_regression_model/', iso
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = IsotonicRegression(**isotonic_regression_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
 #############################
@@ -2336,7 +2142,7 @@ def isotonic_regression_model(model_dir: str = 'isotonic_regression_model/', iso
 #############################
 
 
-def mlp_regressor_model(model_dir: str = 'mlp_regressor_model/', mlp_regressor_kwargs: dict = None,
+def mlp_regressor_model(mlp_regressor_kwargs: dict = None,
                         sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.neural_network.MLPRegressor.
@@ -2344,8 +2150,6 @@ def mlp_regressor_model(model_dir: str = 'mlp_regressor_model/', mlp_regressor_k
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'mlp_regressor_model/'
     mlp_regressor_kwargs : dict
         Keyword arguments for sklearn.neural_network.MLPRegressor
     sklearn_kwargs : dict
@@ -2360,10 +2164,10 @@ def mlp_regressor_model(model_dir: str = 'mlp_regressor_model/', mlp_regressor_k
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = MLPRegressor(**mlp_regressor_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def mlp_classifier_model(model_dir: str = 'mlp_classifier_model/', mlp_classifier_kwargs: dict = None,
+def mlp_classifier_model(mlp_classifier_kwargs: dict = None,
                          sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.neural_network.MLPClassifier.
@@ -2371,8 +2175,6 @@ def mlp_classifier_model(model_dir: str = 'mlp_classifier_model/', mlp_classifie
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'mlp_classifier_model/'
     mlp_classifier_kwargs : dict
         Keyword arguments for sklearn.neural_network.MLPClassifier
     sklearn_kwargs : dict
@@ -2387,10 +2189,10 @@ def mlp_classifier_model(model_dir: str = 'mlp_classifier_model/', mlp_classifie
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = MLPClassifier(**mlp_classifier_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def label_propagation_model(model_dir: str = 'label_propagation_model/', label_propagation_kwargs: dict = None,
+def label_propagation_model(label_propagation_kwargs: dict = None,
                             sklearn_kwargs: dict = None) -> SklearnModel:
     """
     DeepMol wrapper for sklearn.semi_supervised.LabelPropagation.
@@ -2398,8 +2200,6 @@ def label_propagation_model(model_dir: str = 'label_propagation_model/', label_p
 
     Parameters
     ----------
-    model_dir : str
-        Directory where the model will be saved, by default 'label_propagation_model/'
     label_propagation_kwargs : dict
         Keyword arguments for sklearn.semi_supervised.LabelPropagation
     sklearn_kwargs : dict
@@ -2414,31 +2214,29 @@ def label_propagation_model(model_dir: str = 'label_propagation_model/', label_p
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = LabelPropagation(**label_propagation_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)
 
 
-def label_spreading_model(model_dir: str = 'label_spreading_model/', label_spreading_kwargs: dict = None,
+def label_spreading_model(label_spreading_kwargs: dict = None,
                           sklearn_kwargs: dict = None) -> SklearnModel:
     """
-        DeepMol wrapper for sklearn.semi_supervised.LabelSpreading.
-        Reference: https://scikit-learn.org/stable/modules/generated/sklearn.semi_supervised.LabelSpreading.html
+    DeepMol wrapper for sklearn.semi_supervised.LabelSpreading.
+    Reference: https://scikit-learn.org/stable/modules/generated/sklearn.semi_supervised.LabelSpreading.html
 
-        Parameters
-        ----------
-        model_dir : str
-            Directory where the model will be saved, by default 'label_spreading_model/'
-        label_spreading_kwargs : dict
-            Keyword arguments for sklearn.semi_supervised.LabelSpreading
-        sklearn_kwargs : dict
-            Keyword arguments for SklearnModel
+    Parameters
+    ----------
+    label_spreading_kwargs : dict
+        Keyword arguments for sklearn.semi_supervised.LabelSpreading
+    sklearn_kwargs : dict
+        Keyword arguments for SklearnModel
 
-        Returns
-        -------
-        SklearnModel
-            Wrapped sklearn.semi_supervised.LabelSpreading
-        """
+    Returns
+    -------
+    SklearnModel
+        Wrapped sklearn.semi_supervised.LabelSpreading
+    """
     label_spreading_kwargs = label_spreading_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
     model = LabelSpreading(**label_spreading_kwargs)
-    return SklearnModel(model=model, model_dir=model_dir, **sklearn_kwargs)
+    return SklearnModel(model=model, **sklearn_kwargs)

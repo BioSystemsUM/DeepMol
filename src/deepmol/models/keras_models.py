@@ -13,6 +13,8 @@ from deepmol.datasets import Dataset
 from tensorflow.keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
 from sklearn.base import clone
 
+import tensorflow as tf
+
 from deepmol.utils.utils import normalize_labels_shape
 
 
@@ -74,7 +76,7 @@ class KerasModel(Model):
         else:
             self.model = model_builder(**kwargs)
 
-        self.initial_weights = self.model.get_weights()
+        self.history = None
 
         super().__init__(self.model, model_dir, **kwargs)
 
@@ -96,7 +98,7 @@ class KerasModel(Model):
         kwargs:
             Additional arguments to pass to `fit` method of the keras model.
         """
-        self.model.set_weights(self.initial_weights)
+        tf.keras.backend.clear_session()
         if self.mode != dataset.mode:
             raise ValueError('Dataset mode does not match model mode.')
 
@@ -106,7 +108,7 @@ class KerasModel(Model):
         else:
             targets = [dataset.y[:, i] for i in range(len(dataset.label_names))]
             y = {f"{dataset.label_names[i]}": targets[i] for i in range(len(dataset.label_names))}
-        self.model.fit(features, y, **kwargs)
+        self.history = self.model.fit(features, y, **kwargs)
 
     def predict(self, dataset: Dataset) -> np.ndarray:
         """

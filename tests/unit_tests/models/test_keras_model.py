@@ -100,10 +100,9 @@ class TestKerasModel(ModelsTestCase, TestCase):
         keras_kwargs = {}
         models = [keras_fcnn_model, keras_1d_cnn_model, keras_tabular_transformer_model]
         for f_model in models:
-            model = f_model(model_dir='test_model', model_kwargs=model_kwargs, keras_kwargs=keras_kwargs)
+            model = f_model(model_kwargs=model_kwargs, keras_kwargs=keras_kwargs)
 
             model.fit(self.binary_dataset)
-
             first_predictions = model.predict(self.binary_dataset_test)
 
             model.save("test_model")
@@ -114,13 +113,20 @@ class TestKerasModel(ModelsTestCase, TestCase):
 
             shutil.rmtree("test_model")
 
+    def test_weights_reset(self):
+        model = keras_fcnn_model(model_kwargs={'input_dim': 50}, keras_kwargs={})
+        model.fit(self.binary_dataset)
+        last_loss = model.history.history['loss'][-1]
+        model.fit(self.binary_dataset)
+        self.assertGreater(model.history.history['loss'][0], last_loss)
+
     @skip("This test is too slow for CI")
     def test_rnn_baseline_models(self):
         model_kwargs = {'input_dim': (50, 10)}
         keras_kwargs = {}
         models = [keras_rnn_model, keras_simple_rnn_model, keras_bidirectional_rnn_model]
         for f_model in models:
-            model = f_model(model_dir='test_model', model_kwargs=model_kwargs, keras_kwargs=keras_kwargs)
+            model = f_model(model_kwargs=model_kwargs, keras_kwargs=keras_kwargs)
 
             model.fit(self.one_hot_encoded_dataset)
 

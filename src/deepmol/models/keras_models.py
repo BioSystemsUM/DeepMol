@@ -74,6 +74,8 @@ class KerasModel(Model):
         else:
             self.model = model_builder(**kwargs)
 
+        self.initial_weights = self.model.get_weights()
+
         super().__init__(self.model, model_dir, **kwargs)
 
     @property
@@ -94,6 +96,7 @@ class KerasModel(Model):
         kwargs:
             Additional arguments to pass to `fit` method of the keras model.
         """
+        self.model.set_weights(self.initial_weights)
         if self.mode != dataset.mode:
             raise ValueError('Dataset mode does not match model mode.')
 

@@ -275,7 +275,7 @@ class Pipeline(Transformer):
                                 'path': f'{name}.pkl'}
 
         if self.is_prediction_pipeline():
-            predictor_path = os.path.join(self.path, f'{self.steps[-1][1].model_dir}')
+            predictor_path = os.path.join(self.path, "model")
             self.steps[-1][1].save(predictor_path)
             steps_to_save[len(self.steps) - 1] = {'name': self.steps[-1][0],
                                                   'type': 'predictor',

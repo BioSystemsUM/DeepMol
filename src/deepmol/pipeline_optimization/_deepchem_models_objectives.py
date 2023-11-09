@@ -36,8 +36,8 @@ def gat_model_steps(trial: Trial, model_dir: str = 'gat_model/', gat_kwargs: dic
     # model
     n_attention_heads = trial.suggest_int('n_attention_heads', 4, 10, step=2)
     gat_kwargs['n_attention_heads'] = n_attention_heads
-    agg_modes = trial.suggest_categorical('agg_modes', [['mean'], ['flatten']])
-    gat_kwargs['agg_modes'] = agg_modes
+    agg_modes = trial.suggest_categorical('agg_modes', [str(cat) for cat in [['mean'], ['flatten']]])
+    gat_kwargs['agg_modes'] = eval(agg_modes)
     dropout = trial.suggest_float('dropout', 0.0, 0.5, step=0.25)
     gat_kwargs['dropout'] = dropout
     predictor_dropout = trial.suggest_float('predictor_dropout', 0.0, 0.5, step=0.25)
@@ -72,8 +72,9 @@ def gcn_model_steps(trial: Trial, model_dir: str = 'gcn_model/', gcn_kwargs: dic
     # MolGraphConvFeaturizer
     featurizer = MolGraphConvFeat()
     # model
-    graph_conv_layers = trial.suggest_categorical('graph_conv_layers', [[32, 64], [64, 64], [64, 128]])
-    gcn_kwargs['graph_conv_layers'] = graph_conv_layers
+    graph_conv_layers = trial.suggest_categorical('graph_conv_layers',
+                                                  [str(cat) for cat in [[32, 64], [64, 64], [64, 128]]])
+    gcn_kwargs['graph_conv_layers'] = eval(graph_conv_layers)
     batchnorm = trial.suggest_categorical('batchnorm', [True, False])
     gcn_kwargs['batchnorm'] = batchnorm
     dropout = trial.suggest_float('dropout', 0.0, 0.5, step=0.25)
@@ -282,8 +283,9 @@ def cnn_model_steps(trial: Trial, model_dir: str = 'cnn_model/', cnn_kwargs: dic
     """
     # Classifier/ Regressor
     # works with 1D, 2D and 3D data
-    layer_filters = trial.suggest_categorical('layer_filters', [[100], [100, 100], [100, 100, 100]])
-    cnn_kwargs['layer_filters'] = layer_filters
+    layer_filters = trial.suggest_categorical('layer_filters',
+                                              [str(cat) for cat in [[100], [100, 100], [100, 100, 100]]])
+    cnn_kwargs['layer_filters'] = eval(layer_filters)
     kernel_size = trial.suggest_int('kernel_size', 3, 6)
     cnn_kwargs['kernel_size'] = kernel_size
     dropouts = trial.suggest_float('dropout', 0.0, 0.5, step=0.25)
@@ -319,8 +321,8 @@ def multitask_classifier_model_steps(trial: Trial, model_dir: str = 'multitask_c
     # 1D descriptors
     dropouts = trial.suggest_float('dropout', 0.0, 0.5, step=0.25)
     multitask_classifier_kwargs['dropouts'] = dropouts
-    layer_sizes = trial.suggest_categorical('layer_sizes', [[50], [100], [500], [200, 100]])
-    multitask_classifier_kwargs['layer_sizes'] = layer_sizes
+    layer_sizes = trial.suggest_categorical('layer_sizes', [str(cat) for cat in [[50], [100], [500], [200, 100]]])
+    multitask_classifier_kwargs['layer_sizes'] = eval(layer_sizes)
     model = multitask_classifier_model(model_dir=model_dir, multitask_classifier_kwargs=multitask_classifier_kwargs,
                                        deepchem_kwargs=deepchem_kwargs)
     return [('model', model)]
@@ -387,8 +389,8 @@ def progressive_multitask_classifier_model_steps(trial: Trial,
     # 1D Descriptors
     dropouts = trial.suggest_float('dropout', 0.0, 0.5, step=0.25)
     progressive_multitask_classifier_kwargs['dropouts'] = dropouts
-    layer_sizes = trial.suggest_categorical('layer_sizes', [[50], [100], [500], [200, 100]])
-    progressive_multitask_classifier_kwargs['layer_sizes'] = layer_sizes
+    layer_sizes = trial.suggest_categorical('layer_sizes', [str(cat) for cat in [[50], [100], [500], [200, 100]]])
+    progressive_multitask_classifier_kwargs['layer_sizes'] = eval(layer_sizes)
     model = progressive_multitask_classifier_model(model_dir=model_dir,
                                                    progressive_multitask_classifier_kwargs=progressive_multitask_classifier_kwargs,
                                                    deepchem_kwargs=deepchem_kwargs)
@@ -422,8 +424,8 @@ def robust_multitask_classifier_model_steps(trial: Trial, model_dir: str = 'robu
     # 1D Descriptors
     dropouts = trial.suggest_float('dropout', 0.0, 0.5, step=0.25)
     robust_multitask_classifier_kwargs['dropouts'] = dropouts
-    layer_sizes = trial.suggest_categorical('layer_sizes', [[50], [100], [500], [200, 100]])
-    robust_multitask_classifier_kwargs['layer_sizes'] = layer_sizes
+    layer_sizes = trial.suggest_categorical('layer_sizes', [str(cat) for cat in [[50], [100], [500], [200, 100]]])
+    robust_multitask_classifier_kwargs['layer_sizes'] = eval(layer_sizes)
     bypass_dropouts = trial.suggest_float('bypass_dropout', 0.0, 0.5, step=0.25)
     robust_multitask_classifier_kwargs['bypass_dropouts'] = bypass_dropouts
     model = robust_multitask_classifier_model(model_dir=model_dir,
@@ -458,8 +460,9 @@ def sc_score_model_steps(trial: Trial, model_dir: str = 'sc_score_model/', sc_sc
     # 1D Descriptors
     dropouts = trial.suggest_float('dropout', 0.0, 0.5, step=0.25)
     sc_score_kwargs['dropouts'] = dropouts
-    layer_sizes = trial.suggest_categorical('layer_sizes', [[100, 100, 100], [300, 300, 300], [500, 200, 100]])
-    sc_score_kwargs['layer_sizes'] = layer_sizes
+    layer_sizes = trial.suggest_categorical('layer_sizes',
+                                            [str(cat) for cat in [[100, 100, 100], [300, 300, 300], [500, 200, 100]]])
+    sc_score_kwargs['layer_sizes'] = eval(layer_sizes)
     model = sc_score_model(model_dir=model_dir, sc_score_kwargs=sc_score_kwargs, deepchem_kwargs=deepchem_kwargs)
     return [('model', model)]
 
@@ -521,8 +524,8 @@ def dag_model_steps(trial: Trial, model_dir: str = 'dag_model/', dag_kwargs: dic
     # Classifier/ Regressor
     # ConvMolFeaturizer
     featurizer = ConvMolFeat()
-    layer_sizes = trial.suggest_categorical('layer_sizes', [[50], [100], [500], [200, 100]])
-    dag_kwargs['layer_sizes'] = layer_sizes
+    layer_sizes = trial.suggest_categorical('layer_sizes', [str(cat) for cat in [[50], [100], [500], [200, 100]]])
+    dag_kwargs['layer_sizes'] = eval(layer_sizes)
     transformer = DagTransformer()
     model = dag_model(model_dir=model_dir, dag_kwargs=dag_kwargs, deepchem_kwargs=deepchem_kwargs)
     return [('featurizer', featurizer), ('transformer', transformer), ('model', model)]
@@ -553,11 +556,10 @@ def graph_conv_model_steps(trial: Trial, model_dir: str = 'graph_conv_model/', g
     # Classifier/ Regressor
     # ConvMolFeaturizer
     featurizer = ConvMolFeat()
-    graph_conv_layers = trial.suggest_categorical('graph_conv_layers_conv_model', [[64, 64],
-                                                                                   [128, 64],
-                                                                                   [256, 128],
-                                                                                   [256, 128, 64]])
-    graph_conv_kwargs['graph_conv_layers'] = graph_conv_layers
+    graph_conv_layers = trial.suggest_categorical('graph_conv_layers_conv_model',
+                                                  [str(cat) for cat in [[64, 64], [128, 64],
+                                                                        [256, 128], [256, 128, 64]]])
+    graph_conv_kwargs['graph_conv_layers'] = eval(graph_conv_layers)
     dense_layer_size = trial.suggest_categorical('dense_layer_size', [128, 256, 512])
     graph_conv_kwargs['dense_layer_size'] = dense_layer_size
     dropout = trial.suggest_float('dropout', 0.0, 0.5, step=0.25)
@@ -778,8 +780,8 @@ def progressive_multitask_regressor_model_steps(trial: Trial, model_dir: str = '
     # 1D Descriptors
     dropouts = trial.suggest_float('dropout', 0.0, 0.5, step=0.25)
     progressive_multitask_regressor_kwargs['dropouts'] = dropouts
-    layer_sizes = trial.suggest_categorical('layer_sizes', [[50], [100], [500], [200, 100]])
-    progressive_multitask_regressor_kwargs['layer_sizes'] = layer_sizes
+    layer_sizes = trial.suggest_categorical('layer_sizes', [str(cat) for cat in [[50], [100], [500], [200, 100]]])
+    progressive_multitask_regressor_kwargs['layer_sizes'] = eval(layer_sizes)
     model = progressive_multitask_regressor_model(model_dir=model_dir,
                                                   progressive_multitask_regressor_kwargs=progressive_multitask_regressor_kwargs,
                                                   deepchem_kwargs=deepchem_kwargs)
@@ -813,8 +815,8 @@ def multitask_regressor_model_steps(trial: Trial, model_dir: str = 'multitask_re
     # 1D Descriptors
     dropouts = trial.suggest_float('dropout', 0.0, 0.5, step=0.25)
     multitask_regressor_kwargs['dropouts'] = dropouts
-    layer_sizes = trial.suggest_categorical('layer_sizes', [[50], [100], [500], [200, 100]])
-    multitask_regressor_kwargs['layer_sizes'] = layer_sizes
+    layer_sizes = trial.suggest_categorical('layer_sizes', [str(cat) for cat in [[50], [100], [500], [200, 100]]])
+    multitask_regressor_kwargs['layer_sizes'] = eval(layer_sizes)
     model = multitask_regressor_model(model_dir=model_dir, multitask_regressor_kwargs=multitask_regressor_kwargs,
                                       deepchem_kwargs=deepchem_kwargs)
     return [('model', model)]
@@ -847,8 +849,8 @@ def robust_multitask_regressor_model_steps(trial: Trial, model_dir: str = 'robus
     # 1D Descriptors
     dropouts = trial.suggest_float('dropout', 0.0, 0.5, step=0.25)
     robust_multitask_regressor_kwargs['dropouts'] = dropouts
-    layer_sizes = trial.suggest_categorical('layer_sizes', [[50], [100], [500], [200, 100]])
-    robust_multitask_regressor_kwargs['layer_sizes'] = layer_sizes
+    layer_sizes = trial.suggest_categorical('layer_sizes', [str(cat) for cat in [[50], [100], [500], [200, 100]]])
+    robust_multitask_regressor_kwargs['layer_sizes'] = eval(layer_sizes)
     bypass_dropouts = trial.suggest_float('bypass_dropout', 0.0, 0.5, step=0.25)
     robust_multitask_regressor_kwargs['bypass_dropouts'] = bypass_dropouts
     model = robust_multitask_regressor_model(model_dir=model_dir,

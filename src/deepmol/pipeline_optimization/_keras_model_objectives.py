@@ -95,9 +95,10 @@ def keras_1d_cnn_step(trial: Trial, input_shape: tuple, label_names: List[str] =
     filters = [trial.suggest_int(f'filter_{i}', 4, 32) for i in range(n_conv_layers)]
     kernel_sizes = [trial.suggest_int(f'kernel_size_{i}', 16, 64) for i in range(n_conv_layers)]
     strides = [trial.suggest_int(f'stride_{i}', 1, 2) for i in range(n_conv_layers)]
-    conv_activations = [trial.suggest_categorical('conv_activation', ['relu', 'tanh']) for i in range(n_conv_layers)]
-    conv_dropouts = [trial.suggest_float('conv_dropout', 0.0, 0.8) for i in range(n_conv_layers)]
-    conv_batch_norms = [trial.suggest_categorical('conv_batch_norm', [True, False]) for i in range(n_conv_layers)]
+    conv_activations = [trial.suggest_categorical(f'conv_activation_{i}',
+                                                  ['relu', 'tanh']) for i in range(n_conv_layers)]
+    conv_dropouts = [trial.suggest_float(f'conv_dropout_{i}', 0.0, 0.8) for i in range(n_conv_layers)]
+    conv_batch_norms = [trial.suggest_categorical(f'conv_batch_norm_{i}', [True, False]) for i in range(n_conv_layers)]
     dense_units = trial.suggest_int('dense_units', 32, 256, step=32)
     dense_activation = trial.suggest_categorical('dense_activation', ['relu', 'tanh'])
     dense_dropout = trial.suggest_float('dropout', 0.0, 0.8)
@@ -147,9 +148,9 @@ def keras_tabular_transformer_step(trial: Trial, input_shape: tuple, label_names
     embedding_output_dim = trial.suggest_categorical('embedding_output_dim', [8, 16, 32, 64, 128])
     n_attention_layers = trial.suggest_categorical('n_attention_layers', [1, 2, 3, 4])
     n_attention_heads = trial.suggest_categorical('n_attention_heads', [1, 2, 4, 8])
-    attention_dropouts = [trial.suggest_float('attention_dropout', 0.0, 0.5) for _ in range(n_attention_layers)]
-    attention_key_dims = [trial.suggest_categorical('attention_key_dim', [2, 4, 8, 16])
-                          for _ in range(n_attention_layers)]
+    attention_dropouts = [trial.suggest_float(f'attention_dropout_{i}', 0.0, 0.5) for i in range(n_attention_layers)]
+    attention_key_dims = [trial.suggest_categorical(f'attention_key_dim_{i}', [2, 4, 8, 16])
+                          for i in range(n_attention_layers)]
     dense_units = trial.suggest_int('dense_units', 8, 128, step=8)
     dense_activation = trial.suggest_categorical('dense_activation', ['relu', 'tanh'])
     dense_dropout = trial.suggest_float('dense_dropout', 0.0, 0.5)

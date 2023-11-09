@@ -1830,10 +1830,11 @@ def mlp_regressor_step(trial):
     Regressor
         The MLPRegressor object step.
     """
-    hidden_layer_sizes = trial.suggest_categorical("hidden_layer_sizes", [(50,), (100,), (50, 50), (100, 50)])
+    hidden_layer_sizes = trial.suggest_categorical("hidden_layer_sizes",
+                                                   [str(cat) for cat in [(50,), (100,), (50, 50), (100, 50)]])
     activation = trial.suggest_categorical("activation", ["relu", "tanh"])
     alpha = trial.suggest_loguniform("alpha", 1e-5, 1e-2)
-    mlp_regressor_kwargs = {'hidden_layer_sizes': hidden_layer_sizes, 'activation': activation, 'alpha': alpha}
+    mlp_regressor_kwargs = {'hidden_layer_sizes': eval(hidden_layer_sizes), 'activation': activation, 'alpha': alpha}
     return mlp_regressor_model(mlp_regressor_kwargs=mlp_regressor_kwargs)
 
 
@@ -1851,10 +1852,11 @@ def mlp_classifier_step(trial):
     Classifier
         The MLPClassifier object step.
     """
-    hidden_layer_sizes = trial.suggest_categorical("hidden_layer_sizes", [(50,), (100,), (50, 50), (100, 50)])
+    hidden_layer_sizes = trial.suggest_categorical("hidden_layer_sizes",
+                                                   [str(cat) for cat in [(50,), (100,), (50, 50), (100, 50)]])
     activation = trial.suggest_categorical("activation", ["relu", "tanh"])
     alpha = trial.suggest_loguniform("alpha", 1e-5, 1e-2)
-    mlp_classifier_kwargs = {'hidden_layer_sizes': hidden_layer_sizes, 'activation': activation, 'alpha': alpha}
+    mlp_classifier_kwargs = {'hidden_layer_sizes': eval(hidden_layer_sizes), 'activation': activation, 'alpha': alpha}
     return mlp_classifier_model(mlp_classifier_kwargs=mlp_classifier_kwargs)
 
 

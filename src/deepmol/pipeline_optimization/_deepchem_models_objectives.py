@@ -34,7 +34,7 @@ def gat_model_steps(trial: Trial, model_dir: str = 'gat_model/', gat_kwargs: dic
     # MolGraphConvFeaturizer
     featurizer = MolGraphConvFeat()
     # model
-    n_attention_heads = trial.suggest_int('n_attention_heads', 4, 10, step=2)
+    n_attention_heads = trial.suggest_categorical('n_attention_heads', [4, 6, 8, 10])
     gat_kwargs['n_attention_heads'] = n_attention_heads
     agg_modes = trial.suggest_categorical('agg_modes', [str(cat) for cat in [['mean'], ['flatten']]])
     gat_kwargs['agg_modes'] = eval(agg_modes)

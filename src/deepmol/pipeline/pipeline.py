@@ -281,7 +281,7 @@ class Pipeline(Transformer):
                                                   'type': 'predictor',
                                                   'model_type': self.steps[-1][1].model_type,
                                                   'is_fitted': self.steps[-1][1].is_fitted(),
-                                                  'path': f'{self.steps[-1][1].model_dir}'}
+                                                  'path': 'model'}
         else:
             transformer_path = os.path.join(self.path, f'{self.steps[-1][0]}.pkl')
             self.steps[-1][1].to_pickle(transformer_path)

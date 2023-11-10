@@ -463,7 +463,7 @@ def chem_ception_model_steps(trial: Trial, chem_ception_kwargs: dict = None,
     featurizer = SmileImageFeat()
     base_filters = trial.suggest_categorical('base_filters', [8, 16, 32, 64])
     chem_ception_kwargs['base_filters'] = base_filters
-    model = chem_ception_model( chem_ception_kwargs=chem_ception_kwargs,
+    model = chem_ception_model(chem_ception_kwargs=chem_ception_kwargs,
                                deepchem_kwargs=deepchem_kwargs)
     return [('featurizer', featurizer), ('model', model)]
 
@@ -594,7 +594,7 @@ def text_cnn_model_steps(trial: Trial, text_cnn_kwargs: dict = None,
     text_cnn_kwargs['n_embedding'] = n_embedding
     dropout = trial.suggest_float('dropout', 0.0, 0.5, step=0.25)
     text_cnn_kwargs['dropout'] = dropout
-    model = text_cnn_model( text_cnn_kwargs=text_cnn_kwargs, deepchem_kwargs=deepchem_kwargs)
+    model = text_cnn_model(text_cnn_kwargs=text_cnn_kwargs, deepchem_kwargs=deepchem_kwargs)
     return [('model', model)]
 
 
@@ -629,7 +629,7 @@ def weave_model_steps(trial: Trial, weave_kwargs: dict = None,
     weave_kwargs['n_weave'] = n_weave
     dropouts = trial.suggest_float('dropouts', 0.0, 0.5, step=0.25)
     weave_kwargs['dropouts'] = dropouts
-    model = weave_model( weave_kwargs=weave_kwargs, deepchem_kwargs=deepchem_kwargs)
+    model = weave_model(weave_kwargs=weave_kwargs, deepchem_kwargs=deepchem_kwargs)
     return [('featurizer', featurizer), ('model', model)]
 
 
@@ -661,7 +661,7 @@ def dtnn_model_steps(trial: Trial, dtnn_kwargs: dict = None,
     dtnn_kwargs['n_hidden'] = n_hidden
     dropout = trial.suggest_float('dropouts', 0.0, 0.5, step=0.25)
     dtnn_kwargs['dropout'] = dropout
-    model = dtnn_model( dtnn_kwargs=dtnn_kwargs, deepchem_kwargs=deepchem_kwargs)
+    model = dtnn_model(dtnn_kwargs=dtnn_kwargs, deepchem_kwargs=deepchem_kwargs)
     return [('model', model)]
 
 
@@ -704,7 +704,7 @@ def mat_model_steps(trial: Trial, mat_kwargs: dict = None,
     mat_kwargs['gen_dropout_p'] = gen_dropout_p
     gen_n_layers = trial.suggest_int('gen_n_layers', 1, 3)
     mat_kwargs['gen_n_layers'] = gen_n_layers
-    model = mat_model( mat_kwargs=mat_kwargs, deepchem_kwargs=deepchem_kwargs)
+    model = mat_model(mat_kwargs=mat_kwargs, deepchem_kwargs=deepchem_kwargs)
     return [('featurizer', featurizer), ('model', model)]
 
 

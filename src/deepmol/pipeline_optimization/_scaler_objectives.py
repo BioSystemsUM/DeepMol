@@ -71,8 +71,9 @@ def robust_scaler_step(trial) -> Transformer:
     """
     with_centering = trial.suggest_categorical("with_centering", [True, False])
     with_scaling = trial.suggest_categorical("with_scaling", [True, False])
-    quantile_range = trial.suggest_categorical("quantile_range", [(25.0, 75.0), (10.0, 90.0), (5.0, 95.0)])
-    return RobustScaler(with_centering=with_centering, with_scaling=with_scaling, quantile_range=quantile_range)
+    quantile_range = trial.suggest_categorical("quantile_range",
+                                               [str(cat) for cat in [(25.0, 75.0), (10.0, 90.0), (5.0, 95.0)]])
+    return RobustScaler(with_centering=with_centering, with_scaling=with_scaling, quantile_range=eval(quantile_range))
 
 
 def normalizer_step(trial) -> Transformer:

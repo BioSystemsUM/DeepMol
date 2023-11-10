@@ -95,14 +95,17 @@ class TestPipelineOptimization(TestCase):
             if file.endswith('.log'):
                 os.remove(file)
 
+        if os.path.exists('model'):
+            shutil.rmtree('model')
         # remove model directories (ending with _model)
         for file in os.listdir():
-            if file.endswith('_model'):
-                shutil.rmtree(file)
-            elif file.startswith('test_pipeline_'):
-                shutil.rmtree(file)
-            elif file.startswith('test_predictor_pipeline_'):
-                shutil.rmtree(file)
+            if not file.endswith('.py'):
+                if file.endswith('_model'):
+                    shutil.rmtree(file)
+                elif file.startswith('test_pipeline_'):
+                    shutil.rmtree(file)
+                elif file.startswith('test_predictor_pipeline_'):
+                    shutil.rmtree(file)
         # remove study rdbm
         try:
             optuna.delete_study(study_name="test_pipeline", storage="sqlite:///test_pipeline.db")
@@ -199,6 +202,7 @@ class TestPipelineOptimization(TestCase):
         if param_importance is not None:
             for param in param_importance:
                 self.assertTrue(param in po.best_params.keys())
+
     @skip("This test is too slow to run on CI and can have different results on different trials")
     def test_multi_label_classification_keras(self):
         warnings.filterwarnings("ignore")

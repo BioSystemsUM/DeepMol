@@ -801,7 +801,6 @@ def robust_multitask_regressor_model_steps(trial: Trial,
     robust_multitask_regressor_kwargs['layer_sizes'] = eval(layer_sizes)
     bypass_dropouts = trial.suggest_float('bypass_dropout', 0.0, 0.5, step=0.25)
     robust_multitask_regressor_kwargs['bypass_dropouts'] = bypass_dropouts
-    model = robust_multitask_regressor_model(
-                                             robust_multitask_regressor_kwargs=robust_multitask_regressor_kwargs,
+    model = robust_multitask_regressor_model(robust_multitask_regressor_kwargs=robust_multitask_regressor_kwargs,
                                              deepchem_kwargs=deepchem_kwargs)
     return [('model', model)]

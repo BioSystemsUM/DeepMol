@@ -1,4 +1,4 @@
-rdkit-pypi==2022.9.3: preprocessing, deep_learning, machine_learning, test
+rdkit==2023.9.1: preprocessing, deep_learning, machine_learning, test
 smilespe==0.0.3: preprocessing, deep_learning, machine_learning, test
 seaborn==0.12.0: preprocessing, deep_learning, machine_learning, test
 joblib==1.1.1: preprocessing, deep_learning, machine_learning, test

@@ -416,6 +416,9 @@ class TwoDimensionDescriptors(MolecularFeaturizer):
         """
         super().__init__(**kwargs)
         self.feature_names = [x[0] for x in Descriptors._descList]
+        seen = {}
+        self.feature_names[:] = [seen.setdefault(value, value) for value in self.feature_names
+                                 if seen.get(value) is None]
 
     def _featurize(self, mol: Mol):
         """

@@ -346,6 +346,7 @@ class CoulombFeat(MolecularFeaturizer):
                  n_samples: int = 1,
                  max_conformers: int = 1,
                  seed: int = None,
+                 generate_conformers: bool = True,
                  **kwargs) -> None:
         """
         Parameters
@@ -364,6 +365,8 @@ class CoulombFeat(MolecularFeaturizer):
             Maximum number of conformers.
         seed: int
             Random seed to use.
+        generate_conformers: bool
+            Whether to generate conformers.
         kwargs:
             Additional arguments for the base class.
         """
@@ -377,6 +380,7 @@ class CoulombFeat(MolecularFeaturizer):
         if seed is not None:
             seed = int(seed)
         self.seed = seed
+        self.generate_conformers = generate_conformers
         self.feature_names = ['coulomb_feat']
 
     def _featurize(self, mol: Mol) -> np.ndarray:
@@ -393,8 +397,11 @@ class CoulombFeat(MolecularFeaturizer):
         feature: np.ndarray
             Array of features.
         """
-        generator = ConformerGenerator(max_conformers=self.max_conformers)
-        new_conformers = get_conformers([mol], generator)
+        if self.generate_conformers:
+            generator = ConformerGenerator(max_conformers=self.max_conformers)
+            new_conformers = get_conformers([mol], generator)
+        else:
+            new_conformers = [mol]
 
         # featurization process using DeepChem CoulombMatrix
         featurizer = CoulombMatrix(
@@ -430,6 +437,7 @@ class CoulombEigFeat(MolecularFeaturizer):
                  n_samples: int = 1,
                  max_conformers: int = 1,
                  seed: int = None,
+                 generate_conformers=True,
                  **kwargs) -> None:
         """
         Parameters
@@ -446,6 +454,8 @@ class CoulombEigFeat(MolecularFeaturizer):
             maximum number of conformers.
         seed: int
             Random seed to use.
+        generate_conformers: bool
+            Whether to generate conformers.
         kwargs:
             Additional arguments for the base class.
         """
@@ -458,6 +468,7 @@ class CoulombEigFeat(MolecularFeaturizer):
             seed = int(seed)
         self.seed = seed
         self.max_conformers = max_conformers
+        self.generate_conformers = generate_conformers
         self.feature_names = ['coulomb_eig_feat']
 
     def _featurize(self, mol: Mol) -> np.ndarray:
@@ -473,12 +484,16 @@ class CoulombEigFeat(MolecularFeaturizer):
         feature: np.ndarray
             Array of features.
         """
-        generator = ConformerGenerator(max_conformers=self.max_conformers)
 
-        # TO USE in case to add option for the software to find the parameter max_atoms
-        # maximum_number_atoms = find_maximum_number_atoms(new_smiles)
+        if self.generate_conformers:
+            generator = ConformerGenerator(max_conformers=self.max_conformers)
 
-        new_conformers = get_conformers([mol], generator)
+            # TO USE in case to add option for the software to find the parameter max_atoms
+            # maximum_number_atoms = find_maximum_number_atoms(new_smiles)
+
+            new_conformers = get_conformers([mol], generator)
+        else:
+            new_conformers = [mol]
         # featurization process using DeepChem CoulombMatrixEig
         featurizer = CoulombMatrixEig(
             max_atoms=self.max_atoms,

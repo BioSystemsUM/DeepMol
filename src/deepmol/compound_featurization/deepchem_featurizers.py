@@ -381,7 +381,7 @@ class CoulombFeat(MolecularFeaturizer):
             seed = int(seed)
         self.seed = seed
         self.generate_conformers = generate_conformers
-        self.feature_names = ['coulomb_feat']
+        self.feature_names = [f'coulomb_feat_{i}' for i in range(max_atoms)]
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -469,7 +469,7 @@ class CoulombEigFeat(MolecularFeaturizer):
         self.seed = seed
         self.max_conformers = max_conformers
         self.generate_conformers = generate_conformers
-        self.feature_names = ['coulomb_eig_feat']
+        self.feature_names = [f'coulomb_eig_feat_{i}' for i in range(max_atoms)]
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """

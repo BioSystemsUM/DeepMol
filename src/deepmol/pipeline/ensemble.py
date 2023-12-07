@@ -1,3 +1,4 @@
+import os
 from typing import List, Literal, Tuple, Dict, Union
 from collections import Counter
 
@@ -6,127 +7,250 @@ import numpy as np
 from deepmol.metrics import Metric
 from deepmol.pipeline import Pipeline
 from deepmol.datasets import Dataset
+from deepmol.utils.utils import normalize_labels_shape
 
 
 class VotingPipeline:
+    """
+    Pipeline that combines the predictions of multiple pipelines using voting.
+    """
 
-    def __init__(self, pipelines: List[Pipeline], voting: Literal["hard", "soft"] = "hard", weights: List[float] = None):
+    def __init__(self, pipelines: List[Pipeline],
+                 voting: Literal["hard", "soft"] = "hard",
+                 weights: List[float] = None) -> None:
+        """
+        Initializes a voting pipeline.
+
+        Parameters
+        ----------
+        pipelines: List[Pipeline]
+            List of pipelines to be used in the voting.
+        voting: Literal["hard", "soft"]
+            Type of voting to be used. Either hard or soft. Only applicable for classification.
+        weights: List[float]
+            List of weights to be used for each pipeline. If None, all pipelines will have equal weight.
+        """
         super().__init__()
         self.pipelines = pipelines
         self.voting = voting
         self.weights = weights
         self._validate_pipelines()
 
-    def _validate_pipelines(self):
+    def _validate_pipelines(self) -> 'VotingPipeline':
+        """
+        Validates the pipelines.
+        It normalizes the weights and verifies that the number of weights is equal to the number of pipelines.
+        It also verifies that all pipelines are prediction pipelines.
+        """
         if self.weights is None:
-            self.weights = [1] * len(self.pipelines)
-        else:
-            # Normalize weights
-            total_weight = sum(self.weights)
-            self.weights = [w / total_weight for w in self.weights]
+            self.weights = np.array([1] * len(self.pipelines))
+        # Normalize weights
+        total_weight = sum(self.weights)
+        self.weights = np.array([w / total_weight for w in self.weights])
         assert len(self.weights) == len(self.pipelines), "Number of weights must be equal to number of pipelines"
         assert self.voting in ["hard", "soft"], "Voting must be either hard or soft"
         for pipeline in self.pipelines:
             assert pipeline.is_prediction_pipeline(), "All pipelines must be prediction pipelines"
-        # TODO: more verifications here?
         return self
 
     def fit(self, train_dataset: Dataset, validation_dataset: Dataset = None) -> 'VotingPipeline':
+        """
+        Fits the pipelines to the training dataset. A separate validation dataset can also be provided.
+
+        Parameters
+        ----------
+        train_dataset: Dataset
+            Dataset to be used for training.
+        validation_dataset: Dataset
+            Dataset to be used for validation.
+        """
         for pipeline in self.pipelines:
             pipeline.fit(train_dataset, validation_dataset)
         return self
 
-    def is_fitted(self):
+    def is_fitted(self) -> bool:
+        """
+        Returns True if all pipelines are fitted, False otherwise.
+
+        Returns
+        -------
+        bool
+            True if all pipelines are fitted, False otherwise.
+        """
         for pipeline in self.pipelines:
             if not pipeline.is_fitted():
                 return False
         return True
 
-    def _voting(self, predictions, proba=False):
+    def _voting(self, predictions: List[np.ndarray]) -> np.ndarray:
+        """
+        Performs the voting. It can be either hard or soft.
+
+        Parameters
+        ----------
+        predictions: List[np.ndarray]
+            List of predictions from each pipeline.
+
+        Returns
+        -------
+        np.ndarray
+            List of predictions by voting.
+        """
         if self.voting == "hard":
-            return self._hard_voting(predictions, proba)
+            return self._hard_voting(predictions)
         else:
-            return self._soft_voting(predictions, proba)
+            return self._soft_voting(predictions)
 
-    @staticmethod
-    def _hard_voting(predictions, proba=False):
-        if not proba:
-            return [Counter(column).most_common(1)[0][0] for column in zip(*predictions)]
-        else:
-            # convert probabilities of each pipeline to binary predictions
-            binary_predictions = []
-            for pipeline_predictions in predictions:
-                binary_predictions.append([1 if prediction >= 0.5 else 0 for prediction in pipeline_predictions])
-            return [Counter(column).most_common(1)[0][0] for column in zip(*binary_predictions)]
+    def _hard_voting(self, predictions: List[np.ndarray]) -> np.ndarray:
+        """
+        Performs weighted hard voting.
 
-    def _soft_voting(self, predictions, proba=False):
+        Parameters
+        ----------
+        predictions: List[Union[List[int], List[float]]]
+            List of predictions from each pipeline.
+
+        Returns
+        -------
+        np.ndarray
+            Array of predictions by hard voting.
+        """
+        binary_predictions = [np.where(pred >= 0.5, 1, 0) for pred in predictions]
+        weights = [int(w) for w in self.weights * 100]
+        final_predictions = [
+            Counter(np.repeat(binary_predictions, weights, axis=0)[:, i]).most_common(1)[0][0] for i in
+            range(len(binary_predictions[0]))]
+        return np.array(final_predictions)
+
+    def _soft_voting(self, predictions: List[np.ndarray]) -> np.ndarray:
+        """
+        Performs weighted soft voting.
+
+        Parameters
+        ----------
+        predictions: List[np.ndarray]
+            List of predictions from each pipeline.
+
+        Returns
+        -------
+        np.ndarray
+            Array of predictions by soft voting.
+        """
+        # transform probabilities to 0 and 1 probabilities, i.e.,
+        # [[0.1, 0.9], [0.8, 0.2]] -> [[[0.9, 0.1], [0.1, 0.9]], [[0.2, 0.8], [0.8, 0.2]]]
+        preds = []
+        for pipeline_predictions in predictions:
+            preds.append([[1 - prob, prob] for prob in pipeline_predictions])
         # Calculate the weighted average of predicted probabilities
-        soft_votes = np.average(predictions, axis=0, weights=self.weights)
-        # if binary predictions, transform to 2D array
-        if soft_votes.ndim == 1:
-            soft_votes = np.array([1 - soft_votes, soft_votes]).T
-        # Choose the class with the highest probability for each instance
-        if not proba:
-            soft_predictions = np.argmax(soft_votes, axis=1)
-        else:
-            soft_predictions = [soft_votes[1] for soft_votes in soft_votes]
-        return soft_predictions
+        soft_votes = np.average(preds, axis=0, weights=self.weights)
+        # TODO: should this return classes or probabilities?
+        return np.argmax(soft_votes, axis=1)
 
-    def predict(self, dataset):
-        predictions = []
-        for pipeline in self.pipelines:
-            predictions.append(pipeline.predict(dataset))
-        # TODO: check for different modes
+    def predict(self, dataset: Dataset) -> np.ndarray:
+        """
+        Makes predictions for the given dataset using the voting pipeline.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to be used for prediction.
+
+        Returns
+        -------
+        np.ndarray
+            Array of predictions.
+        """
         if dataset.mode == 'classification':
+            predictions = [pipeline.predict_proba(dataset) for pipeline in self.pipelines]
             return self._voting(predictions)
-        else:
+        elif dataset.mode == 'regression':
+            predictions = [pipeline.predict(dataset) for pipeline in self.pipelines]
             return np.average(predictions, axis=0, weights=self.weights)
-
-    def predict_proba(self, dataset):
-        # TODO: raise error for regression?
-        predictions = []
-        for pipeline in self.pipelines:
-            predictions.append(pipeline.predict_proba(dataset))
-        return self._voting(predictions, proba=True)
+        else:
+            raise ValueError(f"For now, only 'classification' and 'regression' modes are supported, but got {dataset.mode}")
 
     def evaluate(self, dataset: Dataset, metrics: List[Metric],
                  per_task_metrics: bool = False) -> Tuple[Dict, Union[None, Dict]]:
-        evaluations = []
+        """
+        Evaluates the voting pipeline using the given metrics.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to be used for evaluation.
+        metrics: List[Metric]
+            List of metrics to be used.
+        per_task_metrics: bool
+            If true, returns the metrics for each task separately.
+
+        Returns
+        -------
+        Tuple[Dict, Union[None, Dict]]
+            Tuple containing the multitask scores and the scores for each task separately.
+        """
+        n_tasks = dataset.n_tasks
+        y = dataset.y
+        y_pred = self.predict(dataset)
+        if not y.shape == np.array(y_pred).shape:
+            y_pred = normalize_labels_shape(y_pred, n_tasks)
+
+        multitask_scores = {}
+        all_task_scores = {}
+
+        # Compute multitask metrics
+        for metric in metrics:
+            results = metric.compute_metric(y, y_pred, per_task_metrics=per_task_metrics, n_tasks=n_tasks)
+            if per_task_metrics:
+                multitask_scores[metric.name], computed_metrics = results
+                all_task_scores[metric.name] = computed_metrics
+            else:
+                multitask_scores[metric.name], all_task_scores = results
+
+        if not per_task_metrics:
+            return multitask_scores, {}
+        else:
+            return multitask_scores, all_task_scores
+
+    def save(self, path: str) -> 'VotingPipeline':
+        """
+        Saves the voting pipeline.
+
+        Parameters
+        ----------
+        path: str
+            Path where the voting pipeline will be saved.
+        """
+        if not os.path.exists(path):
+            os.makedirs(path)
         for pipeline in self.pipelines:
-            evaluations.append(pipeline.evaluate(dataset, metrics, per_task_metrics))
-        # TODO: implement this
-        pass
+            pipeline.path = os.path.join(path, pipeline.path)
+            pipeline.save()
+        # save json with voting and weights info
+        with open(path + 'voting_pipeline.json', 'w') as f:
+            f.write(f'{{"voting": "{self.voting}", "weights": {self.weights.tolist()}}}')
+        return self
 
-    def save(self, path):
-        pass
+    @classmethod
+    def load(cls, path: str) -> 'VotingPipeline':
+        """
+        Loads a voting pipeline from the specified path.
 
-    def load(self, path):
-        pass
+        Parameters
+        ----------
+        path: str
+            Path where the voting pipeline is saved.
 
-
-if __name__ == '__main__':
-    from sklearn.svm import SVC
-    from sklearn.ensemble import RandomForestClassifier
-    from deepmol.models import SklearnModel
-    from deepmol.datasets import SmilesDataset, Dataset
-    from deepmol.compound_featurization import TwoDimensionDescriptors, MorganFingerprint
-    X = np.array(['O(C(=O)C(NC(=O)C(N)CC(O)=O)CCCCNOC(=O)C)C', 'Clc1ccc(cc1)C[N](Cc1ccccc1)(CC(=O)Nc1c(C)cccc1C)C',
-                  'COc1ccc(cc1O)C1SCc2c(CS1)cccc2', 'CC(=O)OCC12C(CCC(C2C(=O)O)(C)C)OC(=O)C23C1C(O)CC(C2)C(C3=O)C',
-                  'COc1ccc(C2OCc3ccccc3O2)cc1OC(=O)Nc1ccc([N+](=O)[O-])cc1'])
-    y = np.array([0, 1, 0, 1, 0])
-    data = SmilesDataset(smiles=X, y=y)
-    svc = SVC(probability=True)
-    scv = SklearnModel(model=svc, model_dir='model')
-    rf = RandomForestClassifier()
-    model = SklearnModel(model=rf, model_dir='model')
-    pipe1 = Pipeline(steps=[('descriptors', TwoDimensionDescriptors()), ('model', model)], path='pipe1/')
-    pipe1.fit_transform(data)
-    pipe2 = Pipeline(steps=[('descriptors', MorganFingerprint()), ('model', scv)], path='pipe2/')
-    pipe2.fit_transform(data)
-    voting = VotingPipeline(pipelines=[pipe1, pipe2], voting='soft')
-    print(voting.predict(data))
-    print(voting.predict_proba(data))
-
-
-
-
+        Returns
+        -------
+        VotingPipeline
+            Loaded voting pipeline.
+        """
+        pipelines = []
+        for pipeline_path in os.listdir(path):
+            pp = os.path.join(path, pipeline_path)
+            pipelines.append(Pipeline.load(pp))
+        # load json with voting and weights info
+        with open(path + 'voting_pipeline.json', 'r') as f:
+            voting_info = f.read()
+        voting_info = eval(voting_info)
+        return cls(pipelines=pipelines, voting=voting_info['voting'], weights=voting_info['weights'])

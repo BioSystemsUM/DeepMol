@@ -112,7 +112,6 @@ class MolecularFeaturizer(ABC, Transformer):
         dataset.clear_cached_properties()
         dataset._X = features
         dataset.feature_names = self.feature_names
-
         dataset.remove_nan(remove_nans_axis, inplace=True)
         return dataset
 

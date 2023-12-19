@@ -105,10 +105,30 @@ class KerasModel(Model):
         features = dataset.X.astype('float32')
         if len(dataset.label_names) == 1:
             y = np.squeeze(dataset.y)
+
+            if "validation_data" in kwargs:
+                validation_data = kwargs.pop("validation_data")
+                y_valid = np.squeeze(validation_data.y)
+                valid_features = validation_data.X.astype('float32')
+                validation_data = (valid_features, y_valid)
+                kwargs["validation_data"] = validation_data
+
+            self.history = self.model.fit(features, y, **kwargs)
         else:
             targets = [dataset.y[:, i] for i in range(len(dataset.label_names))]
             y = {f"{dataset.label_names[i]}": targets[i] for i in range(len(dataset.label_names))}
-        self.history = self.model.fit(features, y, **kwargs)
+
+            if "validation_data" in kwargs:
+                validation_data = kwargs.pop("validation_data")
+                targets = [validation_data.y[:, i] for i in range(len(dataset.label_names))]
+                y_valid = {f"{dataset.label_names[i]}": targets[i] for i in range(len(dataset.label_names))}
+                valid_features = validation_data.X.astype('float32')
+                validation_data = (valid_features, y_valid)
+                kwargs["validation_data"] = validation_data
+
+            self.history = self.model.fit(features, y, epochs=self.epochs, batch_size=self.batch_size, verbose=self.verbose,
+                                          **kwargs)
+        
 
     def predict(self, dataset: Dataset) -> np.ndarray:
         """

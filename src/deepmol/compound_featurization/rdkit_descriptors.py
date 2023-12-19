@@ -390,9 +390,10 @@ def generate_conformers_to_sdf_file(dataset: Dataset,
             signal.alarm(timeout_per_molecule)
             m2 = generate_conformers(generator, mol_set[i], etkg_version, optimization_mode)
             signal.alarm(0)
-            label = dataset.y[i]
-            for j, class_name in enumerate(dataset.label_names):
-                m2.SetProp(class_name, "%f" % label[j])
+            if dataset.y is not None and dataset.y.size > 0:
+                label = dataset.y[i]
+                for j, class_name in enumerate(dataset.label_names):
+                    m2.SetProp(class_name, "%f" % label[j])
             if dataset.ids is not None and dataset.ids.size > 0:
                 mol_id = dataset.ids[i]
                 m2.SetProp("_ID", f"{mol_id}")

@@ -28,8 +28,8 @@ class TestDeepChemModel(ModelsTestCase, TestCase):
         ds_test = self.binary_dataset_test
         ds_test.X = ConvMolFeaturizer().featurize([MolFromSmiles('CCC')] * 10)
 
-        graph = GraphConvModel(n_tasks=1, mode='classification')
-        model_graph = DeepChemModel(graph)
+        # graph = GraphConvModel(n_tasks=1, mode='classification')
+        model_graph = DeepChemModel(GraphConvModel, n_tasks=1, mode='classification')
 
         model_graph.fit(ds_train)
         test_preds = model_graph.predict(ds_test)
@@ -59,8 +59,7 @@ class TestDeepChemModel(ModelsTestCase, TestCase):
         ds_test = self.multitask_dataset_test
         ds_test.X = ConvMolFeaturizer().featurize([MolFromSmiles('CCC')] * 10)
 
-        graph = GraphConvModel(n_tasks=ds_train.n_tasks, mode='classification')
-        model_graph = DeepChemModel(graph)
+        model_graph = DeepChemModel(GraphConvModel, n_tasks=ds_train.n_tasks, mode='classification')
 
         model_graph.fit(ds_train)
         test_preds = model_graph.predict(ds_test)
@@ -84,8 +83,7 @@ class TestDeepChemModel(ModelsTestCase, TestCase):
         ds_test = self.multitask_dataset_test
         ds_test.X = ConvMolFeaturizer().featurize([MolFromSmiles('CCC')] * 10)
 
-        graph = GraphConvModel(n_tasks=ds_train.n_tasks, mode='classification')
-        model_graph = DeepChemModel(graph, n_tasks=ds_train.n_tasks, epochs=3)
+        model_graph = DeepChemModel(GraphConvModel, n_tasks=ds_train.n_tasks, mode='classification', epochs=3)
 
         model_graph.fit(ds_train)
         test_preds = model_graph.predict(ds_test)
@@ -108,8 +106,7 @@ class TestDeepChemModel(ModelsTestCase, TestCase):
                                                                      mode='classification',
                                                                      ids=ds_train.ids[arg])
 
-        graph = GraphConvModel(n_tasks=1, mode='classification')
-        model = DeepChemModel(graph)
+        model = DeepChemModel(GraphConvModel, n_tasks=1, mode='classification', epochs=3)
 
         best_model, train_score_best_model, test_score_best_model, train_scores, test_scores, avg_train_score, \
             avg_test_score = model.cross_validate(ds_train, metric=Metric(roc_auc_score), folds=3)
@@ -141,29 +138,26 @@ class TestDeepChemModel(ModelsTestCase, TestCase):
         self.binary_dataset.X = self.binary_dataset.smiles
 
         char_dict, length = TextCNNModel.build_char_dict(self.binary_dataset)
-        cnn_model = TextCNNModel(n_tasks=1, char_dict=char_dict, seq_length=length)
-        # cnn_model.model.save("test_model", save_format='tf')
-        custom_objects = {"DTNNEmbedding": DTNNEmbedding,
-                          "Highway": Highway}
-        model = DeepChemModel(cnn_model)
+
+        model = DeepChemModel(TextCNNModel, n_tasks=1, char_dict=char_dict, seq_length=length, epochs=10)
         model.fit(self.binary_dataset)
         test_predict = model.predict(self.binary_dataset)
         model.save("test_model")
 
-        new_model_loaded = DeepChemModel.load("test_model", custom_objects=custom_objects)
+        new_model_loaded = DeepChemModel.load("test_model")
         new_predict = new_model_loaded.predict(self.binary_dataset)
         self.assertTrue(np.array_equal(test_predict, new_predict))
 
     def test_torch_model_save(self):
         self.binary_dataset.X = MolGraphConvFeaturizer().featurize([MolFromSmiles('CCC')] * 100)
 
-        gcn = GCNModel(n_tasks=1, graph_conv_layers=[32, 32], activation=None,
+        model = DeepChemModel(GCNModel, n_tasks=1, graph_conv_layers=[32, 32], activation=None,
                        residual=True, batchnorm=False, predictor_hidden_feats=64,
                        dropout=0.25, predictor_dropout=0.25,
                        learning_rate=1e-3,
-                       batch_size=20, mode="classification", epochs=10)
-
-        model = DeepChemModel(gcn)
+                       batch_size=20, mode="classification",
+                       device="cpu", epochs=10)
+        
         model.fit(self.binary_dataset)
         test_predict = model.predict(self.binary_dataset)
         metrics = [Metric(f1_score, average='micro'), Metric(precision_score, average='micro')]
@@ -181,13 +175,12 @@ class TestDeepChemModel(ModelsTestCase, TestCase):
     def test_save_without_model_dir(self):
         self.binary_dataset.X = MolGraphConvFeaturizer().featurize([MolFromSmiles('CCC')] * 100)
 
-        gcn = GCNModel(n_tasks=1, graph_conv_layers=[32, 32], activation=None,
+        model = DeepChemModel(GCNModel, n_tasks=1, graph_conv_layers=[32, 32], activation=None,
                        residual=True, batchnorm=False, predictor_hidden_feats=64,
                        dropout=0.25, predictor_dropout=0.25,
                        learning_rate=1e-3,
-                       batch_size=20, mode="classification", epochs=10)
-
-        model = DeepChemModel(gcn, model_dir="test_model")
+                       batch_size=20, device="cpu",
+                       mode="classification", epochs=10, model_dir="test_model")
         model.fit(self.binary_dataset)
         model.save()
         model = DeepChemModel.load("test_model")

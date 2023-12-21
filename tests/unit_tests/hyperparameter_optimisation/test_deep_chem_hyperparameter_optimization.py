@@ -33,9 +33,8 @@ class TestDeepChemHyperparameterOptimization(ModelsTestCase, TestCase):
         ds_test.X = ConvMolFeaturizer().featurize([MolFromSmiles('CCC')] * 10)
 
         def graphconv_builder(graph_conv_layers, batch_size=256, epochs=5):
-            graph = GraphConvModel(n_tasks=1, graph_conv_layers=graph_conv_layers, batch_size=batch_size,
-                                   mode='classification')
-            return DeepChemModel(graph, model_dir=None, epochs=epochs)
+            return DeepChemModel(GraphConvModel, n_tasks=1, graph_conv_layers=graph_conv_layers, batch_size=batch_size,
+                                   mode='classification', epochs=epochs)
 
         model_graph = HyperparameterOptimizerCV(model_builder=graphconv_builder,
                                                 metric=Metric(roc_auc_score),
@@ -67,9 +66,8 @@ class TestDeepChemHyperparameterOptimization(ModelsTestCase, TestCase):
         from deepmol.parameter_optimization import HyperparameterOptimizerValidation
 
         def graphconv_builder(graph_conv_layers, batch_size=256, epochs=5):
-            graph = GraphConvModel(n_tasks=1, graph_conv_layers=graph_conv_layers, batch_size=batch_size,
+            return DeepChemModel(GraphConvModel, epochs=epochs, n_tasks=1, graph_conv_layers=graph_conv_layers, batch_size=batch_size,
                                    mode='classification')
-            return DeepChemModel(graph, epochs=epochs)
 
         model_graph = HyperparameterOptimizerValidation(model_builder=graphconv_builder,
                                                         metric=Metric(accuracy_score),

@@ -243,9 +243,9 @@ class TestPipeline(TestCase):
         featurizer = ConvMolFeat()
 
         def graphconv_builder(graph_conv_layers, batch_size=256, epochs=5):
-            graph = GraphConvModel(n_tasks=1, graph_conv_layers=graph_conv_layers, batch_size=batch_size,
+            return DeepChemModel(GraphConvModel, model_dir=None, epochs=epochs,
+                                 n_tasks=1, graph_conv_layers=graph_conv_layers, batch_size=batch_size,
                                    mode='classification')
-            return DeepChemModel(graph, model_dir=None, epochs=epochs)
 
         steps = [('standardizer', standardizer),
                  ('featurizer', featurizer)]
@@ -274,9 +274,9 @@ class TestPipeline(TestCase):
         featurizer = ConvMolFeat()
 
         def graphconv_builder(graph_conv_layers, batch_size=256, epochs=5):
-            graph = GraphConvModel(n_tasks=1, graph_conv_layers=graph_conv_layers, batch_size=batch_size,
+            return DeepChemModel(GraphConvModel, model_dir=None, epochs=epochs,
+                                 n_tasks=1, graph_conv_layers=graph_conv_layers, batch_size=batch_size,
                                    mode='classification')
-            return DeepChemModel(graph, model_dir=None, epochs=epochs)
 
         steps = [('standardizer', standardizer),
                  ('featurizer', featurizer)]

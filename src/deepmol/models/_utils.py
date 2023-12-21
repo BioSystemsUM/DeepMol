@@ -31,7 +31,7 @@ def save_to_disk(model: 'Model', filename: str, compress: int = 3):
         try:
             with open(filename, 'wb') as f:
                 pickle.dump(model, f, protocol=pickle.HIGHEST_PROTOCOL)
-        except (TypeError, AttributeError):
+        except (TypeError, AttributeError, ValueError):
             # dump with dill
             with open(filename, 'wb') as f:
                 dill.dump(model, f)

@@ -1,5 +1,7 @@
+from copy import deepcopy
 import os
 import pickle
+import re
 import shutil
 import tempfile
 from typing import List, Sequence, Union
@@ -70,25 +72,24 @@ class DeepChemModel(BaseDeepChemModel, Predictor):
         kwargs:
           additional arguments to be passed to the model.
         """
-        # create a temporary file
-        temp_file = tempfile.NamedTemporaryFile(suffix='.pkl', delete=False)
 
-        # Get the path of the temporary file
-        self.model_path_saved = temp_file.name
-
-        save_to_disk(model, self.model_path_saved)
-        self.model_instance = None
-        if 'model_instance' in kwargs and kwargs['model_instance'] is not None:
-            self.model_instance = kwargs['model_instance']
-            if model is not None:
-                raise ValueError("Can not use both model and model_instance argument at the same time.")
-
-            model = self.model_instance
+        if 'model_dir' in kwargs:
+            model_dir = kwargs.pop('model_dir')
 
         if model_dir is None:
             model_dir = tempfile.mkdtemp()
 
-        super().__init__(model=model, model_dir=model_dir, **kwargs)
+        if 'epochs' in kwargs:
+            self.epochs = kwargs.pop('epochs')
+        else:
+            self.epochs = 30
+
+        assert isinstance(model, type), f"Model must be a class not an instance. Got {type(model)}"
+
+        self.model_instance = model
+        model = model(**kwargs)
+
+        super().__init__(model=model, model_dir=model_dir, epochs=self.epochs, **kwargs)
         super(Predictor, self).__init__()
         self._model_dir = model_dir
 
@@ -102,16 +103,12 @@ class DeepChemModel(BaseDeepChemModel, Predictor):
         else:
             self.n_tasks = 1
 
-        if 'epochs' in kwargs:
-            self.epochs = kwargs['epochs']
-        else:
-            self.epochs = 30
-
         self.custom_objects = custom_objects
+
+        self.deepchem_model_parameters = kwargs
 
         self.parameters_to_save = {
             'use_weights': self.use_weights,
-            'n_tasks': self.n_tasks,
             'epochs': self.epochs,
             'model_instance': self.model_instance
         }
@@ -302,24 +299,22 @@ class DeepChemModel(BaseDeepChemModel, Predictor):
                 raise ValueError("Please specify folder_path or model_dir")
             folder_path = self.model_dir
         else:
+            self.model_dir = folder_path
             os.makedirs(folder_path, exist_ok=True)
 
-        # move file
-        shutil.copy(self.model_path_saved, os.path.join(folder_path, 'model.pkl'))
+        if os.path.exists(os.path.join(folder_path, "model")):
+            shutil.rmtree(os.path.join(folder_path, "model"))
+            
+        shutil.copytree(self.model.model_dir, os.path.join(folder_path, "model"))
 
         save_to_disk(self.parameters_to_save, os.path.join(folder_path, "model_parameters.pkl"))
+
+        save_to_disk(self.deepchem_model_parameters, os.path.join(folder_path, "deepchem_model_parameters.pkl"))
 
         if self.custom_objects is not None:
             with open(os.path.join(folder_path, 'custom_objects.pkl'), 'wb') as file:
                 pickle.dump(self.custom_objects, file)
 
-        # write self in pickle format
-        if isinstance(self.model, KerasModel):
-            self.model.model.save_weights(os.path.join(folder_path, 'model_weights'))
-        elif isinstance(self.model, TorchModel):
-            self.model.save_checkpoint(max_checkpoints_to_keep=1, model_dir=folder_path)
-        else:
-            raise ValueError(f"DeepChemModel does not support saving model of type {type(self.model)}")
 
     @classmethod
     def load(cls, folder_path: str, **kwargs):
@@ -335,29 +330,15 @@ class DeepChemModel(BaseDeepChemModel, Predictor):
             custom_objects: Dict
                 Dictionary of custom objects to be passed to `tensorflow.keras.utils.custom_object_scope`.
         """
-        try:
-            model = load_from_disk(os.path.join(folder_path, "model.pkl"))
-        except ValueError as e:
-            if 'custom_objects' in kwargs:
-                with tensorflow.keras.utils.custom_object_scope(kwargs['custom_objects']):
-                    model = load_from_disk(os.path.join(folder_path, "model.pkl"))
-            elif os.path.exists(os.path.join(folder_path, 'custom_objects.pkl')):
-                with open(os.path.join(folder_path, 'custom_objects.pkl'), 'rb') as file:
-                    custom_objects = pickle.load(file)
-                with tensorflow.keras.utils.custom_object_scope(custom_objects):
-                    model = load_from_disk(os.path.join(folder_path, "model.pkl"))
-            else:
-                raise e
 
+        deepchem_model_parameters = load_from_disk(os.path.join(folder_path, "deepchem_model_parameters.pkl"))
         model_parameters = load_from_disk(os.path.join(folder_path, "model_parameters.pkl"))
-        deepchem_model = cls(model=model, model_dir=folder_path, **model_parameters)
-        # load self from pickle format
-        if isinstance(model, KerasModel):
-            deepchem_model.model.model.load_weights(os.path.join(folder_path, 'model_weights'))
-            return deepchem_model
-        else:
-            deepchem_model.model.restore(model_dir=folder_path)
-            return deepchem_model
+
+        model = model_parameters.pop('model_instance')
+        deepchem_model = cls(model=model, 
+                             model_dir=os.path.join(folder_path, "model"), **model_parameters, **deepchem_model_parameters)
+        deepchem_model.model.restore(model_dir=os.path.join(folder_path, "model"))
+        return deepchem_model
 
     def cross_validate(self,
                        dataset: Dataset,
@@ -404,7 +385,7 @@ class DeepChemModel(BaseDeepChemModel, Predictor):
         best_model = None
         for train_ds, test_ds in datasets:
 
-            dummy_model = DeepChemModel(self.model)
+            dummy_model = DeepChemModel(self.model.__class__, **self.deepchem_model_parameters, **self.parameters_to_save)
 
             # TODO: isto está testado ? estes transformers nao é um boleano
             train_score = dummy_model.evaluate(train_ds, [metric], transformers)

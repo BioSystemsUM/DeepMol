@@ -16,11 +16,12 @@ kaleido==0.2.1: machine_learning
 plotly==5.13.1: machine_learning
 chembl_structure_pipeline==1.1.0: preprocessing
 torch==2.0.1: deep_learning
-dgl==0.9.1: deep_learning
+dgl==1.1.3: deep_learning
+scikeras==0.12.0: deep_learning
 dgllife==0.3.2: deep_learning
 deepchem==2.7.1: deep_learning
 torch_geometric==2.3.1: deep_learning
-tensorflow==2.12.0: deep_learning
+tensorflow==2.15.0: deep_learning
 tensorflow-probability==0.20.1: deep_learning
 boruta==0.3: preprocessing
 scikit-learn==1.2.0: machine_learning, deep_learning

@@ -6,7 +6,7 @@ from deepchem.models.chemnet_layers import Stem, InceptionResnetA, ReductionA, I
     InceptionResnetC
 from deepchem.models.layers import DTNNEmbedding, Highway, Stack, DAGLayer, DAGGather, WeaveLayer, WeaveGather
 from deepchem.models.torch_models import MATModel
-from keras.initializers.initializers import TruncatedNormal
+from keras.initializers import TruncatedNormal
 
 from deepmol.models import DeepChemModel
 
@@ -35,8 +35,8 @@ def gat_model(gat_kwargs: dict = None, deepchem_kwargs: dict = None) -> DeepChem
     deepchem_kwargs = deepchem_kwargs or {}
     # Classifier/ Regressor
     # MolGraphConvFeaturizer
-    model = GATModel(**gat_kwargs)
-    return DeepChemModel(model=model, **deepchem_kwargs)
+    model = GATModel
+    return DeepChemModel(model=model, **deepchem_kwargs, **gat_kwargs)
 
 
 def gcn_model(gcn_kwargs: dict = None, deepchem_kwargs: dict = None) -> DeepChemModel:
@@ -62,8 +62,8 @@ def gcn_model(gcn_kwargs: dict = None, deepchem_kwargs: dict = None) -> DeepChem
     deepchem_kwargs = deepchem_kwargs or {}
     # Classifier/ Regressor
     # MolGraphConvFeaturizer
-    model = GCNModel(**gcn_kwargs)
-    return DeepChemModel(model=model, **deepchem_kwargs)
+    model = GCNModel
+    return DeepChemModel(model=model, **deepchem_kwargs, **gcn_kwargs)
 
 
 def attentivefp_model(attentivefp_kwargs: dict = None,
@@ -92,8 +92,8 @@ def attentivefp_model(attentivefp_kwargs: dict = None,
     deepchem_kwargs = deepchem_kwargs or {}
     # Classifier/ Regressor
     # MolGraphConvFeaturizer
-    model = AttentiveFPModel(**attentivefp_kwargs)
-    return DeepChemModel(model=model, **deepchem_kwargs)
+    model = AttentiveFPModel
+    return DeepChemModel(model=model, **deepchem_kwargs, **attentivefp_kwargs)
 
 
 def pagtn_model(patgn_kwargs: dict = None,
@@ -120,8 +120,8 @@ def pagtn_model(patgn_kwargs: dict = None,
     deepchem_kwargs = deepchem_kwargs or {}
     # Classifier/ Regressor
     # PagtnMolGraphFeaturizer MolGraphConvFeaturizer
-    model = PagtnModel(**patgn_kwargs)
-    return DeepChemModel(model=model, **deepchem_kwargs)
+    model = PagtnModel
+    return DeepChemModel(model=model, **deepchem_kwargs, **patgn_kwargs)
 
 
 def mpnn_model(mpnn_kwargs: dict = None, deepchem_kwargs: dict = None) -> DeepChemModel:
@@ -148,8 +148,8 @@ def mpnn_model(mpnn_kwargs: dict = None, deepchem_kwargs: dict = None) -> DeepCh
     deepchem_kwargs = deepchem_kwargs or {}
     # Classifier/ Regressor
     # MolGraphConvFeaturizer
-    model = MPNNModel(**mpnn_kwargs)
-    return DeepChemModel(model=model, **deepchem_kwargs)
+    model = MPNNModel
+    return DeepChemModel(model=model, **deepchem_kwargs, **mpnn_kwargs)
 
 
 def megnet_model(megnet_kwargs: dict = None,
@@ -178,8 +178,8 @@ def megnet_model(megnet_kwargs: dict = None,
     megnet_kwargs = megnet_kwargs or {}
     deepchem_kwargs = deepchem_kwargs or {}
     # Classifier/ Regressor
-    model = MEGNetModel(**megnet_kwargs)
-    return DeepChemModel(model=model, **deepchem_kwargs)
+    model = MEGNetModel
+    return DeepChemModel(model=model, **deepchem_kwargs, **megnet_kwargs)
 
 
 def dmpnn_model(dmpnn_kwargs: dict = None,
@@ -206,8 +206,8 @@ def dmpnn_model(dmpnn_kwargs: dict = None,
     deepchem_kwargs = deepchem_kwargs or {}
     # Classifier/ Regressor
     # DMPNNFeaturizer
-    model = DMPNNModel(**dmpnn_kwargs)
-    return DeepChemModel(model=model, **deepchem_kwargs)
+    model = DMPNNModel
+    return DeepChemModel(model=model, **deepchem_kwargs, **dmpnn_kwargs)
 
 
 def cnn_model(cnn_kwargs: dict = None, deepchem_kwargs: dict = None) -> DeepChemModel:
@@ -231,8 +231,8 @@ def cnn_model(cnn_kwargs: dict = None, deepchem_kwargs: dict = None) -> DeepChem
     cnn_kwargs = cnn_kwargs or {}
     deepchem_kwargs = deepchem_kwargs or {}
     # Classifier/ Regressor
-    model = CNN(**cnn_kwargs)
-    return DeepChemModel(model=model, **deepchem_kwargs)
+    model = CNN
+    return DeepChemModel(model=model, **deepchem_kwargs, **cnn_kwargs)
 
 
 def multitask_classifier_model(multitask_classifier_kwargs: dict = None,
@@ -258,10 +258,11 @@ def multitask_classifier_model(multitask_classifier_kwargs: dict = None,
     deepchem_kwargs = deepchem_kwargs or {}
     # Classifier
     # 1D Descriptors
-    model = MultitaskClassifier(**multitask_classifier_kwargs)
-    model.mode = 'classification'
-    model.model.mode = 'classification'
-    return DeepChemModel(model=model, **deepchem_kwargs)
+    model = MultitaskClassifier
+    #TODO: check how we could workaround this
+    # model.mode = 'classification'
+    # model.model.mode = 'classification'
+    return DeepChemModel(model=model, **deepchem_kwargs, **multitask_classifier_kwargs)
 
 
 def multitask_irv_classifier_model(multitask_irv_classifier_kwargs: dict = None,
@@ -287,9 +288,10 @@ def multitask_irv_classifier_model(multitask_irv_classifier_kwargs: dict = None,
     deepchem_kwargs = deepchem_kwargs or {}
     # Classifier
     # 1D Descriptors
-    model = MultitaskIRVClassifier(**multitask_irv_classifier_kwargs)
-    model.model.mode = 'classification'
-    return DeepChemModel(model=model, **deepchem_kwargs)
+    model = MultitaskIRVClassifier
+    #TODO: check how we could workaround this
+    # model.model.mode = 'classification'
+    return DeepChemModel(model=model, **deepchem_kwargs, **multitask_irv_classifier_kwargs)
 
 
 def progressive_multitask_classifier_model(progressive_multitask_classifier_kwargs: dict = None,
@@ -317,8 +319,9 @@ def progressive_multitask_classifier_model(progressive_multitask_classifier_kwar
     # Classifier
     # 1D Descriptors
     model = ProgressiveMultitaskClassifier(**progressive_multitask_classifier_kwargs)
-    model.model.mode = 'classification'
-    return DeepChemModel(model=model, **deepchem_kwargs)
+    #TODO: check how we could workaround this
+    #model.model.mode = 'classification'
+    return DeepChemModel(model=model, **deepchem_kwargs, **progressive_multitask_classifier_kwargs)
 
 
 def progressive_multitask_regressor_model(progressive_multitask_regressor_kwargs: dict = None,
@@ -346,9 +349,10 @@ def progressive_multitask_regressor_model(progressive_multitask_regressor_kwargs
     # Regressor
     # CircularFingerprint RDKitDescriptors CoulombMatrixEig RdkitGridFeaturizer BindingPocketFeaturizer
     # ElementPropertyFingerprint
-    model = ProgressiveMultitaskRegressor(**progressive_multitask_regressor_kwargs)
-    model.model.mode = 'regression'
-    return DeepChemModel(model=model, **deepchem_kwargs)
+    model = ProgressiveMultitaskRegressor
+    #TODO: check how we could workaround this
+    # model.model.mode = 'regression'
+    return DeepChemModel(model=model, **deepchem_kwargs, **progressive_multitask_regressor_kwargs)
 
 
 def robust_multitask_classifier_model(robust_multitask_classifier_kwargs: dict = None,
@@ -376,10 +380,11 @@ def robust_multitask_classifier_model(robust_multitask_classifier_kwargs: dict =
     deepchem_kwargs = deepchem_kwargs or {}
     # Classifier
     # 1D Descriptors
-    model = RobustMultitaskClassifier(**robust_multitask_classifier_kwargs)
-    model.model.mode = 'classification'
-    custom_objects = {'Stack': Stack}
-    return DeepChemModel(model=model, custom_objects=custom_objects, **deepchem_kwargs)
+    model = RobustMultitaskClassifier
+    #TODO: check how we could workaround this
+    # model.model.mode = 'classification'
+    # custom_objects = {'Stack': Stack}
+    return DeepChemModel(model=model, **deepchem_kwargs, **robust_multitask_classifier_kwargs)
 
 
 def robust_multitask_regressor_model(robust_multitask_regressor_kwargs: dict = None,
@@ -408,10 +413,11 @@ def robust_multitask_regressor_model(robust_multitask_regressor_kwargs: dict = N
     # Regressor
     # CircularFingerprint RDKitDescriptors CoulombMatrixEig RdkitGridFeaturizer BindingPocketFeaturizer
     # ElementPropertyFingerprint
-    model = RobustMultitaskRegressor(**robust_multitask_regressor_kwargs)
+    model = RobustMultitaskRegressor
+    #TODO: check how we could workaround this
     model.model.mode = 'regression'
     custom_objects = {'Stack': Stack}
-    return DeepChemModel(model=model, custom_objects=custom_objects, **deepchem_kwargs)
+    return DeepChemModel(model=model, custom_objects=custom_objects, **deepchem_kwargs, **robust_multitask_regressor_kwargs)
 
 
 def sc_score_model(sc_score_kwargs: dict = None, deepchem_kwargs: dict = None) -> DeepChemModel:
@@ -437,9 +443,10 @@ def sc_score_model(sc_score_kwargs: dict = None, deepchem_kwargs: dict = None) -
     deepchem_kwargs = deepchem_kwargs or {}
     # Classifier
     # CircularFingerprint
-    model = ScScoreModel(**sc_score_kwargs)
-    model.model.mode = 'classification'
-    return DeepChemModel(model=model, **deepchem_kwargs)
+    model = ScScoreModel()
+    #TODO: check how we could workaround this
+    # model.model.mode = 'classification'
+    return DeepChemModel(model=model, **deepchem_kwargs, **sc_score_kwargs)
 
 
 def chem_ception_model(chem_ception_kwargs: dict = None,
@@ -467,11 +474,11 @@ def chem_ception_model(chem_ception_kwargs: dict = None,
     deepchem_kwargs = deepchem_kwargs or {}
     # Classifier/ Regressor
     # SmilesToImage
-    model = ChemCeption(**chem_ception_kwargs)
-    custom_objects = {'Stem': Stem, 'InceptionResnetA': InceptionResnetA, 'ReductionA': ReductionA,
-                      'InceptionResnetB': InceptionResnetB, 'ReductionB': ReductionB,
-                      'InceptionResnetC': InceptionResnetC}
-    return DeepChemModel(model=model, custom_objects=custom_objects, **deepchem_kwargs)
+    model = ChemCeption
+    # custom_objects = {'Stem': Stem, 'InceptionResnetA': InceptionResnetA, 'ReductionA': ReductionA,
+    #                   'InceptionResnetB': InceptionResnetB, 'ReductionB': ReductionB,
+    #                   'InceptionResnetC': InceptionResnetC}
+    return DeepChemModel(model=model, **deepchem_kwargs, **chem_ception_kwargs)
 
 
 def dag_model(dag_kwargs: dict = None, deepchem_kwargs: dict = None) -> DeepChemModel:
@@ -499,9 +506,9 @@ def dag_model(dag_kwargs: dict = None, deepchem_kwargs: dict = None) -> DeepChem
     deepchem_kwargs = deepchem_kwargs or {}
     # Classifier/ Regressor
     # ConvMolFeaturizer
-    model = DAGModel(**dag_kwargs)
-    custom_objects = {'DAGLayer': DAGLayer, 'DAGGather': DAGGather}
-    return DeepChemModel(model=model, custom_objects=custom_objects, **deepchem_kwargs)
+    model = DAGModel
+    # custom_objects = {'DAGLayer': DAGLayer, 'DAGGather': DAGGather}
+    return DeepChemModel(model=model, **dag_kwargs, **deepchem_kwargs)
 
 
 def graph_conv_model(graph_conv_kwargs: dict = None,
@@ -529,8 +536,8 @@ def graph_conv_model(graph_conv_kwargs: dict = None,
     deepchem_kwargs = deepchem_kwargs or {}
     # Classifier/ Regressor
     # ConvMolFeaturizer
-    model = GraphConvModel(**graph_conv_kwargs)
-    return DeepChemModel(model=model, **deepchem_kwargs)
+    model = GraphConvModel
+    return DeepChemModel(model=model, **deepchem_kwargs, **graph_conv_kwargs)
 
 
 def smiles_to_vec_model(smiles_to_vec_kwargs: dict = None,
@@ -558,8 +565,8 @@ def smiles_to_vec_model(smiles_to_vec_kwargs: dict = None,
     deepchem_kwargs = deepchem_kwargs or {}
     # Classifier/ Regressor
     # SmilesToSeq
-    model = Smiles2Vec(**smiles_to_vec_kwargs)
-    return DeepChemModel(model=model, **deepchem_kwargs)
+    model = Smiles2Vec
+    return DeepChemModel(model=model, **deepchem_kwargs, **smiles_to_vec_kwargs)
 
 
 def text_cnn_model(text_cnn_kwargs: dict = None, deepchem_kwargs: dict = None) -> DeepChemModel:
@@ -586,9 +593,9 @@ def text_cnn_model(text_cnn_kwargs: dict = None, deepchem_kwargs: dict = None) -
     text_cnn_kwargs = text_cnn_kwargs or {}
     deepchem_kwargs = deepchem_kwargs or {}
     # Classifier/ Regressor
-    model = TextCNNModel(**text_cnn_kwargs)
-    custom_objects = {"DTNNEmbedding": DTNNEmbedding, "Highway": Highway}
-    return DeepChemModel(model=model, custom_objects=custom_objects, **deepchem_kwargs)
+    model = TextCNNModel
+    # custom_objects = {"DTNNEmbedding": DTNNEmbedding, "Highway": Highway}
+    return DeepChemModel(model=model, **deepchem_kwargs, **text_cnn_kwargs)
 
 
 def weave_model(weave_kwargs: dict = None, deepchem_kwargs: dict = None) -> DeepChemModel:
@@ -615,9 +622,9 @@ def weave_model(weave_kwargs: dict = None, deepchem_kwargs: dict = None) -> Deep
     deepchem_kwargs = deepchem_kwargs or {}
     # Classifier/ Regressor
     # WeaveFeaturizer
-    model = WeaveModel(**weave_kwargs)
-    custom_objects = {'WeaveLayer': WeaveLayer, 'TruncatedNormal': TruncatedNormal, 'WeaveGather': WeaveGather}
-    return DeepChemModel(model=model, custom_objects=custom_objects, **deepchem_kwargs)
+    model = WeaveModel
+    # custom_objects = {'WeaveLayer': WeaveLayer, 'TruncatedNormal': TruncatedNormal, 'WeaveGather': WeaveGather}
+    return DeepChemModel(model=model, **weave_kwargs, **deepchem_kwargs)
 
 
 def dtnn_model(dtnn_kwargs: dict = None, deepchem_kwargs: dict = None) -> DeepChemModel:
@@ -644,8 +651,8 @@ def dtnn_model(dtnn_kwargs: dict = None, deepchem_kwargs: dict = None) -> DeepCh
     deepchem_kwargs = deepchem_kwargs or {}
     # Regressor
     # CoulombMatrix
-    model = DTNNModel(**dtnn_kwargs)
-    return DeepChemModel(model=model, **deepchem_kwargs)
+    model = DTNNModel
+    return DeepChemModel(model=model, **deepchem_kwargs, **dtnn_kwargs)
 
 
 def mat_model(mat_kwargs: dict = None, deepchem_kwargs: dict = None) -> DeepChemModel:
@@ -672,9 +679,9 @@ def mat_model(mat_kwargs: dict = None, deepchem_kwargs: dict = None) -> DeepChem
     deepchem_kwargs = deepchem_kwargs or {}
     # Regressor
     # MATFeaturizer
-    model = MATModel(**mat_kwargs)
-    model.model.mode = 'regression'
-    return DeepChemModel(model=model, **deepchem_kwargs)
+    model = MATModel
+    # model.model.mode = 'regression'
+    return DeepChemModel(model=model, **deepchem_kwargs, **mat_kwargs)
 
 
 def multitask_regressor_model(multitask_regressor_kwargs: dict = None,
@@ -700,7 +707,7 @@ def multitask_regressor_model(multitask_regressor_kwargs: dict = None,
     deepchem_kwargs = deepchem_kwargs or {}
     # Regressor
     # 1D Descriptors
-    model = MultitaskRegressor(**multitask_regressor_kwargs)
-    model.mode = 'regression'
-    model.model.mode = 'regression'
-    return DeepChemModel(model=model, **deepchem_kwargs)
+    model = MultitaskRegressor
+    # model.mode = 'regression'
+    # model.model.mode = 'regression'
+    return DeepChemModel(model=model, **deepchem_kwargs, **multitask_regressor_kwargs)

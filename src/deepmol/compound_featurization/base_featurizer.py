@@ -91,7 +91,6 @@ class MolecularFeaturizer(ABC, Transformer):
           The input Dataset containing a featurized representation of the molecules in Dataset.X.
         """
         molecules = dataset.mols
-
         multiprocessing_cls = JoblibMultiprocessing(process=self._featurize_mol, n_jobs=self.n_jobs)
         features = multiprocessing_cls.run(molecules)
 

@@ -91,7 +91,6 @@ class MolecularFeaturizer(ABC, Transformer):
           The input Dataset containing a featurized representation of the molecules in Dataset.X.
         """
         molecules = dataset.mols
-
         multiprocessing_cls = JoblibMultiprocessing(process=self._featurize_mol, n_jobs=self.n_jobs)
         features = multiprocessing_cls.run(molecules)
 
@@ -112,7 +111,6 @@ class MolecularFeaturizer(ABC, Transformer):
         dataset.clear_cached_properties()
         dataset._X = features
         dataset.feature_names = self.feature_names
-
         dataset.remove_nan(remove_nans_axis, inplace=True)
         return dataset
 

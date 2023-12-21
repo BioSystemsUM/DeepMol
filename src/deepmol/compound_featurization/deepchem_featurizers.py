@@ -10,6 +10,7 @@ from deepchem.feat.molecule_featurizers.mat_featurizer import MATEncoding
 from deepchem.trans import DAGTransformer as DAGTransformerDC
 from deepchem.utils import ConformerGenerator
 from rdkit.Chem import Mol
+from rdkit.Chem import rdFreeSASA
 
 from deepmol.base import Transformer
 from deepmol.compound_featurization import MolecularFeaturizer
@@ -61,6 +62,53 @@ class ConvMolFeat(MolecularFeaturizer):
         self.per_atom_fragmentation = per_atom_fragmentation
         self.feature_names = ['conv_mol_feat']
 
+    def get_atom_features(self, mol):
+        
+        three_d_structure = False
+        if mol.GetNumConformers() > 0:
+            radii1 = rdFreeSASA.classifyAtoms(mol)
+            rdFreeSASA.CalcSASA(mol, radii1)
+            three_d_structure = True
+
+        for atom in mol.GetAtoms():
+            is_aromatic = atom.GetIsAromatic()
+            explicit_valence = atom.GetExplicitValence()
+            formal_charge = atom.GetFormalCharge()
+            hybridization = atom.GetHybridization()
+            implicit_valence = atom.GetImplicitValence()
+            is_in_ring = atom.IsInRing()
+            mass = atom.GetMass()
+            num_explicit_hs = atom.GetNumExplicitHs()
+            num_implicit_hs = atom.GetNumImplicitHs()
+            atom_number = atom.GetAtomicNum()
+
+
+            properties = [("is_aromatic", is_aromatic),
+                                                ("explicit_valence", explicit_valence),
+                                                ("formal_charge", formal_charge),
+                                                ("hybridization", hybridization),
+                                                ("implicit_valence", implicit_valence),
+                                                ("is_in_ring", is_in_ring),
+                                                ("mass", mass),
+                                                ("num_explicit_hs", num_explicit_hs),
+                                                ("num_implicit_hs", num_implicit_hs),
+                                                ("atom_number", atom_number)]
+            if three_d_structure:
+                positions = mol.GetConformer().GetAtomPosition(atom.GetIdx())
+                x, y, z = positions.x, positions.y, positions.z
+                sasa = float(atom.GetProp("SASA"))
+
+                properties.extend([("x", x), ("y", y), ("z", z), ("sasa", sasa)])
+
+            for property_name, property_value in properties:
+                # Construct the property name
+                atom_property_name = f"atom {atom.GetIdx():08d} {property_name}"
+                
+                # Assign the property to the molecule
+                mol.SetDoubleProp(atom_property_name, property_value)
+        return mol, properties
+        
+
     def _featurize(self, mol: Mol) -> ConvMol:
         """
         Featurizes a single molecule.
@@ -76,6 +124,10 @@ class ConvMolFeat(MolecularFeaturizer):
             The ConvMol features of the molecule.
         """
         # featurization process using DeepChem ConvMolFeaturizer
+        mol, properties = self.get_atom_features(mol)
+
+        self.atom_properties = [name for name, _ in properties]
+
         feature = ConvMolFeaturizer(
             master_atom=self.master_atom,
             use_chirality=self.use_chirality,
@@ -346,6 +398,7 @@ class CoulombFeat(MolecularFeaturizer):
                  n_samples: int = 1,
                  max_conformers: int = 1,
                  seed: int = None,
+                 generate_conformers: bool = True,
                  **kwargs) -> None:
         """
         Parameters
@@ -364,6 +417,8 @@ class CoulombFeat(MolecularFeaturizer):
             Maximum number of conformers.
         seed: int
             Random seed to use.
+        generate_conformers: bool
+            Whether to generate conformers.
         kwargs:
             Additional arguments for the base class.
         """
@@ -377,7 +432,8 @@ class CoulombFeat(MolecularFeaturizer):
         if seed is not None:
             seed = int(seed)
         self.seed = seed
-        self.feature_names = ['coulomb_feat']
+        self.generate_conformers = generate_conformers
+        self.feature_names = [f'coulomb_feat_{i}' for i in range(max_atoms)]
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -393,8 +449,11 @@ class CoulombFeat(MolecularFeaturizer):
         feature: np.ndarray
             Array of features.
         """
-        generator = ConformerGenerator(max_conformers=self.max_conformers)
-        new_conformers = get_conformers([mol], generator)
+        if self.generate_conformers:
+            generator = ConformerGenerator(max_conformers=self.max_conformers)
+            new_conformers = get_conformers([mol], generator)
+        else:
+            new_conformers = [mol]
 
         # featurization process using DeepChem CoulombMatrix
         featurizer = CoulombMatrix(
@@ -430,6 +489,7 @@ class CoulombEigFeat(MolecularFeaturizer):
                  n_samples: int = 1,
                  max_conformers: int = 1,
                  seed: int = None,
+                 generate_conformers=True,
                  **kwargs) -> None:
         """
         Parameters
@@ -446,6 +506,8 @@ class CoulombEigFeat(MolecularFeaturizer):
             maximum number of conformers.
         seed: int
             Random seed to use.
+        generate_conformers: bool
+            Whether to generate conformers.
         kwargs:
             Additional arguments for the base class.
         """
@@ -458,7 +520,8 @@ class CoulombEigFeat(MolecularFeaturizer):
             seed = int(seed)
         self.seed = seed
         self.max_conformers = max_conformers
-        self.feature_names = ['coulomb_eig_feat']
+        self.generate_conformers = generate_conformers
+        self.feature_names = [f'coulomb_eig_feat_{i}' for i in range(max_atoms)]
 
     def _featurize(self, mol: Mol) -> np.ndarray:
         """
@@ -473,12 +536,16 @@ class CoulombEigFeat(MolecularFeaturizer):
         feature: np.ndarray
             Array of features.
         """
-        generator = ConformerGenerator(max_conformers=self.max_conformers)
 
-        # TO USE in case to add option for the software to find the parameter max_atoms
-        # maximum_number_atoms = find_maximum_number_atoms(new_smiles)
+        if self.generate_conformers:
+            generator = ConformerGenerator(max_conformers=self.max_conformers)
 
-        new_conformers = get_conformers([mol], generator)
+            # TO USE in case to add option for the software to find the parameter max_atoms
+            # maximum_number_atoms = find_maximum_number_atoms(new_smiles)
+
+            new_conformers = get_conformers([mol], generator)
+        else:
+            new_conformers = [mol]
         # featurization process using DeepChem CoulombMatrixEig
         featurizer = CoulombMatrixEig(
             max_atoms=self.max_atoms,

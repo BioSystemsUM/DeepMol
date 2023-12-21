@@ -57,7 +57,7 @@ class Predictor:
         """
         return self.model_type
 
-    def fit(self, dataset: Dataset) -> 'Predictor':
+    def fit(self, dataset: Dataset, **kwargs) -> 'Predictor':
         """
         Fits a model on data in a Dataset object.
 
@@ -71,7 +71,7 @@ class Predictor:
         Predictor
             self
         """
-        self._fit(dataset)
+        self._fit(dataset, **kwargs)
         self._is_fitted = True
         return self
 

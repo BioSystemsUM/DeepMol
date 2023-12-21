@@ -167,7 +167,18 @@ class VotingPipeline:
             predictions = [pipeline.predict(dataset) for pipeline in self.pipelines]
             return np.average(predictions, axis=0, weights=self.weights)
         else:
-            raise ValueError(f"For now, only 'classification' and 'regression' modes are supported, but got {dataset.mode}")
+            predictions = [pipeline.predict_proba(dataset) for pipeline in self.pipelines]
+            final_predictions = np.empty(predictions[0].shape)
+            for i, mode in enumerate(dataset.mode):
+                assert mode in ['classification', 'regression'], "Dataset must be either classification or regression"
+                predictions_i = [prediction[:, i] for prediction in predictions]
+                if mode == 'classification':
+                    final_prediction = self._voting(predictions_i)
+                    final_predictions[:, i] = final_prediction
+                else:
+                    final_prediction = np.average(predictions_i, axis=0, weights=self.weights)
+                    final_predictions[:, i] = final_prediction
+            return final_predictions
 
     def evaluate(self, dataset: Dataset, metrics: List[Metric],
                  per_task_metrics: bool = False) -> Tuple[Dict, Union[None, Dict]]:

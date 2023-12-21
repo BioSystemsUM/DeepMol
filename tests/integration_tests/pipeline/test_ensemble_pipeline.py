@@ -8,6 +8,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 from sklearn.svm import SVC, SVR
 
+from deepmol.compound_featurization import MorganFingerprint
 from deepmol.metrics import Metric
 from deepmol.models import SklearnModel
 from deepmol.pipeline import Pipeline
@@ -91,6 +92,22 @@ class TestEnsemblePipeline(TestPipeline):
         dc.mode = 'regression'
         # float values between 0 and 10
         dc._y = np.random.rand(len(dc.y)) * 10
+        vp.fit(dc)
+        predictions = vp.predict(dc)
+        self.assertEqual(len(predictions), len(dc.y))
+
+    def test_ensemble_pipeline_multi_task(self):
+        rf = RandomForestClassifier()
+        knn = KNeighborsClassifier()
+        fingerprint = MorganFingerprint()
+
+        model_rf = SklearnModel(model=rf, model_dir='model_rf')
+        model_knn = SklearnModel(model=knn, model_dir='model_knn')
+        pipeline1 = Pipeline(steps=[("fingerprint", fingerprint), ('model', model_rf)], path='test_pipeline_rf/')
+        pipeline3 = Pipeline(steps=[("fingerprint", fingerprint), ('model', model_knn)], path='test_pipeline_knn/')
+        vp = VotingPipeline(pipelines=[pipeline1, pipeline3], weights=[1, 2])
+        dc = deepcopy(self.multi_label_dataset)
+
         vp.fit(dc)
         predictions = vp.predict(dc)
         self.assertEqual(len(predictions), len(dc.y))

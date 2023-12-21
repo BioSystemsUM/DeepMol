@@ -88,7 +88,7 @@ class TestKerasModel(ModelsTestCase, TestCase):
         model.save("test_model")
         loaded_model = KerasModel.load("test_model")
         self.assertEqual(2, loaded_model.epochs)
-        self.assertEqual(50, loaded_model.model.sk_params["input_dim"])
+        self.assertEqual(50, loaded_model.parameters_to_save["input_dim"])
         loaded_model_predictions = loaded_model.predict(self.binary_dataset_test)
 
         assert np.array_equal(first_predictions, loaded_model_predictions)
@@ -107,7 +107,7 @@ class TestKerasModel(ModelsTestCase, TestCase):
 
             model.save("test_model")
             loaded_model = KerasModel.load("test_model")
-            self.assertEqual(50, loaded_model.model.sk_params["input_dim"])
+            self.assertEqual(50, loaded_model.parameters_to_save["input_dim"])
             loaded_model_predictions = loaded_model.predict(self.binary_dataset_test)
             assert np.array_equal(first_predictions, loaded_model_predictions)
 
@@ -116,9 +116,9 @@ class TestKerasModel(ModelsTestCase, TestCase):
     def test_weights_reset(self):
         model = keras_fcnn_model(model_kwargs={'input_dim': 50}, keras_kwargs={})
         model.fit(self.binary_dataset)
-        last_loss = model.history.history['loss'][-1]
+        last_loss = model.history['loss'][-1]
         model.fit(self.binary_dataset)
-        self.assertGreater(model.history.history['loss'][0], last_loss)
+        self.assertGreater(model.history['loss'][0], last_loss)
 
     @skip("This test is too slow for CI")
     def test_rnn_baseline_models(self):

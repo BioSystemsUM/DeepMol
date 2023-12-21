@@ -3,14 +3,14 @@ from typing import Union
 
 import keras
 
-from deepmol.models._utils import _get_splitter, load_from_disk, _save_keras_model, get_prediction_from_proba
+from deepmol.models._utils import _get_splitter, load_from_disk, _save_keras_model, get_prediction_from_proba, save_to_disk
 from deepmol.models.models import Model
 from deepmol.models.sklearn_models import SklearnModel
 from deepmol.metrics.metrics import Metric
 from deepmol.splitters.splitters import Splitter
 import numpy as np
 from deepmol.datasets import Dataset
-from tensorflow.keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
+from scikeras.wrappers import KerasClassifier, KerasRegressor
 from sklearn.base import clone
 
 import tensorflow as tf
@@ -113,7 +113,7 @@ class KerasModel(Model):
                 validation_data = (valid_features, y_valid)
                 kwargs["validation_data"] = validation_data
 
-            self.history = self.model.fit(features, y, **kwargs)
+            self.model = self.model.fit(features, y, **kwargs)
         else:
             targets = [dataset.y[:, i] for i in range(len(dataset.label_names))]
             y = {f"{dataset.label_names[i]}": targets[i] for i in range(len(dataset.label_names))}
@@ -126,8 +126,10 @@ class KerasModel(Model):
                 validation_data = (valid_features, y_valid)
                 kwargs["validation_data"] = validation_data
 
-            self.history = self.model.fit(features, y, epochs=self.epochs, batch_size=self.batch_size, verbose=self.verbose,
+            self.model = self.model.fit(features, y, epochs=self.epochs, batch_size=self.batch_size, verbose=self.verbose,
                                           **kwargs)
+            
+        self.history = self.model.history_
         
 
     def predict(self, dataset: Dataset) -> np.ndarray:
@@ -225,12 +227,14 @@ class KerasModel(Model):
         file_path_model_builder = os.path.join(folder_path, 'model_builder.pkl')
         model_builder = load_from_disk(file_path_model_builder)
         file_path_model = os.path.join(folder_path, 'model.h5')
-        model = keras.models.load_model(file_path_model)
+        model_ = keras.models.load_model(file_path_model)
         model_parameters = load_from_disk(os.path.join(folder_path, 'model_parameters.pkl'))
         keras_model_class = cls(model_builder=model_builder, **model_parameters)
+        model = load_from_disk(os.path.join(folder_path, 'model.pkl'))
         if isinstance(keras_model_class.model, KerasClassifier) or isinstance(keras_model_class.model,
                                                                               KerasRegressor):
-            keras_model_class.model.model = model
+            keras_model_class.model = model
+            keras_model_class.model.model_ = model_
         else:
             keras_model_class.model = model
         return keras_model_class
@@ -251,16 +255,20 @@ class KerasModel(Model):
                 try:
                     # write self in pickle format
                     _save_keras_model(self.model_dir, self.model.model, self.parameters_to_save, self.model_builder)
+                    save_to_disk(self.model, os.path.join(self.model_dir, 'model.pkl'))
                 except AttributeError:
                     # write self in pickle format
-                    _save_keras_model(self.model_dir, self.model, self.parameters_to_save, self.model_builder)
+                    _save_keras_model(self.model_dir, self.model.model_, self.parameters_to_save, self.model_builder)
+                    save_to_disk(self.model, os.path.join(self.model_dir, 'model.pkl'))
         else:
             try:
                 # write self in pickle format
                 _save_keras_model(file_path, self.model.model, self.parameters_to_save, self.model_builder)
+                save_to_disk(self.model, os.path.join(file_path, 'model.pkl'))
             except AttributeError:
                 # write self in pickle format
-                _save_keras_model(file_path, self.model, self.parameters_to_save, self.model_builder)
+                _save_keras_model(file_path, self.model.model_, self.parameters_to_save, self.model_builder)
+                save_to_disk(self.model, os.path.join(file_path, 'model.pkl'))
 
     def get_task_type(self) -> str:
         """

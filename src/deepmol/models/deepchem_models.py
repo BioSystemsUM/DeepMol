@@ -1,19 +1,17 @@
 from copy import deepcopy
 import os
 import pickle
-import re
 import shutil
 import tempfile
 from typing import List, Sequence, Union
 import numpy as np
-import tensorflow
 
 from deepmol.base import Predictor
 from deepmol.evaluator import Evaluator
 from deepmol.metrics.metrics import Metric
 from deepmol.datasets import Dataset
 from deepchem.models.torch_models import TorchModel
-from deepchem.models import SeqToSeq, WGAN, KerasModel
+from deepchem.models import SeqToSeq, WGAN
 from deepchem.models import Model as BaseDeepChemModel
 from deepchem.data import NumpyDataset
 import deepchem as dc
@@ -88,6 +86,7 @@ class DeepChemModel(BaseDeepChemModel, Predictor):
 
         self.model_instance = model
         model = model(**kwargs)
+        self._define_model_mode_in_multitask_models(model)
 
         super().__init__(model=model, model_dir=model_dir, epochs=self.epochs, **kwargs)
         super(Predictor, self).__init__()
@@ -112,6 +111,36 @@ class DeepChemModel(BaseDeepChemModel, Predictor):
             'epochs': self.epochs,
             'model_instance': self.model_instance
         }
+
+    def _define_model_mode_in_multitask_models(self, model):
+        """
+        Defines the model mode in multitask models.
+        """
+        if str(model.__class__.__name__) in ["MultitaskClassifier"]:
+            model.mode = 'classification'
+            model.model.mode = 'classification'
+
+        elif str(model.__class__.__name__) in [
+                                           "MultitaskIRVClassifier",
+                                           "ProgressiveMultitaskClassifier",
+                                           "RobustMultitaskClassifier",
+                                           "ScScoreModel"
+                                           ]:
+                                      
+            model.model.mode = 'classification'
+        
+        elif str(model.__class__.__name__) in ["ProgressiveMultitaskRegressor", 
+                                           "RobustMultitaskRegressor",
+                                           "MATModel"]:
+            model.model.mode = 'regression'
+
+        elif str(model.__class__.__name__) in ["MultitaskRegressor"]:
+            model.mode = 'regression'
+            model.model.mode = 'regression'
+
+        else:
+            pass
+
 
     @property
     def model_type(self):

@@ -89,44 +89,44 @@ class ObjectiveTrainEval(Objective):
         trial : optuna.trial.Trial
             Trial object that stores the hyperparameters.
         """
-        try:
-            @timeout_decorator.timeout(self.trial_timeout, timeout_exception=optuna.TrialPruned)
-            def run_with_timeout():
-                train_dataset = copy(self.train_dataset)
-                test_dataset = copy(self.test_dataset)
-                trial_id = str(trial.number)
-                path = os.path.join(self.save_dir, f'trial_{trial_id}')
-                pipeline = Pipeline(steps=self.objective_steps(trial, **self.kwargs), path=path)
-                pipeline.fit(train_dataset)
-                score = pipeline.evaluate(test_dataset, [self.metric])[0][self.metric.name]
+        # try:
+        @timeout_decorator.timeout(self.trial_timeout, timeout_exception=optuna.TrialPruned)
+        def run_with_timeout():
+            train_dataset = copy(self.train_dataset)
+            test_dataset = copy(self.test_dataset)
+            trial_id = str(trial.number)
+            path = os.path.join(self.save_dir, f'trial_{trial_id}')
+            pipeline = Pipeline(steps=self.objective_steps(trial, **self.kwargs), path=path)
+            pipeline.fit(train_dataset)
+            score = pipeline.evaluate(test_dataset, [self.metric])[0][self.metric.name]
 
-                best_scores = self.study.user_attrs['best_scores']
-                min_score = min(best_scores.values()) if len(best_scores) > 0 else float('inf')
-                max_score = max(best_scores.values()) if len(best_scores) > 0 else float('-inf')
-                update_score = (self.direction == 'maximize' and score > min_score) or (
-                        self.direction == 'minimize' and score < max_score)
+            best_scores = self.study.user_attrs['best_scores']
+            min_score = min(best_scores.values()) if len(best_scores) > 0 else float('inf')
+            max_score = max(best_scores.values()) if len(best_scores) > 0 else float('-inf')
+            update_score = (self.direction == 'maximize' and score > min_score) or (
+                    self.direction == 'minimize' and score < max_score)
 
-                if len(best_scores) < self.save_top_n or update_score:
-                    pipeline.save()
-                    best_scores.update({trial_id: score})
+            if len(best_scores) < self.save_top_n or update_score:
+                pipeline.save()
+                best_scores.update({trial_id: score})
 
-                    if len(best_scores) > self.save_top_n:
-                        if self.direction == 'maximize':
-                            min_score_id = min(best_scores, key=best_scores.get)
-                            del best_scores[min_score_id]
-                            shutil.rmtree(os.path.join(self.save_dir, f'trial_{min_score_id}'))
-                        else:
-                            max_score_id = max(best_scores, key=best_scores.get)
-                            del best_scores[max_score_id]
-                            shutil.rmtree(os.path.join(self.save_dir, f'trial_{max_score_id}'))
+                if len(best_scores) > self.save_top_n:
+                    if self.direction == 'maximize':
+                        min_score_id = min(best_scores, key=best_scores.get)
+                        del best_scores[min_score_id]
+                        shutil.rmtree(os.path.join(self.save_dir, f'trial_{min_score_id}'))
+                    else:
+                        max_score_id = max(best_scores, key=best_scores.get)
+                        del best_scores[max_score_id]
+                        shutil.rmtree(os.path.join(self.save_dir, f'trial_{max_score_id}'))
 
-                self.study.set_user_attr('best_scores', best_scores)
-                return score
+            self.study.set_user_attr('best_scores', best_scores)
+            return score
 
-            return run_with_timeout()
-        except ValueError as e:
-            print(e)
-            return float('inf') if self.direction == 'minimize' else float('-inf')
-        except Exception as e:
-            print(e)
-            return float('inf') if self.direction == 'minimize' else float('-inf')
+        return run_with_timeout()
+        # except ValueError as e:
+        #     print(e)
+        #     return float('inf') if self.direction == 'minimize' else float('-inf')
+        # except Exception as e:
+        #     print(e)
+        #     return float('inf') if self.direction == 'minimize' else float('-inf')

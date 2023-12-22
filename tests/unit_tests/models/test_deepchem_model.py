@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 import numpy as np
 from deepchem.feat import ConvMolFeaturizer, MolGraphConvFeaturizer
-from deepchem.models import GraphConvModel, TextCNNModel, GCNModel
+from deepchem.models import GraphConvModel, TextCNNModel, GCNModel, MultitaskClassifier
 from deepchem.models.layers import DTNNEmbedding, Highway
 from rdkit.Chem import MolFromSmiles
 from sklearn.metrics import f1_score
@@ -15,6 +15,7 @@ from deepmol.metrics.metrics_functions import roc_auc_score, precision_score, ac
 from deepmol.metrics import Metric
 from deepmol.models import DeepChemModel
 from deepmol.splitters import RandomSplitter
+from deepmol.compound_featurization import MorganFingerprint
 from unit_tests.models.test_models import ModelsTestCase
 
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
@@ -186,3 +187,9 @@ class TestDeepChemModel(ModelsTestCase, TestCase):
         model = DeepChemModel.load("test_model")
         model.predict(self.binary_dataset)
         self.assertTrue(os.path.exists("test_model"))
+
+    def test_multitask_regressors_and_classifiers(self):
+        ds_train = self.multitask_dataset
+
+        model = DeepChemModel(MultitaskClassifier, n_tasks=ds_train.n_tasks, n_features=ds_train.X.shape[1])
+        self.assertEqual(model.model.model.mode, "classification")

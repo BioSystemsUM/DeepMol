@@ -9,6 +9,8 @@ from deepmol.pipeline import Pipeline
 from deepmol.datasets import Dataset
 from deepmol.utils.utils import normalize_labels_shape
 
+from joblib import Parallel, delayed
+
 
 class VotingPipeline:
     """
@@ -168,16 +170,22 @@ class VotingPipeline:
             return np.average(predictions, axis=0, weights=self.weights)
         else:
             predictions = [pipeline.predict_proba(dataset) for pipeline in self.pipelines]
+
             final_predictions = np.empty(predictions[0].shape)
+
+            # Vectorized operations for regression tasks
+            regression_indices = [i for i, mode in enumerate(dataset.mode) if mode == 'regression']
+            if regression_indices:
+                regression_predictions = np.average([prediction[:, regression_indices] for prediction in predictions],
+                                                    axis=0, weights=self.weights)
+                final_predictions[:, regression_indices] = regression_predictions
+
+            # Loop for classification tasks - potential for further optimization depending on the _voting implementation
             for i, mode in enumerate(dataset.mode):
-                assert mode in ['classification', 'regression'], "Dataset must be either classification or regression"
-                predictions_i = [prediction[:, i] for prediction in predictions]
                 if mode == 'classification':
-                    final_prediction = self._voting(predictions_i)
-                    final_predictions[:, i] = final_prediction
-                else:
-                    final_prediction = np.average(predictions_i, axis=0, weights=self.weights)
-                    final_predictions[:, i] = final_prediction
+                    predictions_i = [prediction[:, i] for prediction in predictions]
+                    final_predictions[:, i] = self._voting(predictions_i)
+
             return final_predictions
 
     def evaluate(self, dataset: Dataset, metrics: List[Metric],
@@ -237,7 +245,7 @@ class VotingPipeline:
             pipeline.path = os.path.join(path, pipeline.path)
             pipeline.save()
         # save json with voting and weights info
-        with open(path + 'voting_pipeline.json', 'w') as f:
+        with open(os.path.join(path, 'voting_pipeline.json'), 'w') as f:
             f.write(f'{{"voting": "{self.voting}", "weights": {self.weights.tolist()}}}')
         return self
 
@@ -261,7 +269,7 @@ class VotingPipeline:
             pp = os.path.join(path, pipeline_path)
             pipelines.append(Pipeline.load(pp))
         # load json with voting and weights info
-        with open(path + 'voting_pipeline.json', 'r') as f:
+        with open(os.path.join(path, 'voting_pipeline.json'), 'r') as f:
             voting_info = f.read()
         voting_info = eval(voting_info)
         return cls(pipelines=pipelines, voting=voting_info['voting'], weights=voting_info['weights'])

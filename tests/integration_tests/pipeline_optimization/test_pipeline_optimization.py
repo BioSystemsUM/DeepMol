@@ -152,6 +152,45 @@ class TestPipelineOptimization(TestCase):
         new_predictions = best_pipeline.evaluate(test, [metric])[0][metric.name]
         self.assertEqual(new_predictions, po.best_value)
 
+    def test_pipeline_optimization_with_ensembles(self):
+
+        def objective(trial):
+            model = trial.suggest_categorical('model', ['RandomForestClassifier', 'SVC'])
+            if model == 'RandomForestClassifier':
+                n_estimators = trial.suggest_int('model__n_estimators', 10, 100, step=10)
+                model = RandomForestClassifier(n_estimators=n_estimators)
+            elif model == 'SVC':
+                kernel = trial.suggest_categorical('model__kernel', ['linear', 'poly', 'rbf', 'sigmoid'])
+                model = SVC(kernel=kernel)
+            model = SklearnModel(model=model, model_dir='model')
+            steps = [('model', model)]
+            return steps
+
+        study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        po = PipelineOptimization(direction='maximize', study_name=study_name, n_pipelines_ensemble=5)
+        metric = Metric(accuracy_score)
+        train, test = RandomSplitter().train_test_split(self.dataset_descriptors, seed=123)
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps=objective, metric=metric, n_trials=5,
+                    save_top_n=3)
+        self.assertEqual(po.best_params, po.best_trial.params)
+        self.assertIsInstance(po.best_value, float)
+
+        self.assertEqual(len(po.trials), 5)
+        # assert that 3 pipelines were saved
+        self.assertEqual(len(os.listdir(study_name)), 4)
+
+        df = po.trials_dataframe()
+        self.assertEqual(len(df), 5)
+        df2 = po.trials_dataframe(cols=['number', 'value'])
+        self.assertEqual(df2.shape, (5, 2))
+
+        best_pipeline = po.best_pipeline
+        new_predictions = best_pipeline.evaluate(test, [metric])[0][metric.name]
+        self.assertEqual(new_predictions, po.best_value)
+
+        results = po.pipelines_ensemble.evaluate(test, [metric])[0][metric.name]
+        self.assertAlmostEqual(results, new_predictions, delta=0.15)
+
     @skip("This test is too slow to run on CI and can have different results on different trials")
     def test_classification_preset(self):
         storage_name = "sqlite:///test_pipeline.db"

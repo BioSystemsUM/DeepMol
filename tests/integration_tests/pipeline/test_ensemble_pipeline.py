@@ -111,3 +111,26 @@ class TestEnsemblePipeline(TestPipeline):
         vp.fit(dc)
         predictions = vp.predict(dc)
         self.assertEqual(len(predictions), len(dc.y))
+        results = vp.evaluate(dc, metrics=[Metric(accuracy_score)])
+        self.assertGreater(results[0]['accuracy_score'], 0.8)
+
+        vp_w_weights = VotingPipeline(pipelines=[pipeline1, pipeline3], voting='hard',
+                                      weights=[0.45, 0.55])
+        vp_w_weights.fit(self.multi_label_dataset)
+        results = vp.evaluate(dc, metrics=[Metric(accuracy_score)])
+        self.assertGreater(results[0]['accuracy_score'], 0.8)
+
+    def test_fitting_pipeline_separately_and_make_predictions(self):
+        rf = RandomForestClassifier()
+        knn = KNeighborsClassifier()
+        fingerprint = MorganFingerprint()
+
+        model_rf = SklearnModel(model=rf, model_dir='model_rf')
+        model_knn = SklearnModel(model=knn, model_dir='model_knn')
+        pipeline1 = Pipeline(steps=[("fingerprint", fingerprint), ('model', model_rf)], path='test_pipeline_rf/')
+        pipeline3 = Pipeline(steps=[("fingerprint", fingerprint), ('model', model_knn)], path='test_pipeline_knn/')
+        pipeline1.fit(self.dataset_descriptors)
+        pipeline3.fit(self.dataset_descriptors)
+
+        vp = VotingPipeline(pipelines=[pipeline1, pipeline3], weights=[1, 2])
+        vp.predict(self.dataset_descriptors)

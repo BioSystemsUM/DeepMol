@@ -124,7 +124,12 @@ class SklearnModel(Model):
         -------
         np.ndarray
         """
-        predictions = self.model.predict_proba(dataset.X)
+        try:
+            predictions = self.model.predict_proba(dataset.X)
+        except AttributeError as e:
+            self.logger.error(f'AttributeError: {e}. The model does not have a predict_proba method. ')
+            return self.model.predict(dataset.X)
+
         if isinstance(predictions, list):
             predictions = np.array(predictions)
         if predictions.shape != (len(dataset.mols), dataset.n_tasks):

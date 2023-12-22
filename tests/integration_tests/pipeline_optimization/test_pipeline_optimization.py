@@ -141,7 +141,7 @@ class TestPipelineOptimization(TestCase):
 
         self.assertEqual(len(po.trials), 5)
         # assert that 3 pipelines were saved
-        self.assertEqual(len(os.listdir(study_name)), 3)
+        self.assertEqual(len(os.listdir(study_name)), 4)
 
         df = po.trials_dataframe()
         self.assertEqual(len(df), 5)

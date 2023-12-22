@@ -227,7 +227,7 @@ class Pipeline(Transformer):
 
     def evaluate(self,
                  dataset: Dataset,
-                 metrics: Union[List[Metric]],
+                 metrics: List[Metric],
                  per_task_metrics: bool = False) -> Tuple[Dict, Union[None, Dict]]:
         """
         Evaluate the pipeline on a dataset based on the provided metrics.

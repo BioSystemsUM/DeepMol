@@ -266,8 +266,9 @@ class VotingPipeline:
         """
         pipelines = []
         for pipeline_path in os.listdir(path):
-            pp = os.path.join(path, pipeline_path)
-            pipelines.append(Pipeline.load(pp))
+            if pipeline_path != 'voting_pipeline.json':
+                pp = os.path.join(path, pipeline_path)
+                pipelines.append(Pipeline.load(pp))
         # load json with voting and weights info
         with open(os.path.join(path, 'voting_pipeline.json'), 'r') as f:
             voting_info = f.read()

@@ -134,11 +134,18 @@ class PipelineOptimization:
         """
         trials_df = self.trials_dataframe()
         best_trials = (trials_df[trials_df['state'] == 'COMPLETE'].
-                       sort_values('value', ascending=False).head(self.n_pipelines_ensemble))
+                       sort_values('value', ascending=False))
         pipelines = []
-        for i, row in best_trials.iterrows():
-            path = os.path.join(self.study.study_name, f'trial_{row["number"]}')
-            pipelines.append(Pipeline.load(path))
+        i = 0
+        while len(pipelines) < self.n_pipelines_ensemble:
+            path_exists = False
+            while not path_exists:
+                number = best_trials.iloc[i]['number']
+                path = os.path.join(self.study.study_name, f'trial_{number}')
+                if os.path.exists(path):
+                    pipelines.append(Pipeline.load(path))
+                    path_exists = True
+                i += 1
 
         voting_pipeline = VotingPipeline(pipelines=pipelines, voting='soft')
         voting_pipeline.save(os.path.join(self.study.study_name, 'voting_pipeline'))

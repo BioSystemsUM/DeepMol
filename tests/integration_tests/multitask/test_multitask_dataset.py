@@ -98,8 +98,8 @@ class TestMultitaskDataset(MultitaskBaseTestCase, TestCase):
         md._y = np.nan_to_num(md.y)
         ConvMolFeat().featurize(md, inplace=True)
         train, test = RandomSplitter().train_test_split(md, frac_train=0.8, seed=123)
-        graph = GraphConvModel(n_tasks=md.n_tasks)
-        model_graph = DeepChemModel(graph)
+        graph = GraphConvModel
+        model_graph = DeepChemModel(graph, n_tasks=md.n_tasks)
         model_graph.fit(train)
         test_preds = model_graph.predict(test)
         self.assertEqual(len(test_preds), len(test))

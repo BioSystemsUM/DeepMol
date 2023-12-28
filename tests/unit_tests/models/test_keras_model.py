@@ -16,7 +16,7 @@ from tensorflow.keras.layers import Dense, Dropout, GaussianNoise, Conv1D, Flatt
 from tensorflow.keras.optimizers import Adadelta, Adam, RMSprop
 from keras.callbacks import EarlyStopping
 
-
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 
 def make_cnn_model(input_dim=None,

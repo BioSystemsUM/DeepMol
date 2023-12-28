@@ -73,10 +73,10 @@ class KerasModel(Model):
                                    **kwargs}
 
         if mode == 'classification':
-            self.model = KerasClassifier(build_fn=model_builder, epochs=epochs, batch_size=batch_size,
+            self.model = KerasClassifier(model=model_builder, epochs=epochs, batch_size=batch_size,
                                          verbose=verbose, **kwargs)
         elif mode == 'regression':
-            self.model = KerasRegressor(build_fn=model_builder, epochs=epochs, batch_size=batch_size, verbose=verbose,
+            self.model = KerasRegressor(model=model_builder, epochs=epochs, batch_size=batch_size, verbose=verbose,
                                         **kwargs)
         elif isinstance(model_builder, keras.models.Model):
             self.model = model_builder

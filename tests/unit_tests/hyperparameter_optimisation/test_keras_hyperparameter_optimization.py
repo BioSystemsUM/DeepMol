@@ -3,7 +3,7 @@ from unittest import TestCase
 from sklearn.metrics import accuracy_score
 
 from deepmol.metrics import Metric
-from deepmol.parameter_optimization import HyperparameterOptimizerValidation
+from deepmol.parameter_optimization import HyperparameterOptimizerValidation, HyperparameterOptimizerCV
 from unit_tests.models.test_models import ModelsTestCase
 from tensorflow.keras.layers import Dropout
 from tensorflow import keras
@@ -51,3 +51,18 @@ class TestKerasHyperparameterOptimization(ModelsTestCase, TestCase):
 
         best_dnn, best_hyperparams, all_results = optimizer.fit(train_dataset=self.binary_dataset,
                                                                 valid_dataset=self.binary_dataset)
+        
+    def test_fit_predict_evaluate_cv(self):
+        params_dict_dense = {
+            "input_dim": [self.binary_dataset.X.shape[1]],
+            "dropout": [0.5, 0.6, 0.7],
+            "optimizer": ['adam']
+        }
+        optimizer = HyperparameterOptimizerCV(create_model, metric=Metric(accuracy_score),
+                                                      maximize_metric=True,
+                                                    n_iter_search=2,
+                                                    cv=3,
+                                                    params_dict=params_dict_dense,
+                                                    model_type="keras", epochs=2)
+
+        best_dnn, best_hyperparams, all_results = optimizer.fit(train_dataset=self.binary_dataset)

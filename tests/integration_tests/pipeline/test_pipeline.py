@@ -202,24 +202,22 @@ class TestPipeline(TestCase):
         self.assertTrue(np.array_equal(predictions, new_predictions))
 
     def test_hpo_cv_keras_models(self):
-        def basic_classification_model_builder(input_shape, layers):
+        def basic_classification_model_builder(input_dim, layers):
             model = Sequential()
-            model.add(Input(shape=input_shape))
+            model.add(Input(shape=input_dim))
             for layer in layers:
                 model.add(Dense(layer, activation='relu'))
             model.add(Dense(1, activation='sigmoid'))
             model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
             return model
 
-        keras_model = KerasModel(model_builder=basic_classification_model_builder, epochs=2, input_shape=(1024,))
         standardizer = BasicStandardizer()
         featurizer = MorganFingerprint(size=1024)
 
         steps = [('standardizer', standardizer),
-                 ('featurizer', featurizer),
-                 ('model', keras_model)]
+                 ('featurizer', featurizer)]
 
-        params_dict_keras = {"layers": [[512, 256], [512, 256, 128]], "input_shape": [(1024,)]}
+        params_dict_keras = {"layers": [[512, 256], [512, 256, 128]], "input_dim": [(1024,)]}
         optimizer = HyperparameterOptimizerCV(basic_classification_model_builder, metric=Metric(accuracy_score),
                                               maximize_metric=True,
                                               n_iter_search=2,
@@ -392,8 +390,8 @@ class TestPipeline(TestCase):
                                         unsupervised=None,
                                         model=keras_model)
 
-        deepchem_model = GraphConvModel(n_tasks=1, mode='classification')
-        model_graph = DeepChemModel(deepchem_model)
+        deepchem_model = GraphConvModel
+        model_graph = DeepChemModel(deepchem_model, n_tasks=1, mode='classification')
         self.validate_complete_pipeline(standardizer=ChEMBLStandardizer(),
                                         featurizer=ConvMolFeat(),
                                         scaler=PassThroughTransformer(),

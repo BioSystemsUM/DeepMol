@@ -168,15 +168,19 @@ def preset_deepchem_models(trial, data: Dataset) -> list:
     epochs=trial.suggest_int("epochs_deepchem", 100, 1000)
     deepchem_kwargs = {"epochs": epochs}
     if mode == 'classification' or (len(set(mode)) == 1 and mode[0] == 'classification'):
-        models.extend(["multitask_classifier_model", "robust_multitask_classifier_model"])  # , "multitask_irv_classifier_model",
+         # , "multitask_irv_classifier_model",
         # "progressive_multitask_classifier_model", "robust_multitask_classifier_model", "sc_score_model"])
         if n_classes > 2:
             models.remove("text_cnn_model")
+        if (len(set(mode)) == 1 and mode[0] == 'classification'):
+            models.extend(["multitask_classifier_model", "robust_multitask_classifier_model"]) 
         mode = 'classification'
     elif mode == 'regression' or (len(set(mode)) == 1 and mode[0] == 'regression'):
-        models.extend(["dtnn_model", "mat_model", "multitask_regressor_model"])  # ,
+        models.extend(["dtnn_model", "mat_model"])  # ,
         # "progressive_multitask_regressor_model", "robust_multitask_regressor_model"])
         mode = 'regression'
+        if (len(set(mode)) == 1 and mode[0] == 'regression'):
+            models.extend(["multitask_regressor_model"])
     else:
         raise ValueError("data mode must be either 'classification' or 'regression' or a list of both")
     

@@ -97,7 +97,7 @@ class MolecularFeaturizer(ABC, Transformer):
         features, remove_mols = zip(*features)
 
         remove_mols_list = np.array(remove_mols)
-        dataset.remove_elements(dataset.ids[remove_mols_list], inplace=True)
+        dataset.remove_elements(np.array(dataset.ids)[remove_mols_list], inplace=True)
 
         features = np.array(features)
         features = features[~remove_mols_list]

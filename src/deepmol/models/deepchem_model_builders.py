@@ -344,7 +344,7 @@ def progressive_multitask_classifier_model(progressive_multitask_classifier_kwar
     deepchem_kwargs = deepchem_kwargs or {}
     # Classifier
     # 1D Descriptors
-    model = ProgressiveMultitaskClassifier(**progressive_multitask_classifier_kwargs)
+    model = ProgressiveMultitaskClassifier
     return DeepChemModel(model=model, **deepchem_kwargs, **progressive_multitask_classifier_kwargs)
 
 

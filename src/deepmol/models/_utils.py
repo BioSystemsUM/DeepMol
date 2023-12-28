@@ -108,7 +108,7 @@ def _save_keras_model(file_path: str,
         file_path_model_builder = os.path.join(file_path, 'model_builder.pkl')
         save_to_disk(model_builder, file_path_model_builder)
     # write model in h5 format
-    model_file_path = os.path.join(file_path, 'model.h5')
+    model_file_path = os.path.join(file_path, 'model.keras')
     model.save(model_file_path)
     # write parameters in pickle format
     file_path_parameters = os.path.join(file_path, 'model_parameters.pkl')

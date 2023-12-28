@@ -1,4 +1,5 @@
 from deepmol.base import Predictor
+from deepmol.datasets.datasets import Dataset
 from deepmol.models.sklearn_model_builders import *
 
 
@@ -33,7 +34,7 @@ def ridge_step(trial):
     Predictor
         The Ridge object step.
     """
-    alpha = trial.suggest_float('alpha', 0.001, 10.0)
+    alpha = trial.suggest_float('alpha_ridge_model', 0.001, 10.0)
     ridge_kwargs = {'alpha': alpha}
     return ridge_model(ridge_kwargs=ridge_kwargs)
 
@@ -52,7 +53,7 @@ def ridge_classifier_step(trial):
     Predictor
         The RidgeClassifier object step.
     """
-    alpha = trial.suggest_float('alpha', 0.001, 10.0)
+    alpha = trial.suggest_float('alpha_ridge_classifier', 0.001, 10.0)
     ridge_classifier_kwargs = {'alpha': alpha}
     return ridge_classifier_model(ridge_classifier_kwargs=ridge_classifier_kwargs)
 
@@ -71,7 +72,7 @@ def ridge_cv_step(trial):
     Predictor
         The RidgeCV object step.
     """
-    alpha = trial.suggest_float('alpha', 0.01, 10.0)
+    alpha = trial.suggest_float('alpha_ridge_cv', 0.01, 10.0)
     ridge_cv_kwargs = {'alphas': alpha}
     return ridge_cv_model(ridge_cv_kwargs=ridge_cv_kwargs)
 
@@ -90,7 +91,7 @@ def ridge_classifier_cv_step(trial):
     Predictor
         The RidgeClassifierCV object step.
     """
-    alpha = trial.suggest_float('alpha', 0.01, 10.0)
+    alpha = trial.suggest_float('alpha_ridge_classifier_cv', 0.01, 10.0)
     ridge_classifier_cv_kwargs = {'alphas': alpha}
     return ridge_classifier_cv_model(ridge_classifier_cv_kwargs=ridge_classifier_cv_kwargs)
 
@@ -109,7 +110,7 @@ def lasso_step(trial):
     Predictor
         The Lasso object step.
     """
-    alpha = trial.suggest_float('alpha', 0.01, 10.0)
+    alpha = trial.suggest_float('alpha_lasso', 0.01, 10.0)
     lasso_kwargs = {'alpha': alpha}
     return lasso_model(lasso_kwargs=lasso_kwargs)
 
@@ -128,7 +129,7 @@ def lasso_cv_step(trial):
     Predictor
         The LassoCV object step.
     """
-    alpha = trial.suggest_float('alpha', 0.01, 10.0)
+    alpha = trial.suggest_float('alpha_lasso_cv', 0.01, 10.0)
     lasso_cv_kwargs = {'alphas': [alpha]}
     return lasso_cv_model(lasso_cv_kwargs=lasso_cv_kwargs)
 
@@ -164,7 +165,7 @@ def lasso_lars_ic_step(trial):
     Predictor
         The LassoLarsIC object step.
     """
-    criterion = trial.suggest_categorical('criterion', ['aic', 'bic'])
+    criterion = trial.suggest_categorical('criterion_lasso_lars', ['aic', 'bic'])
     lasso_lars_ic_kwargs = {'criterion': criterion}
     return lasso_lars_ic_model(lasso_lars_ic_kwargs=lasso_lars_ic_kwargs)
 
@@ -183,8 +184,8 @@ def elastic_net_step(trial):
     ElasticNet
         The ElasticNet object step.
     """
-    alpha = trial.suggest_float('alpha', 0.01, 10.0)
-    l1_ratio = trial.suggest_uniform('l1_ratio', 0.0, 1.0)
+    alpha = trial.suggest_float('alpha_elastic_net', 0.01, 10.0)
+    l1_ratio = trial.suggest_uniform('l1_ratio_elastic_net', 0.0, 1.0)
     elastic_net_kwargs = {'alpha': alpha, 'l1_ratio': l1_ratio}
     return elastic_net_model(elastic_net_kwargs=elastic_net_kwargs)
 
@@ -220,9 +221,9 @@ def bayesian_ridge_step(trial):
     Predictor
         The BayesianRidge object step.
     """
-    alpha = trial.suggest_float('alpha', 1e-5, 1e+1)
-    lambda_1 = trial.suggest_float('lambda_1', 1e-5, 1e+1)
-    lambda_2 = trial.suggest_float('lambda_2', 1e-5, 1e+1)
+    alpha = trial.suggest_float('alpha_bayesian_ridge', 1e-5, 1e+1)
+    lambda_1 = trial.suggest_float('lambda_1_bayesian_ridge', 1e-5, 1e+1)
+    lambda_2 = trial.suggest_float('lambda_2_bayesian_ridge', 1e-5, 1e+1)
     bayesian_ridge_kwargs = {'alpha_1': alpha, 'alpha_2': alpha, 'lambda_1': lambda_1, 'lambda_2': lambda_2}
     return bayesian_ridge_model(bayesian_ridge_kwargs=bayesian_ridge_kwargs)
 
@@ -243,8 +244,8 @@ def ard_regression_step(trial):
     """
     alpha_1 = trial.suggest_loguniform('alpha_1', 1e-8, 1.0)
     alpha_2 = trial.suggest_loguniform('alpha_2', 1e-8, 1.0)
-    lambda_1 = trial.suggest_loguniform('lambda_1', 1e-8, 1.0)
-    lambda_2 = trial.suggest_loguniform('lambda_2', 1e-8, 1.0)
+    lambda_1 = trial.suggest_loguniform('lambda_1_ard_regression', 1e-8, 1.0)
+    lambda_2 = trial.suggest_loguniform('lambda_2_ard_regression', 1e-8, 1.0)
     threshold_lambda = trial.suggest_loguniform('threshold_lambda', 1e-8, 1.0)
     ard_regression_kwargs = {'alpha_1': alpha_1, 'alpha_2': alpha_2, 'lambda_1': lambda_1, 'lambda_2': lambda_2,
                              'threshold_lambda': threshold_lambda}
@@ -265,7 +266,7 @@ def logistic_regression_step(trial):
     Predictor
         The LogisticRegression object step.
     """
-    C = trial.suggest_float('C', 0.01, 10.0, log=True)
+    C = trial.suggest_float('C_logistic_regression', 0.01, 10.0, log=True)
     logistic_regression_kwargs = {'C': C}
     return logistic_regression_model(logistic_regression_kwargs=logistic_regression_kwargs)
 
@@ -284,8 +285,8 @@ def logistic_regression_multiclass_step(trial):
     Predictor
         The LogisticRegressionMulticlass object step.
     """
-    C = trial.suggest_float('C', 0.01, 10.0, log=True)
-    multiclass_type = trial.suggest_categorical('multiclass_type', ['ovr', 'multinomial'])
+    C = trial.suggest_float('C_logistic_regression_multiclass', 0.01, 10.0, log=True)
+    multiclass_type = trial.suggest_categorical('multiclass_type_logistic_regression_multiclass', ['ovr', 'multinomial'])
     logistic_regression_multiclass_kwargs = {'C': C, 'multi_class': multiclass_type}
     return logistic_regression_model(logistic_regression_kwargs=logistic_regression_multiclass_kwargs)
 
@@ -304,7 +305,7 @@ def logistic_regression_cv_step(trial):
     Predictor
         The LogisticRegressionCV object step.
     """
-    Cs = trial.suggest_int('Cs', 1, 10)
+    Cs = trial.suggest_int('Cs_logistic_regression_cv', 1, 10)
     logistic_regression_cv_kwargs = {'Cs': Cs}
     return logistic_regression_cv_model(logistic_regression_cv_kwargs=logistic_regression_cv_kwargs)
 
@@ -323,8 +324,8 @@ def logistic_regression_cv_multiclass_step(trial):
     Predictor
         The LogisticRegressionMulticlassCV object step.
     """
-    Cs = trial.suggest_int('Cs', 1, 10)
-    multiclass_type = trial.suggest_categorical('multiclass_type', ['ovr', 'multinomial'])
+    Cs = trial.suggest_int('Cs_logistic_regression_cv_multiclass', 1, 10)
+    multiclass_type = trial.suggest_categorical('multiclass_type_logistic_regression_cv_multiclass', ['ovr', 'multinomial'])
     logistic_regression_cv_multiclass_kwargs = {'Cs': Cs, 'multi_class': multiclass_type}
     return logistic_regression_cv_model(logistic_regression_cv_kwargs=logistic_regression_cv_multiclass_kwargs)
 
@@ -343,8 +344,8 @@ def tweedie_regressor_step(trial):
     Predictor
         The TweedieRegressor object step.
     """
-    power = trial.suggest_float('power', 0.0, 1.0)
-    alpha = trial.suggest_float('alpha', 0.0, 2.0)
+    power = trial.suggest_float('power_tweedie_regressor', 0.0, 1.0)
+    alpha = trial.suggest_float('alpha_tweedie_regressor', 0.0, 2.0)
     tweedie_regression_kwargs = {'power': power, 'alpha': alpha}
     return tweedie_regressor_model(tweedie_regressor_kwargs=tweedie_regression_kwargs)
 
@@ -363,7 +364,7 @@ def poisson_regressor_step(trial):
     Predictor
         The PoissonRegressor object step.
     """
-    alpha = trial.suggest_float('alpha', 0.0, 2.0)
+    alpha = trial.suggest_float('alpha_poisson_regressor', 0.0, 2.0)
     poisson_regression_kwargs = {'alpha': alpha}
     return poisson_regressor_model(poisson_regressor_kwargs=poisson_regression_kwargs)
 
@@ -382,7 +383,7 @@ def gamma_regressor_step(trial):
     Predictor
         The GammaRegressor object step.
     """
-    alpha = trial.suggest_float('alpha', 0.0, 2.0)
+    alpha = trial.suggest_float('alpha_gamma_regressor', 0.0, 2.0)
     gamma_regression_kwargs = {'alpha': alpha}
     return gamma_regressor_model(gamma_regressor_kwargs=gamma_regression_kwargs)
 
@@ -401,7 +402,7 @@ def perceptron_step(trial):
     Predictor
         The Perceptron object step.
     """
-    alpha = trial.suggest_float('alpha', 0.0, 2.0)
+    alpha = trial.suggest_float('alpha_perceptron', 0.0, 2.0)
     perceptron_kwargs = {'alpha': alpha}
     return perceptron_model(perceptron_kwargs=perceptron_kwargs)
 
@@ -420,7 +421,7 @@ def passive_aggressive_regressor_step(trial):
     Predictor
         The PassiveAggressiveRegressor object step.
     """
-    C = trial.suggest_float('C', 0.0, 10.0)
+    C = trial.suggest_float('C_passive_aggressive_regressor', 0.0, 10.0)
     passive_aggressive_regressor_kwargs = {'C': C}
     return passive_aggressive_regressor_model(passive_aggressive_regressor_kwargs=passive_aggressive_regressor_kwargs)
 
@@ -439,7 +440,7 @@ def passive_aggressive_classifier_step(trial):
     Classifier
         The PassiveAggressiveClassifier object step.
     """
-    C = trial.suggest_float('C', 0.0, 10.0)
+    C = trial.suggest_float('C_passive_aggressive_classifier', 0.0, 10.0)
     passive_aggressive_classifier_kwargs = {'C': C}
     return passive_aggressive_classifier_model(
         passive_aggressive_classifier_kwargs=passive_aggressive_classifier_kwargs)
@@ -459,8 +460,8 @@ def huber_regressor_step(trial):
     Predictor
         The HuberRegressor object step.
     """
-    alpha = trial.suggest_float('alpha', 0.0, 2.0)
-    epsilon = trial.suggest_float('epsilon', 1.0, 2.0)
+    alpha = trial.suggest_float('alpha_huber_regressor', 0.0, 2.0)
+    epsilon = trial.suggest_float('epsilon_huber_regressor', 1.0, 2.0)
     huber_regressor_kwargs = {'alpha': alpha, 'epsilon': epsilon}
     return huber_regressor_model(huber_regressor_kwargs=huber_regressor_kwargs)
 
@@ -479,7 +480,7 @@ def ransac_regressor_step(trial):
     Predictor
         The RANSACRegressor object step.
     """
-    base_estimator = trial.suggest_categorical('base_estimator', ['linear', 'ridge', 'lasso'])
+    base_estimator = trial.suggest_categorical('base_estimator_ransac_regressor', ['linear', 'ridge', 'lasso'])
     if base_estimator == 'linear':
         model = LinearRegression()
     elif base_estimator == 'ridge':
@@ -523,7 +524,7 @@ def quantile_regressor_step(trial):
     Predictor
         The QuantileRegressor object step.
     """
-    alpha = trial.suggest_float('alpha', 0.0, 1.0)
+    alpha = trial.suggest_float('alpha_quantile_regressor', 0.0, 1.0)
     quantile = trial.suggest_uniform('quantile', 0.1, 0.9)
     quantile_regressor_kwargs = {'alpha': alpha, 'quantile': quantile}
     return quantile_regressor_model(quantile_regressor_kwargs=quantile_regressor_kwargs)
@@ -582,9 +583,9 @@ def kernel_ridge_step(trial):
     Predictor
         The KernelRidge object step.
     """
-    alpha = trial.suggest_float('alpha', 0.0, 1.0)
-    kernel = trial.suggest_categorical('kernel', ['linear', 'poly', 'rbf'])
-    gamma = trial.suggest_float('gamma', 0.0, 1.0)
+    alpha = trial.suggest_float('alpha_kernel_ridge', 0.0, 1.0)
+    kernel = trial.suggest_categorical('kernel_ridge', ['linear', 'poly', 'rbf'])
+    gamma = trial.suggest_float('gamma_kernel_ridge', 0.0, 1.0)
     kernel_ridge_kwargs = {'alpha': alpha, 'kernel': kernel, 'gamma': gamma}
     return kernel_ridge_regressor_model(kernel_ridge_regressor_kwargs=kernel_ridge_kwargs)
 
@@ -603,10 +604,10 @@ def svc_step(trial):
     Classifier
         The SVC object step.
     """
-    C = trial.suggest_float('C', 0.1, 10.0)
-    kernel = trial.suggest_categorical('kernel', ['linear', 'poly', 'rbf'])
-    gamma = trial.suggest_float('gamma', 0.0, 1.0)
-    degree = trial.suggest_int('degree', 2, 5)
+    C = trial.suggest_float('C_svc', 0.1, 10.0)
+    kernel = trial.suggest_categorical('kernel_svc', ['linear', 'poly', 'rbf'])
+    gamma = trial.suggest_float('gamma_svc', 0.0, 1.0)
+    degree = trial.suggest_int('degree_svc', 2, 5)
     svc_kwargs = {'C': C, 'kernel': kernel, 'gamma': gamma, 'degree': degree}
     return svc_model(svc_kwargs=svc_kwargs)
 
@@ -625,10 +626,10 @@ def nu_svc_step(trial):
     Classifier
         The NuSVC object step.
     """
-    nu = trial.suggest_float('nu', 0.0, 1.0)
-    kernel = trial.suggest_categorical('kernel', ['linear', 'poly', 'rbf'])
-    gamma = trial.suggest_float('gamma', 0.0, 1.0)
-    degree = trial.suggest_int('degree', 2, 5)
+    nu = trial.suggest_float('nu_nu_svc', 0.0, 1.0)
+    kernel = trial.suggest_categorical('kernel_nu_svc', ['linear', 'poly', 'rbf'])
+    gamma = trial.suggest_float('gamma_nu_svc', 0.0, 1.0)
+    degree = trial.suggest_int('degree_nu_svc', 2, 5)
     nu_svc_kwargs = {'nu': nu, 'kernel': kernel, 'gamma': gamma, 'degree': degree}
     return nu_svc_model(nu_svc_kwargs=nu_svc_kwargs)
 
@@ -647,7 +648,7 @@ def linear_svc_step(trial):
     Classifier
         The LinearSVC object step.
     """
-    C = trial.suggest_float('C', 0.1, 10.0)
+    C = trial.suggest_float('C_linear_svc', 0.1, 10.0)
     linear_svc_kwargs = {'C': C}
     return linear_svc_model(linear_svc_kwargs=linear_svc_kwargs)
 
@@ -666,8 +667,8 @@ def linear_svc_multiclass_step(trial):
     Classifier
         The LinearSVC object step.
     """
-    C = trial.suggest_float('C', 0.1, 10.0)
-    multiclass_type = trial.suggest_categorical('multiclass_type', ['ovr', 'crammer_singer'])
+    C = trial.suggest_float('C_linear_svc_multiclass', 0.1, 10.0)
+    multiclass_type = trial.suggest_categorical('multiclass_type_linear_svc_multiclass', ['ovr', 'crammer_singer'])
     linear_svc_multiclass_kwargs = {'C': C, 'multi_class': multiclass_type}
     return linear_svc_model(linear_svc_kwargs=linear_svc_multiclass_kwargs)
 
@@ -686,10 +687,10 @@ def svr_step(trial):
     Predictor
         The SVR object step.
     """
-    C = trial.suggest_float('C', 0.1, 10.0)
-    kernel = trial.suggest_categorical('kernel', ['linear', 'poly', 'rbf'])
-    gamma = trial.suggest_float('gamma', 0.0, 1.0)
-    degree = trial.suggest_int('degree', 2, 5)
+    C = trial.suggest_float('C_svr', 0.1, 10.0)
+    kernel = trial.suggest_categorical('kernel_svr', ['linear', 'poly', 'rbf'])
+    gamma = trial.suggest_float('gamma_svr', 0.0, 1.0)
+    degree = trial.suggest_int('degree_svr', 2, 5)
     svr_kwargs = {'C': C, 'kernel': kernel, 'gamma': gamma, 'degree': degree}
     return svr_model(svr_kwargs=svr_kwargs)
 
@@ -708,11 +709,11 @@ def nu_svr_step(trial):
     Predictor
         The NuSVR object step.
     """
-    nu = trial.suggest_float('nu', 0.0, 1.0)
-    C = trial.suggest_float('C', 0.1, 10.0)
-    kernel = trial.suggest_categorical('kernel', ['linear', 'poly', 'rbf'])
-    gamma = trial.suggest_float('gamma', 0.0, 1.0)
-    degree = trial.suggest_int('degree', 2, 5)
+    nu = trial.suggest_float('nu_nu_svr', 0.0, 1.0)
+    C = trial.suggest_float('C_nu_svr', 0.1, 10.0)
+    kernel = trial.suggest_categorical('kernel_nu_svr', ['linear', 'poly', 'rbf'])
+    gamma = trial.suggest_float('gamma_nu_svr', 0.0, 1.0)
+    degree = trial.suggest_int('degree_nu_svr', 2, 5)
     nu_svr_kwargs = {'nu': nu, 'kernel': kernel, 'gamma': gamma, 'degree': degree, 'C': C}
     return nu_svr_model(nu_svr_kwargs=nu_svr_kwargs)
 
@@ -731,8 +732,8 @@ def linear_svr_step(trial):
     Predictor
         The LinearSVR object step.
     """
-    epsilon = trial.suggest_float('epsilon', 0.0, 1.0)
-    C = trial.suggest_float('C', 0.1, 10.0)
+    epsilon = trial.suggest_float('epsilon_linear_svr', 0.0, 1.0)
+    C = trial.suggest_float('C_linear_svr', 0.1, 10.0)
     linear_svr_kwargs = {'epsilon': epsilon, 'C': C}
     return linear_svr_model(linear_svr_kwargs=linear_svr_kwargs)
 
@@ -751,10 +752,10 @@ def one_class_svm_step(trial):
     Predictor
         The OneClassSVM object step.
     """
-    nu = trial.suggest_float('nu', 0.0, 1.0)
-    kernel = trial.suggest_categorical('kernel', ['linear', 'poly', 'rbf'])
-    gamma = trial.suggest_float('gamma', 0.0, 1.0)
-    degree = trial.suggest_int('degree', 2, 5)
+    nu = trial.suggest_float('nu_one_class_svm', 0.0, 1.0)
+    kernel = trial.suggest_categorical('kernel_one_class_svm', ['linear', 'poly', 'rbf'])
+    gamma = trial.suggest_float('gamma_one_class_svm', 0.0, 1.0)
+    degree = trial.suggest_int('degree_one_class_svm', 2, 5)
     one_class_svm_kwargs = {'nu': nu, 'kernel': kernel, 'gamma': gamma, 'degree': degree}
     return one_class_svm_model(one_class_svm_kwargs=one_class_svm_kwargs)
 
@@ -774,9 +775,9 @@ def sgd_regressor_step(trial):
         The SGDRegressor object step.
     """
     penalty = trial.suggest_categorical('penalty', ['l2', 'l1', 'elasticnet'])
-    alpha = trial.suggest_float('alpha', 0.0, 1.0)
-    l1_ratio = trial.suggest_float('l1_ratio', 0.0, 1.0)
-    epsilon = trial.suggest_float('epsilon', 0.0, 1.0)
+    alpha = trial.suggest_float('alpha_sgd_regressor', 0.0, 1.0)
+    l1_ratio = trial.suggest_float('l1_ratio_sgd_regressor', 0.0, 1.0)
+    epsilon = trial.suggest_float('epsilon_sgd_regressor', 0.0, 1.0)
     sgd_regressor_kwargs = {'penalty': penalty, 'alpha': alpha, 'l1_ratio': l1_ratio, 'epsilon': epsilon}
     return sgd_regressor_model(sgd_regressor_kwargs=sgd_regressor_kwargs)
 
@@ -796,9 +797,9 @@ def sgd_classifier_step(trial):
         The SGDClassifier object step.
     """
     penalty = trial.suggest_categorical('penalty', ['l2', 'l1', 'elasticnet'])
-    alpha = trial.suggest_float('alpha', 0.0, 1.0)
-    l1_ratio = trial.suggest_float('l1_ratio', 0.0, 1.0)
-    epsilon = trial.suggest_float('epsilon', 0.0, 1.0)
+    alpha = trial.suggest_float('alpha_sgd_classifier', 0.0, 1.0)
+    l1_ratio = trial.suggest_float('l1_ratio_sgd_classifier', 0.0, 1.0)
+    epsilon = trial.suggest_float('epsilon_sgd_classifier', 0.0, 1.0)
     sgd_classifier_kwargs = {'penalty': penalty, 'alpha': alpha, 'l1_ratio': l1_ratio, 'epsilon': epsilon}
     return sgd_classifier_model(sgd_classifier_kwargs=sgd_classifier_kwargs)
 
@@ -817,7 +818,7 @@ def sgd_one_class_svm_step(trial):
     OneClassSVM
         The SGDOneClassSVM object step.
     """
-    nu = trial.suggest_float('nu', 0.0, 1.0)
+    nu = trial.suggest_float('nu_sgd_one_class_svm', 0.0, 1.0)
     tol = trial.suggest_float('tol', 0.0, 1.0)
     sgd_one_class_svm_kwargs = {'nu': nu, 'tol': tol}
     return sgd_one_class_svm_model(sgd_one_class_svm_kwargs=sgd_one_class_svm_kwargs)
@@ -837,10 +838,10 @@ def kneighbors_regressor_step(trial):
     Predictor
         The KNeighborsRegressor object step.
     """
-    n_neighbors = trial.suggest_int('n_neighbors', 2, 10)
-    weights = trial.suggest_categorical('weights', ['uniform', 'distance'])
-    algorithm = trial.suggest_categorical('algorithm', ['auto', 'ball_tree', 'kd_tree', 'brute'])
-    leaf_size = trial.suggest_int('leaf_size', 2, 10)
+    n_neighbors = trial.suggest_int('n_neighbors_kneighbors_regressor', 2, 10)
+    weights = trial.suggest_categorical('weights_kneighbors_regressor', ['uniform', 'distance'])
+    algorithm = trial.suggest_categorical('algorithm_kneighbors_regressor', ['auto', 'ball_tree', 'kd_tree', 'brute'])
+    leaf_size = trial.suggest_int('leaf_size_kneighbors_regressor', 2, 10)
     p = trial.suggest_int('p', 2, 10)
     kneighbors_regressor_kwargs = {'n_neighbors': n_neighbors, 'weights': weights, 'algorithm': algorithm,
                                    'leaf_size': leaf_size, 'p': p}
@@ -861,10 +862,10 @@ def kneighbors_classifier_step(trial):
     Classifier
         The KNeighborsClassifier object step.
     """
-    n_neighbors = trial.suggest_int('n_neighbors', 2, 10)
-    weights = trial.suggest_categorical('weights', ['uniform', 'distance'])
-    algorithm = trial.suggest_categorical('algorithm', ['auto', 'ball_tree', 'kd_tree', 'brute'])
-    leaf_size = trial.suggest_int('leaf_size', 2, 10)
+    n_neighbors = trial.suggest_int('n_neighbors_kneighbors_classifier', 2, 10)
+    weights = trial.suggest_categorical('weights_kneighbors_classifier', ['uniform', 'distance'])
+    algorithm = trial.suggest_categorical('algorithm_kneighbors_classifier', ['auto', 'ball_tree', 'kd_tree', 'brute'])
+    leaf_size = trial.suggest_int('leaf_size_kneighbors_classifier', 2, 10)
     p = trial.suggest_int('p', 2, 10)
     kneighbors_classifier_kwargs = {'n_neighbors': n_neighbors, 'weights': weights, 'algorithm': algorithm,
                                     'leaf_size': leaf_size, 'p': p}
@@ -885,10 +886,10 @@ def radius_neighbors_regressor_step(trial):
     Predictor
         The RadiusNeighborsRegressor object step.
     """
-    radius_n = trial.suggest_float('radius_n', 0.0, 10.0)
-    weights = trial.suggest_categorical('weights', ['uniform', 'distance'])
-    algorithm = trial.suggest_categorical('algorithm', ['auto', 'ball_tree', 'kd_tree', 'brute'])
-    leaf_size = trial.suggest_int('leaf_size', 2, 10)
+    radius_n = trial.suggest_float('radius_n_radius_neighbors_regressor', 0.0, 10.0)
+    weights = trial.suggest_categorical('weights_radius_neighbors_regressor', ['uniform', 'distance'])
+    algorithm = trial.suggest_categorical('algorithm_radius_neighbors_regressor', ['auto', 'ball_tree', 'kd_tree', 'brute'])
+    leaf_size = trial.suggest_int('leaf_size_radius_neighbors_regressor', 2, 10)
     p = trial.suggest_int('p', 2, 10)
     radius_neighbors_regressor_kwargs = {'radius': radius_n, 'weights': weights, 'algorithm': algorithm,
                                          'leaf_size': leaf_size, 'p': p}
@@ -909,10 +910,10 @@ def radius_neighbors_classifier_step(trial):
     Classifier
         The RadiusNeighborsClassifier object step.
     """
-    radius_n = trial.suggest_int('radius_n', 0.0, 10.0)
-    weights = trial.suggest_categorical('weights', ['uniform', 'distance'])
-    algorithm = trial.suggest_categorical('algorithm', ['auto', 'ball_tree', 'kd_tree', 'brute'])
-    leaf_size = trial.suggest_int('leaf_size', 2, 10)
+    radius_n = trial.suggest_int('radius_n_radius_neighbors_classifier', 0.0, 10.0)
+    weights = trial.suggest_categorical('weights_radius_neighbors_classifier', ['uniform', 'distance'])
+    algorithm = trial.suggest_categorical('algorithm_radius_neighbors_classifier', ['auto', 'ball_tree', 'kd_tree', 'brute'])
+    leaf_size = trial.suggest_int('leaf_size_radius_neighbors_classifier', 2, 10)
     p = trial.suggest_int('p', 2, 10)
     radius_neighbors_classifier_kwargs = {'radius': radius_n, 'weights': weights, 'algorithm': algorithm,
                                           'leaf_size': leaf_size, 'p': p}
@@ -952,7 +953,7 @@ def gaussian_process_regressor_step(trial):
     Predictor
         The GaussianProcessRegressor object step.
     """
-    alpha = trial.suggest_float('alpha', 0.0, 1.0)
+    alpha = trial.suggest_float('alpha_gaussian_process_regressor', 0.0, 1.0)
     gaussian_process_regressor_kwargs = {'alpha': alpha}
     return gaussian_process_regressor_model(gaussian_process_regressor_kwargs=gaussian_process_regressor_kwargs)
 
@@ -971,7 +972,7 @@ def gaussian_process_multiclass_classifier_step(trial):
     Classifier
         The GaussianProcessClassifier object step.
     """
-    multiclass_type = trial.suggest_categorical('multiclass_type', ['one_vs_rest', 'one_vs_one'])
+    multiclass_type = trial.suggest_categorical('multiclass_type_gaussian_process_multiclass', ['one_vs_rest', 'one_vs_one'])
     gaussian_process_multiclass_classifier_kwargs = {'multi_class': multiclass_type}
     return gaussian_process_classifier_model(
         gaussian_process_classifier_kwargs=gaussian_process_multiclass_classifier_kwargs)
@@ -1047,7 +1048,7 @@ def multinomial_nb_step(trial):
     Classifier
         The MultinomialNB object step.
     """
-    alpha = trial.suggest_float('alpha', 0.0, 1.0)
+    alpha = trial.suggest_float('alpha_multinomial_nb', 0.0, 1.0)
     multinomial_nb_kwargs = {'alpha': alpha}
     return multinomial_nb_model(multinomial_nb_kwargs=multinomial_nb_kwargs)
 
@@ -1066,7 +1067,7 @@ def bernoulli_nb_step(trial):
     Classifier
         The BernoulliNB object step.
     """
-    alpha = trial.suggest_float('alpha', 0.0, 1.0)
+    alpha = trial.suggest_float('alpha_bernoulli_nb', 0.0, 1.0)
     bernoulli_nb_kwargs = {'alpha': alpha}
     return bernoulli_nb_model(bernoulli_nb_kwargs=bernoulli_nb_kwargs)
 
@@ -1085,7 +1086,7 @@ def categorical_nb_step(trial):
     Classifier
         The CategoricalNB object step.
     """
-    alpha = trial.suggest_float('alpha', 0.0, 1.0)
+    alpha = trial.suggest_float('alpha_categorical_nb', 0.0, 1.0)
     categorical_nb_kwargs = {'alpha': alpha}
     return categorical_nb_model(categorical_nb_kwargs=categorical_nb_kwargs)
 
@@ -1104,7 +1105,7 @@ def complement_nb_step(trial):
     Classifier
         The ComplementNB object step.
     """
-    alpha = trial.suggest_float('alpha', 0.0, 1.0)
+    alpha = trial.suggest_float('alpha_complement_nb', 0.0, 1.0)
     complement_nb_kwargs = {'alpha': alpha}
     return complement_nb_model(complement_nb_kwargs=complement_nb_kwargs)
 
@@ -1141,7 +1142,7 @@ def decision_tree_classifier_step(trial):
     Classifier
         The DecisionTreeClassifier object step.
     """
-    criterion = trial.suggest_categorical('criterion', ['gini', 'entropy'])
+    criterion = trial.suggest_categorical('criterion_decision_tree', ['gini', 'entropy'])
     decision_tree_classifier_kwargs = {'criterion': criterion}
     return decision_tree_classifier_model(decision_tree_classifier_kwargs=decision_tree_classifier_kwargs)
 
@@ -1160,7 +1161,7 @@ def extra_tree_classifier_step(trial):
     Classifier
         The ExtraTreeClassifier object step.
     """
-    criterion = trial.suggest_categorical('criterion', ['gini', 'entropy'])
+    criterion = trial.suggest_categorical('criterion_extra_tree', ['gini', 'entropy'])
     extra_tree_classifier_kwargs = {'criterion': criterion}
     return extra_tree_classifier_model(extra_tree_classifier_kwargs=extra_tree_classifier_kwargs)
 
@@ -1197,10 +1198,10 @@ def random_forest_regressor_step(trial):
     Predictor
         The RandomForestRegressor object step.
     """
-    n_estimators = trial.suggest_int('n_estimators', 100, 1000, step=100)
-    criterion = trial.suggest_categorical('criterion', ['mse', 'mae'])
-    max_features = trial.suggest_categorical('max_features', ['auto', 'sqrt', 'log2'])
-    bootstrap = trial.suggest_categorical('bootstrap', [True, False])
+    n_estimators = trial.suggest_int('n_estimators_random_forest_regressor', 100, 1000, step=100)
+    criterion = trial.suggest_categorical('criterion_random_forest_regressor', ['squared_error', 'absolute_error', 'poisson', 'friedman_mse'])
+    max_features = trial.suggest_categorical('max_features_random_forest_regressor', ['auto', 'sqrt', 'log2'])
+    bootstrap = trial.suggest_categorical('bootstrap_random_forest_regressor', [True, False])
     random_forest_regressor_kwargs = {'n_estimators': n_estimators, 'criterion': criterion,
                                       'max_features': max_features, 'bootstrap': bootstrap}
     return random_forest_regressor_model(random_forest_regressor_kwargs=random_forest_regressor_kwargs)
@@ -1220,10 +1221,10 @@ def random_forest_classifier_step(trial):
     Classifier
         The RandomForestClassifier object step.
     """
-    n_estimators = trial.suggest_int('n_estimators', 100, 1000, step=100)
-    criterion = trial.suggest_categorical('criterion', ['gini', 'entropy'])
-    max_features = trial.suggest_categorical('max_features', ['auto', 'sqrt', 'log2'])
-    bootstrap = trial.suggest_categorical('bootstrap', [True, False])
+    n_estimators = trial.suggest_int('n_estimators_random_forest_classifier', 100, 1000, step=100)
+    criterion = trial.suggest_categorical('criterion_random_forest_classifier', ['gini', 'entropy'])
+    max_features = trial.suggest_categorical('max_features_random_forest_classifier', ['auto', 'sqrt', 'log2'])
+    bootstrap = trial.suggest_categorical('bootstrap_random_forest_classifier', [True, False])
     random_forest_classifier_kwargs = {'n_estimators': n_estimators, 'criterion': criterion,
                                        'max_features': max_features, 'bootstrap': bootstrap}
     return random_forest_classifier_model(random_forest_classifier_kwargs=random_forest_classifier_kwargs)
@@ -1243,10 +1244,10 @@ def extra_trees_regressor_step(trial):
     Predictor
         The ExtraTreesRegressor object step.
     """
-    n_estimators = trial.suggest_int('n_estimators', 100, 1000, step=100)
-    criterion = trial.suggest_categorical('criterion', ['mse', 'mae'])
-    max_features = trial.suggest_categorical('max_features', ['auto', 'sqrt', 'log2'])
-    bootstrap = trial.suggest_categorical('bootstrap', [True, False])
+    n_estimators = trial.suggest_int('n_estimators_extra_trees_regressor', 100, 1000, step=100)
+    criterion = trial.suggest_categorical('criterion_extra_trees_regressor', ['friedman_mse', 'squared_error', 'absolute_error', 'poisson'])
+    max_features = trial.suggest_categorical('max_features_extra_trees_regressor', ['auto', 'sqrt', 'log2'])
+    bootstrap = trial.suggest_categorical('bootstrap_extra_trees_regressor', [True, False])
     extra_trees_regressor_kwargs = {'n_estimators': n_estimators, 'criterion': criterion,
                                     'max_features': max_features, 'bootstrap': bootstrap}
     return extra_trees_regressor_model(extra_trees_regressor_kwargs=extra_trees_regressor_kwargs)
@@ -1266,10 +1267,10 @@ def extra_trees_classifier_step(trial):
     Classifier
         The ExtraTreesClassifier object step.
     """
-    n_estimators = trial.suggest_int('n_estimators', 100, 1000, step=100)
-    criterion = trial.suggest_categorical('criterion', ['gini', 'entropy'])
-    max_features = trial.suggest_categorical('max_features', ['auto', 'sqrt', 'log2'])
-    bootstrap = trial.suggest_categorical('bootstrap', [True, False])
+    n_estimators = trial.suggest_int('n_estimators_extra_trees_classifier', 100, 1000, step=100)
+    criterion = trial.suggest_categorical('criterion_extra_trees_classifier', ['gini', 'entropy'])
+    max_features = trial.suggest_categorical('max_features_extra_trees_classifier', ['auto', 'sqrt', 'log2'])
+    bootstrap = trial.suggest_categorical('bootstrap_extra_trees_classifier', [True, False])
     extra_trees_classifier_kwargs = {'n_estimators': n_estimators, 'criterion': criterion,
                                      'max_features': max_features, 'bootstrap': bootstrap}
     return extra_trees_classifier_model(extra_trees_classifier_kwargs=extra_trees_classifier_kwargs)
@@ -1289,9 +1290,9 @@ def ada_boost_regressor_step(trial):
     Predictor
         The AdaBoostRegressor object step.
     """
-    n_estimators = trial.suggest_int('n_estimators', 50, 500, step=50)
-    learning_rate = trial.suggest_float('learning_rate', 0.01, 1.0)
-    loss = trial.suggest_categorical('loss', ['linear', 'square', 'exponential'])
+    n_estimators = trial.suggest_int('n_estimators_ada_boost_regressor', 50, 500, step=50)
+    learning_rate = trial.suggest_float('learning_rate_ada_boost_regressor', 0.01, 1.0)
+    loss = trial.suggest_categorical('loss_ada_boost_regressor', ['linear', 'square', 'exponential'])
     ada_boost_regressor_kwargs = {'n_estimators': n_estimators, 'learning_rate': learning_rate, 'loss': loss}
     return ada_boost_regressor_model(ada_boost_regressor_kwargs=ada_boost_regressor_kwargs)
 
@@ -1310,9 +1311,9 @@ def ada_boost_classifier_step(trial):
     Classifier
         The AdaBoostClassifier object step.
     """
-    n_estimators = trial.suggest_int('n_estimators', 50, 500, step=50)
-    learning_rate = trial.suggest_float('learning_rate', 0.01, 1.0)
-    algorithm = trial.suggest_categorical('algorithm', ['SAMME', 'SAMME.R'])
+    n_estimators = trial.suggest_int('n_estimators_ada_boost_classifier', 50, 500, step=50)
+    learning_rate = trial.suggest_float('learning_rate_ada_boost_classifier', 0.01, 1.0)
+    algorithm = trial.suggest_categorical('algorithm_ada_boost_classifier', ['SAMME', 'SAMME.R'])
     ada_boost_classifier_kwargs = {'n_estimators': n_estimators, 'learning_rate': learning_rate,
                                    'algorithm': algorithm}
     return ada_boost_classifier_model(ada_boost_classifier_kwargs=ada_boost_classifier_kwargs)
@@ -1332,11 +1333,11 @@ def gradient_boosting_regressor_step(trial):
     Predictor
         The GradientBoostingRegressor object step.
     """
-    loss = trial.suggest_categorical('loss', ['ls', 'lad', 'huber', 'quantile'])
-    n_estimators = trial.suggest_int('n_estimators', 50, 500, step=50)
-    learning_rate = trial.suggest_float('learning_rate', 0.01, 1.0)
-    criterion = trial.suggest_categorical('criterion', ['friedman_mse', 'squared_error'])
-    max_features = trial.suggest_categorical('max_features', ['auto', 'sqrt', 'log2'])
+    loss = trial.suggest_categorical('loss_gradient_boosting_regressor', ['ls', 'lad', 'huber'])
+    n_estimators = trial.suggest_int('n_estimators_gradient_boosting_regressor', 50, 500, step=50)
+    learning_rate = trial.suggest_float('learning_rate_gradient_boosting_regressor', 0.01, 1.0)
+    criterion = trial.suggest_categorical('criterion_gradient_boosting_regressor', ['friedman_mse', 'squared_error'])
+    max_features = trial.suggest_categorical('max_features_gradient_boosting_regressor', ['auto', 'sqrt', 'log2'])
     gradient_boosting_regressor_kwargs = {'loss': loss, 'n_estimators': n_estimators,
                                           'learning_rate': learning_rate, 'criterion': criterion,
                                           'max_features': max_features}
@@ -1357,11 +1358,11 @@ def gradient_boosting_classifier_step(trial):
     Classifier
         The GradientBoostingClassifier object step.
     """
-    loss = trial.suggest_categorical('loss', ['deviance', 'exponential'])
-    n_estimators = trial.suggest_int('n_estimators', 50, 500, step=50)
-    learning_rate = trial.suggest_float('learning_rate', 0.01, 1.0)
-    criterion = trial.suggest_categorical('criterion', ['friedman_mse', 'mse'])
-    max_features = trial.suggest_categorical('max_features', ['auto', 'sqrt', 'log2'])
+    loss = trial.suggest_categorical('loss_gradient_boosting_classifier', ['deviance', 'exponential'])
+    n_estimators = trial.suggest_int('n_estimators_gradient_boosting_classifier', 50, 500, step=50)
+    learning_rate = trial.suggest_float('learning_rate_gradient_boosting_classifier', 0.01, 1.0)
+    criterion = trial.suggest_categorical('criterion_gradient_boosting_classifier', ['friedman_mse', 'squared_error'])
+    max_features = trial.suggest_categorical('max_features_gradient_boosting_classifier', ['auto', 'sqrt', 'log2'])
     gradient_boosting_classifier_kwargs = {'loss': loss, 'n_estimators': n_estimators,
                                            'learning_rate': learning_rate, 'criterion': criterion,
                                            'max_features': max_features}
@@ -1382,11 +1383,11 @@ def gradient_boosting_multiclass_classifier_step(trial):
     Classifier
         The GradientBoostingClassifier object step.
     """
-    loss = trial.suggest_categorical('loss', ['deviance', 'log_loss'])
-    n_estimators = trial.suggest_int('n_estimators', 50, 500, step=50)
-    learning_rate = trial.suggest_float('learning_rate', 0.01, 1.0)
-    criterion = trial.suggest_categorical('criterion', ['friedman_mse', 'mse'])
-    max_features = trial.suggest_categorical('max_features', ['auto', 'sqrt', 'log2'])
+    loss = trial.suggest_categorical('loss_gradient_boosting_multiclass_classifier', ['deviance', 'log_loss'])
+    n_estimators = trial.suggest_int('n_estimators_gradient_boosting_multiclass_classifier', 50, 500, step=50)
+    learning_rate = trial.suggest_float('learning_rate_gradient_boosting_multiclass_classifier', 0.01, 1.0)
+    criterion = trial.suggest_categorical('criterion_gradient_boosting_multiclass', ['friedman_mse', 'squared_error'])
+    max_features = trial.suggest_categorical('max_features_gradient_boosting_multiclass_classifier', ['auto', 'sqrt', 'log2'])
     gradient_boosting_classifier_kwargs = {'loss': loss, 'n_estimators': n_estimators,
                                            'learning_rate': learning_rate, 'criterion': criterion,
                                            'max_features': max_features}
@@ -1407,8 +1408,8 @@ def hist_gradient_boosting_regressor_step(trial):
     Predictor
         The HistGradientBoostingRegressor object step.
     """
-    loss = trial.suggest_categorical('loss', ['least_squares', 'least_absolute_deviation', 'poisson'])
-    learning_rate = trial.suggest_float('learning_rate', 0.01, 1.0)
+    loss = trial.suggest_categorical('loss_hist_gradient_boosting_regressor', ['poisson', 'absolute_error', 'squared_error'])
+    learning_rate = trial.suggest_float('learning_rate_hist_gradient_boosting_regressor', 0.01, 1.0)
     hist_gradient_boosting_regressor_kwargs = {'loss': loss, 'learning_rate': learning_rate}
     return hist_gradient_boosting_regressor_model(
         hist_gradient_boosting_regressor_kwargs=hist_gradient_boosting_regressor_kwargs)
@@ -1428,7 +1429,7 @@ def hist_gradient_boosting_classifier_step(trial):
     Classifier
         The HistGradientBoostingClassifier object step.
     """
-    learning_rate = trial.suggest_float('learning_rate', 0.01, 1.0)
+    learning_rate = trial.suggest_float('learning_rate_hist_gradient_boosting_classifier', 0.01, 1.0)
     hist_gradient_boosting_classifier_kwargs = {'learning_rate': learning_rate}
     return hist_gradient_boosting_classifier_model(
         hist_gradient_boosting_classifier_kwargs=hist_gradient_boosting_classifier_kwargs)
@@ -1540,7 +1541,7 @@ def bagging_regressor_step(trial):
     Predictor
         The BaggingRegressor object step.
     """
-    base_estimator = trial.suggest_categorical('base_estimator', ['lr', 'svr', 'rfr', 'gbr', 'mlpr'])
+    base_estimator = trial.suggest_categorical('base_estimator_bagging_regressor', ['lr', 'svr', 'rfr', 'gbr', 'mlpr'])
     if base_estimator == 'lr':
         base_estimator = LinearRegression()
     elif base_estimator == 'svr':
@@ -1551,8 +1552,8 @@ def bagging_regressor_step(trial):
         base_estimator = GradientBoostingRegressor()
     else:
         base_estimator = MLPRegressor()
-    n_estimators = trial.suggest_int('n_estimators', 50, 500, step=50)
-    bootstrap = trial.suggest_categorical('bootstrap', [True, False])
+    n_estimators = trial.suggest_int('n_estimators_bagging_regressor', 50, 500, step=50)
+    bootstrap = trial.suggest_categorical('bootstrap_bagging_regressor', [True, False])
     bootstrap_features = trial.suggest_categorical('bootstrap_features', [True, False])
     bagging_regressor_kwargs = {'base_estimator': base_estimator, 'n_estimators': n_estimators,
                                 'bootstrap': bootstrap, 'bootstrap_features': bootstrap_features}
@@ -1573,7 +1574,7 @@ def bagging_classifier_step(trial):
     Classifier
         The BaggingClassifier object step.
     """
-    base_estimator = trial.suggest_categorical('base_estimator', ['lr', 'svc', 'rfr', 'gbr', 'mlpr'])
+    base_estimator = trial.suggest_categorical('base_estimator_bagging_classifier', ['lr', 'svc', 'rfr', 'gbr', 'mlpr'])
     if base_estimator == 'lr':
         base_estimator = LogisticRegression()
     elif base_estimator == 'svc':
@@ -1584,8 +1585,8 @@ def bagging_classifier_step(trial):
         base_estimator = GradientBoostingClassifier()
     else:
         base_estimator = MLPClassifier()
-    n_estimators = trial.suggest_int('n_estimators', 50, 500, step=50)
-    bootstrap = trial.suggest_categorical('bootstrap', [True, False])
+    n_estimators = trial.suggest_int('n_estimators_bagging_classifier', 50, 500, step=50)
+    bootstrap = trial.suggest_categorical('bootstrap_bagging_classifier', [True, False])
     bootstrap_features = trial.suggest_categorical('bootstrap_features', [True, False])
     bagging_classifier_kwargs = {'base_estimator': base_estimator, 'n_estimators': n_estimators,
                                  'bootstrap': bootstrap, 'bootstrap_features': bootstrap_features}
@@ -1606,7 +1607,7 @@ def one_vs_rest_classifier_step(trial):
     Classifier
         The OneVsRestClassifier object step.
     """
-    estimator = trial.suggest_categorical('estimator', ['lr', 'svc', 'rfr', 'gbr', 'mlpr'])
+    estimator = trial.suggest_categorical('estimator_one_vs_rest_classifier', ['lr', 'svc', 'rfr', 'gbr', 'mlpr'])
     if estimator == 'lr':
         estimator = LogisticRegression()
     elif estimator == 'svc':
@@ -1635,7 +1636,7 @@ def one_vs_one_classifier_step(trial):
     Classifier
         The OneVsOneClassifier object step.
     """
-    estimator = trial.suggest_categorical('estimator', ['lr', 'svc', 'rfr', 'gbr', 'mlpr'])
+    estimator = trial.suggest_categorical('estimator_one_vs_one_classifier', ['lr', 'svc', 'rfr', 'gbr', 'mlpr'])
     if estimator == 'lr':
         estimator = LogisticRegression()
     elif estimator == 'svc':
@@ -1664,7 +1665,7 @@ def output_code_classifier_step(trial):
     Classifier
         The OutputCodeClassifier object step.
     """
-    estimator = trial.suggest_categorical('estimator', ['lr', 'svc', 'rfr', 'gbr', 'mlpr'])
+    estimator = trial.suggest_categorical('estimator_output_code_classifier', ['lr', 'svc', 'rfr', 'gbr', 'mlpr'])
     if estimator == 'lr':
         estimator = LogisticRegression()
     elif estimator == 'svc':
@@ -1694,7 +1695,7 @@ def multi_output_classifier_step(trial):
     Classifier
         The MultiOutputClassifier object step.
     """
-    estimator = trial.suggest_categorical('estimator', ['lr', 'svc', 'rfr', 'gbr', 'mlpr'])
+    estimator = trial.suggest_categorical('estimator_multi_output_classifier', ['lr', 'svc', 'rfr', 'gbr', 'mlpr'])
     if estimator == 'lr':
         estimator = LogisticRegression()
     elif estimator == 'svc':
@@ -1723,7 +1724,7 @@ def classifier_chain_step(trial):
     Classifier
         The ClassifierChain object step.
     """
-    estimator = trial.suggest_categorical('estimator', ['lr', 'svc', 'rfr', 'gbr', 'mlpr'])
+    estimator = trial.suggest_categorical('estimator_classifier_chain', ['lr', 'svc', 'rfr', 'gbr', 'mlpr'])
     if estimator == 'lr':
         estimator = LogisticRegression()
     elif estimator == 'svc':
@@ -1734,7 +1735,7 @@ def classifier_chain_step(trial):
         estimator = GradientBoostingClassifier()
     else:
         estimator = MLPClassifier()
-    order = trial.suggest_categorical('order', ['random', 'count', 'prior'])
+    order = trial.suggest_categorical('order_classifier_chain', ['random', None])
     classifier_chain_kwargs = {'estimator': estimator, 'order': order}
     return classifier_chain_model(classifier_chain_kwargs=classifier_chain_kwargs)
 
@@ -1753,7 +1754,7 @@ def multi_output_regressor_step(trial):
     Regressor
         The MultiOutputRegressor object step.
     """
-    estimator = trial.suggest_categorical('estimator', ['lr', 'svr', 'rfr', 'gbr', 'mlpr'])
+    estimator = trial.suggest_categorical('estimator_multi_output_regressor', ['lr', 'svr', 'rfr', 'gbr', 'mlpr'])
     if estimator == 'lr':
         estimator = LinearRegression()
     elif estimator == 'svr':
@@ -1782,7 +1783,7 @@ def regressor_chain_step(trial):
     Regressor
         The RegressorChain object step.
     """
-    estimator = trial.suggest_categorical('estimator', ['lr', 'svr', 'rfr', 'gbr', 'mlpr'])
+    estimator = trial.suggest_categorical('estimator_regressor_chain', ['lr', 'svr', 'rfr', 'gbr', 'mlpr'])
     if estimator == 'lr':
         estimator = LinearRegression()
     elif estimator == 'svr':
@@ -1793,7 +1794,7 @@ def regressor_chain_step(trial):
         estimator = GradientBoostingRegressor()
     else:
         estimator = MLPRegressor()
-    order = trial.suggest_categorical('order', ['random', 'count', 'prior'])
+    order = trial.suggest_categorical('order_regressor_chain', ['random', 'count', 'prior'])
     regressor_chain_kwargs = {'estimator': estimator, 'order': order}
     return regressor_chain_model(regressor_chain_kwargs=regressor_chain_kwargs)
 
@@ -1830,10 +1831,10 @@ def mlp_regressor_step(trial):
     Regressor
         The MLPRegressor object step.
     """
-    hidden_layer_sizes = trial.suggest_categorical("hidden_layer_sizes",
+    hidden_layer_sizes = trial.suggest_categorical("hidden_layer_sizes_mlp_regressor",
                                                    [str(cat) for cat in [(50,), (100,), (50, 50), (100, 50)]])
-    activation = trial.suggest_categorical("activation", ["relu", "tanh"])
-    alpha = trial.suggest_loguniform("alpha", 1e-5, 1e-2)
+    activation = trial.suggest_categorical("activation_mlp_regressor", ["relu", "tanh"])
+    alpha = trial.suggest_loguniform("alpha_mlp_regressor", 1e-5, 1e-2)
     mlp_regressor_kwargs = {'hidden_layer_sizes': eval(hidden_layer_sizes), 'activation': activation, 'alpha': alpha}
     return mlp_regressor_model(mlp_regressor_kwargs=mlp_regressor_kwargs)
 
@@ -1852,10 +1853,10 @@ def mlp_classifier_step(trial):
     Classifier
         The MLPClassifier object step.
     """
-    hidden_layer_sizes = trial.suggest_categorical("hidden_layer_sizes",
+    hidden_layer_sizes = trial.suggest_categorical("hidden_layer_sizes_mlp_classifier",
                                                    [str(cat) for cat in [(50,), (100,), (50, 50), (100, 50)]])
-    activation = trial.suggest_categorical("activation", ["relu", "tanh"])
-    alpha = trial.suggest_loguniform("alpha", 1e-5, 1e-2)
+    activation = trial.suggest_categorical("activation_mlp_classifier", ["relu", "tanh"])
+    alpha = trial.suggest_loguniform("alpha_mlp_classifier", 1e-5, 1e-2)
     mlp_classifier_kwargs = {'hidden_layer_sizes': eval(hidden_layer_sizes), 'activation': activation, 'alpha': alpha}
     return mlp_classifier_model(mlp_classifier_kwargs=mlp_classifier_kwargs)
 
@@ -1874,7 +1875,7 @@ def label_propagation_step(trial):
     Classifier
         The LabelPropagation object step.
     """
-    kernel = trial.suggest_categorical("kernel", ["knn", "rbf"])
+    kernel = trial.suggest_categorical("kernel_label_propagation", ["knn", "rbf"])
     label_propagation_kwargs = {'kernel': kernel}
     return label_propagation_model(label_propagation_kwargs=label_propagation_kwargs)
 
@@ -1893,7 +1894,7 @@ def label_spreading_step(trial):
     Classifier
         The LabelSpreading object step.
     """
-    kernel = trial.suggest_categorical("kernel", ["knn", "rbf"])
+    kernel = trial.suggest_categorical("kernel_label_spreading", ["knn", "rbf"])
     label_spreading_kwargs = {'kernel': kernel}
     return label_spreading_model(label_spreading_kwargs=label_spreading_kwargs)
 

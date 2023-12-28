@@ -812,7 +812,7 @@ class SmilesDataset(Dataset):
             self.clear_cached_properties()
             return self
         else:
-            raise ValueError('The list of indexes is empty.')
+            return self
 
     @inplace_decorator
     def select_features_by_name(self, names: List[str]) -> None:

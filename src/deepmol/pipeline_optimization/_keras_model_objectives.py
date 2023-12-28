@@ -53,8 +53,9 @@ def keras_fcnn_step(trial: Trial, input_shape: tuple, label_names: List[str] = N
                     'hidden_activations': hidden_activations, 'hidden_regularizers': l1_l2,
                     'hidden_dropouts': hidden_dropouts, 'batch_normalization': batch_normalization,
                     'last_layers_units': last_layers_units, 'last_layers_activations': last_layers_activations,
-                    'optimizer': 'adam', 'losses': losses, 'metrics': metrics}
-    keras_kwargs = {'mode': mode}
+                    'optimizer': 'adam', 'losses': losses, 'metrics': metrics, 'callbacks': [EarlyStopping(patience=10)]}
+    keras_kwargs = {'mode': mode, 'batch_size': trial.suggest_categorical('batch_size_fcnn', [16, 32, 64, 128, 256]),
+                    'epochs': trial.suggest_categorical('epochs_fcnn', [30, 50, 100, 150, 200, 300, 500, 1000])}
     return keras_fcnn_model(model_kwargs=model_kwargs, keras_kwargs=keras_kwargs)
 
 
@@ -108,8 +109,9 @@ def keras_1d_cnn_step(trial: Trial, input_shape: tuple, label_names: List[str] =
                     'conv_dropouts': conv_dropouts, 'conv_batch_norms': conv_batch_norms, 'dense_units': dense_units,
                     'dense_activation': dense_activation, 'dense_dropout': dense_dropout,
                     'last_layers_units': last_layers_units, 'last_layers_activations': last_layers_activations,
-                    'losses': losses, 'optimizer': 'adam', 'metrics': metrics}
-    keras_kwargs = {'mode': mode}
+                    'losses': losses, 'optimizer': 'adam', 'metrics': metrics, 'callbacks': [EarlyStopping(patience=10)]}
+    keras_kwargs = {'mode': mode, 'batch_size': trial.suggest_categorical('batch_size_1d_conv', [16, 32, 64, 128, 256]),
+                    'epochs': trial.suggest_categorical('epochs_1d_conv', [30, 50, 100, 150, 200, 300, 500, 1000])}
     return keras_1d_cnn_model(model_kwargs=model_kwargs, keras_kwargs=keras_kwargs)
 
 
@@ -160,8 +162,9 @@ def keras_tabular_transformer_step(trial: Trial, input_shape: tuple, label_names
                     'attention_key_dims': attention_key_dims, 'dense_units': dense_units,
                     'dense_activation': dense_activation, 'dense_dropout': dense_dropout, 'optimizer': 'adam',
                     'last_layers_units': last_layers_units, 'last_layers_activations': last_layers_activations,
-                    'losses': losses, 'metrics': metrics}
-    keras_kwargs = {'mode': mode}
+                    'losses': losses, 'metrics': metrics, 'callbacks': [EarlyStopping(patience=10)]}
+    keras_kwargs = {'mode': mode, 'batch_size': trial.suggest_categorical('batch_size_tabular_transformer', [16, 32, 64, 128, 256]),
+                    'epochs': trial.suggest_categorical('epochs_tabular_transformer', [30, 50, 100, 150, 200, 300, 500, 1000])}
     return keras_tabular_transformer_model(model_kwargs=model_kwargs, keras_kwargs=keras_kwargs)
 
 
@@ -208,8 +211,10 @@ def keras_simple_rnn_step(trial: Trial, input_shape: tuple, label_names: List[st
                     'n_rnn_layers': n_rnn_layers, 'rnn_units': rnn_units, 'rnn_dropouts': rnn_dropouts,
                     'dense_units': dense_units, 'dense_dropout': dense_dropout, 'dense_activation': dense_activation,
                     'optimizer': 'adam', 'last_layers_units': last_layers_units,
-                    'last_layers_activations': last_layers_activations, 'losses': losses, 'metrics': metrics}
-    keras_kwargs = {'mode': mode}
+                    'last_layers_activations': last_layers_activations, 'losses': losses, 'metrics': metrics,
+                    'callbacks': [EarlyStopping(patience=10)]}
+    keras_kwargs = {'mode': mode, 'batch_size': trial.suggest_categorical('batch_size_simple_rnn', [16, 32, 64, 128, 256]),
+                    'epochs': trial.suggest_categorical('epochs_simple_rnn', [30, 50, 100, 150, 200, 300, 500, 1000])}
     return keras_simple_rnn_model(model_kwargs=model_kwargs, keras_kwargs=keras_kwargs)
 
 
@@ -260,8 +265,10 @@ def keras_rnn_step(trial: Trial, input_shape: tuple, label_names: List[str] = No
                     'n_gru_layers': n_gru_layers, 'gru_units': gru_units, 'gru_dropout': gru_dropout,
                     'dense_units': dense_units, 'dense_dropout': dense_dropout, 'dense_activation': dense_activation,
                     'optimizer': 'adam', 'last_layers_units': last_layers_units,
-                    'last_layers_activations': last_layers_activations, 'losses': losses, 'metrics': metrics}
-    keras_kwargs = {'mode': mode}
+                    'last_layers_activations': last_layers_activations, 'losses': losses, 'metrics': metrics,
+                    'callbacks': [EarlyStopping(patience=10)]}
+    keras_kwargs = {'mode': mode, 'batch_size': trial.suggest_categorical('batch_size_rnn', [16, 32, 64, 128, 256]),
+                    'epochs': trial.suggest_categorical('epochs_rnn', [30, 50, 100, 150, 200, 300, 500, 1000])}
     return keras_rnn_model(model_kwargs=model_kwargs, keras_kwargs=keras_kwargs)
 
 
@@ -312,8 +319,10 @@ def keras_bidirectional_rnn_step(trial: Trial, input_shape: tuple, label_names: 
                     'n_gru_layers': n_gru_layers, 'gru_units': gru_units, 'gru_dropout': gru_dropout,
                     'dense_units': dense_units, 'dense_dropout': dense_dropout, 'dense_activation': dense_activation,
                     'optimizer': 'adam', 'last_layers_units': last_layers_units,
-                    'last_layers_activations': last_layers_activations, 'losses': losses, 'metrics': metrics}
-    keras_kwargs = {'mode': mode}
+                    'last_layers_activations': last_layers_activations, 'losses': losses, 'metrics': metrics,
+                    'callbacks': [EarlyStopping(patience=10)]}
+    keras_kwargs = {'mode': mode, 'batch_size': trial.suggest_categorical('batch_size_bi_rnn', [16, 32, 64, 128, 256]),
+                    'epochs': trial.suggest_categorical('epochs_bi_rnn', [30, 50, 100, 150, 200, 300, 500, 1000])}
     return keras_bidirectional_rnn_model(model_kwargs=model_kwargs, keras_kwargs=keras_kwargs)
 
 

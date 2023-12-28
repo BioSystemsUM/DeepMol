@@ -9,7 +9,7 @@ _STANDARDIZERS = {"basic_standardizer": BasicStandardizer,
                   'pass_through_standardizer': PassThroughTransformer}
 
 
-def _get_standardizer(trial) -> Transformer:
+def _get_standardizer(trial, featurizer=None) -> Transformer:
     """
     Get a Standardizer object for the Optuna optimization.
 
@@ -30,6 +30,9 @@ def _get_standardizer(trial) -> Transformer:
             params = simple_standardisation
         else:
             params = heavy_standardisation
+            if featurizer is not None:
+                if featurizer.__class__.__name__ == "TwoDimensionDescriptors":
+                    params['ADD_HYDROGEN'] = False
         return CustomStandardizer(params)
     else:
         return _STANDARDIZERS[standardizer]()

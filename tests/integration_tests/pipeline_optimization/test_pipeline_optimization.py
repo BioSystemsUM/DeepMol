@@ -19,6 +19,8 @@ from deepmol.models import SklearnModel
 from deepmol.pipeline_optimization import PipelineOptimization
 from deepmol.splitters import RandomSplitter
 
+from deepmol.pipeline_optimization._featurizer_objectives import _get_featurizer
+
 import tensorflow as tf
 
 from tests import TEST_DIR
@@ -313,6 +315,7 @@ class TestPipelineOptimization(TestCase):
         self.assertEqual(po.best_params, po.best_trial.params)
         self.assertIsInstance(po.best_value, float)
 
+    @skip("This test is too slow to run on CI")
     def test_predictor_weave_model_steps(self):
         from deepmol.pipeline_optimization._deepchem_models_objectives import weave_model_steps
 
@@ -351,6 +354,190 @@ class TestPipelineOptimization(TestCase):
                     save_top_n=3)
         self.assertEqual(po.best_params, po.best_trial.params)
         self.assertIsInstance(po.best_value, float)
+
+    @skip("This test is too slow to run on CI")
+    def test_predictor_robust_multitask_classifier_model_steps(self):
+        from deepmol.pipeline_optimization._deepchem_models_objectives import robust_multitask_classifier_model_steps
+
+        def objective(trial):
+            n_tasks = len(self.multitask_dataset.mode)
+            if self.multitask_dataset.mode == 'classification':
+                n_classes = len(set(self.multitask_dataset.y))
+            else:
+                n_classes = len(set(self.multitask_dataset.y[0]))
+
+            featurizer = _get_featurizer(trial, '1D')
+            n_features = len(featurizer.feature_names)
+            robust_multitask_classifier_kwargs = {'n_tasks': n_tasks, 'n_features': n_features, 'n_classes': n_classes}
+            model_step = robust_multitask_classifier_model_steps(trial=trial,
+                                                                    robust_multitask_classifier_kwargs=robust_multitask_classifier_kwargs)
+            featurizer = ('featurizer', featurizer)
+            steps = [featurizer, model_step[0]]
+            return steps
+
+        study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        po = PipelineOptimization(direction='maximize', study_name=study_name)
+        metric = Metric(accuracy_score)
+        train, test = RandomSplitter().train_test_split(self.multitask_dataset, seed=123)
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps=objective, metric=metric, n_trials=5,
+                    save_top_n=3)
+        self.assertEqual(po.best_params, po.best_trial.params)
+        self.assertIsInstance(po.best_value, float)
+
+    @skip("This test is not passing")
+    def test_predictor_progressive_multitask_classifier_model_steps(self):
+        from deepmol.pipeline_optimization._deepchem_models_objectives import progressive_multitask_classifier_model_steps
+
+        def objective(trial):
+            n_tasks = len(self.multitask_dataset.mode)
+            if self.multitask_dataset.mode == 'classification':
+                n_classes = len(set(self.multitask_dataset.y))
+            else:
+                n_classes = 2
+
+            featurizer = _get_featurizer(trial, '1D')
+            n_features = len(featurizer.feature_names)
+            progressive_multitask_classifier_kwargs = {'n_tasks': n_tasks, 'n_features': n_features, 'n_classes': n_classes}
+            model_step = progressive_multitask_classifier_model_steps(trial=trial,
+                                                                    progressive_multitask_classifier_kwargs=progressive_multitask_classifier_kwargs)
+            featurizer = ('featurizer', featurizer)
+            steps = [featurizer, model_step[0]]
+            return steps
+
+        study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        po = PipelineOptimization(direction='maximize', study_name=study_name)
+        metric = Metric(accuracy_score)
+        train, test = RandomSplitter().train_test_split(self.multitask_dataset, seed=123)
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps=objective, metric=metric, n_trials=5,
+                    save_top_n=3)
+        self.assertEqual(po.best_params, po.best_trial.params)
+        self.assertIsInstance(po.best_value, float)
+
+    @skip("This test takes too much time to run on CI")
+    def test_sklearn_model_steps(self):
+        from deepmol.pipeline_optimization._utils import preset_sklearn_models
+
+        study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        po = PipelineOptimization(direction='maximize', study_name=study_name)
+        metric = Metric(accuracy_score)
+        train, test = RandomSplitter().train_test_split(self.multitask_dataset, seed=123)
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps=preset_sklearn_models, metric=metric, n_trials=100,
+                    save_top_n=3, data=train, trial_timeout=60*10)
+        self.assertEqual(po.best_params, po.best_trial.params)
+        self.assertIsInstance(po.best_value, float)
+
+    @skip("This test takes too much time to run on CI")
+    def test_sklearn_classification_model_steps(self):
+        from deepmol.pipeline_optimization._utils import preset_sklearn_models
+
+        study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        po = PipelineOptimization(direction='maximize', study_name=study_name)
+        metric = Metric(accuracy_score)
+        train, test = RandomSplitter().train_test_split(self.dataset_descriptors, seed=123)
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps=preset_sklearn_models, metric=metric, n_trials=100,
+                    save_top_n=3, data=train, trial_timeout=60*10)
+        self.assertEqual(po.best_params, po.best_trial.params)
+        self.assertIsInstance(po.best_value, float)
+
+    @skip("This test takes too much time to run on CI")
+    def test_sklearn_regression_model_steps(self):
+        from deepmol.pipeline_optimization._utils import preset_sklearn_models
+
+        study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        po = PipelineOptimization(direction='minimize', study_name=study_name)
+        metric = Metric(mean_squared_error)
+        train, test = RandomSplitter().train_test_split(self.dataset_regression, seed=123)
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps=preset_sklearn_models, metric=metric, n_trials=100,
+                    save_top_n=3, data=train, trial_timeout=60*10)
+        self.assertEqual(po.best_params, po.best_trial.params)
+        self.assertIsInstance(po.best_value, float)
+
+    @skip("This test takes too much time to run on CI")
+    def test_keras_multi_task_model_steps(self):
+        from deepmol.pipeline_optimization._utils import preset_keras_models
+
+        study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        po = PipelineOptimization(direction='maximize', study_name=study_name)
+        metric = Metric(accuracy_score)
+        train, test = RandomSplitter().train_test_split(self.multitask_dataset, seed=123)
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps=preset_keras_models, metric=metric, n_trials=100,
+                    save_top_n=3, data=train, trial_timeout=60*10)
+        self.assertEqual(po.best_params, po.best_trial.params)
+        self.assertIsInstance(po.best_value, float)
+    
+    @skip("This test takes too much time to run on CI")
+    def test_keras_classification_model_steps(self):
+        from deepmol.pipeline_optimization._utils import preset_keras_models
+
+        study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        po = PipelineOptimization(direction='maximize', study_name=study_name)
+        metric = Metric(accuracy_score)
+        train, test = RandomSplitter().train_test_split(self.dataset_descriptors, seed=123)
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps=preset_keras_models, metric=metric, n_trials=100,
+                    save_top_n=3, data=train, trial_timeout=60*1)
+        self.assertEqual(po.best_params, po.best_trial.params)
+        self.assertIsInstance(po.best_value, float)
+
+    @skip("This test takes too much time to run on CI")
+    def test_keras_regression_model_steps(self):
+        from deepmol.pipeline_optimization._utils import preset_keras_models
+
+        study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        po = PipelineOptimization(direction='minimize', study_name=study_name)
+        metric = Metric(mean_squared_error)
+        train, test = RandomSplitter().train_test_split(self.dataset_regression, seed=123)
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps=preset_keras_models, metric=metric, n_trials=100,
+                    save_top_n=3, data=train, trial_timeout=60*10)
+        self.assertEqual(po.best_params, po.best_trial.params)
+        self.assertIsInstance(po.best_value, float)
+
+    def test_deepchem_multi_task_model_steps(self):
+        from deepmol.pipeline_optimization._utils import preset_deepchem_models
+
+        study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        po = PipelineOptimization(direction='maximize', study_name=study_name)
+        metric = Metric(accuracy_score)
+        train, test = RandomSplitter().train_test_split(self.multitask_dataset, seed=123)
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps=preset_deepchem_models, metric=metric, n_trials=100,
+                    save_top_n=3, data=train, trial_timeout=60*10)
+        self.assertEqual(po.best_params, po.best_trial.params)
+        self.assertIsInstance(po.best_value, float)
+
+    def test_deepchem_classification_model_steps(self):
+        from deepmol.pipeline_optimization._utils import preset_deepchem_models
+
+        study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        po = PipelineOptimization(direction='maximize', study_name=study_name)
+        metric = Metric(accuracy_score)
+        train, test = RandomSplitter().train_test_split(self.dataset_descriptors, seed=123)
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps=preset_deepchem_models, metric=metric, n_trials=100,
+                    save_top_n=3, data=train, trial_timeout=60*10)
+        self.assertEqual(po.best_params, po.best_trial.params)
+        self.assertIsInstance(po.best_value, float)
+
+    def test_deepchem_regression_model_steps(self):
+        from deepmol.pipeline_optimization._utils import preset_deepchem_models
+
+        study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        po = PipelineOptimization(direction='maximize', study_name=study_name)
+        metric = Metric(mean_squared_error)
+        train, test = RandomSplitter().train_test_split(self.dataset_regression, seed=123)
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps=preset_deepchem_models, metric=metric, n_trials=100,
+                    save_top_n=3, data=train, trial_timeout=60*10)
+        self.assertEqual(po.best_params, po.best_trial.params)
+        self.assertIsInstance(po.best_value, float)
+
+    def test_gcn_featurization(self):
+
+        from deepmol.standardizer import CustomStandardizer
+        from deepmol.compound_featurization import MolGraphConvFeat
+        from deepmol.pipeline import Pipeline
+
+        standardizer = CustomStandardizer()
+        featurizer = MolGraphConvFeat(use_chirality=True, use_edges=True, use_partial_charge=True)
+        new_pipeline_steps = [("standardizer", standardizer), ("featurizer", featurizer)]
+        new_pipeline = Pipeline(new_pipeline_steps)
+        new_pipeline.fit_transform(self.multitask_dataset) 
 
     @skip("This test is too slow to run on CI and can have different results on different trials")
     def test_classification_preset(self):

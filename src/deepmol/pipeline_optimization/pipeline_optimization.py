@@ -1,4 +1,5 @@
 import os
+import warnings
 from typing import Union, List
 
 import optuna
@@ -8,9 +9,8 @@ from optuna.samplers import BaseSampler
 from optuna.storages import BaseStorage
 from optuna.study import StudyDirection
 
-from deepmol.datasets import Dataset
-from deepmol.metrics import Metric
 from deepmol.pipeline import Pipeline
+from deepmol.pipeline.ensemble import VotingPipeline
 from deepmol.pipeline_optimization._utils import _get_preset
 from deepmol.pipeline_optimization.objective_wrapper import ObjectiveTrainEval, Objective
 
@@ -81,14 +81,17 @@ class PipelineOptimization:
                  study_name: str = None,
                  direction: Union[str, StudyDirection] = None,
                  load_if_exists: bool = False,
-                 directions: List[Union[str, StudyDirection]] = None) -> None:
+                 directions: List[Union[str, StudyDirection]] = None,
+                 n_pipelines_ensemble=5) -> None:
         """
         Initialize the PipelineOptimization class.
         """
+        self._pipelines_ensemble = None
         self.direction = direction
         self.study = optuna.create_study(storage=storage, sampler=sampler, pruner=pruner, study_name=study_name,
                                          direction=direction, load_if_exists=load_if_exists, directions=directions)
         self.study.set_user_attr("best_scores", {})
+        self.n_pipelines_ensemble = n_pipelines_ensemble
 
     def optimize(self, objective_steps: Union[callable, str], n_trials: int, save_top_n: int = 1,
                  objective: Objective = ObjectiveTrainEval,
@@ -116,8 +119,48 @@ class PipelineOptimization:
                 'objective_steps must be one of the following: keras, deepchem, sklearn, all'
             objective_steps = _get_preset(objective_steps)
         objective = objective(objective_steps, self.study, self.direction,
-                                       save_top_n, trial_timeout, **kwargs)
+                              save_top_n, trial_timeout, **kwargs)
         self.study.optimize(objective, n_trials=n_trials)
+        if self.n_pipelines_ensemble > 0:
+            if save_top_n < self.n_pipelines_ensemble:
+                warnings.warn(f'save_top_n ({save_top_n}) is smaller than n_pipelines_ensemble, '
+                              f'producing an ensemble pipeline with {save_top_n} pipelines.')
+                self.n_pipelines_ensemble = save_top_n
+            self.get_pipelines_ensemble()
+
+    def get_pipelines_ensemble(self):
+        """
+        Returns the best pipelines ensemble.
+        """
+        trials_df = self.trials_dataframe()
+        best_trials = (trials_df[trials_df['state'] == 'COMPLETE'].
+                       sort_values('value', ascending=False))
+        pipelines = []
+        i = 0
+        while len(pipelines) < self.n_pipelines_ensemble:
+            path_exists = False
+            while not path_exists:
+                number = best_trials.iloc[i]['number']
+                path = os.path.join(self.study.study_name, f'trial_{number}')
+                if os.path.exists(path):
+                    pipelines.append(Pipeline.load(path))
+                    path_exists = True
+                i += 1
+
+        voting_pipeline = VotingPipeline(pipelines=pipelines, voting='soft')
+        voting_pipeline.save(os.path.join(self.study.study_name, 'voting_pipeline'))
+        self._pipelines_ensemble = voting_pipeline
+
+    @property
+    def pipelines_ensemble(self):
+        """
+        Returns the pipelines ensemble.
+        """
+        if self._pipelines_ensemble is None:
+            raise AttributeError('pipelines_ensemble attribute is not available. '
+                                 'Set a number to pipeline.n_pipelines_ensemble'
+                                 'and run pipeline.get_pipelines_ensemble() to get the pipelines ensemble. ')
+        return self._pipelines_ensemble
 
     @property
     def best_params(self):

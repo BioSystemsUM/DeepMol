@@ -36,7 +36,7 @@ class ConvMolFeat(MolecularFeaturizer):
     def __init__(self,
                  master_atom: bool = False,
                  use_chirality: bool = False,
-                 atom_properties: List[str] = None,
+                 atom_properties:bool = True,
                  per_atom_fragmentation: bool = False,
                  **kwargs) -> None:
         """
@@ -46,8 +46,8 @@ class ConvMolFeat(MolecularFeaturizer):
             If True, create a fake atom with bonds to every other atom.
         use_chirality: bool
             If True, include chirality information.
-        atom_properties: List[str]
-            List of atom properties to use as additional atom-level features in the larger molecular feature.
+        atom_properties: bool
+            If True, include atom properties.
         per_atom_fragmentation: bool
             If True, then multiple "atom-depleted" versions of each molecule will be created.
         kwargs:
@@ -124,14 +124,17 @@ class ConvMolFeat(MolecularFeaturizer):
             The ConvMol features of the molecule.
         """
         # featurization process using DeepChem ConvMolFeaturizer
-        mol, properties = self.get_atom_features(mol)
+        if self.atom_properties:
+            mol, properties = self.get_atom_features(mol)
 
-        self.atom_properties = [name for name, _ in properties]
+            self.atom_properties_ = [name for name, _ in properties]
+        else:
+            self.atom_properties_ = []
 
         feature = ConvMolFeaturizer(
             master_atom=self.master_atom,
             use_chirality=self.use_chirality,
-            atom_properties=self.atom_properties,
+            atom_properties=self.atom_properties_,
             per_atom_fragmentation=self.per_atom_fragmentation).featurize([mol])
 
         assert feature[0].atom_features is not None

@@ -134,3 +134,19 @@ class TestEnsemblePipeline(TestPipeline):
 
         vp = VotingPipeline(pipelines=[pipeline1, pipeline3], weights=[1, 2])
         vp.predict(self.dataset_descriptors)
+
+
+    def test_predict_proba(self):
+        rf = RandomForestClassifier()
+        knn = KNeighborsClassifier()
+        fingerprint = MorganFingerprint()
+
+        model_rf = SklearnModel(model=rf, model_dir='model_rf')
+        model_knn = SklearnModel(model=knn, model_dir='model_knn')
+        pipeline1 = Pipeline(steps=[("fingerprint", fingerprint), ('model', model_rf)], path='test_pipeline_rf/')
+        pipeline3 = Pipeline(steps=[("fingerprint", fingerprint), ('model', model_knn)], path='test_pipeline_knn/')
+        vp = VotingPipeline(pipelines=[pipeline1, pipeline3], weights=[1, 2])
+        vp.fit(self.dataset_descriptors)
+        predictions = vp.predict_proba(self.dataset_descriptors)
+        print(predictions)
+        self.assertEqual(len(predictions), len(self.dataset_descriptors.y))

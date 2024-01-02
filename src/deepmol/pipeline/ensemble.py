@@ -187,6 +187,46 @@ class VotingPipeline:
                     final_predictions[:, i] = self._voting(predictions_i)
 
             return final_predictions
+    
+    def predict_proba(self, dataset: Dataset) -> np.ndarray:
+        """
+        Makes predictions for the given dataset using the voting pipeline.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            Dataset to be used for prediction.
+
+        Returns
+        -------
+        np.ndarray
+            Array of predictions.
+        """
+        if dataset.mode == 'classification':
+            predictions = [pipeline.predict_proba(dataset) for pipeline in self.pipelines]
+            return np.average(predictions, axis=0, weights=self.weights)
+        elif dataset.mode == 'regression':
+            predictions = [pipeline.predict(dataset) for pipeline in self.pipelines]
+            return np.average(predictions, axis=0, weights=self.weights)
+        else:
+            predictions = [pipeline.predict_proba(dataset) for pipeline in self.pipelines]
+
+            final_predictions = np.empty(predictions[0].shape)
+
+            # Vectorized operations for regression tasks
+            regression_indices = [i for i, mode in enumerate(dataset.mode) if mode == 'regression']
+            if regression_indices:
+                regression_predictions = np.average([prediction[:, regression_indices] for prediction in predictions],
+                                                    axis=0, weights=self.weights)
+                final_predictions[:, regression_indices] = regression_predictions
+
+            # Loop for classification tasks - potential for further optimization depending on the _voting implementation
+            for i, mode in enumerate(dataset.mode):
+                if mode == 'classification':
+                    predictions_i = [prediction[:, i] for prediction in predictions]
+                    final_predictions[:, i] = np.average(predictions_i, axis=0, weights=self.weights)
+
+            return final_predictions
 
     def evaluate(self, dataset: Dataset, metrics: List[Metric],
                  per_task_metrics: bool = False) -> Tuple[Dict, Union[None, Dict]]:

@@ -282,7 +282,7 @@ class VotingPipeline:
         if not os.path.exists(path):
             os.makedirs(path)
         for pipeline in self.pipelines:
-            pipeline.path = os.path.join(path, pipeline.path)
+            pipeline.path = os.path.join(path, os.path.basename(os.path.normpath(pipeline.path)))
             pipeline.save()
         # save json with voting and weights info
         with open(os.path.join(path, 'voting_pipeline.json'), 'w') as f:

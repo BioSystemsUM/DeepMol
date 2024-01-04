@@ -364,9 +364,14 @@ class DeepChemModel(BaseDeepChemModel, Predictor):
         model_parameters = load_from_disk(os.path.join(folder_path, "model_parameters.pkl"))
 
         model = model_parameters.pop('model_instance')
+        model_parameters.update(deepchem_model_parameters)
+
         deepchem_model = cls(model=model, 
-                             model_dir=os.path.join(folder_path, "model"), **model_parameters, **deepchem_model_parameters)
-        deepchem_model.model.restore(model_dir=os.path.join(folder_path, "model"))
+                             model_dir=os.path.join(folder_path, "model"), **model_parameters)
+        try:
+            deepchem_model.model.restore(model_dir=os.path.join(folder_path, "model"))
+        except ValueError:
+            print("The model was not restored. The model was probably not trained.")
         return deepchem_model
 
     def cross_validate(self,

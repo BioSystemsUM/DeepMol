@@ -57,6 +57,7 @@ class KerasModel(Model):
         self.epochs = epochs
         self.model_builder = model_builder
         self.verbose = verbose
+        self.builder_kwargs = kwargs
 
         self.fit_kwargs = {}
 
@@ -149,14 +150,12 @@ class KerasModel(Model):
             if "callbacks" not in kwargs and "callbacks" in self.fit_kwargs:
                 kwargs["callbacks"] = self.fit_kwargs["callbacks"]
 
-            self.model.fit(features, y, epochs=self.epochs, batch_size=self.batch_size, verbose=self.verbose,
-                                          **kwargs)
+            self.model.fit(features, y, epochs=self.epochs, batch_size=self.batch_size, verbose=self.verbose, **kwargs)
         
         if isinstance(self.model, KerasClassifier) or isinstance(self.model, KerasRegressor):
             self.history = self.model.history_
         else:
             self.history = self.model.history
-        
 
     def predict(self, dataset: Dataset) -> np.ndarray:
         """

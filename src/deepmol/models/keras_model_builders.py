@@ -5,7 +5,6 @@ from tensorflow.keras.layers import Dense, Dropout, BatchNormalization, Gaussian
     Embedding, MultiHeadAttention, LayerNormalization, Input, SimpleRNN, LSTM, GRU, Bidirectional
 
 from deepmol.models import KerasModel
-from keras.callbacks import EarlyStopping
 
 
 def keras_fcnn_model_builder(input_dim: int, n_tasks: int = 1, label_names: List[str] = None, n_hidden_layers: int = 1,

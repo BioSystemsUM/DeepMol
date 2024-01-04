@@ -134,8 +134,6 @@ class TestKerasModel(ModelsTestCase, TestCase):
             shutil.rmtree("test_model")
             self.assertEqual(2, len(model.history['loss']))
             self.assertEqual(2, len(model.history['val_loss']))
-            
-
 
     def test_weights_reset(self):
         model = keras_fcnn_model(model_kwargs={'input_dim': 50}, keras_kwargs={})

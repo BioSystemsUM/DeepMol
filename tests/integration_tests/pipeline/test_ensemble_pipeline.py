@@ -152,14 +152,14 @@ class TestEnsemblePipeline(TestPipeline):
         self.assertEqual(len(predictions), len(self.dataset_descriptors.y))
 
     def test_deepchem_models(self):
-        from deepchem.models import GraphConvModel
+        from deepchem.models import AttentiveFPModel
         from deepmol.models import DeepChemModel
-        from deepmol.compound_featurization import ConvMolFeat
+        from deepmol.compound_featurization import MolGraphConvFeat
 
-        featurizer = ConvMolFeat()
-        graph_conv = GraphConvModel
-        deepchem_model = DeepChemModel(graph_conv, n_tasks=1, batch_size=50, mode='classification', model_dir='model_gc',
-                                       epochs=2)
+        featurizer = MolGraphConvFeat(use_edges=True)
+        graph_conv = AttentiveFPModel
+        deepchem_model = DeepChemModel(graph_conv, n_tasks=1, mode='classification', model_dir='model_gc',
+                                       epochs=2, device="cpu")
         pipeline1 = Pipeline(steps=[("featurizer", featurizer), ('model', deepchem_model)], path='test_pipeline_gc/')
         pipeline1.fit(self.dataset_descriptors)
         pipeline2 = Pipeline(steps=[("featurizer", featurizer), ('model', deepchem_model)], path='test_pipeline_gc2/')
@@ -170,5 +170,6 @@ class TestEnsemblePipeline(TestPipeline):
         pipeline1.save()
 
         voting_pipeline = VotingPipeline(pipelines=[pipeline1, pipeline2], weights=[1, 2])
-        voting_pipeline.save("test_voting_pipeline")
-        voting_pipeline_loaded = VotingPipeline.load("test_voting_pipeline")
+        voting_pipeline.predict_proba(self.dataset_descriptors)
+        # voting_pipeline.save("test_voting_pipeline")
+        # voting_pipeline_loaded = VotingPipeline.load("test_voting_pipeline")

@@ -242,7 +242,8 @@ ConvMolFeat(n_jobs=10).featurize(test_dataset, inplace=True)
 from deepchem.models import GraphConvModel
 from deepmol.models import DeepChemModel
 
-model = DeepChemModel(model=GraphConvModel(graph_conv_layers=[32, 32], dense_layer_size=128, n_tasks=1), epochs=5, verbose=1)
+model = DeepChemModel(model=GraphConvModel, graph_conv_layers=[32, 32], dense_layer_size=128, 
+                      n_tasks=1, epochs=5, verbose=1)
 model.fit(train_dataset)
 ```
 

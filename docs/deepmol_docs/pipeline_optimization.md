@@ -1,4 +1,4 @@
-# DeepMol Pipeline Optimization
+# DeepMol Pipeline Optimization (AutoML)
 
 In DeepMol we can optimize Pipelines using the `PipelineOptimization` class. This class
 uses the `Optuna` library to optimize the hyperparameters of the pipeline. It is possible
@@ -31,7 +31,7 @@ steps = [('featurizer', featurizer), ('scaler', scaler), ('model', model)]
 The pipeline will first apply the featurizer, then the scaler and finally the model.
 
 
-## Example using a custom objective function
+## Example using a custom steps function
 
 In the following example we will assume that you already have the data processed (ready for
 training). We will only use DeepMol's PipelineOptimization class to optimize the final
@@ -50,7 +50,7 @@ from deepmol.pipeline_optimization import PipelineOptimization
 from deepmol.splitters import RandomSplitter
 
 # DEFINE THE OBJECTIVE FUNCTION
-def objective(trial):
+def steps(trial):
     model = trial.suggest_categorical('model', ['RandomForestClassifier', 'SVC'])
     if model == 'RandomForestClassifier':
         n_estimators = trial.suggest_int('model__n_estimators', 10, 100, step=10)
@@ -75,14 +75,16 @@ dataset_descriptors = loader.create_dataset(sep=",")
 po = PipelineOptimization(direction='maximize', study_name='test_predictor_pipeline')
 metric = Metric(accuracy_score)
 train, test = RandomSplitter().train_test_split(dataset_descriptors, seed=123)
-po.optimize(train_dataset=train, test_dataset=test, objective_steps=objective, 
-            metric=metric, n_trials=5, save_top_n=3)
+po.optimize(train_dataset=train, test_dataset=test, objective_steps=steps, 
+            metric=metric, n_trials=5, save_top_n=3, trial_timeout=600)
 ``` 
 
 This will optimize between the objective function and will save the top 3 pipelines
 (save_top_n=3) in the `study_name` folder. The `direction` parameter indicates if we want
 to maximize or minimize the metric. In this case we want to maximize the accuracy. The
-`n_trials` parameter indicates the number of trials that will be performed by `Optuna`.
+`n_trials` parameter indicates the number of trials that will be performed by `Optuna`. 
+Moreover, if the `trial_timeout` parameter is set, the trial will stop after the
+given number of seconds.
 
 Additionally, we can also provide a storage (see: https://optuna.readthedocs.io/en/stable/reference/storages.html),
 a sampler (https://optuna.readthedocs.io/en/stable/reference/samplers/index.html) and a
@@ -144,6 +146,7 @@ from deepmol.metrics import Metric
 from deepmol.pipeline_optimization import PipelineOptimization
 from deepmol.splitters import RandomSplitter
 from sklearn.metrics import mean_squared_error
+import optuna
 
 # LOAD THE DATA
 loader = CSVLoader('dataset_regression_path',
@@ -153,14 +156,78 @@ loader = CSVLoader('dataset_regression_path',
 dataset_regression = loader.create_dataset(sep=",")
 
 # OPTIMIZE THE PIPELINE
-po = PipelineOptimization(direction='minimize', study_name='test_pipeline')
+po = PipelineOptimization(direction='minimize', study_name='test_pipeline', sampler=optuna.samplers.TPESampler(seed=42),
+                          storage='sqlite:///my_experience.db')
 metric = Metric(mean_squared_error)
 train, test = RandomSplitter().train_test_split(dataset_regression, seed=123)
 po.optimize(train_dataset=train, test_dataset=test, objective_steps='all', 
-            metric=metric, n_trials=10, data=train, save_top_n=2)
+            metric=metric, n_trials=10, data=train, save_top_n=2, trial_timeout=600)
 ```
 
 In this case we are optimizing between all the available steps in DeepMol.
 In this case we want to minimize the mean squared error (regression task).
 
 The best params and best pipeline can be obtained as in the previous example.
+
+
+## Implement a custom objective class
+
+In the following example we will implement a custom objective class. By default, the
+objective class is `ObjectiveTrainEval`. This class will train the pipeline using the
+train dataset and will evaluate the pipeline using the validation dataset. 
+A new objective class must inherit from `Objective` and must implement the `__call__`
+method. This method will receive a `Trial` object from `Optuna` and must return a
+dictionary with the following keys:
+- `'objective_steps'`: a list of tuples where the first element of the tuple is the name of the step
+            and the second element is the object that implements the step.
+- `'study'`: the `Study` object from `Optuna`.
+- `'direction'`: the direction of the optimization (i.e. maximize or minimize).
+- `'save_top_n'`: the number of top pipelines to save.
+- `'trial_timeout'`: the number of seconds the trial has to run.
+
+Here is an example of a custom objective function:
+
+```python
+class MyObjective(Objective):
+    """
+    
+    Parameters
+    ----------
+    objective_steps : callable
+        Function that returns the steps of the pipeline for a given trial.
+    study : optuna.study.Study
+        Study object that stores the optimization history.
+    direction : str or optuna.study.StudyDirection
+        Direction of the optimization (minimize or maximize).
+    save_top_n : int
+        Number of best pipelines to save.
+    **kwargs
+        Additional keyword arguments passed to the objective_steps function.
+    """
+
+    def __init__(self, objective_steps, study, direction, save_top_n,
+                 trial_timeout=86400, **kwargs):
+        """
+        Initialize the objective function.
+        """
+        super().__init__(objective_steps, study, direction, save_top_n)
+        self.metric = kwargs.pop('metric')
+        self.trial_timeout = trial_timeout
+        self.kwargs = kwargs
+
+    def __call__(self, trial: Trial):
+        """
+        Call the objective function.
+        """
+        try:
+            @timeout_decorator.timeout(self.trial_timeout, timeout_exception=optuna.TrialPruned)
+            def run_with_timeout():
+                ...
+                return score
+            score = run_with_timeout()
+        except ValueError as e:
+            print(e)
+            return float('inf') if self.direction == 'minimize' else float('-inf')
+        except Exception as e:
+            print(e)
+            return float('inf') if self.direction == 'minimize' else float('-inf')

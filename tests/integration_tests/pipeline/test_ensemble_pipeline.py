@@ -134,3 +134,42 @@ class TestEnsemblePipeline(TestPipeline):
 
         vp = VotingPipeline(pipelines=[pipeline1, pipeline3], weights=[1, 2])
         vp.predict(self.dataset_descriptors)
+
+
+    def test_predict_proba(self):
+        rf = RandomForestClassifier()
+        knn = KNeighborsClassifier()
+        fingerprint = MorganFingerprint()
+
+        model_rf = SklearnModel(model=rf, model_dir='model_rf')
+        model_knn = SklearnModel(model=knn, model_dir='model_knn')
+        pipeline1 = Pipeline(steps=[("fingerprint", fingerprint), ('model', model_rf)], path='test_pipeline_rf/')
+        pipeline3 = Pipeline(steps=[("fingerprint", fingerprint), ('model', model_knn)], path='test_pipeline_knn/')
+        vp = VotingPipeline(pipelines=[pipeline1, pipeline3], weights=[1, 2])
+        vp.fit(self.dataset_descriptors)
+        predictions = vp.predict_proba(self.dataset_descriptors)
+        print(predictions)
+        self.assertEqual(len(predictions), len(self.dataset_descriptors.y))
+
+    def test_deepchem_models(self):
+        from deepchem.models import AttentiveFPModel
+        from deepmol.models import DeepChemModel
+        from deepmol.compound_featurization import MolGraphConvFeat
+
+        featurizer = MolGraphConvFeat(use_edges=True)
+        graph_conv = AttentiveFPModel
+        deepchem_model = DeepChemModel(graph_conv, n_tasks=1, mode='classification', model_dir='model_gc',
+                                       epochs=2, device="cpu")
+        pipeline1 = Pipeline(steps=[("featurizer", featurizer), ('model', deepchem_model)], path='test_pipeline_gc/')
+        pipeline1.fit(self.dataset_descriptors)
+        pipeline2 = Pipeline(steps=[("featurizer", featurizer), ('model', deepchem_model)], path='test_pipeline_gc2/')
+        pipeline2.fit(self.dataset_descriptors)
+        predictions = pipeline1.predict(self.dataset_descriptors)
+        self.assertEqual(len(predictions), len(self.dataset_descriptors.y))
+        results = pipeline1.evaluate(self.dataset_descriptors, metrics=[Metric(accuracy_score)])
+        pipeline1.save()
+
+        voting_pipeline = VotingPipeline(pipelines=[pipeline1, pipeline2], weights=[1, 2])
+        voting_pipeline.predict_proba(self.dataset_descriptors)
+        # voting_pipeline.save("test_voting_pipeline")
+        # voting_pipeline_loaded = VotingPipeline.load("test_voting_pipeline")

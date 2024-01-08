@@ -80,6 +80,7 @@ class ModelsTestCase(ABC):
 
         # create multitask classification dataset
         self.multitask_dataset = SmilesDatasetMagicMock(spec=SmilesDataset,
+                                                        mols=mols,
                                                         X=x,
                                                         y=y_multitask,
                                                         ids=ids,
@@ -88,7 +89,9 @@ class ModelsTestCase(ABC):
                                                                      'multitask_label_3'],
                                                         mode=["classification"] * 3)
         self.multitask_dataset.__len__.return_value = 100
+        # self.multiclass_dataset.mols.return_value = mols
         self.multitask_dataset_test = SmilesDatasetMagicMock(spec=SmilesDataset,
+                                                             mols=mols,
                                                              X=x_test,
                                                              y=y_multitask_test,
                                                              ids=ids_test,

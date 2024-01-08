@@ -1,17 +1,18 @@
 rdkit==2023.9.1
 smilespe==0.0.3
 seaborn==0.12.0
-torch==2.0.1
-dgl==0.9.1
+torch==2.1.2
+dgl==1.1.3
 joblib==1.1.1
 pillow==8.4.0
 h5py==3.7.0
 deepchem==2.7.1
-shap==0.41.0
+shap==0.44.0
 gensim==4.2.0
 mol2vec @ git+https://github.com/samoturk/mol2vec#egg=mol2vec
 boruta==0.3
-tensorflow==2.12.0
+tensorflow==2.14.0
+nvidia-cudnn-cu11==8.6.0.163
 chembl_structure_pipeline==1.1.0
 scikit-learn==1.2.0
 imblearn
@@ -24,7 +25,8 @@ numpy==1.23.5
 dgllife==0.3.2
 dill==0.3.6
 optuna==3.1.1
-tensorflow-probability==0.20.1
+tensorflow-probability==0.22.1
 torch_geometric==2.3.1
 scikit-multilearn==0.2.0
 timeout-decorator==0.5.0
+scikeras==0.12.0

@@ -93,6 +93,6 @@ def get_model_instance_from_explainer(explainer: str, model: Model) -> Union[Mod
                          'https://github.com/slundberg/shap/issues/1136 and '
                          'https://github.com/slundberg/shap/issues/1650')
     elif explainer == 'deep':
-        return model.model.model
+        return model.model.model(**model.builder_kwargs)
     else:
         return model.model.predict

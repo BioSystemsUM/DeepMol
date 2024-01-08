@@ -136,7 +136,13 @@ class Pipeline(Transformer):
             if self.is_prediction_pipeline():
                 for name, transformer in self.steps[:-1]:
                     train_dataset = transformer.fit_transform(train_dataset)
-                self.steps[-1][1].fit(train_dataset)
+                    if validation_dataset is not None:
+                        validation_dataset = transformer.transform(validation_dataset)
+                
+                if validation_dataset is not None and self.steps[-1][1].__class__.__name__ == 'KerasModel':
+                    self.steps[-1][1].fit(train_dataset, validation_data = validation_dataset)
+                else:
+                    self.steps[-1][1].fit(train_dataset)
             else:
                 for name, transformer in self.steps:
                     train_dataset = transformer.fit_transform(train_dataset)

@@ -1,6 +1,6 @@
 from typing import List, Union, Tuple, Dict
 
-from tensorflow.keras import Sequential, regularizers, Model
+from tensorflow.keras import regularizers, Model
 from tensorflow.keras.layers import Dense, Dropout, BatchNormalization, GaussianNoise, Reshape, Conv1D, Flatten, \
     Embedding, MultiHeadAttention, LayerNormalization, Input, SimpleRNN, LSTM, GRU, Bidirectional
 

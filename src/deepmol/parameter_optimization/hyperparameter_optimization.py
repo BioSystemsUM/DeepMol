@@ -8,7 +8,7 @@ from operator import mul
 from typing import Dict, Any, Tuple
 
 import numpy as np
-from keras.wrappers.scikit_learn import KerasRegressor, KerasClassifier
+from scikeras.wrappers import KerasRegressor, KerasClassifier
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import StratifiedKFold, KFold, RandomizedSearchCV, GridSearchCV
 
@@ -171,9 +171,15 @@ class HyperparameterOptimizerCV(HyperparameterOptimizer):
                  maximize_metric: bool, n_iter_search: int = 15, n_jobs: int = 1, verbose: int = 0, logdir: str = None,
                  mode: str = None, cv=5, seed=123, refit=True, **kwargs):
 
+        if model_type == 'keras':
+            # get random values from the params_dict
+            # just to make sure that we instantiate the parameters in the keras model
+            keras_default_parameters = {k: [random.choice(v)] for k, v in params_dict.items()}
+            kwargs.update(keras_default_parameters)
+
         super().__init__(model_builder, model_type, params_dict, metric, maximize_metric, n_iter_search, n_jobs,
                          verbose, logdir, mode, **kwargs)
-
+        
         self.cv = cv
         self.seed = seed
         self.refit = refit

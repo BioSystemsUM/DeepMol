@@ -14,8 +14,9 @@ from unit_tests.models.test_models import ModelsTestCase
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, GaussianNoise, Conv1D, Flatten, Reshape
 from tensorflow.keras.optimizers import Adadelta, Adam, RMSprop
+from keras.callbacks import EarlyStopping
 
-
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 
 def make_cnn_model(input_dim=None,
@@ -88,7 +89,7 @@ class TestKerasModel(ModelsTestCase, TestCase):
         model.save("test_model")
         loaded_model = KerasModel.load("test_model")
         self.assertEqual(2, loaded_model.epochs)
-        self.assertEqual(50, loaded_model.model.sk_params["input_dim"])
+        self.assertEqual(50, loaded_model.parameters_to_save["input_dim"])
         loaded_model_predictions = loaded_model.predict(self.binary_dataset_test)
 
         assert np.array_equal(first_predictions, loaded_model_predictions)
@@ -107,18 +108,39 @@ class TestKerasModel(ModelsTestCase, TestCase):
 
             model.save("test_model")
             loaded_model = KerasModel.load("test_model")
-            self.assertEqual(50, loaded_model.model.sk_params["input_dim"])
+            self.assertEqual(50, loaded_model.parameters_to_save["input_dim"])
             loaded_model_predictions = loaded_model.predict(self.binary_dataset_test)
             assert np.array_equal(first_predictions, loaded_model_predictions)
 
             shutil.rmtree("test_model")
 
+    def test_baseline_models_wvalidation(self):
+        model_kwargs = {'input_dim': 50, 'callbacks': EarlyStopping(patience=2)}
+        keras_kwargs = {'epochs': 2, 'verbose': 0, 'batch_size': 32}
+        
+        models = [keras_fcnn_model, keras_1d_cnn_model, keras_tabular_transformer_model]
+        for f_model in models:
+            model = f_model(model_kwargs=model_kwargs, keras_kwargs=keras_kwargs)
+
+            model.fit(self.binary_dataset, validation_data=self.binary_dataset_test)
+            first_predictions = model.predict(self.binary_dataset_test)
+
+            model.save("test_model")
+            loaded_model = KerasModel.load("test_model")
+            self.assertEqual(50, loaded_model.parameters_to_save["input_dim"])
+            loaded_model_predictions = loaded_model.predict(self.binary_dataset_test)
+            assert np.array_equal(first_predictions, loaded_model_predictions)
+
+            shutil.rmtree("test_model")
+            self.assertEqual(2, len(model.history['loss']))
+            self.assertEqual(2, len(model.history['val_loss']))
+
     def test_weights_reset(self):
         model = keras_fcnn_model(model_kwargs={'input_dim': 50}, keras_kwargs={})
         model.fit(self.binary_dataset)
-        last_loss = model.history.history['loss'][-1]
+        last_loss = model.history['loss'][-1]
         model.fit(self.binary_dataset)
-        self.assertGreater(model.history.history['loss'][0], last_loss)
+        self.assertGreater(model.history['loss'][0], last_loss)
 
     @skip("This test is too slow for CI")
     def test_rnn_baseline_models(self):

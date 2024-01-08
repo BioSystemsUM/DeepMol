@@ -3,14 +3,14 @@ from typing import Union
 
 import keras
 
-from deepmol.models._utils import _get_splitter, load_from_disk, _save_keras_model, get_prediction_from_proba
+from deepmol.models._utils import _get_splitter, load_from_disk, _save_keras_model, get_prediction_from_proba, save_to_disk
 from deepmol.models.models import Model
 from deepmol.models.sklearn_models import SklearnModel
 from deepmol.metrics.metrics import Metric
 from deepmol.splitters.splitters import Splitter
 import numpy as np
 from deepmol.datasets import Dataset
-from tensorflow.keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
+from scikeras.wrappers import KerasClassifier, KerasRegressor
 from sklearn.base import clone
 
 import tensorflow as tf
@@ -57,6 +57,15 @@ class KerasModel(Model):
         self.epochs = epochs
         self.model_builder = model_builder
         self.verbose = verbose
+        self.builder_kwargs = kwargs
+
+        self.fit_kwargs = {}
+
+        if "validation_data" in kwargs and kwargs["validation_data"] is not None:
+            self.fit_kwargs = {"validation_data": kwargs.pop("validation_data")}
+
+        if "callbacks" in kwargs and kwargs["callbacks"] is not None:
+            self.fit_kwargs["callbacks"] = kwargs.pop("callbacks")
 
         self.parameters_to_save = {'mode': self.mode,
                                    'batch_size': self.batch_size,
@@ -65,10 +74,10 @@ class KerasModel(Model):
                                    **kwargs}
 
         if mode == 'classification':
-            self.model = KerasClassifier(build_fn=model_builder, epochs=epochs, batch_size=batch_size,
+            self.model = KerasClassifier(model=model_builder, epochs=epochs, batch_size=batch_size,
                                          verbose=verbose, **kwargs)
         elif mode == 'regression':
-            self.model = KerasRegressor(build_fn=model_builder, nb_epoch=epochs, batch_size=batch_size, verbose=verbose,
+            self.model = KerasRegressor(model=model_builder, epochs=epochs, batch_size=batch_size, verbose=verbose,
                                         **kwargs)
         elif isinstance(model_builder, keras.models.Model):
             self.model = model_builder
@@ -106,29 +115,47 @@ class KerasModel(Model):
         if len(dataset.label_names) == 1:
             y = np.squeeze(dataset.y)
 
-            if "validation_data" in kwargs:
-                validation_data = kwargs.pop("validation_data")
+            validation_data = kwargs.pop("validation_data", None)
+            
+            if validation_data is None:
+                validation_data = self.fit_kwargs.pop("validation_data", None)
+            
+            if validation_data is not None:
                 y_valid = np.squeeze(validation_data.y)
                 valid_features = validation_data.X.astype('float32')
                 validation_data = (valid_features, y_valid)
-                kwargs["validation_data"] = validation_data
+                
+            kwargs["validation_data"] = validation_data
+            if "callbacks" not in kwargs and "callbacks" in self.fit_kwargs:
+                kwargs["callbacks"] = self.fit_kwargs["callbacks"]
 
-            self.history = self.model.fit(features, y, **kwargs)
+            self.model.fit(features, y, **kwargs)
         else:
             targets = [dataset.y[:, i] for i in range(len(dataset.label_names))]
             y = {f"{dataset.label_names[i]}": targets[i] for i in range(len(dataset.label_names))}
 
-            if "validation_data" in kwargs:
-                validation_data = kwargs.pop("validation_data")
+            validation_data = kwargs.pop("validation_data", None)
+            
+            if validation_data is None:
+                validation_data = self.fit_kwargs.pop("validation_data", None)
+            
+            if validation_data is not None:
+                y_valid = np.squeeze(validation_data.y)
                 targets = [validation_data.y[:, i] for i in range(len(dataset.label_names))]
                 y_valid = {f"{dataset.label_names[i]}": targets[i] for i in range(len(dataset.label_names))}
                 valid_features = validation_data.X.astype('float32')
                 validation_data = (valid_features, y_valid)
-                kwargs["validation_data"] = validation_data
+                
+            kwargs["validation_data"] = validation_data
+            if "callbacks" not in kwargs and "callbacks" in self.fit_kwargs:
+                kwargs["callbacks"] = self.fit_kwargs["callbacks"]
 
-            self.history = self.model.fit(features, y, epochs=self.epochs, batch_size=self.batch_size, verbose=self.verbose,
-                                          **kwargs)
+            self.model.fit(features, y, epochs=self.epochs, batch_size=self.batch_size, verbose=self.verbose, **kwargs)
         
+        if isinstance(self.model, KerasClassifier) or isinstance(self.model, KerasRegressor):
+            self.history = self.model.history_
+        else:
+            self.history = self.model.history
 
     def predict(self, dataset: Dataset) -> np.ndarray:
         """
@@ -163,13 +190,16 @@ class KerasModel(Model):
         np.ndarray
             predictions
         """
-        try:
-            predictions = self.model.predict_proba(dataset.X.astype('float32'))
-        except AttributeError as e:
-            self.logger.error(e)
-            self.logger.info(str(self.model))
-            self.logger.info(str(type(self.model)))
+        if self.model.__class__.__name__ == 'KerasRegressor':
             predictions = self.model.predict(dataset.X.astype('float32'))
+        else:
+            try:
+                predictions = self.model.predict_proba(dataset.X.astype('float32'))
+            except AttributeError as e:
+                self.logger.error(e)
+                self.logger.info(str(self.model))
+                self.logger.info(str(type(self.model)))
+                predictions = self.model.predict(dataset.X.astype('float32'))
 
         predictions = np.array(predictions)
         if predictions.shape != (len(dataset.mols), dataset.n_tasks):
@@ -224,16 +254,33 @@ class KerasModel(Model):
         """
         file_path_model_builder = os.path.join(folder_path, 'model_builder.pkl')
         model_builder = load_from_disk(file_path_model_builder)
-        file_path_model = os.path.join(folder_path, 'model.h5')
-        model = keras.models.load_model(file_path_model)
+        file_path_model = os.path.join(folder_path, 'model.keras')
+        model_ = keras.models.load_model(file_path_model)
         model_parameters = load_from_disk(os.path.join(folder_path, 'model_parameters.pkl'))
         keras_model_class = cls(model_builder=model_builder, **model_parameters)
+        model = load_from_disk(os.path.join(folder_path, 'model.pkl'))
         if isinstance(keras_model_class.model, KerasClassifier) or isinstance(keras_model_class.model,
                                                                               KerasRegressor):
-            keras_model_class.model.model = model
+            keras_model_class.model = model
+            keras_model_class.model.model_ = model_
         else:
             keras_model_class.model = model
         return keras_model_class
+    
+    def _save(self, file_path: str) -> None:
+        if isinstance(self.model, KerasClassifier) or isinstance(self.model, KerasRegressor):
+            try:
+                # write self in pickle format
+                _save_keras_model(file_path, self.model.model, self.parameters_to_save, self.model_builder)
+                save_to_disk(self.model, os.path.join(file_path, 'model.pkl'))
+            except AttributeError:
+                # write self in pickle format
+                _save_keras_model(file_path, self.model.model_, self.parameters_to_save, self.model_builder)
+                save_to_disk(self.model, os.path.join(file_path, 'model.pkl'))
+        else:
+            # write self in pickle format
+            _save_keras_model(file_path, self.model, self.parameters_to_save, self.model_builder)
+            save_to_disk(self.model, os.path.join(file_path, 'model.pkl'))
 
     def save(self, file_path: str = None) -> None:
         """
@@ -248,19 +295,9 @@ class KerasModel(Model):
             if self.model_dir is None:
                 raise ValueError('No model directory specified.')
             else:
-                try:
-                    # write self in pickle format
-                    _save_keras_model(self.model_dir, self.model.model, self.parameters_to_save, self.model_builder)
-                except AttributeError:
-                    # write self in pickle format
-                    _save_keras_model(self.model_dir, self.model, self.parameters_to_save, self.model_builder)
+                self._save(self.model_dir)
         else:
-            try:
-                # write self in pickle format
-                _save_keras_model(file_path, self.model.model, self.parameters_to_save, self.model_builder)
-            except AttributeError:
-                # write self in pickle format
-                _save_keras_model(file_path, self.model, self.parameters_to_save, self.model_builder)
+            self._save(file_path)
 
     def get_task_type(self) -> str:
         """

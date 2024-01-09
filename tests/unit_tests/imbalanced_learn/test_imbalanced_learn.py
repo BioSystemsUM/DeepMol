@@ -91,7 +91,7 @@ class TestImbalancedLearn(TestCase):
     def test_SMOTETomek(self):
         df = copy.deepcopy(self.imbalanced_dataset)
         smote = SMOTE_IB(k_neighbors=2)
-        new_df = SMOTETomek(smote=smote).sample(df)
+        new_df = SMOTETomek(smote=smote, random_state=42).sample(df)
         # assert under-represented class is oversampled
         self.assertTrue(np.sum(new_df._y == 1) >= np.sum(df.y == 1))
         # assert over-represented class is undersampled

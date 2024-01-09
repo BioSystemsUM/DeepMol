@@ -160,7 +160,7 @@ def get_prediction_from_proba(dataset: Dataset, y_pred_proba: np.ndarray) -> np.
         y_preds = []
         for i in range(len(dataset.mode)):
             if dataset.mode[i] == "classification":
-                if np.all((dataset.y[:, i] == 0) | (dataset.y[:, i] == 1)):
+                if np.all((y_pred_proba[:, i] == 0) | (y_pred_proba[:, i] == 1)):
                     if len(y_pred_proba[:, i].shape) == 1:
                         y_pred = np.array([1 if pred >= 0.5 else 0 for pred in y_pred_proba[:, i]])
                     elif len(y_pred_proba[:, i].shape) == 2 and y_pred_proba[:, i].shape[1] == 1:
@@ -187,7 +187,7 @@ def get_prediction_from_proba(dataset: Dataset, y_pred_proba: np.ndarray) -> np.
         return np.array(y_preds).T
     else:
         if dataset.mode == "classification":
-            if np.all((dataset.y == 0) | (dataset.y == 1)):
+            if np.all((y_pred_proba == 0) | (y_pred_proba == 1)):
                 if len(y_pred_proba.shape) == 1:
                     y_pred = np.array([1 if pred >= 0.5 else 0 for pred in y_pred_proba])
                 elif len(y_pred_proba.shape) == 2 and y_pred_proba.shape[1] == 1:

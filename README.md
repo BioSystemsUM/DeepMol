@@ -669,12 +669,6 @@ PhD student in Bioinformatics currently working with machine learning methods to
 [GitHub](https://github.com/jcapels), [LinkedIn](https://www.linkedin.com/in/joaocapels/), 
 [ResearchGate](https://www.researchgate.net/profile/Joao-Capela-4)
 
-Vitor Pereira - Postdoctoral researcher at the University of Minho (UMinho) and Centre of Biological Engineering (CEB),
-Braga, Portugal. Vitor Pereira is a postdoctoral researcher in Bioinformatics currently working with machine learning
-to produce new chemical compounds and proteins. 
-[GitHub](https://github.com/vmspereira), [LinkedIn](https://www.linkedin.com/in/v%C3%ADtor-s%C3%A1-pereira/),
-[ResearchGate](https://www.researchgate.net/profile/Vitor-Pereira-9)
-
 Miguel Rocha - Associate Professor in Artificial Intelligence and Bioinformatics, 
 being the founder of the MSc in Bioinformatics (2007) and its current Director. 
 He is currently the CSO of OmniumAI. He has 20 years of experience in applying AI and data science 

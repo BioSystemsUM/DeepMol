@@ -391,8 +391,8 @@ ds = WeaveFeat().featurize(dataset)
 splitter = SingletaskStratifiedSplitter()
 train_dataset, valid_dataset, test_dataset = splitter.train_valid_test_split(dataset=ds, frac_train=0.6, frac_valid=0.2,
                                                                              frac_test=0.2)
-mpnn = MPNNModel(n_tasks=1, n_pair_feat=14, n_atom_feat=75, n_hidden=75, T=1, M=1, mode='classification')
-model_mpnn = DeepChemModel(mpnn)
+mpnn = MPNNModel
+model_mpnn = DeepChemModel(mpnn, n_tasks=1, n_pair_feat=14, n_atom_feat=75, n_hidden=75, T=1, M=1, mode='classification')
 # Model training
 model_mpnn.fit(train_dataset)
 valid_preds = model_mpnn.predict(valid_dataset)

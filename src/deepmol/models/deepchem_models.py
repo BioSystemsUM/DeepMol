@@ -294,8 +294,18 @@ class DeepChemModel(BaseDeepChemModel, Predictor):
                 res)  # this works for all regression models (Keras and PyTorch) and is more general than the
             # commented code above
 
-        if new_res.shape != (len(dataset.mols), dataset.n_tasks):
-            new_res = normalize_labels_shape(new_res, dataset.n_tasks)
+        if dataset.mode is not None:
+            if not isinstance(dataset.mode, str):
+                n_tasks = len(dataset.mode)
+                if new_res.shape != (len(dataset.mols), n_tasks):
+                    new_res = normalize_labels_shape(new_res, n_tasks)
+        else:
+            error_message = """Mode is not defined, please define it when creating the dataset
+                    Example with CSVLoader: CSVLoader(path_to_csv, smiles_field='smiles', mode='classification'),
+                    Example with SmilesDataset: SmilesDataset(smiles, mode='classification')
+                    Example with SmilesDataset for multitask classification with 10 tasks: 
+                    SmilesDataset(smiles, mode=['classification']*10)"""
+            raise ValueError(error_message)
 
         if len(new_res.shape) > 1:
             if new_res.shape[1] == len(dataset.mols) and new_res.shape[0] == dataset.n_tasks:

@@ -41,6 +41,10 @@ class PipelineOptimization:
     directions : list of str or optuna.study.StudyDirection
         Direction of the optimization for each step of the pipeline.
         If None, the direction argument is used for all steps.
+    n_pipelines_ensemble : int
+        Number of pipelines to be used in the ensemble.
+    n_jobs : int
+        Number of parallel jobs.
 
     Attributes
     ----------
@@ -54,6 +58,9 @@ class PipelineOptimization:
         List of all trials.
     best_pipeline : deepmol.pipeline.Pipeline
         Best pipeline.
+    pipelines_ensemble : deepmol.pipeline.ensemble.VotingPipeline
+        Pipelines ensemble.
+
 
     Examples
     --------
@@ -82,7 +89,8 @@ class PipelineOptimization:
                  direction: Union[str, StudyDirection] = None,
                  load_if_exists: bool = False,
                  directions: List[Union[str, StudyDirection]] = None,
-                 n_pipelines_ensemble=5) -> None:
+                 n_pipelines_ensemble=5,
+                 n_jobs=5) -> None:
         """
         Initialize the PipelineOptimization class.
         """
@@ -92,6 +100,7 @@ class PipelineOptimization:
                                          direction=direction, load_if_exists=load_if_exists, directions=directions)
         self.study.set_user_attr("best_scores", {})
         self.n_pipelines_ensemble = n_pipelines_ensemble
+        self.n_jobs = n_jobs
 
     def optimize(self, objective_steps: Union[callable, str], n_trials: int, save_top_n: int = 1,
                  objective: Objective = ObjectiveTrainEval,

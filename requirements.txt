@@ -2,7 +2,7 @@ rdkit==2023.9.1
 smilespe==0.0.3
 seaborn==0.12.0
 torch==2.1.2
-dgl==2.0.0
+dgl
 joblib==1.1.1
 pillow==8.4.0
 h5py==3.7.0

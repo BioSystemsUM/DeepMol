@@ -35,6 +35,10 @@ class TestLogger(TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        # Close logger file handlers to release the file
+        singleton_instance = Logger()
+        singleton_instance.close_handlers()
+
         log_file_name = os.path.join(TEST_DIR, "test.log")
         if os.path.exists(log_file_name):
             os.remove(log_file_name)

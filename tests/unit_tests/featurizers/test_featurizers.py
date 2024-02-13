@@ -9,6 +9,7 @@ import pandas as pd
 from rdkit.Chem import MolFromSmiles
 
 from deepmol.datasets import SmilesDataset
+from deepmol.loggers import Logger
 from deepmol.scalers import StandardScaler
 
 from tests import TEST_DIR
@@ -34,6 +35,9 @@ class FeaturizerTestCase(ABC):
         self.mock_scaler = MagicMock(spec=StandardScaler)
 
     def tearDown(self) -> None:
+        # Close logger file handlers to release the file
+        singleton_instance = Logger()
+        singleton_instance.close_handlers()
         if os.path.exists('deepmol.log'):
             os.remove('deepmol.log')
 

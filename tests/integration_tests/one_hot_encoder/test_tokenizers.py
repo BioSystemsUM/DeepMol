@@ -6,6 +6,7 @@ from tensorflow.keras.layers import LSTM, Dense
 
 from deepmol.compound_featurization import SmilesOneHotEncoder
 from deepmol.loaders import CSVLoader
+from deepmol.loggers import Logger
 from deepmol.models import KerasModel
 from deepmol.tokenizers import KmerSmilesTokenizer
 
@@ -34,6 +35,9 @@ class TestOneHotEncoder(TestCase):
         self.model_builder = classification_rnn_builder
 
     def tearDown(self) -> None:
+        # Close logger file handlers to release the file
+        singleton_instance = Logger()
+        singleton_instance.close_handlers()
         # remove logs (files starting with 'deepmol.log')
         for f in os.listdir():
             if f.startswith('deepmol.log'):

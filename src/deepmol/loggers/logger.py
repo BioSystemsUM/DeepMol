@@ -202,6 +202,15 @@ class Logger(metaclass=SingletonMeta):
         """
         self.logger.debug(msg, **kwargs)
 
+    def close_handlers(self):
+        """
+        Closes the handlers of the logger.
+        """
+        if self.console_handler:
+            self.console_handler.close()
+        if self.file_handler:
+            self.file_handler.close()
+
     def __getstate__(self) -> dict:
         """
         Returns the state of the logger.

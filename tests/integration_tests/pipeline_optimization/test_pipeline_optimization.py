@@ -14,6 +14,7 @@ from sklearn.svm import SVC
 from deepmol.base.transformer import DatasetTransformer
 
 from deepmol.loaders import CSVLoader
+from deepmol.loggers import Logger
 from deepmol.metrics import Metric
 from deepmol.models import SklearnModel
 from deepmol.pipeline_optimization import PipelineOptimization
@@ -93,6 +94,9 @@ class TestPipelineOptimization(TestCase):
         tf.config.set_visible_devices([], 'GPU')
 
     def tearDown(self) -> None:
+        # Close logger file handlers to release the file
+        singleton_instance = Logger()
+        singleton_instance.close_handlers()
         # remove logs (files with .log extension)
         for file in os.listdir():
             if file.endswith('.log'):

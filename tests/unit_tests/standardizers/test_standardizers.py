@@ -7,6 +7,7 @@ import pandas as pd
 from rdkit import Chem
 
 from deepmol.datasets import SmilesDataset
+from deepmol.loggers import Logger
 
 from tests import TEST_DIR
 

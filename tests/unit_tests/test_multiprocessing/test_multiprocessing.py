@@ -1,6 +1,7 @@
 import os
 from unittest import TestCase
 
+from deepmol.loggers import Logger
 from deepmol.parallelism.multiprocessing import JoblibMultiprocessing
 
 

@@ -2,6 +2,7 @@ import os
 from unittest import TestCase
 
 from deepmol.loaders import SDFLoader, CSVLoader
+from deepmol.loggers import Logger
 from tests import TEST_DIR
 
 

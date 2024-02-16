@@ -2,9 +2,9 @@ import os
 
 from deepmol.compound_featurization import MorganFingerprint
 from deepmol.loggers.logger import Logger
-from integration_tests.logger.test_logger import TestLogger
 
 from tests import TEST_DIR
+from tests.integration_tests.logger.test_logger import TestLogger
 
 
 class TestLoggerFeaturizer(TestLogger):

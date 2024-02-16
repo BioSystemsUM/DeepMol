@@ -13,7 +13,7 @@ from deepmol.metrics import Metric
 from deepmol.models import SklearnModel
 from deepmol.pipeline import Pipeline
 from deepmol.pipeline.ensemble import VotingPipeline
-from integration_tests.pipeline.test_pipeline import TestPipeline
+from tests.integration_tests.pipeline.test_pipeline import TestPipeline
 
 
 class TestEnsemblePipeline(TestPipeline):

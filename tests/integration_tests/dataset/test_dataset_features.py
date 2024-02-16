@@ -1,5 +1,5 @@
 from deepmol.compound_featurization import MorganFingerprint, LayeredFingerprint, TwoDimensionDescriptors
-from integration_tests.dataset.test_dataset import TestDataset
+from tests.integration_tests.dataset.test_dataset import TestDataset
 
 
 class TestDatasetFeaturizers(TestDataset):

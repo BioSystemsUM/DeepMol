@@ -21,10 +21,12 @@ class FeaturizerTestCase(ABC):
         data_path = os.path.join(TEST_DIR, 'data/test_to_convert_to_sdf.csv')
         self.original_smiles = pd.read_csv(data_path, sep=',').Smiles.values
         mols = [self._smiles_to_mol(s) for s in self.original_smiles]
+        y = np.random.rand(len(self.original_smiles))
         self.mock_dataset = MagicMock(spec=SmilesDataset,
                                       smiles=np.array(self.original_smiles),
                                       mols=np.array(mols),
-                                      ids=np.arange(len(self.original_smiles)))
+                                      ids=np.arange(len(self.original_smiles)),
+                                      y=y)
         self.original_smiles_with_invalid = np.append(self.original_smiles, ['CC(=O)[O-].NC', 'C1=CC=CC=C1('])
         mols = [self._smiles_to_mol(s) for s in self.original_smiles_with_invalid]
         self.mock_dataset_with_invalid = MagicMock(spec=SmilesDataset,

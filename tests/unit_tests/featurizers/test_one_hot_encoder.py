@@ -5,7 +5,7 @@ import numpy as np
 
 from deepmol.compound_featurization import SmilesOneHotEncoder
 from deepmol.tokenizers.kmer_smiles_tokenizer import KmerSmilesTokenizer
-from unit_tests.featurizers.test_featurizers import FeaturizerTestCase
+from .test_featurizers import FeaturizerTestCase
 
 
 class TestOneHotEncoder(FeaturizerTestCase, TestCase):

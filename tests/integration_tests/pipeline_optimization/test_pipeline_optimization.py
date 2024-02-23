@@ -7,7 +7,6 @@ from random import randint, random
 from unittest import TestCase, skip
 
 import numpy as np
-import optuna
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, mean_squared_error, precision_score
 from sklearn.svm import SVC
@@ -91,37 +90,12 @@ class TestPipelineOptimization(TestCase):
                                                           range(len(self.dataset_multilabel_regression))])
         self.dataset_multilabel_regression.mode = ['regression', 'regression', 'regression']
 
+        self.pipeline_path = os.path.join(TEST_DIR, 'pipelines')
+
         tf.config.set_visible_devices([], 'GPU')
 
     def tearDown(self) -> None:
-        # Close logger file handlers to release the file
-        singleton_instance = Logger()
-        singleton_instance.close_handlers()
-        # remove logs (files with .log extension)
-        for file in os.listdir():
-            if file.endswith('.log'):
-                os.remove(file)
-
-        if os.path.exists('model'):
-            shutil.rmtree('model')
-        # remove model directories (ending with _model)
-        for file in os.listdir():
-            if not file.endswith('.py'):
-                if file.endswith('_model'):
-                    shutil.rmtree(file)
-                elif file.startswith('test_pipeline_'):
-                    shutil.rmtree(file)
-                elif file.startswith('test_predictor_pipeline_'):
-                    shutil.rmtree(file)
-        # remove study rdbm
-        try:
-            optuna.delete_study(study_name="test_pipeline", storage="sqlite:///test_pipeline.db")
-        except Exception as e:
-            print(e)
-        # remove db files
-        for file in os.listdir():
-            if file.endswith('.db'):
-                os.remove(file)
+        shutil.rmtree(self.pipeline_path)
 
     def test_predictor_pipeline(self):
 
@@ -138,6 +112,7 @@ class TestPipelineOptimization(TestCase):
             return steps
 
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='maximize', study_name=study_name)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_descriptors, seed=123)
@@ -174,6 +149,7 @@ class TestPipelineOptimization(TestCase):
             return steps
 
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='maximize', study_name=study_name, n_pipelines_ensemble=5)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_descriptors, seed=123)
@@ -208,6 +184,7 @@ class TestPipelineOptimization(TestCase):
             return steps
 
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='maximize', study_name=study_name)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_descriptors, seed=123)
@@ -226,6 +203,7 @@ class TestPipelineOptimization(TestCase):
             return steps
 
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='maximize', study_name=study_name)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_descriptors, seed=123)
@@ -244,6 +222,7 @@ class TestPipelineOptimization(TestCase):
             return steps
 
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='maximize', study_name=study_name)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_descriptors, seed=123)
@@ -262,6 +241,7 @@ class TestPipelineOptimization(TestCase):
             return steps
 
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='maximize', study_name=study_name)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_descriptors, seed=123)
@@ -280,6 +260,7 @@ class TestPipelineOptimization(TestCase):
             return steps
 
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='maximize', study_name=study_name)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_descriptors, seed=123)
@@ -298,6 +279,7 @@ class TestPipelineOptimization(TestCase):
             return steps
 
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='maximize', study_name=study_name)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_descriptors, seed=123)
@@ -321,6 +303,7 @@ class TestPipelineOptimization(TestCase):
             return steps
 
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='maximize', study_name=study_name)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_descriptors, seed=123)
@@ -350,6 +333,7 @@ class TestPipelineOptimization(TestCase):
             return steps
 
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='maximize', study_name=study_name)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_descriptors, seed=123)
@@ -368,6 +352,7 @@ class TestPipelineOptimization(TestCase):
             return steps
 
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='maximize', study_name=study_name)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_descriptors, seed=123)
@@ -390,6 +375,7 @@ class TestPipelineOptimization(TestCase):
             return final_steps
 
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='maximize', study_name=study_name)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_descriptors, seed=123)
@@ -419,6 +405,7 @@ class TestPipelineOptimization(TestCase):
             return steps
 
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='maximize', study_name=study_name)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.multitask_dataset, seed=123)
@@ -448,6 +435,7 @@ class TestPipelineOptimization(TestCase):
             return steps
 
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='maximize', study_name=study_name)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.multitask_dataset, seed=123)
@@ -461,6 +449,7 @@ class TestPipelineOptimization(TestCase):
         from deepmol.pipeline_optimization._utils import preset_sklearn_models
 
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='maximize', study_name=study_name)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.multitask_dataset, seed=123)
@@ -474,6 +463,7 @@ class TestPipelineOptimization(TestCase):
         from deepmol.pipeline_optimization._utils import preset_sklearn_models
 
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='maximize', study_name=study_name)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_descriptors, seed=123)
@@ -487,6 +477,7 @@ class TestPipelineOptimization(TestCase):
         from deepmol.pipeline_optimization._utils import preset_sklearn_models
 
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='minimize', study_name=study_name)
         metric = Metric(mean_squared_error)
         train, test = RandomSplitter().train_test_split(self.dataset_regression, seed=123)
@@ -500,6 +491,7 @@ class TestPipelineOptimization(TestCase):
         from deepmol.pipeline_optimization._utils import preset_keras_models
 
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='maximize', study_name=study_name)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.multitask_dataset, seed=123)
@@ -513,6 +505,7 @@ class TestPipelineOptimization(TestCase):
         from deepmol.pipeline_optimization._utils import preset_keras_models
 
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='maximize', study_name=study_name)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_descriptors, seed=123)
@@ -526,6 +519,7 @@ class TestPipelineOptimization(TestCase):
         from deepmol.pipeline_optimization._utils import preset_keras_models
 
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='minimize', study_name=study_name)
         metric = Metric(mean_squared_error)
         train, test = RandomSplitter().train_test_split(self.dataset_regression, seed=123)
@@ -539,6 +533,7 @@ class TestPipelineOptimization(TestCase):
         from deepmol.pipeline_optimization._utils import preset_deepchem_models
 
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='maximize', study_name=study_name)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.multitask_dataset, seed=123)
@@ -552,6 +547,7 @@ class TestPipelineOptimization(TestCase):
         from deepmol.pipeline_optimization._utils import preset_deepchem_models
 
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='maximize', study_name=study_name)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_descriptors, seed=123)
@@ -565,6 +561,7 @@ class TestPipelineOptimization(TestCase):
         from deepmol.pipeline_optimization._utils import preset_deepchem_models
 
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='minimize', study_name=study_name)
         metric = Metric(mean_squared_error)
         train, test = RandomSplitter().train_test_split(self.dataset_regression, seed=123)
@@ -577,6 +574,7 @@ class TestPipelineOptimization(TestCase):
     def test_all_regression_model_steps(self):
 
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='minimize', study_name=study_name)
         metric = Metric(mean_squared_error)
         train, test = RandomSplitter().train_test_split(self.dataset_regression, seed=123)
@@ -589,6 +587,7 @@ class TestPipelineOptimization(TestCase):
     def test_all_classification_model_steps(self):
 
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='maximize', study_name=study_name)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_descriptors, seed=123)
@@ -614,6 +613,7 @@ class TestPipelineOptimization(TestCase):
     def test_classification_preset(self):
         storage_name = "sqlite:///test_pipeline.db"
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='maximize', study_name=study_name, storage=storage_name)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_smiles, seed=123)
@@ -640,6 +640,7 @@ class TestPipelineOptimization(TestCase):
         warnings.filterwarnings("ignore")
         storage_name = "sqlite:///test_pipeline.db"
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='maximize', study_name=study_name, storage=storage_name)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_multiclass, seed=123)
@@ -666,6 +667,7 @@ class TestPipelineOptimization(TestCase):
         warnings.filterwarnings("ignore")
         storage_name = "sqlite:///test_pipeline.db"
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='maximize', study_name=study_name, storage=storage_name)
 
         def precision_score_macro(y_true, y_pred):
@@ -695,6 +697,7 @@ class TestPipelineOptimization(TestCase):
         warnings.filterwarnings("ignore")
         storage_name = "sqlite:///test_pipeline.db"
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='maximize', study_name=study_name, storage=storage_name)
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_multilabel, seed=123)
@@ -718,6 +721,7 @@ class TestPipelineOptimization(TestCase):
     @skip("This test is too slow to run on CI and can have different results on different trials")
     def test_regression_preset(self):
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='minimize', study_name=study_name)
         metric = Metric(mean_squared_error)
         train, test = RandomSplitter().train_test_split(self.dataset_regression, seed=123)
@@ -739,6 +743,7 @@ class TestPipelineOptimization(TestCase):
 
         storage_name = "sqlite:///test_pipeline.db"
         study_name = f"test_predictor_pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        study_name = os.path.join(self.pipeline_path, study_name)
         po = PipelineOptimization(direction='minimize', study_name=study_name, storage=storage_name)
         metric = Metric(mean_squared_error)
         train, test = RandomSplitter().train_test_split(self.dataset_multilabel_regression, seed=124)

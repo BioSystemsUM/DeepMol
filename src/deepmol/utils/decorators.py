@@ -2,6 +2,8 @@ from concurrent import futures
 from copy import deepcopy
 from typing import Union
 
+import optuna
+
 
 def inplace_decorator(method: callable) -> Union[callable, None]:
     """
@@ -107,7 +109,7 @@ def timeout(timelimit):
                 try:
                     result = future.result(timelimit)
                 except futures.TimeoutError:
-                    raise TimeoutError from None
+                    raise optuna.TrialPruned
                 executor._threads.clear()
                 futures.thread._threads_queues.clear()
                 return result

@@ -109,7 +109,7 @@ def timeout(timelimit):
                 try:
                     result = future.result(timelimit)
                 except futures.TimeoutError:
-                    raise optuna.TrialPruned
+                    raise TimeoutError(f"Function {func.__name__} timed out after {timelimit} seconds.")
                 executor._threads.clear()
                 futures.thread._threads_queues.clear()
                 return result

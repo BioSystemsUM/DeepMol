@@ -84,13 +84,15 @@ class TestLogger(TestCase):
             self.assertIn("Test", f.readline())
 
     def tearDown(self):
-        # Close logger file handlers to release the file
-        singleton_instance = Logger()
-        singleton_instance.close_handlers()
-
         log_file_name = os.path.join(TEST_DIR, "test3.log")
         if os.path.exists(log_file_name):
+            # Close logger file handlers to release the file
+            singleton_instance = Logger()
+            singleton_instance.close_handlers()
             os.remove(log_file_name)
         test_log_file_4 = os.path.join(TEST_DIR, "test4.log")
         if os.path.exists(test_log_file_4):
+            # Close logger file handlers to release the file
+            singleton_instance = Logger()
+            singleton_instance.close_handlers()
             os.remove(test_log_file_4)

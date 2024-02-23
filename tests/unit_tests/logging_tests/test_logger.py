@@ -22,6 +22,9 @@ class TestLogger(TestCase):
         self.assertTrue(os.path.exists(self.log_file_name))
         with open(self.log_file_name, "r") as f:
             self.assertIn("Test", f.readline())
+        # Close logger file handlers to release the file
+        singleton_instance = Logger()
+        singleton_instance.close_handlers()
 
     def test_logger_set_level(self):
 
@@ -31,6 +34,9 @@ class TestLogger(TestCase):
 
         self.logger.set_level(logging.INFO)
         self.assertEqual(self.logger.logger.level, logging.INFO)
+        # Close logger file handlers to release the file
+        singleton_instance = Logger()
+        singleton_instance.close_handlers()
 
     def test_logger_set_file_path(self):
         self.logger.set_file_path(self.log_file_name + "2")
@@ -48,6 +54,9 @@ class TestLogger(TestCase):
         self.assertEqual(logger1, logger2)
         self.assertEqual(logger1, self.logger)
         self.assertEqual(logger2, self.logger)
+        # Close logger file handlers to release the file
+        singleton_instance = Logger()
+        singleton_instance.close_handlers()
 
     def test_pickling(self):
         import pickle
@@ -57,6 +66,9 @@ class TestLogger(TestCase):
             logger = pickle.load(f)
 
         logger.info("Test")
+        # Close logger file handlers to release the file
+        singleton_instance = Logger()
+        singleton_instance.close_handlers()
         os.remove("test.pickle")
 
     def test_warning(self):
@@ -64,35 +76,41 @@ class TestLogger(TestCase):
         self.assertTrue(os.path.exists(self.log_file_name))
         with open(self.log_file_name, "r") as f:
             self.assertIn("Test", f.readline())
+        # Close logger file handlers to release the file
+        singleton_instance = Logger()
+        singleton_instance.close_handlers()
 
     def test_error(self):
         self.logger.error("Test")
         self.assertTrue(os.path.exists(self.log_file_name))
         with open(self.log_file_name, "r") as f:
             self.assertIn("Test", f.readline())
+        # Close logger file handlers to release the file
+        singleton_instance = Logger()
+        singleton_instance.close_handlers()
 
     def test_debug(self):
         self.logger.debug("Test")
         self.assertTrue(os.path.exists(self.log_file_name))
         with open(self.log_file_name, "r") as f:
             self.assertIn("Test", f.readline())
+        # Close logger file handlers to release the file
+        singleton_instance = Logger()
+        singleton_instance.close_handlers()
 
     def test_critical(self):
         self.logger.critical("Test")
         self.assertTrue(os.path.exists(self.log_file_name))
         with open(self.log_file_name, "r") as f:
             self.assertIn("Test", f.readline())
+        # Close logger file handlers to release the file
+        singleton_instance = Logger()
+        singleton_instance.close_handlers()
 
     def tearDown(self):
         log_file_name = os.path.join(TEST_DIR, "test3.log")
         if os.path.exists(log_file_name):
-            # Close logger file handlers to release the file
-            singleton_instance = Logger()
-            singleton_instance.close_handlers()
             os.remove(log_file_name)
         test_log_file_4 = os.path.join(TEST_DIR, "test4.log")
         if os.path.exists(test_log_file_4):
-            # Close logger file handlers to release the file
-            singleton_instance = Logger()
-            singleton_instance.close_handlers()
             os.remove(test_log_file_4)

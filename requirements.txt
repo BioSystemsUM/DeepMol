@@ -27,5 +27,4 @@ optuna==3.1.1
 tensorflow-probability==0.22.1
 torch_geometric==2.3.1
 scikit-multilearn==0.2.0
-timeout-decorator==0.5.0
 scikeras==0.12.0

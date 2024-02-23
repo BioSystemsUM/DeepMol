@@ -37,6 +37,9 @@ class TestLogger(TestCase):
         self.assertEqual(self.logger.logger.name, self.log_file_name + "2")
         self.logger.info("Test")
         self.assertTrue(os.path.exists(self.log_file_name + "2"))
+        # Close logger file handlers to release the file
+        singleton_instance = Logger()
+        singleton_instance.close_handlers()
         os.remove(self.log_file_name + "2")
 
     def test_singleton(self):
@@ -80,8 +83,7 @@ class TestLogger(TestCase):
         with open(self.log_file_name, "r") as f:
             self.assertIn("Test", f.readline())
 
-    @classmethod
-    def tearDownClass(cls):
+    def tearDown(self):
         # Close logger file handlers to release the file
         singleton_instance = Logger()
         singleton_instance.close_handlers()

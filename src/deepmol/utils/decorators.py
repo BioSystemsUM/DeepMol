@@ -1,3 +1,4 @@
+from concurrent import futures
 from copy import deepcopy
 from typing import Union
 
@@ -96,3 +97,19 @@ def modify_object_inplace_decorator(method: callable) -> Union[callable, None]:
             method(self, new_object, **kwargs)
             return new_object
     return modify_object_wrapper
+
+
+def timeout(timelimit):
+    def decorator(func):
+        def decorated(*args, **kwargs):
+            with futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(func, *args, **kwargs)
+                try:
+                    result = future.result(timelimit)
+                except futures.TimeoutError:
+                    raise TimeoutError from None
+                executor._threads.clear()
+                futures.thread._threads_queues.clear()
+                return result
+        return decorated
+    return decorator

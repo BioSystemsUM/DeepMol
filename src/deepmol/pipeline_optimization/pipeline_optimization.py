@@ -2,6 +2,7 @@ import os
 import warnings
 from typing import Union, List
 
+import numpy as np
 import optuna
 import pandas as pd
 from optuna.pruners import BasePruner
@@ -130,6 +131,8 @@ class PipelineOptimization:
         objective = objective(objective_steps, self.study, self.direction,
                               save_top_n, trial_timeout, **kwargs)
         self.study.optimize(objective, n_trials=n_trials)
+        if self.best_value in [np.float_('-inf'), np.float_('inf')]:
+            raise ValueError('The best value is -inf or inf. No trials completed successfully.')
         if self.n_pipelines_ensemble > 0:
             if save_top_n < self.n_pipelines_ensemble:
                 warnings.warn(f'save_top_n ({save_top_n}) is smaller than n_pipelines_ensemble, '

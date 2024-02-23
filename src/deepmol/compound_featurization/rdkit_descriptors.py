@@ -15,9 +15,8 @@ from rdkit.ML.Descriptors import MoleculeDescriptors
 from deepmol.compound_featurization import MolecularFeaturizer
 from deepmol.datasets import Dataset
 from deepmol.loggers.logger import Logger
+from deepmol.utils.decorators import timeout
 from deepmol.utils.errors import PreConditionViolationException
-
-import signal
 
 
 def _no_conformers_message(e):
@@ -347,6 +346,10 @@ def generate_conformers_to_sdf_file(dataset: Dataset,
         Mode for the molecular geometry optimization (MMFF or UFF).
     """
 
+    @timeout(timeout_per_molecule)
+    def generate_conformers_with_timeout(generator, mol, etkg_version, optimization_mode):
+        return generate_conformers(generator, mol, etkg_version, optimization_mode)
+
     def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='|'):
         """
         Call in a loop to create terminal progress bar.
@@ -383,13 +386,10 @@ def generate_conformers_to_sdf_file(dataset: Dataset,
     final_set_with_conformations = []
     writer = Chem.SDWriter(file_path)
 
-    signal.signal(signal.SIGALRM, handler)
     for i in range(mol_set.shape[0]):
         printProgressBar(i, mol_set.shape[0])
         try:
-            signal.alarm(timeout_per_molecule)
-            m2 = generate_conformers(generator, mol_set[i], etkg_version, optimization_mode)
-            signal.alarm(0)
+            m2 = generate_conformers_with_timeout(generator, mol_set[i], etkg_version, optimization_mode)
             if dataset.y is not None and dataset.y.size > 0:
                 label = dataset.y[i]
                 for j, class_name in enumerate(dataset.label_names):
@@ -399,7 +399,7 @@ def generate_conformers_to_sdf_file(dataset: Dataset,
                 m2.SetProp("_ID", f"{mol_id}")
             writer.write(m2)
             final_set_with_conformations.append(m2)
-        except:
+        except TimeoutError:
             logger.info("Timeout for molecule %d" % i)
 
     writer.close()

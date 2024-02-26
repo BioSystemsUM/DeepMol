@@ -7,6 +7,7 @@ from plotly.graph_objs import Figure
 from deepmol.unsupervised import UMAP
 from unit_tests.unsupervised.test_unsupervised import UnsupervisedBaseTestCase
 
+
 @skip("Skip KMeans tests because it takes too much time in CI")
 class TestUMAP(UnsupervisedBaseTestCase, TestCase):
 

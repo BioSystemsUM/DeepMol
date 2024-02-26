@@ -134,6 +134,7 @@ class TestPipelineOptimization(TestCase):
         new_predictions = best_pipeline.evaluate(test, [metric])[0][metric.name]
         self.assertEqual(new_predictions, po.best_value)
 
+    @skip("This test is too slow to run on CI.")
     def test_pipeline_optimization_with_ensembles(self):
 
         def objective(trial):

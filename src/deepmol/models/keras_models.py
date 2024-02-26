@@ -1,8 +1,8 @@
 import os
 from typing import Union
 
-import keras
 
+from sklearn.base import clone
 from deepmol.models._utils import _get_splitter, load_from_disk, _save_keras_model, get_prediction_from_proba, save_to_disk
 from deepmol.models.models import Model
 from deepmol.models.sklearn_models import SklearnModel
@@ -10,10 +10,13 @@ from deepmol.metrics.metrics import Metric
 from deepmol.splitters.splitters import Splitter
 import numpy as np
 from deepmol.datasets import Dataset
-from scikeras.wrappers import KerasClassifier, KerasRegressor
-from sklearn.base import clone
 
-import tensorflow as tf
+try:
+    import keras
+    from scikeras.wrappers import KerasClassifier, KerasRegressor
+    import tensorflow as tf
+except ImportError:
+    pass
 
 from deepmol.utils.utils import normalize_labels_shape
 

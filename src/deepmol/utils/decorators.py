@@ -2,8 +2,6 @@ from concurrent import futures
 from copy import deepcopy
 from typing import Union
 
-import optuna
-
 
 def inplace_decorator(method: callable) -> Union[callable, None]:
     """

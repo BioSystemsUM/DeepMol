@@ -3,10 +3,13 @@ import shutil
 from unittest import TestCase, skip
 
 import numpy as np
-from deepchem.models import GraphConvModel
-from tensorflow.keras import Input
-from tensorflow.keras import Sequential
-from tensorflow.keras.layers import Dense
+try:
+    from deepchem.models import GraphConvModel
+    from tensorflow.keras import Input
+    from tensorflow.keras import Sequential
+    from tensorflow.keras.layers import Dense
+except ImportError:
+    pass
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.svm import SVC

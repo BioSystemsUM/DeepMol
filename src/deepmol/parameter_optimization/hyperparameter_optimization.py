@@ -8,7 +8,10 @@ from operator import mul
 from typing import Dict, Any, Tuple
 
 import numpy as np
-from scikeras.wrappers import KerasRegressor, KerasClassifier
+try:
+    from scikeras.wrappers import KerasRegressor, KerasClassifier
+except ImportError:
+    pass
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import StratifiedKFold, KFold, RandomizedSearchCV, GridSearchCV
 

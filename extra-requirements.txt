@@ -8,13 +8,14 @@ cached_property==1.5.2: preprocessing, deep_learning, machine_learning, test
 numpy==1.23.5: preprocessing, deep_learning, machine_learning, test
 dill==0.3.6: preprocessing, deep_learning, machine_learning, test
 shap==0.44.0: deep_learning, machine_learning
-gensim==4.2.0: preprocessing
-imblearn: preprocessing
-umap-learn==0.5.1: machine_learning
-kneed==0.8.2: machine_learning
-kaleido==0.2.1: machine_learning
-plotly==5.13.1: machine_learning
-chembl_structure_pipeline==1.1.0: preprocessing
+gensim==4.2.0: preprocessing, deep_learning, machine_learning
+IPython: preprocessing, deep_learning, machine_learning
+imblearn: preprocessing, machine_learning, deep_learning
+umap-learn==0.5.1: machine_learning, deep_learning
+kneed==0.8.2: machine_learning, deep_learning
+kaleido==0.2.1: machine_learning, deep_learning
+plotly==5.13.1: machine_learning, deep_learning
+chembl_structure_pipeline==1.1.0: preprocessing, machine_learning, deep_learning
 torch==2.1.2: deep_learning
 dgl: deep_learning
 scikeras==0.12.0: deep_learning
@@ -23,7 +24,7 @@ deepchem==2.7.1: deep_learning
 torch_geometric==2.3.1: deep_learning
 tensorflow==2.14.0: deep_learning
 tensorflow-probability==0.22.1: deep_learning
-boruta==0.3: preprocessing
+boruta==0.3: preprocessing, machine_learning
 scikit-learn==1.2.0: machine_learning, deep_learning
 optuna==3.1.1: machine_learning, deep_learning
 scikit-multilearn==0.2.0: machine_learning, deep_learning

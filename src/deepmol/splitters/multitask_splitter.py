@@ -4,7 +4,11 @@ import numpy as np
 
 from deepmol.datasets import Dataset
 from deepmol.splitters.splitters import Splitter
-from skmultilearn.model_selection import IterativeStratification
+
+try:
+    from skmultilearn.model_selection import IterativeStratification
+except ImportError:
+    pass
 
 
 class MultiTaskStratifiedSplitter(Splitter):

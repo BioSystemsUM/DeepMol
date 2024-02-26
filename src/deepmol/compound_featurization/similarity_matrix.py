@@ -16,14 +16,14 @@ class TanimotoSimilarityMatrix(Transformer):
     The similarity matrix is calculated using Morgan fingerprints.
     """
 
-    def __init__(self, n_molecules: int, n_jobs: int = -1) -> None:
+    def __init__(self, n_molecules: int = None, n_jobs: int = -1) -> None:
         """
-        Initialize a MACCSkeysFingerprint object.
+        Initialize a TanimotoSimilarityMatrix object.
 
         Parameters
         ----------
         n_molecules: int
-            Number of molecules in the dataset.
+            Number of molecules to evaluate the similarity with. It choses the first n_molecules from the dataset.
         n_jobs: int
             Number of jobs to run in parallel.
         """
@@ -77,12 +77,14 @@ class TanimotoSimilarityMatrix(Transformer):
         """
         self.fps = calc_morgan_fingerprints(dataset.mols, **kwargs)
         # initialize similarity matrix as a numpy array
+        if self.n_molecules is None:
+            self.n_molecules = len(dataset.mols)
         n_mols = len(dataset.smiles)
-        similarity_matrix = np.zeros((n_mols, n_mols), dtype=np.float32)
+        similarity_matrix = np.zeros((n_mols, self.n_molecules), dtype=np.float32)
 
         # use multiprocessing to calculate similarities in parallel
         multiprocessing_cls = JoblibMultiprocessing(process=self._calc_similarity, n_jobs=self.n_jobs)
-        pairs = [(i, j) for i in range(n_mols) for j in range(i + 1, n_mols)]
+        pairs = [(i, j) for i in range(n_mols) for j in range(i + 1, self.n_molecules)]
         features = multiprocessing_cls.run(pairs)
         for i, j, similarity in features:
             similarity_matrix[i, j] = similarity

@@ -13,7 +13,6 @@ from sklearn.svm import SVC
 from deepmol.base.transformer import DatasetTransformer
 
 from deepmol.loaders import CSVLoader
-from deepmol.loggers import Logger
 from deepmol.metrics import Metric
 from deepmol.models import SklearnModel
 from deepmol.pipeline_optimization import PipelineOptimization
@@ -21,7 +20,10 @@ from deepmol.splitters import RandomSplitter
 
 from deepmol.pipeline_optimization._featurizer_objectives import _get_featurizer
 
-import tensorflow as tf
+try:
+    import tensorflow as tf
+except ImportError:
+    pass
 
 from tests import TEST_DIR
 
@@ -91,8 +93,6 @@ class TestPipelineOptimization(TestCase):
         self.dataset_multilabel_regression.mode = ['regression', 'regression', 'regression']
 
         self.pipeline_path = os.path.join(TEST_DIR, 'pipelines')
-
-        tf.config.set_visible_devices([], 'GPU')
 
     def tearDown(self) -> None:
         shutil.rmtree(self.pipeline_path)
@@ -726,14 +726,14 @@ class TestPipelineOptimization(TestCase):
         po = PipelineOptimization(direction='minimize', study_name=study_name)
         metric = Metric(mean_squared_error)
         train, test = RandomSplitter().train_test_split(self.dataset_regression, seed=123)
-        po.optimize(train_dataset=train, test_dataset=test, objective_steps='all', metric=metric, n_trials=3,
+        po.optimize(train_dataset=train, test_dataset=test, objective_steps='sklearn', metric=metric, n_trials=4,
                     data=train, save_top_n=2)
         self.assertEqual(po.best_params, po.best_trial.params)
         self.assertIsInstance(po.best_value, float)
 
-        self.assertEqual(len(po.trials), 3)
+        self.assertEqual(len(po.trials), 4)
         # assert that 2 pipelines were saved
-        self.assertEqual(len(os.listdir(study_name)), 2)
+        self.assertEqual(len(os.listdir(study_name)), 3)
 
         best_pipeline = po.best_pipeline
         new_predictions = best_pipeline.evaluate(test, [metric])[0][metric.name]

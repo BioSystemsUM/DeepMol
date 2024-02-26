@@ -3,7 +3,11 @@ from unittest import TestCase
 
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.linear_model import LinearRegression
-import tensorflow as tf
+
+try:
+    import tensorflow as tf
+except ImportError:
+    pass
 
 from deepmol.compound_featurization import TwoDimensionDescriptors
 from deepmol.feature_importance.shap_values import ShapValues

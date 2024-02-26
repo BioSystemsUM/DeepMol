@@ -6,9 +6,15 @@ from optuna import Trial
 from deepmol.base import Transformer
 from deepmol.compound_featurization import *
 
-_1D_FEATURIZERS = {'2d_descriptors': TwoDimensionDescriptors, 'morgan': MorganFingerprint,
-                   'atom_pair': AtomPairFingerprint, 'layered': LayeredFingerprint, 'rdk': RDKFingerprint,
-                   'maccs': MACCSkeysFingerprint, 'mol2vec': Mol2Vec, 'mixed': MixedFeaturizer}
+try:
+    _1D_FEATURIZERS = {'2d_descriptors': TwoDimensionDescriptors, 'morgan': MorganFingerprint,
+                       'atom_pair': AtomPairFingerprint, 'layered': LayeredFingerprint, 'rdk': RDKFingerprint,
+                       'maccs': MACCSkeysFingerprint, 'mol2vec': Mol2Vec, 'mixed': MixedFeaturizer}
+except NameError:
+    warnings.warn("Mol2Vec featurizer not available. If you want to use it install it, please.")
+    _1D_FEATURIZERS = {'2d_descriptors': TwoDimensionDescriptors, 'morgan': MorganFingerprint,
+                       'atom_pair': AtomPairFingerprint, 'layered': LayeredFingerprint, 'rdk': RDKFingerprint,
+                       'maccs': MACCSkeysFingerprint, 'mixed': MixedFeaturizer}
 
 
 def _get_featurizer(trial: Trial, feat_type: Literal['1D', '2D']) -> Transformer:

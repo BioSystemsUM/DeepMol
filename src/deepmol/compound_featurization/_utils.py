@@ -2,7 +2,11 @@ from typing import List, Dict, Tuple
 
 import numpy as np
 from IPython.core.display import SVG
-from deepchem.utils import ConformerGenerator
+
+try:
+    from deepchem.utils import ConformerGenerator
+except ImportError:
+    pass
 from rdkit import DataStructs, Chem
 from rdkit.Chem import Mol, AllChem, rdDepictor
 from rdkit.Chem.Draw import rdMolDraw2D
@@ -32,32 +36,35 @@ def find_maximum_number_atoms(molecules: List[Mol]) -> int:
     return best
 
 
-def get_conformers(molecules: List[Mol], generator: ConformerGenerator) -> List[Mol]:
-    """
-    Gets conformers for molecules with a specific generator
+try:
+    def get_conformers(molecules: List[Mol], generator: ConformerGenerator) -> List[Mol]:
+        """
+        Gets conformers for molecules with a specific generator
 
-    Parameters
-    ----------
-    molecules: List[Mol]
-        List of rdkit mol objects
-    generator: ConformerGenerator
-        DeepChem conformer generator.
+        Parameters
+        ----------
+        molecules: List[Mol]
+            List of rdkit mol objects
+        generator: ConformerGenerator
+            DeepChem conformer generator.
 
-    Returns
-    -------
-    new_conformations: List[Mol]
-        List of rdkit mol objects with conformers.
-    """
-    new_conformations = []
-    for i, mol in enumerate(molecules):
-        try:
-            conf = generator.generate_conformers(mol)
-            new_conformations.append(conf)
-        except Exception as e:
-            logger = Logger()
-            logger.error(f"Could not generate conformers for molecule {i} with error {e}")
-            new_conformations.append([])
-    return new_conformations
+        Returns
+        -------
+        new_conformations: List[Mol]
+            List of rdkit mol objects with conformers.
+        """
+        new_conformations = []
+        for i, mol in enumerate(molecules):
+            try:
+                conf = generator.generate_conformers(mol)
+                new_conformations.append(conf)
+            except Exception as e:
+                logger = Logger()
+                logger.error(f"Could not generate conformers for molecule {i} with error {e}")
+                new_conformations.append([])
+        return new_conformations
+except NameError:
+    pass
 
 
 def get_dictionary_from_smiles(smiles: List[str], max_len: int) -> Dict[str, int]:

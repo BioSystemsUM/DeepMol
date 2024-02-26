@@ -1,20 +1,23 @@
 from copy import deepcopy, copy
 from typing import Literal
 
-from deepchem.models import TextCNNModel
+try:
+    from deepchem.models import TextCNNModel
+    from deepmol.pipeline_optimization._keras_model_objectives import _get_keras_model
+    from deepmol.pipeline_optimization._deepchem_models_objectives import *
+    from deepmol.compound_featurization import CoulombFeat
+except ImportError:
+    pass
 
 from deepmol.base import DatasetTransformer, PassThroughTransformer
-from deepmol.compound_featurization import CoulombFeat
 from deepmol.datasets import Dataset
 from deepmol.datasets._utils import _get_n_classes
 from deepmol.encoders.label_one_hot_encoder import LabelOneHotEncoder
 from deepmol.pipeline_optimization._feature_selector_objectives import _get_feature_selector
 from deepmol.pipeline_optimization._featurizer_objectives import _get_featurizer
-from deepmol.pipeline_optimization._keras_model_objectives import _get_keras_model
 from deepmol.pipeline_optimization._scaler_objectives import _get_scaler
 from deepmol.pipeline_optimization._sklearn_model_objectives import _get_sk_model
 from deepmol.pipeline_optimization._standardizer_objectives import _get_standardizer
-from deepmol.pipeline_optimization._deepchem_models_objectives import *
 from deepmol.scalers.sklearn_scalers import MinMaxScaler
 
 

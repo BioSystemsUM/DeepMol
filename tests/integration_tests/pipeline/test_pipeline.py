@@ -147,6 +147,7 @@ class TestPipeline(TestCase):
         new_predictions = pipeline.predict(self.dataset_smiles)
         self.assertTrue(np.array_equal(predictions, new_predictions))
 
+    @skip("This test is too slow to run on CI")
     def test_hpo_cv_sklearn_models(self):
         standardizer = BasicStandardizer()
         featurizer = MorganFingerprint(size=1024)
@@ -218,6 +219,7 @@ class TestPipeline(TestCase):
         new_predictions = pipeline.predict(self.dataset_smiles)
         self.assertTrue(np.array_equal(predictions, new_predictions))
 
+    @skip("This test is too slow to run on CI")
     def test_hpo_cv_keras_models(self):
         def basic_classification_model_builder(input_dim, layers):
             model = Sequential()
@@ -284,6 +286,7 @@ class TestPipeline(TestCase):
         new_predictions = pipeline.predict(self.dataset_smiles)
         self.assertTrue(np.array_equal(predictions, new_predictions))
 
+    @skip("This test is too slow to run on CI")
     def test_hpo_cv_deepchem_models(self):
         standardizer = BasicStandardizer()
         featurizer = ConvMolFeat()

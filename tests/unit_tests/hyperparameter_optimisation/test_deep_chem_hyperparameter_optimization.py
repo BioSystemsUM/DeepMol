@@ -1,6 +1,6 @@
 import os
 import pickle
-from unittest import TestCase
+from unittest import TestCase, skip
 from unittest.mock import MagicMock
 
 from deepchem.feat import ConvMolFeaturizer
@@ -17,6 +17,7 @@ from unit_tests.models.test_models import ModelsTestCase
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 
+# @skip("They take too much time in CI")
 class TestDeepChemHyperparameterOptimization(ModelsTestCase, TestCase):
 
     def test_fit_predict_evaluate(self):
@@ -34,7 +35,7 @@ class TestDeepChemHyperparameterOptimization(ModelsTestCase, TestCase):
 
         def graphconv_builder(graph_conv_layers, batch_size=256, epochs=5):
             return DeepChemModel(GraphConvModel, n_tasks=1, graph_conv_layers=graph_conv_layers, batch_size=batch_size,
-                                   mode='classification', epochs=epochs)
+                                 mode='classification', epochs=epochs)
 
         model_graph = HyperparameterOptimizerCV(model_builder=graphconv_builder,
                                                 metric=Metric(roc_auc_score),
@@ -66,8 +67,9 @@ class TestDeepChemHyperparameterOptimization(ModelsTestCase, TestCase):
         from deepmol.parameter_optimization import HyperparameterOptimizerValidation
 
         def graphconv_builder(graph_conv_layers, batch_size=256, epochs=5):
-            return DeepChemModel(GraphConvModel, epochs=epochs, n_tasks=1, graph_conv_layers=graph_conv_layers, batch_size=batch_size,
-                                   mode='classification')
+            return DeepChemModel(GraphConvModel, epochs=epochs, n_tasks=1, graph_conv_layers=graph_conv_layers,
+                                 batch_size=batch_size,
+                                 mode='classification')
 
         model_graph = HyperparameterOptimizerValidation(model_builder=graphconv_builder,
                                                         metric=Metric(accuracy_score),

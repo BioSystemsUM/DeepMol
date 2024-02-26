@@ -1,4 +1,4 @@
-from unittest import TestCase
+from unittest import TestCase, skip
 
 from sklearn.metrics import accuracy_score
 
@@ -35,6 +35,7 @@ def create_model(input_dim, optimizer='adam', dropout=0.5):
     return model
 
 
+# @skip("They take too much time in CI")
 class TestKerasHyperparameterOptimization(ModelsTestCase, TestCase):
 
     def test_fit_predict_evaluate(self):
@@ -51,7 +52,7 @@ class TestKerasHyperparameterOptimization(ModelsTestCase, TestCase):
 
         best_dnn, best_hyperparams, all_results = optimizer.fit(train_dataset=self.binary_dataset,
                                                                 valid_dataset=self.binary_dataset)
-        
+
     def test_fit_predict_evaluate_cv(self):
         params_dict_dense = {
             "input_dim": [self.binary_dataset.X.shape[1]],
@@ -59,10 +60,10 @@ class TestKerasHyperparameterOptimization(ModelsTestCase, TestCase):
             "optimizer": ['adam']
         }
         optimizer = HyperparameterOptimizerCV(create_model, metric=Metric(accuracy_score),
-                                                      maximize_metric=True,
-                                                    n_iter_search=2,
-                                                    cv=3,
-                                                    params_dict=params_dict_dense,
-                                                    model_type="keras", epochs=2)
+                                              maximize_metric=True,
+                                              n_iter_search=2,
+                                              cv=3,
+                                              params_dict=params_dict_dense,
+                                              model_type="keras", epochs=2)
 
         best_dnn, best_hyperparams, all_results = optimizer.fit(train_dataset=self.binary_dataset)

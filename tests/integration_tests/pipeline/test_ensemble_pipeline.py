@@ -1,6 +1,7 @@
 import os
 import shutil
 from copy import deepcopy
+from unittest import skip
 
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
@@ -15,7 +16,7 @@ from deepmol.pipeline import Pipeline
 from deepmol.pipeline.ensemble import VotingPipeline
 from tests.integration_tests.pipeline.test_pipeline import TestPipeline
 
-
+# @skip("They take too much time in CI")
 class TestEnsemblePipeline(TestPipeline):
 
     def tearDown(self) -> None:

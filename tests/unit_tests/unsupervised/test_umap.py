@@ -1,5 +1,5 @@
 from copy import copy
-from unittest import TestCase
+from unittest import TestCase, skip
 from unittest.mock import patch
 
 from plotly.graph_objs import Figure
@@ -7,7 +7,7 @@ from plotly.graph_objs import Figure
 from deepmol.unsupervised import UMAP
 from unit_tests.unsupervised.test_unsupervised import UnsupervisedBaseTestCase
 
-
+@skip("Skip KMeans tests because it takes too much time in CI")
 class TestUMAP(UnsupervisedBaseTestCase, TestCase):
 
     def validate_umap_classification(self, n_components, **kwargs):

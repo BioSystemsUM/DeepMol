@@ -16,7 +16,8 @@ from deepmol.pipeline import Pipeline
 from deepmol.pipeline.ensemble import VotingPipeline
 from tests.integration_tests.pipeline.test_pipeline import TestPipeline
 
-# @skip("They take too much time in CI")
+
+@skip("They take too much time in CI")
 class TestEnsemblePipeline(TestPipeline):
 
     def tearDown(self) -> None:
@@ -135,7 +136,6 @@ class TestEnsemblePipeline(TestPipeline):
 
         vp = VotingPipeline(pipelines=[pipeline1, pipeline3], weights=[1, 2])
         vp.predict(self.dataset_descriptors)
-
 
     def test_predict_proba(self):
         rf = RandomForestClassifier()

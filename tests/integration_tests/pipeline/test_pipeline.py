@@ -1,6 +1,6 @@
 import os
 import shutil
-from unittest import TestCase
+from unittest import TestCase, skip
 
 import numpy as np
 from deepchem.models import GraphConvModel

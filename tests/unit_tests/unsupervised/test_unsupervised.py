@@ -8,6 +8,7 @@ import pandas as pd
 from rdkit.Chem import MolFromSmiles
 
 from deepmol.datasets import SmilesDataset
+from deepmol.loggers import Logger
 from tests import TEST_DIR
 
 
@@ -48,6 +49,9 @@ class UnsupervisedBaseTestCase(ABC):
         self.regression_dataset.X = x
 
     def tearDown(self) -> None:
+        # Close logger file handlers to release the file
+        singleton_instance = Logger()
+        singleton_instance.close_handlers()
         if os.path.exists('deepmol.log'):
             os.remove('deepmol.log')
         if os.path.exists('test_components.png'):

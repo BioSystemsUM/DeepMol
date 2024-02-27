@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from deepmol.compound_featurization import TanimotoSimilarityMatrix
-from unit_tests.featurizers.test_featurizers import FeaturizerTestCase
+from .test_featurizers import FeaturizerTestCase
 
 
 class TestSimilarityMatrix(FeaturizerTestCase, TestCase):

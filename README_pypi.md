@@ -10,38 +10,6 @@ operations on molecular data.
 
 More detailed and comprehensive documentation in [DeepMol readthedocs](https://deepmol.readthedocs.io/en/latest/).
 
-### Table of contents:
-
-- [Requirements](#requirements)
-- [Installation](#installation)
-    - [Pip](#pip)
-    - [Manually](#manually)
-    - [Docker](#docker)
-- [Getting Started](#getting-started)
-    - [Load dataset from csv](#load-a-dataset-from-a-csv)
-    - [Load dataset from sdf](#load-a-dataset-from-a-sdf)
-    - [Compound Standardization](#compound-standardization)
-    - [Compound Featurization](#compound-featurization)
-    - [Feature Selection](#feature-selection)
-    - [Unsupervised Exploration](#unsupervised-exploration)
-    - [Data Split](#data-split)
-    - [Build, train and evaluate a model](#build-train-and-evaluate-a-model)
-    - [Hyperparameter Optimization](#hyperparameter-optimization)
-    - [Feature Importance (Shap Values)](#feature-importance-shap-values)
-    - [Unbalanced Datasets](#unbalanced-datasets)
-    - [Pipelines](#pipeline)
-    - [Pipeline Optimization](#pipeline-optimization)
-- [About Us](#about-us)
-- [Citing DeepMol](#citing-deepmol)
-  - [Related Publications](#publications-using-deepmol)
-- [License](#licensing)
-
-
-## Requirements
-
-
-  
-
 ## Installation
 
 ### Pip
@@ -239,8 +207,6 @@ umap_df = ump.run(dataset)
 ump.plot(umap_df.X, path='umap_output.png')
 ```
 
-![umap_output](docs/imgs/umap_output.png)
-
 ### Data Split
 
 Data can be split randomly or using stratified splitters. K-fold split, train-test
@@ -276,8 +242,6 @@ implemented allowing evaluation of the models under a common workspace.
 
 Models can be imported from scikit-learn and wrapped using the SKlearnModel
 module.
-
-Check this **[jupyter notebook](examples/workshop_bod/featurization.ipynb)** for a complete example!
 
 ```python
 from sklearn.ensemble import RandomForestClassifier
@@ -319,8 +283,6 @@ test_score = model.evaluate(test_dataset, metrics)
 model.save('my_model')
 ```
 
-![evaluate_output](docs/imgs/evaluate_output.png)
-
 Loading and saving models was never so easy!
 
 ```python
@@ -331,8 +293,6 @@ model.evaluate(test_dataset, metrics)
 #### Keras model example
 
 Example of how to build and wrap a keras model using the KerasModel module.
-
-Check this **[jupyter notebook](examples/workshop_bod/models.ipynb)** for a complete example!
 
 ```python
 from tensorflow.keras.models import Sequential
@@ -388,8 +348,6 @@ model.evaluate(test_dataset, metrics)
 
 Using DeepChem models:
 
-Check this **[jupyter notebook](examples/workshop_bod/models.ipynb)** for a complete example!
-
 ```python
 from deepmol.compound_featurization import WeaveFeat
 from deepchem.models import MPNNModel
@@ -428,8 +386,7 @@ model.evaluate(test_dataset, metrics)
 ### Hyperparameter Optimization
 
 Grid and randomized hyperparameter optimization is provided using cross-validation
-or a held-out validation set. For a more detailed example check this 
-**[jupyter notebook](examples/workshop_bod/hyperparameter_optimization.ipynb)**.
+or a held-out validation set.
 
 ```python
 from deepmol.parameter_optimization.hyperparameter_optimization import HyperparameterOptimizerValidation
@@ -485,7 +442,7 @@ best_model.evaluate(test_dataset, metrics)
 ### Feature Importance (Shap Values)
 
 Explain the output of a machine learning model can be done using SHAP (SHapley 
-Additive exPlanations) package. For a more detailed description you can check out this **[jupyter notebook](examples/workshop_bod/model_explainability.ipynb)**.
+Additive exPlanations) package.
 The features that most influenced (positively or
 negatively) a certain prediction can be calculated and visualized in different 
 ways:
@@ -499,19 +456,13 @@ shap_calc.fit(train_dataset, model)
 shap_calc.beeswarm_plot()
 ```
 
-![calc_shap_output](docs/imgs/calc_shap_output.png)
-
 ```python
 shap_calc.sample_explanation_plot(index=1, plot_type='waterfall')
 ```
 
-![sample_explanation_output](docs/imgs/sample_explanation_output.png)
-
 ```python
 shap_calc.feature_explanation_plot(1)
 ```
-
-![feature_explanation_output](docs/imgs/feature_explanation_output.png)
 
 #### Draw relevant features
 
@@ -539,14 +490,12 @@ maccs_keys = MACCSkeysFingerprint()
 maccs_keys.draw_bit(smi, patt_number)
 ```
 
-![draw_maccs_output](docs/imgs/draw_maccs_output.png)
-
 
 ### Unbalanced Datasets
 
 Multiple methods to deal with unbalanced datasets can be used to do oversampling,
 under-sampling or a mixture of both (Random, SMOTE, SMOTEENN, SMOTETomek and 
-ClusterCentroids). For a more detailed example check this **[jupyter notebook](examples/workshop_bod/imbalanced_learn.ipynb)**.
+ClusterCentroids).
 
 ```python
 from deepmol.imbalanced_learn.imbalanced_learn import SMOTEENN

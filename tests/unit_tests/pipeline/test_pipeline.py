@@ -6,6 +6,7 @@ import numpy as np
 from rdkit.Chem import MolFromSmiles
 
 from deepmol.datasets import SmilesDataset
+from deepmol.loggers import Logger
 from deepmol.pipeline import Pipeline
 from unit_tests._mock_utils import SmilesDatasetMagicMock, MockTransformerMagicMock, MockPredictorMagicMock, \
     MockMetricMagicMock
@@ -42,6 +43,10 @@ class TestPipeline(TestCase):
         self.pipeline_path = 'tests/unit_tests/test_pipeline/'
 
     def tearDown(self) -> None:
+        # Close logger file handlers to release the file
+        singleton_instance = Logger()
+        singleton_instance.close_handlers()
+
         if os.path.exists('deepmol.log'):
             os.remove('deepmol.log')
         if os.path.exists(self.pipeline_path):

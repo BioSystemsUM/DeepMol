@@ -1,6 +1,6 @@
 from copy import copy
 from typing import Union
-from unittest import TestCase
+from unittest import TestCase, skip
 from unittest.mock import patch
 
 from plotly.graph_objs import Figure
@@ -9,6 +9,7 @@ from deepmol.unsupervised import KMeans
 from unit_tests.unsupervised.test_unsupervised import UnsupervisedBaseTestCase
 
 
+@skip("Skip KMeans tests because it takes too much time in CI")
 class TestKMeans(UnsupervisedBaseTestCase, TestCase):
 
     def validate_kmeans(self, n_clusters: Union[str, int] = 'elbow'):

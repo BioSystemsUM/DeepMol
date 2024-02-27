@@ -7,6 +7,7 @@ import pandas as pd
 from rdkit.Chem import Mol, MolFromSmiles
 
 from deepmol.datasets import SmilesDataset
+from deepmol.loggers import Logger
 from deepmol.models._utils import get_prediction_from_proba
 
 
@@ -20,6 +21,9 @@ class TestSmilesDataset(TestCase):
             os.mkdir(self.output_dir)
 
     def tearDown(self):
+        # Close logger file handlers to release the file
+        singleton_instance = Logger()
+        singleton_instance.close_handlers()
         if os.path.exists(self.output_dir):
             shutil.rmtree(self.output_dir)
         if os.path.exists('deepmol.log'):

@@ -188,6 +188,8 @@ dictionary with the following keys:
 Here is an example of a custom objective function:
 
 ```python
+from deepmol.utils.decorators import timeout
+
 class MyObjective(Objective):
     """
     
@@ -220,7 +222,7 @@ class MyObjective(Objective):
         Call the objective function.
         """
         try:
-            @timeout_decorator.timeout(self.trial_timeout, timeout_exception=optuna.TrialPruned)
+            @timeout(self.trial_timeout)
             def run_with_timeout():
                 ...
                 return score

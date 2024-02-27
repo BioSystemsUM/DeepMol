@@ -5,9 +5,9 @@ from copy import copy
 
 import optuna
 from optuna import Trial
-from timeout_decorator import timeout_decorator
 
 from deepmol.pipeline import Pipeline
+from deepmol.utils.decorators import timeout
 
 
 class Objective:
@@ -90,7 +90,7 @@ class ObjectiveTrainEval(Objective):
             Trial object that stores the hyperparameters.
         """
         try:
-            @timeout_decorator.timeout(self.trial_timeout, timeout_exception=optuna.TrialPruned)
+            @timeout(self.trial_timeout)
             def run_with_timeout():
                 train_dataset = copy(self.train_dataset)
                 test_dataset = copy(self.test_dataset)

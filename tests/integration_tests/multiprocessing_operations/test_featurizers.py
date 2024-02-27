@@ -2,7 +2,7 @@ import numpy as np
 from rdkit.Chem import rdMolDescriptors, MolFromSmiles
 
 from deepmol.compound_featurization import MorganFingerprint
-from integration_tests.multiprocessing_operations.test_multiprocessing import TestMultiprocessing
+from tests.integration_tests.multiprocessing_operations.test_multiprocessing import TestMultiprocessing
 
 
 class TestMultiprocessingFeaturizers(TestMultiprocessing):

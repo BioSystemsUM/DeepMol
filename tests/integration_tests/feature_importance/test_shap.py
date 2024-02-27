@@ -3,11 +3,16 @@ from unittest import TestCase
 
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.linear_model import LinearRegression
-import tensorflow as tf
+
+try:
+    import tensorflow as tf
+except ImportError:
+    pass
 
 from deepmol.compound_featurization import TwoDimensionDescriptors
 from deepmol.feature_importance.shap_values import ShapValues
 from deepmol.loaders import CSVLoader
+from deepmol.loggers import Logger
 from deepmol.models import SklearnModel, KerasModel
 
 from tests import TEST_DIR
@@ -135,6 +140,9 @@ class TestShap(TestCase):
             self.validate_dl_shap('deep', 'partition')
 
     def tearDown(self) -> None:
+        # Close logger file handlers to release the file
+        singleton_instance = Logger()
+        singleton_instance.close_handlers()
         paths_to_remove = ['deepmol.log', self.plot_path]
         # Remove each path if it exists
         for path in paths_to_remove:

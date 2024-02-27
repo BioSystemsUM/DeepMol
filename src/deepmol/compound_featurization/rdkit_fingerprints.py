@@ -597,12 +597,14 @@ class RDKFingerprint(MolecularFeaturizer):
                     d.WriteDrawingText(file_to_save_image)
                     im = Image.open(file_to_save_image)
                     images.append(im)
+                    im.close()
             else:
                 os.makedirs(folder_path, exist_ok=True)
                 file_to_save_image = os.path.join(folder_path, f'mol_{i}.png')
                 d.WriteDrawingText(file_to_save_image)
                 im = Image.open(file_to_save_image)
                 images.append(im)
+                im.close()
         return display(*images)
 
 

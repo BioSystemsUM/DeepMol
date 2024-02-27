@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Iterable
 
-from joblib import Parallel, delayed
+from joblib import Parallel, delayed, parallel_backend
 
 from deepmol.loggers.logger import Logger
 
@@ -91,11 +91,11 @@ class JoblibMultiprocessing(MultiprocessingClass):
 
             # verifying if the first element is a tuple, if so one must use the args parameter *item
             if isinstance(items[0], tuple):
-                results = Parallel(n_jobs=self.n_jobs, backend="multiprocessing")(delayed(self.process)(*item)
-                                                                                  for item in items)
+                with parallel_backend("threading", n_jobs=self.n_jobs):
+                    results = Parallel()(delayed(self.process)(*item) for item in items)
             else:
-                results = Parallel(n_jobs=self.n_jobs, backend="multiprocessing")(delayed(self.process)(item)
-                                                                                  for item in items)
+                with parallel_backend("threading", n_jobs=self.n_jobs):
+                    results = Parallel()(delayed(self.process)(item) for item in items)
 
         except Exception as e:
             if "pickle" in str(e):

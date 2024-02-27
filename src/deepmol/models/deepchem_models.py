@@ -1,4 +1,3 @@
-from copy import deepcopy
 import os
 import pickle
 import shutil
@@ -10,11 +9,15 @@ from deepmol.base import Predictor
 from deepmol.evaluator import Evaluator
 from deepmol.metrics.metrics import Metric
 from deepmol.datasets import Dataset
-from deepchem.models.torch_models import TorchModel
-from deepchem.models import SeqToSeq, WGAN
-from deepchem.models import Model as BaseDeepChemModel
-from deepchem.data import NumpyDataset
-import deepchem as dc
+
+try:
+    from deepchem.models.torch_models import TorchModel
+    from deepchem.models import SeqToSeq, WGAN
+    from deepchem.models import Model as BaseDeepChemModel
+    from deepchem.data import NumpyDataset
+    import deepchem as dc
+except ImportError:
+    pass
 
 from deepmol.models._utils import _get_splitter, save_to_disk, load_from_disk, get_prediction_from_proba
 from deepmol.splitters.splitters import Splitter

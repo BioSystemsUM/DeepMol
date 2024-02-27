@@ -13,6 +13,7 @@ from sklearn.metrics import precision_score, recall_score, r2_score, f1_score
 
 from deepmol.compound_featurization import MorganFingerprint, ConvMolFeat
 from deepmol.loaders import CSVLoader
+from deepmol.loggers import Logger
 from deepmol.metrics import Metric
 from deepmol.models import DeepChemModel, KerasModel
 from deepmol.models.base_models import basic_multitask_dnn
@@ -61,6 +62,10 @@ class MultitaskBaseTestCase(ABC):
         tf.config.set_visible_devices([], 'GPU')
 
     def tearDown(self):
+        # Close logger file handlers to release the file
+        singleton_instance = Logger()
+        singleton_instance.close_handlers()
+
         if os.path.exists('deepmol.log'):
             os.remove('deepmol.log')
 

@@ -1,3 +1,5 @@
+import os
+
 from deepmol.base import PassThroughTransformer, Transformer
 from deepmol.scalers import *
 

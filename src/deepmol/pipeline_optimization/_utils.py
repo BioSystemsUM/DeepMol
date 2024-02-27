@@ -1,20 +1,23 @@
 from copy import deepcopy, copy
 from typing import Literal
 
-from deepchem.models import TextCNNModel
+try:
+    from deepchem.models import TextCNNModel
+    from deepmol.pipeline_optimization._keras_model_objectives import _get_keras_model
+    from deepmol.pipeline_optimization._deepchem_models_objectives import *
+    from deepmol.compound_featurization import CoulombFeat
+except ImportError:
+    pass
 
 from deepmol.base import DatasetTransformer, PassThroughTransformer
-from deepmol.compound_featurization import CoulombFeat
 from deepmol.datasets import Dataset
 from deepmol.datasets._utils import _get_n_classes
 from deepmol.encoders.label_one_hot_encoder import LabelOneHotEncoder
 from deepmol.pipeline_optimization._feature_selector_objectives import _get_feature_selector
 from deepmol.pipeline_optimization._featurizer_objectives import _get_featurizer
-from deepmol.pipeline_optimization._keras_model_objectives import _get_keras_model
 from deepmol.pipeline_optimization._scaler_objectives import _get_scaler
 from deepmol.pipeline_optimization._sklearn_model_objectives import _get_sk_model
 from deepmol.pipeline_optimization._standardizer_objectives import _get_standardizer
-from deepmol.pipeline_optimization._deepchem_models_objectives import *
 from deepmol.scalers.sklearn_scalers import MinMaxScaler
 
 
@@ -165,15 +168,15 @@ def preset_deepchem_models(trial, data: Dataset) -> list:
     models = ["gat_model", "gcn_model", "attentive_fp_model", "pagtn_model", "chem_ception_model", "dag_model",
               "graph_conv_model", "smiles_to_vec_model", "text_cnn_model", "weave_model", "dmpnn_model"]
     batch_size = trial.suggest_categorical("batch_size_deepchem", [8, 16, 32, 64, 128, 256, 512])
-    epochs=trial.suggest_int("epochs_deepchem", 100, 1000)
+    epochs = trial.suggest_int("epochs_deepchem", 100, 1000)
     deepchem_kwargs = {"epochs": epochs}
     if mode == 'classification' or (len(set(mode)) == 1 and mode[0] == 'classification'):
-         # , "multitask_irv_classifier_model",
+        # , "multitask_irv_classifier_model",
         # "progressive_multitask_classifier_model", "robust_multitask_classifier_model", "sc_score_model"])
         if n_classes > 2:
             models.remove("text_cnn_model")
         if (len(set(mode)) == 1 and mode[0] == 'classification'):
-            models.extend(["multitask_classifier_model", "robust_multitask_classifier_model"]) 
+            models.extend(["multitask_classifier_model", "robust_multitask_classifier_model"])
         mode = 'classification'
     elif mode == 'regression' or (len(set(mode)) == 1 and mode[0] == 'regression'):
         models.extend(["dtnn_model", "mat_model"])  # ,
@@ -183,7 +186,7 @@ def preset_deepchem_models(trial, data: Dataset) -> list:
             models.extend(["multitask_regressor_model"])
     else:
         raise ValueError("data mode must be either 'classification' or 'regression' or a list of both")
-    
+
     model_steps = trial.suggest_categorical("model_steps", models)
 
     if model_steps == "gat_model":
@@ -198,7 +201,8 @@ def preset_deepchem_models(trial, data: Dataset) -> list:
 
     elif model_steps == "attentive_fp_model":
         attentive_fp_kwargs = {'n_tasks': n_tasks, 'mode': mode, 'n_classes': n_classes, 'batch_size': batch_size}
-        steps_attentive = attentive_fp_model_steps(trial=trial, attentive_fp_kwargs=attentive_fp_kwargs, deepchem_kwargs=deepchem_kwargs)
+        steps_attentive = attentive_fp_model_steps(trial=trial, attentive_fp_kwargs=attentive_fp_kwargs,
+                                                   deepchem_kwargs=deepchem_kwargs)
         final_steps.extend(steps_attentive)
 
     elif model_steps == "pagtn_model":
@@ -235,7 +239,8 @@ def preset_deepchem_models(trial, data: Dataset) -> list:
     elif model_steps == "progressive_multitask_classifier_model":
         featurizer = _get_featurizer(trial, '1D')
         n_features = len(featurizer.feature_names)
-        progressive_multitask_classifier_kwargs = {'n_tasks': n_tasks, 'n_features': n_features, 'n_classes': n_classes, 'batch_size': batch_size}
+        progressive_multitask_classifier_kwargs = {'n_tasks': n_tasks, 'n_features': n_features, 'n_classes': n_classes,
+                                                   'batch_size': batch_size}
         model_step = progressive_multitask_classifier_model_steps(trial=trial,
                                                                   progressive_multitask_classifier_kwargs=progressive_multitask_classifier_kwargs,
                                                                   deepchem_kwargs=deepchem_kwargs)
@@ -244,7 +249,8 @@ def preset_deepchem_models(trial, data: Dataset) -> list:
     elif model_steps == "robust_multitask_classifier_model":
         featurizer = _get_featurizer(trial, '1D')
         n_features = len(featurizer.feature_names)
-        robust_multitask_classifier_kwargs = {'n_tasks': n_tasks, 'n_features': n_features, 'n_classes': n_classes, 'batch_size': batch_size}
+        robust_multitask_classifier_kwargs = {'n_tasks': n_tasks, 'n_features': n_features, 'n_classes': n_classes,
+                                              'batch_size': batch_size}
         model_step = robust_multitask_classifier_model_steps(trial=trial,
                                                              robust_multitask_classifier_kwargs=robust_multitask_classifier_kwargs,
                                                              deepchem_kwargs=deepchem_kwargs)
@@ -261,7 +267,8 @@ def preset_deepchem_models(trial, data: Dataset) -> list:
 
     elif model_steps == "chem_ception_model":
         chem_ception_kwargs = {'n_tasks': n_tasks, 'mode': mode, 'n_classes': n_classes, 'batch_size': batch_size}
-        steps_chem_ception = chem_ception_model_steps(trial=trial, chem_ception_kwargs=chem_ception_kwargs, deepchem_kwargs=deepchem_kwargs)
+        steps_chem_ception = chem_ception_model_steps(trial=trial, chem_ception_kwargs=chem_ception_kwargs,
+                                                      deepchem_kwargs=deepchem_kwargs)
         final_steps.extend(steps_chem_ception)
 
     elif model_steps == "dag_model":
@@ -271,7 +278,8 @@ def preset_deepchem_models(trial, data: Dataset) -> list:
 
     elif model_steps == "graph_conv_model":
         graph_conv_kwargs = {'n_tasks': n_tasks, 'mode': mode, 'n_classes': n_classes, 'batch_size': batch_size}
-        steps_graph_conv = graph_conv_model_steps(trial=trial, graph_conv_kwargs=graph_conv_kwargs, deepchem_kwargs=deepchem_kwargs)
+        steps_graph_conv = graph_conv_model_steps(trial=trial, graph_conv_kwargs=graph_conv_kwargs,
+                                                  deepchem_kwargs=deepchem_kwargs)
         final_steps.extend(steps_graph_conv)
 
     elif model_steps == "smiles_to_vec_model":
@@ -281,7 +289,8 @@ def preset_deepchem_models(trial, data: Dataset) -> list:
         ssf.fit_transform(dataset_copy)
         chat_to_idx = ssf.char_to_idx
         smiles_to_vec_kwargs['char_to_idx'] = chat_to_idx
-        steps_smiles_to_vec = smiles_to_vec_model_steps(trial=trial, smiles_to_vec_kwargs=smiles_to_vec_kwargs, deepchem_kwargs=deepchem_kwargs)
+        steps_smiles_to_vec = smiles_to_vec_model_steps(trial=trial, smiles_to_vec_kwargs=smiles_to_vec_kwargs,
+                                                        deepchem_kwargs=deepchem_kwargs)
         final_steps.extend(steps_smiles_to_vec)
 
     elif model_steps == "text_cnn_model":
@@ -294,7 +303,7 @@ def preset_deepchem_models(trial, data: Dataset) -> list:
         text_cnn_kwargs['char_dict'] = char_dict
         text_cnn_kwargs['seq_length'] = seq_length
         padder = DatasetTransformer(prepare_dataset_for_textcnn, max_length=max_length)
-        final_steps.extend([('padder', padder), text_cnn_model_steps(trial=trial, text_cnn_kwargs=text_cnn_kwargs, 
+        final_steps.extend([('padder', padder), text_cnn_model_steps(trial=trial, text_cnn_kwargs=text_cnn_kwargs,
                                                                      deepchem_kwargs=deepchem_kwargs)[0]])
 
     elif model_steps == "weave_model":
@@ -369,10 +378,11 @@ def preset_sklearn_models(trial, data: Dataset) -> list:
             sk_model.model.__class__.__name__ == 'ComplementNB':
         if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
                 featurizer.__class__.__name__ == 'All3DDescriptors' or \
-                    featurizer.__class__.__name__ == 'Mol2Vec':
+                featurizer.__class__.__name__ == 'Mol2Vec':
             scaler = MinMaxScaler()
 
-    final_steps = [('standardizer', _get_standardizer(trial, featurizer)), ('featurizer', featurizer), ('scaler', scaler),
+    final_steps = [('standardizer', _get_standardizer(trial, featurizer)), ('featurizer', featurizer),
+                   ('scaler', scaler),
                    ('feature_selector', feature_selector), ('model', sk_model)]
     return final_steps
 

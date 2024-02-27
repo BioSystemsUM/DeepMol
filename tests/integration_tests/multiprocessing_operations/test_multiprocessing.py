@@ -3,6 +3,7 @@ import os
 
 import pandas as pd
 from deepmol.loaders.loaders import CSVLoader
+from deepmol.loggers import Logger
 
 from tests import TEST_DIR
 
@@ -28,5 +29,8 @@ class TestMultiprocessing(TestCase):
         self.big_pandas_dataset = pd.read_csv(dataset, sep=";")
 
     def tearDown(self) -> None:
+        # Close logger file handlers to release the file
+        singleton_instance = Logger()
+        singleton_instance.close_handlers()
         if os.path.exists('deepmol.log'):
             os.remove('deepmol.log')

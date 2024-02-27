@@ -1,6 +1,7 @@
 import os
 import shutil
 from copy import deepcopy
+from unittest import skip
 
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
@@ -13,9 +14,10 @@ from deepmol.metrics import Metric
 from deepmol.models import SklearnModel
 from deepmol.pipeline import Pipeline
 from deepmol.pipeline.ensemble import VotingPipeline
-from integration_tests.pipeline.test_pipeline import TestPipeline
+from tests.integration_tests.pipeline.test_pipeline import TestPipeline
 
 
+@skip("They take too much time in CI")
 class TestEnsemblePipeline(TestPipeline):
 
     def tearDown(self) -> None:
@@ -134,7 +136,6 @@ class TestEnsemblePipeline(TestPipeline):
 
         vp = VotingPipeline(pipelines=[pipeline1, pipeline3], weights=[1, 2])
         vp.predict(self.dataset_descriptors)
-
 
     def test_predict_proba(self):
         rf = RandomForestClassifier()

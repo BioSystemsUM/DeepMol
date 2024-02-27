@@ -1,9 +1,16 @@
 from deepmol.base import Predictor
-from deepmol.models import SklearnModel, KerasModel, DeepChemModel
+from deepmol.models import SklearnModel
+try:
+    from deepmol.models import DeepChemModel, KerasModel
+except ImportError:
+    pass
 
-MODEL_TYPES = {'sklearn': SklearnModel,
+try:
+    MODEL_TYPES = {'sklearn': SklearnModel,
                'keras': KerasModel,
                'deepchem': DeepChemModel}
+except NameError:
+    MODEL_TYPES = {'sklearn': SklearnModel}
 
 
 def _get_predictor_instance(model_type: str) -> Predictor:

@@ -1,12 +1,15 @@
 import os
 import shutil
-from unittest import TestCase
+from unittest import TestCase, skip
 
 import numpy as np
-from deepchem.models import GraphConvModel
-from tensorflow.keras import Input
-from tensorflow.keras import Sequential
-from tensorflow.keras.layers import Dense
+try:
+    from deepchem.models import GraphConvModel
+    from tensorflow.keras import Input
+    from tensorflow.keras import Sequential
+    from tensorflow.keras.layers import Dense
+except ImportError:
+    pass
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.svm import SVC
@@ -15,6 +18,7 @@ from deepmol.base import PassThroughTransformer
 from deepmol.compound_featurization import MorganFingerprint, LayeredFingerprint, ConvMolFeat
 from deepmol.feature_selection import LowVarianceFS, KbestFS
 from deepmol.loaders import CSVLoader
+from deepmol.loggers import Logger
 from deepmol.metrics import Metric
 from deepmol.models import SklearnModel, KerasModel, DeepChemModel
 from deepmol.parameter_optimization import HyperparameterOptimizerValidation, HyperparameterOptimizerCV
@@ -63,6 +67,10 @@ class TestPipeline(TestCase):
         if os.path.exists('test_pipeline'):
             shutil.rmtree('test_pipeline')
         # remove logs (files starting with 'deepmol.log')
+
+        # Close logger file handlers to release the file
+        singleton_instance = Logger()
+        singleton_instance.close_handlers()
         for f in os.listdir():
             if f.startswith('deepmol.log'):
                 os.remove(f)

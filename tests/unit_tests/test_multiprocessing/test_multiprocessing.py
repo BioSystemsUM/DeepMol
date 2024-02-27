@@ -1,6 +1,7 @@
 import os
 from unittest import TestCase
 
+from deepmol.loggers import Logger
 from deepmol.parallelism.multiprocessing import JoblibMultiprocessing
 
 
@@ -11,6 +12,9 @@ def divide(a, b):
 class TestMultiProcessing(TestCase):
 
     def tearDown(self) -> None:
+        # Close logger file handlers to release the file
+        singleton_instance = Logger()
+        singleton_instance.close_handlers()
         if os.path.exists('deepmol.log'):
             os.remove('deepmol.log')
 

@@ -7,6 +7,7 @@ import pandas as pd
 from rdkit import Chem
 
 from deepmol.datasets import SmilesDataset
+from deepmol.loggers import Logger
 
 from tests import TEST_DIR
 
@@ -21,6 +22,9 @@ class StandardizerBaseTestCase(ABC):
         self.mock_dataset = MagicMock(spec=SmilesDataset, smiles=self.original_smiles, mols=self.original_mols)
 
     def tearDown(self) -> None:
+        # Close logger file handlers to release the file
+        singleton_instance = Logger()
+        singleton_instance.close_handlers()
         if os.path.exists('deepmol.log'):
             os.remove('deepmol.log')
 

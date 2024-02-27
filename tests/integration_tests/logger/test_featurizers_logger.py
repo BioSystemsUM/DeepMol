@@ -2,9 +2,9 @@ import os
 
 from deepmol.compound_featurization import MorganFingerprint
 from deepmol.loggers.logger import Logger
-from integration_tests.logger.test_logger import TestLogger
 
 from tests import TEST_DIR
+from tests.integration_tests.logger.test_logger import TestLogger
 
 
 class TestLoggerFeaturizer(TestLogger):
@@ -20,6 +20,9 @@ class TestLoggerFeaturizer(TestLogger):
         Logger().enable()
         MorganFingerprint().featurize(self.big_dataset_to_test)
         self.assertTrue(os.path.exists(os.path.join(TEST_DIR, "test2.log")))
+        # Close logger file handlers to release the file
+        singleton_instance = Logger()
+        singleton_instance.close_handlers()
         os.remove(os.path.join(TEST_DIR, "test2.log"))
 
 

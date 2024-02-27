@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 from deepmol.loggers import Logger
-from integration_tests.logger.test_logger import TestLogger
+from tests.integration_tests.logger.test_logger import TestLogger
 
 
 class TestLoggerFeaturizer(TestLogger):

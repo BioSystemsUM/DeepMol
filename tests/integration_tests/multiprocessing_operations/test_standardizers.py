@@ -5,7 +5,7 @@ from rdkit.Chem import MolToSmiles, MolFromSmiles
 
 from deepmol.standardizer import BasicStandardizer, ChEMBLStandardizer, CustomStandardizer, MolecularStandardizer
 from deepmol.utils import utils
-from integration_tests.multiprocessing_operations.test_multiprocessing import TestMultiprocessing
+from tests.integration_tests.multiprocessing_operations.test_multiprocessing import TestMultiprocessing
 
 
 class TestStandardizers(TestMultiprocessing):

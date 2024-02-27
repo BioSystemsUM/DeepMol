@@ -7,6 +7,7 @@ import pandas as pd
 
 from deepmol.datasets import SmilesDataset
 from deepmol.feature_selection import BorutaAlgorithm, LowVarianceFS, KbestFS, PercentilFS, RFECVFS, SelectFromModelFS
+from deepmol.loggers import Logger
 
 from tests import TEST_DIR
 from unit_tests._mock_utils import SmilesDatasetMagicMock
@@ -29,6 +30,9 @@ class TestFeatureSelectors(TestCase):
                                                        mode='classification')
 
     def tearDown(self) -> None:
+        # Close logger file handlers to release the file
+        singleton_instance = Logger()
+        singleton_instance.close_handlers()
         if os.path.exists('deepmol.log'):
             os.remove('deepmol.log')
 

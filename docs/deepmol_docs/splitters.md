@@ -306,7 +306,7 @@ scalable for extremely labelled datasets
 
 A similarity splitter splits the data into train, validation and test sets. The data is split in a way that the similarity between the molecules in each set is below a certain threshold. This is useful when we want to make sure that the molecules in the validation and test sets are either not too similar or similar to the molecules in the training set.
 
-This splitter considers all the compounds with a similarity lower than the **homogenous_threshold** to be separated in the training set and test set. The higher the threshold is, the more heterogeneous the split will be.
+This splitter considers all the compounds with a similarity lower than the **homogenous_threshold** to be in the same set. The higher the threshold is, the more heterogeneous the split will be. 
 
 Moreover, this method tries to ensure the stratification of classes.
 

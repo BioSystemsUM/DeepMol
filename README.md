@@ -16,6 +16,7 @@ More detailed and comprehensive documentation in [DeepMol readthedocs](https://d
 - [Installation](#installation)
     - [Pip](#pip)
     - [Manually](#manually)
+    - [Docker](#docker)
 - [Getting Started](#getting-started)
     - [Load dataset from csv](#load-a-dataset-from-a-csv)
     - [Load dataset from sdf](#load-a-dataset-from-a-sdf)
@@ -57,8 +58,8 @@ Extra modules:
 
 ```bash
 pip install deepmol[preprocessing]
-pip install deepmol[machine_learning]
-pip install deepmol[deep_learning]
+pip install deepmol[machine-learning]
+pip install deepmol[deep-learning]
 ```
 
 Also, you should install mol2vec and its dependencies:
@@ -81,6 +82,15 @@ git clone https://github.com/BioSystemsUM/DeepMol.git
 ```bash
 python setup.py install
 ```
+
+### Docker
+
+You can also use the provided image to build your own Docker image:
+
+```bash
+docker pull biosystemsum/deepmol
+```
+
 
 ## Getting Started
 

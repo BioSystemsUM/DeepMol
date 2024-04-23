@@ -22,7 +22,7 @@ Unbalanced Datasets <deepmol_docs/imbalanced_learn>
 Supervised Learning <deepmol_docs/models>
 Hyperparameter Optimization <deepmol_docs/hyperparameter_optimization>
 Pipelines <deepmol_docs/pipeline>
-Pipeline Optimization <deepmol_docs/pipeline_optimization>
+Pipeline Optimization (AutoML) <deepmol_docs/pipeline_optimization>
 Feature Importance <deepmol_docs/model_explainability>
 About Us <deepmol_docs/about_us>
 Related Publications <deepmol_docs/publications>

@@ -5,10 +5,12 @@ uses the `Optuna` library to optimize the hyperparameters of the pipeline. It is
 to optimize between different `Transformers` (e.g. featurizers, scalers, etc.) and 
 `Predictors` (i.e. models) and also to optimize their hyperparameters.
 
-For that we need to define an objective function that will be optimized by `Optuna`. This
-objective function will receive a `Trial` object from `Optuna` and will return the
+As with any optimization problem, pipeline optimization requires an objective function. By default, `DeepMol` sets the goal of maximizing or minimizing a chosen metric (such as accuracy) for a specified validation set. Nonetheless, users can integrate additional custom objective functions as needed.
+
+Furthermore, a function can be created with the configuration space that will be optimized by `Optuna`. This function will
+ receive a `Trial` object from `Optuna` and will return the
 steps (i.e. `Transformers` and `Predictors`) of the pipeline. Alternatively, we can
-use a set of predefined objective functions (presets) that are already implemented in
+use a set of predefined functions (presets) that are already implemented in
 DeepMol. The following presets are available:
 - `'sklearn'`: optimizes between all available Standardizers, Featurizers, Scalers,
             Feature Selectors in DeepMol and all available models in Sklearn.
@@ -19,7 +21,7 @@ DeepMol. The following presets are available:
            DeepMol and some base Keras models (1D CNNs, RNNs, Bidirectional RNNs and FCNNs).
 - `'all'`: optimizes between all the above presets.
 
-In the case of using a custom objective function, the function must return a list of tuples
+In the case of using a custom function, the function must return a list of tuples
 where the first element of the tuple is the name of the step and the second element is the
 object that implements the step. The pipeline class will respect the order of the steps you
 return in the objective function. For example, if you return the following list of tuples:
@@ -49,7 +51,7 @@ from deepmol.models import SklearnModel
 from deepmol.pipeline_optimization import PipelineOptimization
 from deepmol.splitters import RandomSplitter
 
-# DEFINE THE OBJECTIVE FUNCTION
+# DEFINE THE FUNCTION
 def steps(trial):
     model = trial.suggest_categorical('model', ['RandomForestClassifier', 'SVC'])
     if model == 'RandomForestClassifier':
@@ -75,7 +77,7 @@ dataset_descriptors = loader.create_dataset(sep=",")
 po = PipelineOptimization(direction='maximize', study_name='test_predictor_pipeline')
 metric = Metric(accuracy_score)
 train, test = RandomSplitter().train_test_split(dataset_descriptors, seed=123)
-po.optimize(train_dataset=train, test_dataset=test, objective_steps=steps, 
+po.optimize(train_dataset=train, test_dataset=test, objective_steps=steps, objective = ObjectiveTrainEval,
             metric=metric, n_trials=5, save_top_n=3, trial_timeout=600)
 ``` 
 
@@ -161,7 +163,9 @@ po = PipelineOptimization(direction='minimize', study_name='test_pipeline', samp
 metric = Metric(mean_squared_error)
 train, test = RandomSplitter().train_test_split(dataset_regression, seed=123)
 po.optimize(train_dataset=train, test_dataset=test, objective_steps='all', 
-            metric=metric, n_trials=10, data=train, save_top_n=2, trial_timeout=600)
+            metric=metric, n_trials=10, data=train, save_top_n=2, trial_timeout=600, 
+            objective = ObjectiveTrainEval)
+            
 ```
 
 In this case we are optimizing between all the available steps in DeepMol.
@@ -233,3 +237,13 @@ class MyObjective(Objective):
         except Exception as e:
             print(e)
             return float('inf') if self.direction == 'minimize' else float('-inf')
+
+
+po = PipelineOptimization(direction='minimize', study_name='test_pipeline', sampler=optuna.samplers.TPESampler(seed=42),
+                          storage='sqlite:///my_experience.db')
+metric = Metric(mean_squared_error)
+train, test = RandomSplitter().train_test_split(dataset_regression, seed=123)
+po.optimize(train_dataset=train, test_dataset=test, objective_steps='all', 
+            metric=metric, n_trials=10, data=train, save_top_n=2, trial_timeout=600, 
+            objective = MyObjective)
+```

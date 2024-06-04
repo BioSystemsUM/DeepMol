@@ -689,7 +689,7 @@ and in industry scenarios.
 
 ## Citing DeepMol
 
-Manuscript under preparation.
+Correia, J., Capela, J., & Rocha, M. (2024). DeepMol: An Automated Machine and Deep Learning Framework for Computational Chemistry. [https://doi.org/10.1101/2024.05.27.595849](https://www.biorxiv.org/content/10.1101/2024.05.27.595849v1)
 
 ### Publications using DeepMol
 

@@ -17,6 +17,8 @@ from deepmol.models import SklearnModel, KerasModel
 
 from tests import TEST_DIR
 
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
 
 class TestShap(TestCase):
 

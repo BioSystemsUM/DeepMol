@@ -8,7 +8,6 @@ pillow==8.4.0
 h5py==3.10.0
 deepchem==2.7.1
 shap==0.44.0
-gensim==4.2.0
 mol2vec @ git+https://github.com/samoturk/mol2vec#egg=mol2vec
 boruta==0.3
 tensorflow==2.16.1

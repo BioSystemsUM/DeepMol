@@ -5,7 +5,7 @@ from deepmol.compound_featurization.mol2vec import Mol2Vec
 from tests.unit_tests.featurizers.test_featurizers import FeaturizerTestCase
 import unittest
 
-@unittest.skip("Mol2Vec is not available in the current environment")
+#@unittest.skip("Mol2Vec is not available in the current environment")
 class TestMol2Vec(FeaturizerTestCase, TestCase):
     def test_featurize(self):
         dataset_rows_number = len(self.mock_dataset.mols)

@@ -16,7 +16,7 @@ from deepmol.metrics import Metric
 from deepmol.models import DeepChemModel
 from deepmol.splitters import RandomSplitter
 from deepmol.compound_featurization import MorganFingerprint
-from unit_tests.models.test_models import ModelsTestCase
+from tests.unit_tests.models.test_models import ModelsTestCase
 
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
 

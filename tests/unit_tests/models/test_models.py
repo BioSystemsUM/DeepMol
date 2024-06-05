@@ -8,7 +8,7 @@ from rdkit.Chem import MolFromSmiles
 from deepmol.datasets import SmilesDataset
 from deepmol.loggers import Logger
 from deepmol.models._utils import get_prediction_from_proba
-from unit_tests._mock_utils import SmilesDatasetMagicMock
+from tests.unit_tests._mock_utils import SmilesDatasetMagicMock
 
 
 class ModelsTestCase(ABC):

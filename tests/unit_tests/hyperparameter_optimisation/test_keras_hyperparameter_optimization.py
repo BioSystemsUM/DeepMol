@@ -4,7 +4,7 @@ from sklearn.metrics import accuracy_score
 
 from deepmol.metrics import Metric
 from deepmol.parameter_optimization import HyperparameterOptimizerValidation, HyperparameterOptimizerCV
-from unit_tests.models.test_models import ModelsTestCase
+from tests.unit_tests.models.test_models import ModelsTestCase
 from tensorflow.keras.layers import Dropout
 from tensorflow import keras
 from tensorflow.keras import layers

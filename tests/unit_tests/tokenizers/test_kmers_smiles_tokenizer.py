@@ -2,7 +2,7 @@ from copy import copy
 from unittest import TestCase
 
 from deepmol.tokenizers.kmer_smiles_tokenizer import KmerSmilesTokenizer
-from unit_tests.featurizers.test_featurizers import FeaturizerTestCase
+from tests.unit_tests.featurizers.test_featurizers import FeaturizerTestCase
 
 
 class TestKmersSmilesTokenizer(FeaturizerTestCase, TestCase):

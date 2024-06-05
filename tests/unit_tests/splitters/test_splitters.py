@@ -12,7 +12,7 @@ import numpy as np
 
 from deepmol.loggers import Logger
 from tests import TEST_DIR
-from unit_tests._mock_utils import SmilesDatasetMagicMock
+from tests.unit_tests._mock_utils import SmilesDatasetMagicMock
 
 
 class SplittersTestCase(ABC):

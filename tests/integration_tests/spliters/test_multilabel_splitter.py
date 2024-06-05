@@ -5,7 +5,7 @@ import numpy as np
 
 from deepmol.loaders import CSVLoader
 from deepmol.splitters.multitask_splitter import MultiTaskStratifiedSplitter
-from unit_tests.splitters.test_splitters import SplittersTestCase
+from tests.unit_tests.splitters.test_splitters import SplittersTestCase
 
 from tests import TEST_DIR
 

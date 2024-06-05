@@ -5,7 +5,7 @@ from rdkit.Chem import rdMolDescriptors, MolFromSmiles, GetMolFrags
 from rdkit.DataStructs import TanimotoSimilarity
 
 from deepmol.standardizer import BasicStandardizer, CustomStandardizer, ChEMBLStandardizer
-from unit_tests.standardizers.test_standardizers import StandardizerBaseTestCase
+from tests.unit_tests.standardizers.test_standardizers import StandardizerBaseTestCase
 
 
 class GeneralStandardizer(StandardizerBaseTestCase, TestCase):

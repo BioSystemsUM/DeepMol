@@ -9,7 +9,7 @@ from deepmol.metrics import Metric
 from deepmol.models import KerasModel
 from deepmol.models.keras_model_builders import keras_fcnn_model, keras_1d_cnn_model, keras_tabular_transformer_model, \
     keras_simple_rnn_model, keras_rnn_model, keras_bidirectional_rnn_model
-from unit_tests.models.test_models import ModelsTestCase
+from tests.unit_tests.models.test_models import ModelsTestCase
 
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, GaussianNoise, Conv1D, Flatten, Reshape

@@ -11,7 +11,7 @@ from sklearn.multioutput import MultiOutputClassifier, MultiOutputRegressor
 from deepmol.metrics import Metric
 from deepmol.models import SklearnModel
 from deepmol.splitters import RandomSplitter
-from unit_tests.models.test_models import ModelsTestCase
+from tests.unit_tests.models.test_models import ModelsTestCase
 
 
 class TestSklearnModel(ModelsTestCase, TestCase):

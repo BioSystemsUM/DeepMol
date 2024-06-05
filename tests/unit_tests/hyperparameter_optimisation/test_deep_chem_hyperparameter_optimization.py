@@ -12,7 +12,7 @@ from deepmol.datasets import SmilesDataset
 from deepmol.metrics import Metric
 from deepmol.models import DeepChemModel
 from deepmol.parameter_optimization import HyperparameterOptimizerCV
-from unit_tests.models.test_models import ModelsTestCase
+from tests.unit_tests.models.test_models import ModelsTestCase
 
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
 

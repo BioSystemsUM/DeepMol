@@ -3,7 +3,7 @@ from unittest import TestCase
 import numpy as np
 
 from deepmol.splitters import RandomSplitter
-from unit_tests.splitters.test_splitters import SplittersTestCase
+from tests.unit_tests.splitters.test_splitters import SplittersTestCase
 
 
 class RandomSplitterTestCase(SplittersTestCase, TestCase):

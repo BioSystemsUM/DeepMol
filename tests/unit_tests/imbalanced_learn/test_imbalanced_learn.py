@@ -10,7 +10,7 @@ from deepmol.datasets import SmilesDataset
 from deepmol.imbalanced_learn import RandomOverSampler, SMOTE, ClusterCentroids, RandomUnderSampler, SMOTEENN, \
     SMOTETomek
 from deepmol.loggers import Logger
-from unit_tests._mock_utils import SmilesDatasetMagicMock
+from tests.unit_tests._mock_utils import SmilesDatasetMagicMock
 
 
 class TestImbalancedLearn(TestCase):

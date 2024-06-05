@@ -3,7 +3,7 @@ from unittest import TestCase, skip
 
 from deepmol.scalers import StandardScaler, MinMaxScaler, MaxAbsScaler, RobustScaler, PolynomialFeatures, Normalizer, \
     Binarizer, KernelCenterer, QuantileTransformer, PowerTransformer
-from unit_tests.scalers.test_scalers import ScalersTestCase
+from tests.unit_tests.scalers.test_scalers import ScalersTestCase
 
 
 class SklearnScalersTestCase(ScalersTestCase, TestCase):

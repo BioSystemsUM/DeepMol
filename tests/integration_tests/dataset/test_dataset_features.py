@@ -1,6 +1,7 @@
 from deepmol.compound_featurization import MorganFingerprint, LayeredFingerprint, TwoDimensionDescriptors
 from tests.integration_tests.dataset.test_dataset import TestDataset
 
+import unittest
 
 class TestDatasetFeaturizers(TestDataset):
 
@@ -16,6 +17,7 @@ class TestDatasetFeaturizers(TestDataset):
 
         TwoDimensionDescriptors().featurize(self.small_dataset_to_test, inplace=True)
 
+    @unittest.skip("Requires too much memory")
     def test_dataset_with_similarity_matrix(self):
         from deepmol.compound_featurization import TanimotoSimilarityMatrix
         dataset_rows_number = len(self.small_dataset_to_test.mols)

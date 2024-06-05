@@ -9,7 +9,7 @@ from sklearn.svm import SVC
 from deepmol.metrics import Metric
 from deepmol.parameter_optimization import HyperparameterOptimizerCV, HyperparameterOptimizerValidation
 from deepmol.parameter_optimization._utils import validate_metrics, _convert_hyperparam_dict_to_filename
-from unit_tests.models.test_models import ModelsTestCase
+from tests.unit_tests.models.test_models import ModelsTestCase
 
 
 class TestSklearnHyperparameterOptimization(ModelsTestCase, TestCase):

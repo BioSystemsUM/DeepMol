@@ -2,7 +2,7 @@ from copy import copy
 from unittest import TestCase
 
 from deepmol.tokenizers import AtomLevelSmilesTokenizer
-from unit_tests.featurizers.test_featurizers import FeaturizerTestCase
+from tests.unit_tests.featurizers.test_featurizers import FeaturizerTestCase
 
 
 class TestAtomLevelSmilesTokenizer(FeaturizerTestCase, TestCase):

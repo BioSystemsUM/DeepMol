@@ -8,7 +8,7 @@ from rdkit.Chem import MolFromSmiles
 from deepmol.datasets import SmilesDataset
 from deepmol.loggers import Logger
 from deepmol.pipeline import Pipeline
-from unit_tests._mock_utils import SmilesDatasetMagicMock, MockTransformerMagicMock, MockPredictorMagicMock, \
+from tests.unit_tests._mock_utils import SmilesDatasetMagicMock, MockTransformerMagicMock, MockPredictorMagicMock, \
     MockMetricMagicMock
 
 

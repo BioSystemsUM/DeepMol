@@ -115,7 +115,7 @@ class KerasModel(Model):
             raise ValueError('Dataset mode does not match model mode.')
 
         features = dataset.X.astype('float32')
-        if len(dataset.label_names) == 1:
+        if len(dataset.label_names) == 1 or self.mode == 'multilabel':
             y = np.squeeze(dataset.y)
 
             validation_data = kwargs.pop("validation_data", None)

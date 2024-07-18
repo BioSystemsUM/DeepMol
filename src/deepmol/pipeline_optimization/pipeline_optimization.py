@@ -145,8 +145,9 @@ class PipelineOptimization:
         Returns the best pipelines ensemble.
         """
         trials_df = self.trials_dataframe()
+        ascending = True if self.direction == 'minimize' else False
         best_trials = (trials_df[trials_df['state'] == 'COMPLETE'].
-                       sort_values('value', ascending=False))
+                       sort_values('value', ascending=ascending))
         pipelines = []
         i = 0
         while len(pipelines) < self.n_pipelines_ensemble:

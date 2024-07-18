@@ -132,7 +132,11 @@ class KerasModel(Model):
             if "callbacks" not in kwargs and "callbacks" in self.fit_kwargs:
                 kwargs["callbacks"] = self.fit_kwargs["callbacks"]
 
-            self.model.fit(features, y, **kwargs)
+            if self.mode == 'multilabel':
+                self.model.fit(features, y, epochs=self.epochs, batch_size=self.batch_size, verbose=self.verbose, **kwargs)
+            else:
+                self.model.fit(features, y, **kwargs)
+                
         else:
             targets = [dataset.y[:, i] for i in range(len(dataset.label_names))]
             y = {f"{dataset.label_names[i]}": targets[i] for i in range(len(dataset.label_names))}

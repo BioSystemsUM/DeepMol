@@ -124,16 +124,26 @@ def get_fingerprints_for_each_class(dataset: Dataset):
     fps_classes_map = {}
     indices_classes_map = {}
     all_fps = []
+    classes = dataset.y is not None
     for i, mol in enumerate(dataset.mols):
 
         fp = AllChem.GetMorganFingerprintAsBitVect(mol, 2, 1024)
         all_fps.append(fp)
-        if dataset.y[i] not in fps_classes_map:
-            fps_classes_map[dataset.y[i]] = [fp]
-            indices_classes_map[dataset.y[i]] = [i]
+        if classes:
+            if dataset.y[i] not in fps_classes_map:
+                fps_classes_map[dataset.y[i]] = [fp]
+                indices_classes_map[dataset.y[i]] = [i]
 
+            else:
+                fps_classes_map[dataset.y[i]].append(fp)
+                indices_classes_map[dataset.y[i]].append(i)
         else:
-            fps_classes_map[dataset.y[i]].append(fp)
-            indices_classes_map[dataset.y[i]].append(i)
+            if 0 not in fps_classes_map:
+                fps_classes_map[0] = [fp]
+                indices_classes_map[0] = [i]
+
+            else:
+                fps_classes_map[0].append(fp)
+                indices_classes_map[0].append(i)
 
     return fps_classes_map, indices_classes_map, all_fps

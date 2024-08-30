@@ -1,5 +1,6 @@
 import pickle
 from deepmol.compound_featurization.base_featurizer import MolecularFeaturizer
+from deepmol.datasets.datasets import SmilesDataset
 from .nc_mfp.Preprocessing_step import Preprocessing
 from .nc_mfp.Scaffold_matching_step import Scaffold_Matching
 from .nc_mfp.Fragment_list_generation_step import Fragment_List_Generation
@@ -19,15 +20,16 @@ import itertools
 
 class NC_MFP(MolecularFeaturizer):
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, database_file_path = os.path.join(NC_MFP_PATH, 'databases', 'ncdb'), **kwargs) -> None:
         super().__init__(**kwargs)
+
         self.all_scaffold_file_path = (os.path.join(NC_MFP_PATH, "databases", 'All_Optimized_Scaffold_List.txt'))
         # import Final_all_Fragment_Dic from pickle
-        with open(os.path.join(NC_MFP_PATH, 'databases', 'ncdb', 'fragment_dic.pickle'), 'rb') as f:
+        with open(os.path.join(database_file_path, 'fragment_dic.pickle'), 'rb') as f:
             
             self.final_all_fragments_Dic = pickle.load(f)
 
-        with open(os.path.join(NC_MFP_PATH, 'databases', 'ncdb', 'final_label.pickle'), 'rb') as f:
+        with open(os.path.join(database_file_path, 'final_label.pickle'), 'rb') as f:
             self.final_all_NC_MFP_labels = pickle.load(f)
         
         self.feature_names = [f'nc_mfp_{i}' for i in range(len(self.final_all_NC_MFP_labels))]
@@ -80,3 +82,25 @@ class NC_MFP(MolecularFeaturizer):
         #reshape to have the same shape as the number of features
         final_bitstring = final_bitstring.reshape(final_bitstring.shape[1])
         return final_bitstring
+
+    def generate_new_fingerprint_database(data: SmilesDataset, output_folder: str):
+      """
+      Generate a new fingerprint database from the given dataset.
+
+      Parameters
+      ----------
+      data: SmilesDataset
+        A dataset of SMILES strings.
+      output_folder: str
+        The output folder to save the database.
+      
+      Returns
+      -------
+      None
+      
+      """
+
+      from .nc_mfp.generate_database import DatabaseGenerator
+
+      # Generate the database
+      DatabaseGenerator().generate_database(data, output_folder) 

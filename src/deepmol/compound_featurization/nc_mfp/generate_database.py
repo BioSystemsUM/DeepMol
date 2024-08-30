@@ -26,7 +26,8 @@ Step_5 = Fragment_identifying()
 Step_6 = Fingerprint_representation()
 
 # Read All Scaffolds data
-All_Scaffold_FilePath = ('Data/All_Optimized_Scaffold_List.txt')
+this_file_directory = os.path.dirname(os.path.abspath(__file__))
+All_Scaffold_FilePath = (os.path.join(this_file_directory, 'data/All_Optimized_Scaffold_List.txt'))
 #All_Scaffold_FilePath = 'C:\\Users\\Seomyungwon\\NC-MFP\\Data\\All_Optimized_Scaffold_List.txt'
 
 from joblib import Parallel, delayed
@@ -88,7 +89,7 @@ def generate_info(All_Scaffold_FilePath, entry, Final_all_Fragment_Dic):
         print(e)
 
 class DatabaseGenerator():
-    def __init__(self, All_Scaffold_FilePath):
+    def __init__(self):
         self.All_Scaffold_FilePath = All_Scaffold_FilePath
 
     def generate_database(self, dataset: Dataset, output_folder: str):

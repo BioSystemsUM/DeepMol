@@ -27,3 +27,9 @@ class TestDatasetFeaturizers(TestDataset):
         NC_MFP().featurize(self.small_dataset_to_test, inplace=True)
         self.assertEqual(self.small_dataset_to_test.X.shape[0], 13)
         self.assertEqual(self.small_dataset_to_test.X.shape[1], 254399)
+
+    def test_dataset_with_neural_npfp(self):
+        from deepmol.compound_featurization import NeuralNPFP
+        NeuralNPFP().featurize(self.small_dataset_to_test, inplace=True)
+        self.assertEqual(self.small_dataset_to_test.X.shape[0], 13)
+        self.assertEqual(self.small_dataset_to_test.X.shape[1], 64)

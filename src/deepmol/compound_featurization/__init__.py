@@ -31,3 +31,5 @@ from .one_hot_encoder import SmilesOneHotEncoder
 from .np_classifier_fp import NPClassifierFP
 
 from .nc_mfp_generator import NC_MFP
+
+from .neural_npfp_generator import NeuralNPFP

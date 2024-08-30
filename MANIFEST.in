@@ -1,2 +1,4 @@
 include extra-requirements.txt
 include src/deepmol/compound_featurization/mol2vec_models/model_300dim.pkl
+recursive-include src/deepmol/compound_featurization/neural_npfp *.pt
+recursive-include src/deepmol/compound_featurization/nc_mfp/databases *

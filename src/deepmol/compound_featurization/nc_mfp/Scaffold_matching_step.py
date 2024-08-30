@@ -1,9 +1,9 @@
 from rdkit import Chem
 
-class Scaffold_Matching:
+class ScaffoldMatching:
 
     # Input Smarts
-    def match_All_Scaffold_Smarts(self, FilePath, qMol_Smarts):
+    def match_all_scaffold_smarts(self, FilePath, qMol_Smarts):
 
         Final_all_scaffold_Match_List = []
         S_all_Smarts = []

@@ -42,7 +42,7 @@ def tqdm_joblib(tqdm_object):
 
 
 
-class Fingerprint_representation:
+class FingerprintRepresentation:
 
     def get_all_NC_MFP_Label(self, Final_all_NC_MFP_Info):
 
@@ -94,7 +94,7 @@ class Fingerprint_representation:
         file.close()
 
 
-    def get_qMol_NC_MFP_Value_Idx(self, Final_all_NC_MFP_Info, Final_all_NC_MFP_Label):
+    def get_q_mol_nc_mfp_value_idx(self, Final_all_NC_MFP_Info, Final_all_NC_MFP_Label):
 
         Final_qMOl_NC_MFP_Value_String = ""
 

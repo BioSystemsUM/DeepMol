@@ -2,7 +2,7 @@ import itertools
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
-class Fragment_identifying:
+class FragmentIdentifying:
 
     def identify_Fragment_Smarts(self, All_Scaffold_FilePath, qMol_Smarts, Final_all_Fragment_Dic):
 

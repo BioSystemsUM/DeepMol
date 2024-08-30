@@ -3,11 +3,11 @@ import os
 
 from deepmol.datasets.datasets import Dataset
 from .Preprocessing_step import Preprocessing
-from .Scaffold_matching_step import Scaffold_Matching
+from .Scaffold_matching_step import ScaffoldMatching
 from .Fragment_list_generation_step import Fragment_List_Generation
-from .SFCP_assigning_step import SFCP_Assigning
-from .Fragment_identifying_step import Fragment_identifying
-from .Fingerprint_representation_step import Fingerprint_representation
+from .SFCP_assigning_step import SFCPAssigning
+from .Fragment_identifying_step import FragmentIdentifying
+from .Fingerprint_representation_step import FingerprintRepresentation
 
 # coding: utf-8
 # Input: Smarts of query compound (.txt)
@@ -19,11 +19,11 @@ from .Fingerprint_representation_step import Fingerprint_representation
 
 # Define classes
 Step_1 = Preprocessing()
-Step_2 = Scaffold_Matching()
+Step_2 = ScaffoldMatching()
 Step_3 = Fragment_List_Generation()
-Step_4 = SFCP_Assigning()
-Step_5 = Fragment_identifying()
-Step_6 = Fingerprint_representation()
+Step_4 = SFCPAssigning()
+Step_5 = FragmentIdentifying()
+Step_6 = FingerprintRepresentation()
 
 # Read All Scaffolds data
 this_file_directory = os.path.dirname(os.path.abspath(__file__))
@@ -56,7 +56,7 @@ def generate_info(All_Scaffold_FilePath, entry, Final_all_Fragment_Dic):
     try:
         # [2] Scaffold matching step #
         Final_all_Scaffold_Match_List = []
-        Final_all_Scaffold_Match_List.append(Step_2.match_All_Scaffold_Smarts(All_Scaffold_FilePath, entry))
+        Final_all_Scaffold_Match_List.append(Step_2.match_all_scaffold_smarts(All_Scaffold_FilePath, entry))
 
         # Merge scaffold lists
         Final_all_Scaffold_Match_List = list(itertools.chain(*Final_all_Scaffold_Match_List))

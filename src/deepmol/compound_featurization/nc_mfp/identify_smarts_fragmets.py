@@ -1,10 +1,10 @@
 import itertools
 from deepmol.compound_featurization.nc_mfp.Preprocessing_step import Preprocessing
-from deepmol.compound_featurization.nc_mfp.Scaffold_matching_step import Scaffold_Matching
+from deepmol.compound_featurization.nc_mfp.Scaffold_matching_step import ScaffoldMatching
 from deepmol.compound_featurization.nc_mfp.Fragment_list_generation_step import Fragment_List_Generation
-from deepmol.compound_featurization.nc_mfp.SFCP_assigning_step import SFCP_Assigning
-from deepmol.compound_featurization.nc_mfp.Fragment_identifying_step import Fragment_identifying
-from deepmol.compound_featurization.nc_mfp.Fingerprint_representation_step import Fingerprint_representation
+from deepmol.compound_featurization.nc_mfp.SFCP_assigning_step import SFCPAssigning
+from deepmol.compound_featurization.nc_mfp.Fragment_identifying_step import FragmentIdentifying
+from deepmol.compound_featurization.nc_mfp.Fingerprint_representation_step import FingerprintRepresentation
 
 # coding: utf-8
 # Input: Smarts of query compound (.txt)
@@ -16,11 +16,11 @@ from deepmol.compound_featurization.nc_mfp.Fingerprint_representation_step impor
 
 # Define classes
 Step_1 = Preprocessing()
-Step_2 = Scaffold_Matching()
+Step_2 = ScaffoldMatching()
 Step_3 = Fragment_List_Generation()
-Step_4 = SFCP_Assigning()
-Step_5 = Fragment_identifying()
-Step_6 = Fingerprint_representation()
+Step_4 = SFCPAssigning()
+Step_5 = FragmentIdentifying()
+Step_6 = FingerprintRepresentation()
 
 # Read Query Mols data
 Query_FilePath = ('Data/nc_mfp_database.csv')
@@ -66,7 +66,7 @@ def generate_info(All_Scaffold_FilePath, entry, Final_all_Fragment_Dic):
     try:
         # [2] Scaffold matching step #
         Final_all_Scaffold_Match_List = []
-        Final_all_Scaffold_Match_List.append(Step_2.match_All_Scaffold_Smarts(All_Scaffold_FilePath, entry))
+        Final_all_Scaffold_Match_List.append(Step_2.match_all_scaffold_smarts(All_Scaffold_FilePath, entry))
 
         # Merge scaffold lists
         Final_all_Scaffold_Match_List = list(itertools.chain(*Final_all_Scaffold_Match_List))

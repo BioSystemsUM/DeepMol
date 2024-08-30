@@ -3,7 +3,7 @@ from rdkit import Chem
 from rdkit.Chem import AllChem, MolFromSmiles, MolToSmiles
 
 
-class SFCP_Assigning:
+class SFCPAssigning:
 
     def assign_All_SFCP_Smarts(self, All_Scaffold_FilePath, qMol_Smarts):
 

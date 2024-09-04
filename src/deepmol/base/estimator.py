@@ -10,7 +10,7 @@ class Estimator(Serializer):
     An estimator is an object that can be fitted to a Dataset object.
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         """
         Initialize the estimator.
         """

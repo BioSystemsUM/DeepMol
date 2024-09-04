@@ -57,7 +57,7 @@ class Mol2Vec(MolecularFeaturizer):
     def __init__(self, pretrain_model_path: str = None,
                  radius: int = 1,
                  unseen: str = 'UNK',
-                 gather_method: str = 'sum'):
+                 gather_method: str = 'sum', **kwargs):
 
         """
         Parameters
@@ -73,7 +73,7 @@ class Mol2Vec(MolecularFeaturizer):
             How to aggregate vectors of identifiers are extracted from Mol2vec. 'sum' or 'mean' is supported.
         """
 
-        super().__init__()
+        super().__init__(**kwargs)
         self.radius = radius
         self.unseen = unseen
         self.gather_method = gather_method

@@ -10,7 +10,7 @@ deepchem==2.7.1
 shap==0.44.0
 mol2vec @ git+https://github.com/samoturk/mol2vec#egg=mol2vec
 boruta==0.3
-tensorflow==2.14.0
+tensorflow==2.15.0
 chembl_structure_pipeline==1.1.0
 scikit-learn==1.2.0
 imblearn

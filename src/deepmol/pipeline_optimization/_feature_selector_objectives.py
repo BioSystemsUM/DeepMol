@@ -44,7 +44,7 @@ def low_variance_fs(trial: Trial, task_type: str):
     LowVarianceFS
         A LowVarianceFS object.
     """
-    return LowVarianceFS(threshold=trial.suggest_uniform("threshold", 0, 0.15))
+    return LowVarianceFS(threshold=trial.suggest_float("threshold", 0, 0.15))
 
 
 def percentil_fs(trial: Trial, task_type: str):

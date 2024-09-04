@@ -1,9 +1,31 @@
 from abc import ABC, abstractmethod
+import contextlib
 from typing import Iterable
 
-from joblib import Parallel, delayed, parallel_backend
+from joblib import Parallel, delayed
+from tqdm import tqdm
 
 from deepmol.loggers.logger import Logger
+
+import joblib
+
+
+@contextlib.contextmanager
+def tqdm_joblib(tqdm_object):
+    """Context manager to patch joblib to report into tqdm progress bar given as argument"""
+
+    class TqdmBatchCompletionCallback(joblib.parallel.BatchCompletionCallBack):
+        def __call__(self, *args, **kwargs):
+            tqdm_object.update(n=self.batch_size)
+            return super().__call__(*args, **kwargs)
+
+    old_batch_callback = joblib.parallel.BatchCompletionCallBack
+    joblib.parallel.BatchCompletionCallBack = TqdmBatchCompletionCallback
+    try:
+        yield tqdm_object
+    finally:
+        joblib.parallel.BatchCompletionCallBack = old_batch_callback
+        tqdm_object.close()
 
 
 class MultiprocessingClass(ABC):
@@ -40,10 +62,10 @@ class MultiprocessingClass(ABC):
         """
         if isinstance(items[0], tuple):
 
-            for item in items:
+            for item in tqdm(items, desc="threading"):
                 yield self.process(*item)
         else:
-            for item in items:
+            for item in tqdm(items, desc="threading"):
                 yield self.process(item)
 
     @abstractmethod
@@ -91,11 +113,15 @@ class JoblibMultiprocessing(MultiprocessingClass):
 
             # verifying if the first element is a tuple, if so one must use the args parameter *item
             if isinstance(items[0], tuple):
-                with parallel_backend("threading", n_jobs=self.n_jobs):
-                    results = Parallel()(delayed(self.process)(*item) for item in items)
+                parallel_callback = Parallel(backend = "threading", n_jobs=self.n_jobs)
+                with tqdm_joblib(tqdm(desc="threading", total=len(items))):
+                    results = parallel_callback(
+                        delayed(self.process)(*item) for item in items)
             else:
-                with parallel_backend("threading", n_jobs=self.n_jobs):
-                    results = Parallel()(delayed(self.process)(item) for item in items)
+                parallel_callback = Parallel(backend = "threading", n_jobs=self.n_jobs)
+                with tqdm_joblib(tqdm(desc="threading", total=len(items))):
+                    results = parallel_callback(
+                        delayed(self.process)(item) for item in items)
 
         except Exception as e:
             if "pickle" in str(e):

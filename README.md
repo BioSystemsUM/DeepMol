@@ -277,7 +277,7 @@ implemented allowing evaluation of the models under a common workspace.
 Models can be imported from scikit-learn and wrapped using the SKlearnModel
 module.
 
-Check this **[jupyter notebook](examples/workshop_bod/featurization.ipynb)** for a complete example!
+Check this **[jupyter notebook](examples/notebooks/featurization.ipynb)** for a complete example!
 
 ```python
 from sklearn.ensemble import RandomForestClassifier
@@ -332,7 +332,7 @@ model.evaluate(test_dataset, metrics)
 
 Example of how to build and wrap a keras model using the KerasModel module.
 
-Check this **[jupyter notebook](examples/workshop_bod/models.ipynb)** for a complete example!
+Check this **[jupyter notebook](examples/notebooks/models.ipynb)** for a complete example!
 
 ```python
 from tensorflow.keras.models import Sequential
@@ -388,7 +388,7 @@ model.evaluate(test_dataset, metrics)
 
 Using DeepChem models:
 
-Check this **[jupyter notebook](examples/workshop_bod/models.ipynb)** for a complete example!
+Check this **[jupyter notebook](examples/notebooks/models.ipynb)** for a complete example!
 
 ```python
 from deepmol.compound_featurization import WeaveFeat
@@ -429,7 +429,7 @@ model.evaluate(test_dataset, metrics)
 
 Grid and randomized hyperparameter optimization is provided using cross-validation
 or a held-out validation set. For a more detailed example check this 
-**[jupyter notebook](examples/workshop_bod/hyperparameter_optimization.ipynb)**.
+**[jupyter notebook](examples/notebooks/hyperparameter_optimization.ipynb)**.
 
 ```python
 from deepmol.parameter_optimization.hyperparameter_optimization import HyperparameterOptimizerValidation
@@ -485,7 +485,7 @@ best_model.evaluate(test_dataset, metrics)
 ### Feature Importance (Shap Values)
 
 Explain the output of a machine learning model can be done using SHAP (SHapley 
-Additive exPlanations) package. For a more detailed description you can check out this **[jupyter notebook](examples/workshop_bod/model_explainability.ipynb)**.
+Additive exPlanations) package. For a more detailed description you can check out this **[jupyter notebook](examples/notebooks/model_explainability.ipynb)**.
 The features that most influenced (positively or
 negatively) a certain prediction can be calculated and visualized in different 
 ways:
@@ -546,7 +546,7 @@ maccs_keys.draw_bit(smi, patt_number)
 
 Multiple methods to deal with unbalanced datasets can be used to do oversampling,
 under-sampling or a mixture of both (Random, SMOTE, SMOTEENN, SMOTETomek and 
-ClusterCentroids). For a more detailed example check this **[jupyter notebook](examples/workshop_bod/imbalanced_learn.ipynb)**.
+ClusterCentroids). For a more detailed example check this **[jupyter notebook](examples/notebooks/imbalanced_learn.ipynb)**.
 
 ```python
 from deepmol.imbalanced_learn.imbalanced_learn import SMOTEENN

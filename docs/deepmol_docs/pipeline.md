@@ -8,7 +8,7 @@ In DeepMol we have implemented a pipeline class that allows to build a ML pipeli
 
 The pipelines in DeepMol work the same as Sklearn Pipelines: utilize the **fit_transform** method to fit the pipeline and transform the data. The pipeline class also allows to save the pipeline and load it again. Moreover, the pipeline class allows to evaluate the pipeline using the **evaluate** and predict method.
 
-![png](../../examples/workshop_bod/pipeline.png)
+![png](../../examples/notebooks/pipeline.png)
 (source: https://towardsdatascience.com/find-thy-hyper-parameters-for-scikit-learn-pipelines-using-microsoft-nni-f1015b1224c1)
 
 The pipeline class also allows to visualize the chemical space using the **transform** method. The **transform** method will return a dataset object with the features extracted by the pipeline. The dataset object can be used to visualize the chemical space using the **PCA** class.
@@ -41,7 +41,7 @@ steps = [('basic standardizing', BasicStandardizer()),
          ('low variance feature selection', LowVarianceFS(threshold=0.1)),
          ('random forest', SklearnModel(model=RandomForestClassifier(n_jobs=-1, random_state=42)))
          ]
-pipeline = Pipeline(steps=steps, path="../../examples/workshop_bod/DRD2")
+pipeline = Pipeline(steps=steps, path="../../examples/notebooks/DRD2")
 ```
     2023-06-05 14:20:36,975 — INFO — Standardizer BasicStandardizer initialized with -1 jobs.
 

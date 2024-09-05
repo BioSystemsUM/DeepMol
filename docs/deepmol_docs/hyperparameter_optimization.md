@@ -108,7 +108,7 @@ Bring it back to life and make predictions!
 ```python
 from deepmol.models import SklearnModel
 
-SklearnModel.load("../../examples/workshop_bod/my_model").predict(test_dataset)
+SklearnModel.load("../../examples/notebooks/my_model").predict(test_dataset)
 ```
 
 

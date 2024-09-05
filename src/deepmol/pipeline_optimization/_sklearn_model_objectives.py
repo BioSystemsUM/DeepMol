@@ -185,7 +185,7 @@ def elastic_net_step(trial):
         The ElasticNet object step.
     """
     alpha = trial.suggest_float('alpha_elastic_net', 0.01, 10.0)
-    l1_ratio = trial.suggest_uniform('l1_ratio_elastic_net', 0.0, 1.0)
+    l1_ratio = trial.suggest_float('l1_ratio_elastic_net', 0.0, 1.0)
     elastic_net_kwargs = {'alpha': alpha, 'l1_ratio': l1_ratio}
     return elastic_net_model(elastic_net_kwargs=elastic_net_kwargs)
 
@@ -525,7 +525,7 @@ def quantile_regressor_step(trial):
         The QuantileRegressor object step.
     """
     alpha = trial.suggest_float('alpha_quantile_regressor', 0.0, 1.0)
-    quantile = trial.suggest_uniform('quantile', 0.1, 0.9)
+    quantile = trial.suggest_float('quantile', 0.1, 0.9)
     quantile_regressor_kwargs = {'alpha': alpha, 'quantile': quantile}
     return quantile_regressor_model(quantile_regressor_kwargs=quantile_regressor_kwargs)
 
@@ -563,7 +563,7 @@ def quadratic_discriminant_analysis_step(trial):
     Classifier
         The QuadraticDiscriminantAnalysis object step.
     """
-    reg_param = trial.suggest_uniform('reg_param', 0.0, 1.0)
+    reg_param = trial.suggest_float('reg_param', 0.0, 1.0)
     quadratic_discriminant_analysis_kwargs = {'reg_param': reg_param}
     return quadratic_discriminant_analysis_model(
         quadratic_discriminant_analysis_kwargs=quadratic_discriminant_analysis_kwargs)

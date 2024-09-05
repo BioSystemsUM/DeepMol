@@ -103,6 +103,8 @@ class PipelineOptimization:
         self.n_pipelines_ensemble = n_pipelines_ensemble
         self.n_jobs = n_jobs
 
+        
+
     def optimize(self, objective_steps: Union[callable, str], n_trials: int, save_top_n: int = 1,
                  objective: Objective = ObjectiveTrainEval,
                  trial_timeout: int = 86400, **kwargs) -> None:

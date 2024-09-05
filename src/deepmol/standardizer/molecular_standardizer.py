@@ -11,6 +11,8 @@ from deepmol.parallelism.multiprocessing import JoblibMultiprocessing
 from deepmol.utils.decorators import modify_object_inplace_decorator
 from deepmol.utils.utils import canonicalize_mol_object, mol_to_smiles
 
+from rdkit import RDLogger 
+
 
 class MolecularStandardizer(ABC, Transformer):
     """
@@ -28,6 +30,7 @@ class MolecularStandardizer(ABC, Transformer):
         """
         super().__init__()
         self.n_jobs = n_jobs
+        RDLogger.DisableLog('rdApp.info')    
         self.logger = Logger()
         self.logger.info(f"Standardizer {self.__class__.__name__} initialized with {n_jobs} jobs.")
 

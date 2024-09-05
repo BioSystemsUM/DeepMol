@@ -1,4 +1,5 @@
 from optuna import Trial
+from tensorflow.keras.callbacks import EarlyStopping
 
 from deepmol.datasets import Dataset
 from deepmol.datasets._utils import _get_n_classes

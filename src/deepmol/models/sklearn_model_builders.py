@@ -24,11 +24,14 @@ from sklearn.svm import SVC, NuSVC, LinearSVC, SVR, NuSVR, LinearSVR, OneClassSV
 from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier, ExtraTreeRegressor, ExtraTreeClassifier
 
 from deepmol.models import SklearnModel
+import os
 
 
 #####################
 ### LINEAR MODELS ###
 #####################
+
+num_of_cores = os.cpu_count() // 2
 
 def linear_regression_model(linear_regression_kwargs: dict = None,
                             sklearn_kwargs: dict = None) -> SklearnModel:
@@ -49,6 +52,7 @@ def linear_regression_model(linear_regression_kwargs: dict = None,
         Wrapped sklearn.linear_model.LinearRegression
     """
     linear_regression_kwargs = linear_regression_kwargs or {}
+    linear_regression_kwargs["n_jobs"] = num_of_cores
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = LinearRegression(**linear_regression_kwargs)
@@ -199,6 +203,7 @@ def lasso_cv_model(lasso_cv_kwargs: dict = None,
         Wrapped sklearn.linear_model.LassoCV
     """
     lasso_cv_kwargs = lasso_cv_kwargs or {}
+    lasso_cv_kwargs["n_jobs"] = num_of_cores
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
     model = LassoCV(**lasso_cv_kwargs)
@@ -226,6 +231,7 @@ def lasso_lars_cv_model(lasso_lars_cv_kwargs: dict = None,
     lasso_lars_cv_kwargs = lasso_lars_cv_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
+    lasso_lars_cv_kwargs["n_jobs"] = num_of_cores
     model = LassoLarsCV(**lasso_lars_cv_kwargs)
     return SklearnModel(model=model, **sklearn_kwargs)
 
@@ -350,6 +356,8 @@ def multitask_elastic_net_cv_model(multitask_elastic_net_cv_kwargs: dict = None,
     multitask_elastic_net_cv_kwargs = multitask_elastic_net_cv_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
+
+    multitask_elastic_net_cv_kwargs["n_jobs"] = num_of_cores
     model = MultiTaskElasticNetCV(**multitask_elastic_net_cv_kwargs)
     return SklearnModel(model=model, **sklearn_kwargs)
 
@@ -450,6 +458,7 @@ def logistic_regression_model(logistic_regression_kwargs: dict = None,
     logistic_regression_kwargs = logistic_regression_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
+    logistic_regression_kwargs["n_jobs"] = num_of_cores
     model = LogisticRegression(**logistic_regression_kwargs)
     return SklearnModel(model=model, **sklearn_kwargs)
 
@@ -475,6 +484,7 @@ def logistic_regression_cv_model(logistic_regression_cv_kwargs: dict = None,
     logistic_regression_cv_kwargs = logistic_regression_cv_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
+    logistic_regression_cv_kwargs["n_jobs"] = num_of_cores
     model = LogisticRegressionCV(**logistic_regression_cv_kwargs)
     return SklearnModel(model=model, **sklearn_kwargs)
 
@@ -575,6 +585,7 @@ def perceptron_model(perceptron_kwargs: dict = None,
     perceptron_kwargs = perceptron_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
+    perceptron_kwargs["n_jobs"] = num_of_cores
     model = Perceptron(**perceptron_kwargs)
     return SklearnModel(model=model, **sklearn_kwargs)
 
@@ -625,6 +636,7 @@ def passive_aggressive_classifier_model(passive_aggressive_classifier_kwargs: di
     passive_aggressive_classifier_kwargs = passive_aggressive_classifier_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
+    passive_aggressive_classifier_kwargs["n_jobs"] = num_of_cores
     model = PassiveAggressiveClassifier(**passive_aggressive_classifier_kwargs)
     return SklearnModel(model=model, **sklearn_kwargs)
 
@@ -700,6 +712,7 @@ def theil_sen_regressor_model(theil_sen_regressor_kwargs: dict = None,
     theil_sen_regressor_kwargs = theil_sen_regressor_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
+    theil_sen_regressor_kwargs["n_jobs"] = num_of_cores
     model = TheilSenRegressor(**theil_sen_regressor_kwargs)
     return SklearnModel(model=model, **sklearn_kwargs)
 
@@ -1045,6 +1058,7 @@ def sgd_classifier_model(sgd_classifier_kwargs: dict = None,
     sgd_classifier_kwargs = sgd_classifier_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
+    sgd_classifier_kwargs["n_jobs"] = num_of_cores
     model = SGDClassifier(**sgd_classifier_kwargs)
     return SklearnModel(model=model, **sklearn_kwargs)
 
@@ -1100,6 +1114,7 @@ def kneighbors_regressor_model(kneighbors_regressor_kwargs: dict = None,
     kneighbors_regressor_kwargs = kneighbors_regressor_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
+    kneighbors_regressor_kwargs["n_jobs"] = num_of_cores
     model = KNeighborsRegressor(**kneighbors_regressor_kwargs)
     return SklearnModel(model=model, **sklearn_kwargs)
 
@@ -1124,6 +1139,7 @@ def kneighbors_classifier_model(kneighbors_classifier_kwargs: dict = None, sklea
     kneighbors_classifier_kwargs = kneighbors_classifier_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
+    kneighbors_classifier_kwargs["n_jobs"] = num_of_cores
     model = KNeighborsClassifier(**kneighbors_classifier_kwargs)
     return SklearnModel(model=model, **sklearn_kwargs)
 
@@ -1149,6 +1165,7 @@ def radius_neighbors_regressor_model(radius_neighbors_regressor_kwargs: dict = N
     radius_neighbors_regressor_kwargs = radius_neighbors_regressor_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
+    radius_neighbors_regressor_kwargs["n_jobs"] = num_of_cores
     model = RadiusNeighborsRegressor(**radius_neighbors_regressor_kwargs)
     return SklearnModel(model=model, **sklearn_kwargs)
 
@@ -1174,6 +1191,7 @@ def radius_neighbors_classifier_model(radius_neighbors_classifier_kwargs: dict =
     radius_neighbors_classifier_kwargs = radius_neighbors_classifier_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
+    radius_neighbors_classifier_kwargs["n_jobs"] = num_of_cores
     model = RadiusNeighborsClassifier(**radius_neighbors_classifier_kwargs)
     return SklearnModel(model=model, **sklearn_kwargs)
 
@@ -1547,6 +1565,7 @@ def random_forest_regressor_model(random_forest_regressor_kwargs: dict = None,
     random_forest_regressor_kwargs = random_forest_regressor_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
+    random_forest_regressor_kwargs["n_jobs"] = num_of_cores
     model = RandomForestRegressor(**random_forest_regressor_kwargs)
     return SklearnModel(model=model, **sklearn_kwargs)
 
@@ -1572,6 +1591,7 @@ def random_forest_classifier_model(random_forest_classifier_kwargs: dict = None,
     random_forest_classifier_kwargs = random_forest_classifier_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
+    random_forest_classifier_kwargs["n_jobs"] = num_of_cores
     model = RandomForestClassifier(**random_forest_classifier_kwargs)
     return SklearnModel(model=model, **sklearn_kwargs)
 
@@ -1597,6 +1617,7 @@ def extra_trees_regressor_model(extra_trees_regressor_kwargs: dict = None,
     extra_trees_regressor_kwargs = extra_trees_regressor_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
+    extra_trees_regressor_kwargs["n_jobs"] = num_of_cores
     model = ExtraTreesRegressor(**extra_trees_regressor_kwargs)
     return SklearnModel(model=model, **sklearn_kwargs)
 
@@ -1622,6 +1643,7 @@ def extra_trees_classifier_model(extra_trees_classifier_kwargs: dict = None,
     extra_trees_classifier_kwargs = extra_trees_classifier_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
+    extra_trees_classifier_kwargs["n_jobs"] = num_of_cores
     model = ExtraTreesClassifier(**extra_trees_classifier_kwargs)
     return SklearnModel(model=model, **sklearn_kwargs)
 
@@ -1797,6 +1819,7 @@ def voting_regressor_model(voting_regressor_kwargs: dict = None,
     voting_regressor_kwargs = voting_regressor_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
+    voting_regressor_kwargs["n_jobs"] = num_of_cores
     model = VotingRegressor(**voting_regressor_kwargs)
     return SklearnModel(model=model, **sklearn_kwargs)
 
@@ -1822,6 +1845,7 @@ def voting_classifier_model(voting_classifier_kwargs: dict = None,
     voting_classifier_kwargs = voting_classifier_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
+    voting_classifier_kwargs["n_jobs"] = num_of_cores
     model = VotingClassifier(**voting_classifier_kwargs)
     return SklearnModel(model=model, **sklearn_kwargs)
 
@@ -1847,6 +1871,7 @@ def stacking_regressor_model(stacking_regressor_kwargs: dict = None,
     stacking_regressor_kwargs = stacking_regressor_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
+    stacking_regressor_kwargs["n_jobs"] = num_of_cores
     model = StackingRegressor(**stacking_regressor_kwargs)
     return SklearnModel(model=model, **sklearn_kwargs)
 
@@ -1872,6 +1897,7 @@ def stacking_classifier_model(stacking_classifier_kwargs: dict = None,
     stacking_classifier_kwargs = stacking_classifier_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
+    stacking_classifier_kwargs["n_jobs"] = num_of_cores
     model = StackingClassifier(**stacking_classifier_kwargs)
     return SklearnModel(model=model, **sklearn_kwargs)
 
@@ -1897,6 +1923,7 @@ def bagging_regressor_model(bagging_regressor_kwargs: dict = None,
     bagging_regressor_kwargs = bagging_regressor_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
+    bagging_regressor_kwargs["n_jobs"] = num_of_cores
     model = BaggingRegressor(**bagging_regressor_kwargs)
     return SklearnModel(model=model, **sklearn_kwargs)
 
@@ -1922,6 +1949,7 @@ def bagging_classifier_model(bagging_classifier_kwargs: dict = None,
     bagging_classifier_kwargs = bagging_classifier_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
+    bagging_classifier_kwargs["n_jobs"] = num_of_cores
     model = BaggingClassifier(**bagging_classifier_kwargs)
     return SklearnModel(model=model, **sklearn_kwargs)
 
@@ -1952,6 +1980,7 @@ def one_vs_rest_classifier_model(one_vs_rest_classifier_kwargs: dict = None,
     one_vs_rest_classifier_kwargs = one_vs_rest_classifier_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
+    one_vs_rest_classifier_kwargs["n_jobs"] = num_of_cores
     model = OneVsRestClassifier(**one_vs_rest_classifier_kwargs)
     return SklearnModel(model=model, **sklearn_kwargs)
 
@@ -1976,6 +2005,7 @@ def one_vs_one_classifier_model(one_vs_one_classifier_kwargs: dict = None, sklea
     one_vs_one_classifier_kwargs = one_vs_one_classifier_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
+    one_vs_one_classifier_kwargs["n_jobs"] = num_of_cores
     model = OneVsOneClassifier(**one_vs_one_classifier_kwargs)
     return SklearnModel(model=model, **sklearn_kwargs)
 
@@ -2001,6 +2031,7 @@ def output_code_classifier_model(output_code_classifier_kwargs: dict = None,
     output_code_classifier_kwargs = output_code_classifier_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
+    output_code_classifier_kwargs["n_jobs"] = num_of_cores
     model = OutputCodeClassifier(**output_code_classifier_kwargs)
     return SklearnModel(model=model, **sklearn_kwargs)
 
@@ -2026,6 +2057,7 @@ def multi_output_classifier_model(multi_output_classifier_kwargs: dict = None,
     multi_output_classifier_kwargs = multi_output_classifier_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
+    multi_output_classifier_kwargs["n_jobs"] = num_of_cores
     model = MultiOutputClassifier(**multi_output_classifier_kwargs)
     return SklearnModel(model=model, **sklearn_kwargs)
 
@@ -2077,6 +2109,7 @@ def multi_output_regressor_model(multi_output_regressor_kwargs: dict = None,
     multi_output_regressor_kwargs = multi_output_regressor_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Regression model
+    multi_output_regressor_kwargs["n_jobs"] = num_of_cores
     model = MultiOutputRegressor(**multi_output_regressor_kwargs)
     return SklearnModel(model=model, **sklearn_kwargs)
 
@@ -2213,6 +2246,7 @@ def label_propagation_model(label_propagation_kwargs: dict = None,
     label_propagation_kwargs = label_propagation_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
+    label_propagation_kwargs["n_jobs"] = num_of_cores
     model = LabelPropagation(**label_propagation_kwargs)
     return SklearnModel(model=model, **sklearn_kwargs)
 
@@ -2238,5 +2272,6 @@ def label_spreading_model(label_spreading_kwargs: dict = None,
     label_spreading_kwargs = label_spreading_kwargs or {}
     sklearn_kwargs = sklearn_kwargs or {}
     # Classification model
+    label_spreading_kwargs["n_jobs"] = num_of_cores
     model = LabelSpreading(**label_spreading_kwargs)
     return SklearnModel(model=model, **sklearn_kwargs)

@@ -1,6 +1,6 @@
 from deepmol.compound_featurization import MorganFingerprint, LayeredFingerprint, TwoDimensionDescriptors
 from tests.integration_tests.dataset.test_dataset import TestDataset
-
+from deepmol.compound_featurization import MHFP
 
 class TestDatasetFeaturizers(TestDataset):
 
@@ -33,3 +33,8 @@ class TestDatasetFeaturizers(TestDataset):
         NeuralNPFP().featurize(self.small_dataset_to_test, inplace=True)
         self.assertEqual(self.small_dataset_to_test.X.shape[0], 13)
         self.assertEqual(self.small_dataset_to_test.X.shape[1], 64)
+
+    def test_mhfp_featurizer(self):
+        MHFP().featurize(self.small_dataset_to_test, inplace=True)
+        self.assertEqual(self.small_dataset_to_test.X.shape[0], 13)
+        self.assertEqual(self.small_dataset_to_test.X.shape[1], 2048)

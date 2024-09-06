@@ -33,3 +33,5 @@ from .np_classifier_fp import NPClassifierFP
 from .nc_mfp_generator import NcMfp
 
 from .neural_npfp_generator import NeuralNPFP
+
+from .mhfp import MHFP

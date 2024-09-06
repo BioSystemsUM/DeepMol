@@ -68,8 +68,6 @@ def _get_featurizer(trial: Trial, feat_type: Literal['1D', '2D']) -> Transformer
             return MixedFeaturizer([_1D_FEATURIZERS[f1](), _1D_FEATURIZERS[f2]()], n_jobs=num_of_cores)
         elif feat == 'np_classifier_fp':
             return NPClassifierFP(n_jobs=num_of_cores)
-        elif feat == 'nc_mfp':
-            return NcMfp(n_jobs=num_of_cores)
         elif feat == 'neural_npfp':
             model = trial.suggest_categorical('model', ['aux', 'base', 'ae'])
             return NeuralNPFP(model, n_jobs=num_of_cores)

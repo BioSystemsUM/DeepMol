@@ -9,12 +9,14 @@ from deepmol.compound_featurization import *
 try:
     _1D_FEATURIZERS = {'2d_descriptors': TwoDimensionDescriptors, 'morgan': MorganFingerprint,
                        'atom_pair': AtomPairFingerprint, 'layered': LayeredFingerprint, 'rdk': RDKFingerprint,
-                       'maccs': MACCSkeysFingerprint, 'mol2vec': Mol2Vec, 'mixed': MixedFeaturizer}
+                       'maccs': MACCSkeysFingerprint, 'mol2vec': Mol2Vec, 'mixed': MixedFeaturizer,
+                       'np_classifier_fp': NPClassifierFP, 'neural_npfp': NeuralNPFP, "mhfp": MHFP}
 except NameError:
     warnings.warn("Mol2Vec featurizer not available. If you want to use it install it, please.")
     _1D_FEATURIZERS = {'2d_descriptors': TwoDimensionDescriptors, 'morgan': MorganFingerprint,
                        'atom_pair': AtomPairFingerprint, 'layered': LayeredFingerprint, 'rdk': RDKFingerprint,
-                       'maccs': MACCSkeysFingerprint, 'mixed': MixedFeaturizer}
+                       'maccs': MACCSkeysFingerprint, 'mixed': MixedFeaturizer, 'np_classifier_fp': NPClassifierFP,
+                       'neural_npfp': NeuralNPFP, "mhfp": MHFP}
 
 
 def _get_featurizer(trial: Trial, feat_type: Literal['1D', '2D']) -> Transformer:
@@ -64,6 +66,14 @@ def _get_featurizer(trial: Trial, feat_type: Literal['1D', '2D']) -> Transformer
                 while f1 == f2:
                     f2 = trial.suggest_categorical('f2', available_feats)
             return MixedFeaturizer([_1D_FEATURIZERS[f1](), _1D_FEATURIZERS[f2]()], n_jobs=num_of_cores)
+        elif feat == 'np_classifier_fp':
+            return NPClassifierFP(n_jobs=num_of_cores)
+        elif feat == 'neural_npfp':
+            model = trial.suggest_categorical('model', ['aux', 'base', 'ae'])
+            return NeuralNPFP(model, n_jobs=num_of_cores)
+        elif feat == 'mhfp':
+            return MHFP(n_jobs=num_of_cores)
+
         return _1D_FEATURIZERS[feat](n_jobs=num_of_cores)
     elif feat_type == '2D':
         return SmilesOneHotEncoder(n_jobs=num_of_cores)

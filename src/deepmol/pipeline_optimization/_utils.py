@@ -45,88 +45,84 @@ def _get_preset(preset: Literal['deepchem', 'sklearn', 'keras', 'all']) -> calla
         return preset_all_models
 
 
-def _cnn_model_steps(trial, n_tasks, n_classes):
-    featurizer = _get_featurizer(trial, '1D')
+def _check_class_name_and_attribute_scaler_feature_selection(trial, featurizer):
+    """
+    Check if the class name and attribute of the scaler and feature selection are correct.
+    """
     if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
             featurizer.__class__.__name__ == 'All3DDescriptors':
-        scaler = _get_scaler(trial)
+        transformer = ("scaler", _get_scaler(trial))
     else:
-        scaler = PassThroughTransformer()
+        transformer = ("scaler", PassThroughTransformer())
+
+    return transformer
+
+
+def _cnn_model_steps(trial, n_tasks, n_classes):
+    featurizer = _get_featurizer(trial, '1D')
+
+    transformer = _check_class_name_and_attribute_scaler_feature_selection(trial, featurizer)
     dims = 1
     n_features = len(featurizer.feature_names)
     cnn_kwargs = {'n_tasks': n_tasks, 'mode': 'regression', 'n_features': n_features, 'dims': dims,
                   'n_classes': n_classes}
     model_step = cnn_model_steps(trial=trial, cnn_kwargs=cnn_kwargs)
     featurizer = ('featurizer', featurizer)
-    scaler = ('scaler', scaler)
     model = model_step[0]
-    return [featurizer, scaler, model]
+    return [featurizer, transformer, model]
 
 
 def _multitask_classifier_model_steps(trial, n_tasks, n_classes):
     featurizer = _get_featurizer(trial, '1D')
-    if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
-            featurizer.__class__.__name__ == 'All3DDescriptors':
-        scaler = _get_scaler(trial)
-    else:
-        scaler = PassThroughTransformer()
+    transformer = _check_class_name_and_attribute_scaler_feature_selection(trial, featurizer)
+
     n_features = len(featurizer.feature_names)
     multitask_classifier_kwargs = {'n_tasks': n_tasks, 'n_features': n_features, 'n_classes': n_classes}
     model_step = multitask_classifier_model_steps(trial=trial,
                                                   multitask_classifier_kwargs=multitask_classifier_kwargs)
     featurizer = ('featurizer', featurizer)
-    scaler = ('scaler', scaler)
     model = model_step[0]
-    return [featurizer, scaler, model]
+    return [featurizer, transformer, model]
 
 
 def _progressive_multitask_regressor_model_steps(trial, n_tasks):
     featurizer = _get_featurizer(trial, '1D')
-    if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
-            featurizer.__class__.__name__ == 'All3DDescriptors':
-        scaler = _get_scaler(trial)
-    else:
-        scaler = PassThroughTransformer()
+
+    transformer = _check_class_name_and_attribute_scaler_feature_selection(trial, featurizer)
+
     n_features = len(featurizer.feature_names)
     progressive_multitask_regressor_kwargs = {'n_tasks': n_tasks, 'n_features': n_features}
     model_step = progressive_multitask_regressor_model_steps(trial=trial,
                                                              progressive_multitask_regressor_kwargs=progressive_multitask_regressor_kwargs)
     featurizer = ('featurizer', featurizer)
-    scaler = ('scaler', scaler)
-    return [featurizer, scaler, model_step[0]]
+    return [featurizer, transformer, model_step[0]]
 
 
 def _robust_multitask_regressor_model_steps(trial, n_tasks):
     featurizer = _get_featurizer(trial, '1D')
-    if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
-            featurizer.__class__.__name__ == 'All3DDescriptors':
-        scaler = _get_scaler(trial)
-    else:
-        scaler = PassThroughTransformer()
+
+    transformer = _check_class_name_and_attribute_scaler_feature_selection(trial, featurizer)
+
     n_features = len(featurizer.feature_names)
     robust_multitask_regressor_kwargs = {'n_tasks': n_tasks, 'n_features': n_features}
     model_step = robust_multitask_regressor_model_steps(trial=trial,
                                                         robust_multitask_regressor_kwargs=robust_multitask_regressor_kwargs)
     featurizer = ('featurizer', featurizer)
-    scaler = ('scaler', scaler)
-    return [featurizer, scaler, model_step[0]]
+    return [featurizer, transformer, model_step[0]]
 
 
 def _multitask_regressor_model_steps(trial, n_tasks):
     featurizer = _get_featurizer(trial, '1D')
-    if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
-            featurizer.__class__.__name__ == 'All3DDescriptors':
-        scaler = _get_scaler(trial)
-    else:
-        scaler = PassThroughTransformer()
+
+    transformer = _check_class_name_and_attribute_scaler_feature_selection(trial, featurizer)
+
     n_features = len(featurizer.feature_names)
     multitask_regressor_kwargs = {'n_tasks': n_tasks, 'n_features': n_features}
     model_step = multitask_regressor_model_steps(trial=trial,
                                                  multitask_regressor_kwargs=multitask_regressor_kwargs)
     featurizer = ('featurizer', featurizer)
-    scaler = ('scaler', scaler)
     model = model_step[0]
-    return [featurizer, scaler, model]
+    return [featurizer, transformer, model]
 
 
 def preset_deepchem_models(trial, data: Dataset) -> list:
@@ -368,7 +364,14 @@ def preset_sklearn_models(trial, data: Dataset) -> list:
         scaler = _get_scaler(trial)
     else:
         scaler = PassThroughTransformer()
-    feature_selector = _get_feature_selector(trial, task_type=mode, multitask=multitask)
+
+    if featurizer.__class__.__name__ == 'nc_mfp':
+        feature_selector = _get_feature_selector(trial, task_type=mode, multitask=multitask)
+        while feature_selector.__class__.__name__ == 'PassThroughTransformer':
+            feature_selector = _get_feature_selector(trial, task_type=mode, multitask=multitask)
+    else:
+        feature_selector = _get_feature_selector(trial, task_type=mode, multitask=multitask)
+
     if mode == 'classification':
         sk_mode = 'classification_binary' if set(data.y) == {0, 1} else 'classification_multiclass'
     else:
@@ -412,6 +415,7 @@ def preset_keras_models(trial, data: Dataset) -> list:
     label_encoder = LabelOneHotEncoder() if mode == 'classification' and n_classes[0] > 2 else PassThroughTransformer()
     featurizer_type = trial.suggest_categorical('featurizer_type', ['1D', '2D'])
     featurizer = _get_featurizer(trial, featurizer_type)
+    feature_selector = PassThroughTransformer()
     if featurizer_type == '1D':
         if featurizer.__class__.__name__ == 'TwoDimensionDescriptors' or \
                 featurizer.__class__.__name__ == 'All3DDescriptors':
@@ -419,12 +423,19 @@ def preset_keras_models(trial, data: Dataset) -> list:
         else:
             scaler = PassThroughTransformer()
         input_shape = (len(featurizer.feature_names),)
+        if featurizer.__class__.__name__ == 'nc_mfp':
+            mode = data.mode
+            multitask = True if data.n_tasks > 1 else False
+            feature_selector = _get_feature_selector(trial, task_type=mode, multitask=multitask)
+            while feature_selector.__class__.__name__ == 'PassThroughTransformer':
+                feature_selector = _get_feature_selector(trial, task_type=mode, multitask=multitask)
     else:
         scaler = PassThroughTransformer()
         input_shape = featurizer.fit(data).shape
     keras_model = _get_keras_model(trial, input_shape, data)
     final_steps = [('label_encoder', label_encoder), ('standardizer', _get_standardizer(trial, featurizer)),
-                   ('featurizer', featurizer), ('scaler', scaler), ('model', keras_model)]
+                   ('featurizer', featurizer), ('scaler', scaler), ('feature_selector', feature_selector),
+                   ('model', keras_model)]
     return final_steps
 
 

@@ -27,3 +27,11 @@ except ImportError:
     warnings.warn("DeepChem not available. Please install it to use it.")
 
 from .one_hot_encoder import SmilesOneHotEncoder
+
+from .np_classifier_fp import NPClassifierFP
+
+from .nc_mfp_generator import NcMfp
+
+from .neural_npfp_generator import NeuralNPFP
+
+from .mhfp import MHFP

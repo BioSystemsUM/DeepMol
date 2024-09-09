@@ -8,6 +8,8 @@ examples/data/
 # C extensions
 *.so
 
+.vscode/
+
 # tests
 tests/**/*.png
 

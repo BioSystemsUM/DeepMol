@@ -718,11 +718,11 @@ class SmilesDataset(Dataset):
             The mode of the dataset.
         """
         if not isinstance(mode, list):
-            if mode not in ['classification', 'regression', None]:
+            if mode not in ['classification', 'regression', 'multilabel', None]:
                 raise ValueError('The mode must be either "classification" or "regression".')
         else:
             for m in mode:
-                if m not in ['classification', 'regression', None]:
+                if m not in ['classification', 'regression', 'multilabel', None]:
                     raise ValueError('The mode must be either "classification" or "regression".')
         self._mode = mode
 

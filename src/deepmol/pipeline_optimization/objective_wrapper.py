@@ -9,6 +9,8 @@ from optuna import Trial
 from deepmol.pipeline import Pipeline
 from deepmol.utils.decorators import timeout
 
+import traceback
+
 
 class Objective:
     """
@@ -133,7 +135,9 @@ class ObjectiveTrainEval(Objective):
             return run_with_timeout()
         except ValueError as e:
             print(e)
+            traceback.print_exc()
             return float('inf') if self.direction == 'minimize' else float('-inf')
         except Exception as e:
             print(e)
+            traceback.print_exc()
             return float('inf') if self.direction == 'minimize' else float('-inf')

@@ -46,6 +46,10 @@ class MultiprocessingClass(ABC):
         """
         self.n_jobs = n_jobs
         self._process = process
+        try:
+            self._process_name = self.process.__self__.__class__.__name__
+        except AttributeError:
+            self._process_name = self.process.__name__
 
         self.logger = Logger()
 
@@ -62,10 +66,10 @@ class MultiprocessingClass(ABC):
         """
         if isinstance(items[0], tuple):
 
-            for item in tqdm(items, desc="threading"):
+            for item in tqdm(items, desc=self._process_name):
                 yield self.process(*item)
         else:
-            for item in tqdm(items, desc="threading"):
+            for item in tqdm(items, desc=self._process_name):
                 yield self.process(item)
 
     @abstractmethod
@@ -104,7 +108,6 @@ class JoblibMultiprocessing(MultiprocessingClass):
         results: Iterable
             The results of the multiprocessing.
         """
-        # TODO: Add support for progress bar
 
         try:
             # verifying if the process is a zip and convert it to a list
@@ -113,13 +116,13 @@ class JoblibMultiprocessing(MultiprocessingClass):
 
             # verifying if the first element is a tuple, if so one must use the args parameter *item
             if isinstance(items[0], tuple):
-                parallel_callback = Parallel(backend = "threading", n_jobs=self.n_jobs)
-                with tqdm_joblib(tqdm(desc="threading", total=len(items))):
+                parallel_callback = Parallel(backend="threading", n_jobs=self.n_jobs)
+                with tqdm_joblib(tqdm(desc=self._process_name, total=len(items))):
                     results = parallel_callback(
                         delayed(self.process)(*item) for item in items)
             else:
-                parallel_callback = Parallel(backend = "threading", n_jobs=self.n_jobs)
-                with tqdm_joblib(tqdm(desc="threading", total=len(items))):
+                parallel_callback = Parallel(backend="threading", n_jobs=self.n_jobs)
+                with tqdm_joblib(tqdm(desc=self._process_name, total=len(items))):
                     results = parallel_callback(
                         delayed(self.process)(item) for item in items)
 

@@ -42,8 +42,8 @@ class Objective:
     def run_with_timeout_windows(self):
 
         @timeout(self.trial_timeout)
-        def run_with_timeout():
-            return self._run()
+        def run_with_timeout(trial):
+            return self._run(trial)
         
         return run_with_timeout
     

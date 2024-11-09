@@ -7,6 +7,7 @@ import pandas as pd
 from rdkit.Chem import Mol, MolFromSmiles
 
 from deepmol.datasets import SmilesDataset
+from deepmol.loaders._utils import load_sdf_file
 from deepmol.loggers import Logger
 from deepmol.models._utils import get_prediction_from_proba
 
@@ -394,18 +395,56 @@ class TestSmilesDataset(TestCase):
         merged_x2 = dd.merge([d])
         self.assertIsNone(merged_x2.X)
 
+    def test_to_dataframe(self):
+        df = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCCC', 'CCCCC'],
+                           X=[[1, 0, 1], [0, 1, 0], [1, 0, 1], [1, 0, 1], [1, 0, 1]],
+                           y=[1, 0, 1, 0, 1],
+                           ids=[1, 2, 3, 4, 5],
+                           feature_names=['XXX', 'YYY', 'ZZZ'])
+        
+        pd_df = df.to_dataframe()
+        self.assertEqual(pd_df.shape, (len(df.mols), 3 + df.X.shape[1]))
+        for i, col_name in enumerate(pd_df.columns.values):
+            self.assertEqual(col_name, ['ids', 'smiles', 'y', 'XXX', 'YYY', 'ZZZ'][i])
+
     def test_save_to_csv(self):
         df = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCCC', 'CCCCC'],
                            X=[[1, 0, 1], [0, 1, 0], [1, 0, 1], [1, 0, 1], [1, 0, 1]],
                            y=[1, 0, 1, 0, 1],
                            ids=[1, 2, 3, 4, 5],
                            feature_names=['XXX', 'YYY', 'ZZZ'])
-        df.to_csv(os.path.join(self.output_dir, 'test.csv'))
+        df.to_csv(os.path.join(self.output_dir, 'test.csv'), index=False, sep=",")
         pd_df = pd.read_csv(os.path.join(self.output_dir, 'test.csv'))
         # ids + mols + y + features
         self.assertEqual(pd_df.shape, (len(df.mols), 3 + df.X.shape[1]))
         for i, col_name in enumerate(pd_df.columns.values):
             self.assertEqual(col_name, ['ids', 'smiles', 'y', 'XXX', 'YYY', 'ZZZ'][i])
+
+    def test_save_to_sdf(self):
+        dataset = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCCC', 'CCCCC'],
+                                X=[[1, 0, 1], [0, 1, 0], [1, 0, 1], [1, 0, 1], [1, 0, 1]],
+                                y=[1, 0, 1, 0, 1],
+                                ids=[1, 2, 3, 4, 5])
+        dataset.to_sdf(os.path.join(self.output_dir, 'test.sdf'))
+        mols = load_sdf_file(os.path.join(self.output_dir, 'test.sdf'))
+        y = [1, 0, 1, 0, 1]
+        for i, mol in enumerate(mols):
+            y_i = mol.GetProp("y")
+            self.assertEqual(y[i], int(float(y_i)))
+
+        dataset2 = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCCC', 'CCCCC'],
+                                 X=[1, 0, 1, 1, 1],
+                                 y=np.array([[1, 0, 1, 0, 1], [1, 0, 1, 0, 1]]).T,
+                                 ids=[1, 2, 3, 4, 5])
+        dataset2.to_sdf(os.path.join(self.output_dir, 'test.sdf'))
+        mols = load_sdf_file(os.path.join(self.output_dir, 'test.sdf'))
+        y = np.array([[1, 0, 1, 0, 1], [1, 0, 1, 0, 1]]).T
+        for i, mol in enumerate(mols):
+            y_i = mol.GetProp("y_0")
+            self.assertEqual(y[i, 0], int(float(y_i)))
+            y_i = mol.GetProp("y_1")
+            self.assertEqual(y[i, 1], int(float(y_i)))
+
 
     def test_save_load_features(self):
         d = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCCC', 'CCCCC'])

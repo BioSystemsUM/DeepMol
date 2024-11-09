@@ -6,7 +6,7 @@ from typing import Union, List, Tuple
 
 import numpy as np
 import pandas as pd
-from rdkit.Chem import Mol
+from rdkit.Chem import Mol, SDWriter
 
 from deepmol.loggers.logger import Logger
 from deepmol.datasets._utils import merge_arrays, merge_arrays_of_arrays
@@ -969,15 +969,11 @@ class SmilesDataset(Dataset):
             mols = np.append(mols, ds.mols, axis=0)
             smiles = np.append(smiles, ds.smiles, axis=0)
         return SmilesDataset(smiles, mols, ids, X, feature_names, y, label_names, mode)
-
-    def to_csv(self, path: str) -> None:
+    
+    def to_dataframe(self):
         """
-        Save the dataset to a csv file.
-        Parameters
-        ----------
-        path: str
-            Path to save the csv file.
-        """
+        Convert data into dataframe
+        """ 
         df = pd.DataFrame()
         df['ids'] = pd.Series(self._ids)
         df['smiles'] = pd.Series(self._smiles)
@@ -989,8 +985,53 @@ class SmilesDataset(Dataset):
             columns_names = self._feature_names
             df_x = pd.DataFrame(self._X, columns=columns_names)
             df = pd.concat([df, df_x], axis=1)
+        return df
 
-        df.to_csv(path, index=False)
+    def to_csv(self, path: str, **kwargs) -> None:
+        """
+        Save the dataset to a csv file.
+        Parameters
+        ----------
+        path: str
+            Path to save the csv file.
+        """
+        df = self.to_dataframe()
+
+        df.to_csv(path, **kwargs)
+
+    def to_sdf(self, path: str) -> None:
+        """
+        Save the dataset to a sdf file.
+        Parameters
+        ----------
+        path: str
+            Path to save the sdf file.
+        """
+        mol_set = self.mols
+        writer = SDWriter(path)
+
+        for i, mol in enumerate(mol_set):
+            if self.y is not None and self.y.size > 0:
+                if len(self.y.shape) > 1 and self.y.shape[1] > 1:
+                    label = self.y[i, :]
+                    for j, class_name in enumerate(self.label_names):
+                        mol.SetProp(class_name, "%f" % label[j])
+                elif len(self.y.shape) > 1 and self.y.shape[1] == 1:
+                    class_name = self.label_names[0]
+                    label = self.y[i, 0]
+                    mol.SetProp(class_name, "%f" % label)
+
+                else:
+                    class_name = self.label_names[0]
+                    label = self.y[i]
+                    mol.SetProp(class_name, "%f" % label)
+
+            if self.ids is not None and self.ids.size > 0:
+                mol_id = self.ids[i]
+                mol.SetProp("_ID", f"{mol_id}")
+            writer.write(mol)
+
+        writer.close()
 
     @inplace_decorator
     def load_features(self, path: str, **kwargs) -> None:
@@ -1022,3 +1063,5 @@ class SmilesDataset(Dataset):
             df.to_csv(path, index=False)
         else:
             raise ValueError('Features array is empty!')
+
+    

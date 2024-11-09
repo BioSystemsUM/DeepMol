@@ -1,5 +1,14 @@
 # deepmol.compound_featurization package
 
+## Subpackages
+
+```{toctree}
+:maxdepth: 4
+
+deepmol.compound_featurization.nc_mfp
+deepmol.compound_featurization.neural_npfp
+```
+
 ## Submodules
 
 ## deepmol.compound_featurization.base_featurizer module
@@ -20,6 +29,15 @@
    :show-inheritance:
 ```
 
+## deepmol.compound_featurization.mhfp module
+
+```{eval-rst}
+.. automodule:: deepmol.compound_featurization.mhfp
+   :members:
+   :undoc-members:
+   :show-inheritance:
+```
+
 ## deepmol.compound_featurization.mixed_descriptors module
 
 ```{eval-rst}
@@ -33,6 +51,33 @@
 
 ```{eval-rst}
 .. automodule:: deepmol.compound_featurization.mol2vec
+   :members:
+   :undoc-members:
+   :show-inheritance:
+```
+
+## deepmol.compound_featurization.nc_mfp_generator module
+
+```{eval-rst}
+.. automodule:: deepmol.compound_featurization.nc_mfp_generator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+```
+
+## deepmol.compound_featurization.neural_npfp_generator module
+
+```{eval-rst}
+.. automodule:: deepmol.compound_featurization.neural_npfp_generator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+```
+
+## deepmol.compound_featurization.np_classifier_fp module
+
+```{eval-rst}
+.. automodule:: deepmol.compound_featurization.np_classifier_fp
    :members:
    :undoc-members:
    :show-inheritance:

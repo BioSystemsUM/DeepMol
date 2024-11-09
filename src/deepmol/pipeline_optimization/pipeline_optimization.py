@@ -132,7 +132,7 @@ class PipelineOptimization:
             objective_steps = _get_preset(objective_steps)
         objective = objective(objective_steps, self.study, self.direction,
                               save_top_n, trial_timeout, **kwargs)
-        self.study.optimize(objective, n_trials=n_trials)
+        self.study.optimize(objective, n_trials=n_trials, catch=(TimeoutError,))
         if self.best_value in [np.float_('-inf'), np.float_('inf')]:
             raise ValueError('The best value is -inf or inf. No trials completed successfully.')
         if self.n_pipelines_ensemble > 0:

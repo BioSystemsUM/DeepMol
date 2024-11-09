@@ -192,7 +192,7 @@ dictionary with the following keys:
 Here is an example of a custom objective function:
 
 ```python
-from deepmol.utils.decorators import timeout
+from deepmol.pipeline_optimization.objective_wrapper import Objective
 
 class MyObjective(Objective):
     """
@@ -216,27 +216,24 @@ class MyObjective(Objective):
         """
         Initialize the objective function.
         """
-        super().__init__(objective_steps, study, direction, save_top_n)
+        super().__init__(objective_steps, study, direction, save_top_n, trial_timeout=trial_timeout)
         self.metric = kwargs.pop('metric')
-        self.trial_timeout = trial_timeout
+        # the datasets or any additional data can be accessed through kwargs. Here is an example:
+
+        self.train_dataset = kwargs.pop('train_dataset')
+        self.test_dataset = kwargs.pop('test_dataset')
+
+        # and passed as input of the PipelineOptimization().optimize(data=data). See below in the example of optimization calling.
+
         self.kwargs = kwargs
 
-    def __call__(self, trial: Trial):
+    def _run(self, trial: Trial):
         """
         Call the objective function.
         """
-        try:
-            @timeout(self.trial_timeout)
-            def run_with_timeout():
-                ...
-                return score
-            score = run_with_timeout()
-        except ValueError as e:
-            print(e)
-            return float('inf') if self.direction == 'minimize' else float('-inf')
-        except Exception as e:
-            print(e)
-            return float('inf') if self.direction == 'minimize' else float('-inf')
+        # train the pipeline 
+        # compute a score using self.metric for the test/validation set
+        return score
 
 
 po = PipelineOptimization(direction='minimize', study_name='test_pipeline', sampler=optuna.samplers.TPESampler(seed=42),
@@ -247,3 +244,5 @@ po.optimize(train_dataset=train, test_dataset=test, objective_steps='all',
             metric=metric, n_trials=10, data=train, save_top_n=2, trial_timeout=600, 
             objective = MyObjective)
 ```
+
+One example is given in [here](https://github.com/BioSystemsUM/DeepMol/blob/master/src/deepmol/pipeline_optimization/objective_wrapper.py).

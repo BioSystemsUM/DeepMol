@@ -17,13 +17,29 @@ from deepmol.models import DeepChemModel
 from deepmol.splitters import RandomSplitter
 from deepmol.compound_featurization import MorganFingerprint
 from tests.unit_tests.models.test_models import ModelsTestCase
+import dgl
+import torch as th
+from dgl import DGLError
 
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
+# os.environ["CUDA_VISIBLE_DEVICES"] = ""
+def check_if_cuda_is_available_for_dgl() -> bool:
+    """
+    Check if cuda is available for dgl.
+    """
+    
+    u, v = th.tensor([0, 1, 2]), th.tensor([2, 3, 4])
+    g = dgl.graph((u, v))
+    try:
+        g.to("cuda")
+        return True
+    except DGLError as e:
+        return False
 
 class TestDeepChemModel(ModelsTestCase, TestCase):
 
     def test_fit_predict_evaluate(self):
+        print(check_if_cuda_is_available_for_dgl())
         ds_train = self.binary_dataset
         ds_train.X = ConvMolFeaturizer().featurize([MolFromSmiles('CCC')] * 100)
         ds_test = self.binary_dataset_test

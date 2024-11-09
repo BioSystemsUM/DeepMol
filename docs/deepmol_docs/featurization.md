@@ -594,6 +594,19 @@ dataset = CSVLoader("../data/CHEMBL217_reduced.csv", id_field="Original_Entry_ID
 generate_conformers_to_sdf_file(dataset, "CHEMBL217_conformers.sdf", n_conformations=1, threads=15,max_iterations=3)
 ```
 
+or 
+
+```python
+dataset = CSVLoader("../data/CHEMBL217_reduced.csv", id_field="Original_Entry_ID",
+                    smiles_field="SMILES", labels_fields=["Activity_Flag"]).create_dataset()
+
+generator = ThreeDimensionalMoleculeGenerator()
+generator.generate(dataset)
+
+dataset.to_sdf("CHEMBL217_conformers.sdf", etkdg_version = 3, mode = "MMFF94")
+
+```
+
 If you rather want to read directly from a SDF file, you can use the SDFLoader class:
 
 

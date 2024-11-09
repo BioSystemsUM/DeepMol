@@ -9,6 +9,7 @@ from rdkit.Chem import MolFromSmiles
 from deepmol.compound_featurization import MorganFingerprint, \
     MACCSkeysFingerprint, \
     LayeredFingerprint, RDKFingerprint, AtomPairFingerprint
+from deepmol.compound_featurization.rdkit_descriptors import ThreeDimensionalMoleculeGenerator
 from deepmol.compound_featurization.rdkit_fingerprints import AtomPairFingerprintCallbackHash
 from tests.unit_tests.featurizers.test_featurizers import FeaturizerTestCase
 
@@ -16,6 +17,15 @@ from tests import TEST_DIR
 
 
 class TestRDKitFingerprints(FeaturizerTestCase, TestCase):
+
+    def test_three_dimensional_structures(self):
+
+        generator = ThreeDimensionalMoleculeGenerator()
+
+        new_mol = generator.generate_conformers(self.mock_dataset.mols[1], 3)
+        new_mol = generator.optimize_molecular_geometry(new_mol)
+
+        self.assertGreater(len(new_mol.GetConformers()), 0)
 
     def test_featurize(self):
         # test Atom Pair fingerprints (without NaN generation)

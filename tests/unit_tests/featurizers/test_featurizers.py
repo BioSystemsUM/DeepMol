@@ -27,6 +27,7 @@ class FeaturizerTestCase(ABC):
                                       mols=np.array(mols),
                                       ids=np.arange(len(self.original_smiles)),
                                       y=y)
+        self.mock_dataset.label_names = ["y"]
         self.original_smiles_with_invalid = np.append(self.original_smiles, ['CC(=O)[O-].NC', 'C1=CC=CC=C1('])
         mols = [self._smiles_to_mol(s) for s in self.original_smiles_with_invalid]
         self.mock_dataset_with_invalid = MagicMock(spec=SmilesDataset,

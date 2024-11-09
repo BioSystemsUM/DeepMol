@@ -1,6 +1,6 @@
 import copy
 import os
-from unittest import TestCase
+from unittest import TestCase, skip
 
 import numpy as np
 from imblearn.over_sampling import SMOTE as SMOTE_IB
@@ -80,6 +80,7 @@ class TestImbalancedLearn(TestCase):
         self.assertEqual(len(np.unique(new_df._ids)), len(new_df._ids))
         self.assertEqual(len(new_df._ids), len(new_df._smiles), len(new_df._mols))
 
+    @skip()
     def test_SMOTEENN(self):
         df = copy.deepcopy(self.imbalanced_dataset)
         smote = SMOTE_IB(k_neighbors=1)

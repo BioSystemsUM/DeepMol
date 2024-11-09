@@ -39,7 +39,6 @@ def check_if_cuda_is_available_for_dgl() -> bool:
 class TestDeepChemModel(ModelsTestCase, TestCase):
 
     def test_fit_predict_evaluate(self):
-        print(check_if_cuda_is_available_for_dgl())
         ds_train = self.binary_dataset
         ds_train.X = ConvMolFeaturizer().featurize([MolFromSmiles('CCC')] * 100)
         ds_test = self.binary_dataset_test

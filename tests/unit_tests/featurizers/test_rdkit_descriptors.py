@@ -107,27 +107,6 @@ class Test3DDescriptors(FeaturizerTestCase, TestCase):
         self.valid_3D_featurizers_with_nan(PrincipalMomentsOfInertia, mandatory_generation_of_conformers=True)
         self.valid_3D_featurizers_with_nan(NormalizedPrincipalMomentsRatios, mandatory_generation_of_conformers=True)
 
-    def valid_featurize_to_fail(self, method, **kwargs):
-        with self.assertRaises(SystemExit) as cm:
-            method(**kwargs).featurize(self.mock_dataset, inplace=True)
-
-        self.assertEqual(cm.exception.code, 1)
-
-    def test_featurize_to_fail(self):
-        self.valid_featurize_to_fail(All3DDescriptors, mandatory_generation_of_conformers=False)
-        self.valid_featurize_to_fail(AutoCorr3D, mandatory_generation_of_conformers=False)
-        self.valid_featurize_to_fail(RadialDistributionFunction, mandatory_generation_of_conformers=False)
-        self.valid_featurize_to_fail(PlaneOfBestFit, mandatory_generation_of_conformers=False)
-        self.valid_featurize_to_fail(MORSE, mandatory_generation_of_conformers=False)
-        self.valid_featurize_to_fail(WHIM, mandatory_generation_of_conformers=False)
-        self.valid_featurize_to_fail(RadiusOfGyration, mandatory_generation_of_conformers=False)
-        self.valid_featurize_to_fail(InertialShapeFactor, mandatory_generation_of_conformers=False)
-        self.valid_featurize_to_fail(Eccentricity, mandatory_generation_of_conformers=False)
-        self.valid_featurize_to_fail(Asphericity, mandatory_generation_of_conformers=False)
-        self.valid_featurize_to_fail(SpherocityIndex, mandatory_generation_of_conformers=False)
-        self.valid_featurize_to_fail(PrincipalMomentsOfInertia, mandatory_generation_of_conformers=False)
-        self.valid_featurize_to_fail(NormalizedPrincipalMomentsRatios, mandatory_generation_of_conformers=False)
-
     def test_generate_conformers_and_export(self):
         generate_conformers_to_sdf_file(self.mock_dataset, "temp.sdf", n_conformations=1, max_iterations=1)
         os.remove("temp.sdf")

@@ -90,7 +90,7 @@ def create_multitask_regression_model(input_shape, tasks, hidden_units=64):
 
     # Create the model
     model = keras.Model(inputs=input_layer, outputs=output_layers)
-    model.compile(optimizer='a', loss='mean_squared_error', metrics=['mae'])
+    model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae'])
 
     return model
 

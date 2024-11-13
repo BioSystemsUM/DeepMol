@@ -142,7 +142,11 @@ class VotingPipeline:
         # [[0.1, 0.9], [0.8, 0.2]] -> [[[0.9, 0.1], [0.1, 0.9]], [[0.2, 0.8], [0.8, 0.2]]]
         preds = []
         for pipeline_predictions in predictions:
-            preds.append([[1 - prob, prob] if isinstance(prob, float) else prob for prob in pipeline_predictions])
+            preds_ = []
+            for prob in pipeline_predictions:
+                if isinstance(prob, float) or isinstance(prob, int) or isinstance(prob, np.float_) or isinstance(prob, np.int_):
+                    preds_.append([1 - prob, prob])
+            preds.append(preds_)
         # Calculate the weighted average of predicted probabilities
         soft_votes = np.average(preds, axis=0, weights=self.weights)
         # TODO: should this return classes or probabilities?

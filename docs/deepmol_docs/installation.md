@@ -10,12 +10,27 @@ If you intend to install all the deepmol modules' dependencies:
 pip install deepmol[all]
 ```
 
+or in MacOS:
+
+```bash
+pip install "deepmol[all]"
+```
+
+
 Extra modules:
 
 ```bash
 pip install deepmol[preprocessing]
 pip install deepmol[machine-learning]
 pip install deepmol[deep-learning]
+```
+
+or in MacOS:
+
+```bash
+pip install "deepmol[preprocessing]"
+pip install "deepmol[machine-learning]"
+pip install "deepmol[deep-learning]"
 ```
 
 Also, you should install mol2vec and its dependencies:

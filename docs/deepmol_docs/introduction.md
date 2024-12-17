@@ -10,3 +10,12 @@ operations on molecular data.
 Here is an image with the overall pipeline of DeepMol and the packages it uses:
 
 ![alt text](../imgs/deepmol_pipeline.png)
+
+# Google colabs to run AutoML
+
+- [Binary and multiclass classification](https://colab.research.google.com/drive/1wtiwuuhfWKVo40ywgweWUMavKL0zdwJK?usp=sharing)
+- [Regression](https://colab.research.google.com/drive/1vE-Q01orImdD4qFTo20MAT4E4kP2hsYF?usp=sharing)
+- [Multi-task/multi-label](https://colab.research.google.com/drive/18z2vN6zLNSVJ3qgskKZTYxA_t9UNS1b8?usp=sharing)
+
+
+

@@ -10,6 +10,12 @@ operations on molecular data.
 
 More detailed and comprehensive documentation in [DeepMol readthedocs](https://deepmol.readthedocs.io/en/latest/).
 
+### Google colabs to run AutoML
+
+- [Binary and multiclass classification](https://colab.research.google.com/drive/1wtiwuuhfWKVo40ywgweWUMavKL0zdwJK?usp=sharing)
+- [Regression](https://colab.research.google.com/drive/1vE-Q01orImdD4qFTo20MAT4E4kP2hsYF?usp=sharing)
+- [Multi-task/multi-label](https://colab.research.google.com/drive/18z2vN6zLNSVJ3qgskKZTYxA_t9UNS1b8?usp=sharing)
+
 ### Table of contents:
 
 - [Requirements](#requirements)
@@ -54,12 +60,27 @@ If you intend to install all the deepmol modules' dependencies:
 pip install deepmol[all]
 ```
 
+or in MacOS:
+
+```bash
+pip install "deepmol[all]"
+```
+
+
 Extra modules:
 
 ```bash
 pip install deepmol[preprocessing]
 pip install deepmol[machine-learning]
 pip install deepmol[deep-learning]
+```
+
+or in MacOS:
+
+```bash
+pip install "deepmol[preprocessing]"
+pip install "deepmol[machine-learning]"
+pip install "deepmol[deep-learning]"
 ```
 
 Also, you should install mol2vec and its dependencies:

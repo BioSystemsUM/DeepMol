@@ -18,11 +18,11 @@ More detailed and comprehensive documentation in [DeepMol readthedocs](https://d
 
 ### Table of contents:
 
-- [Requirements](#requirements)
 - [Installation](#installation)
     - [Pip](#pip)
     - [Manually](#manually)
     - [Docker](#docker)
+    - [Disclaimer](#disclaimer)
 - [Getting Started](#getting-started)
     - [Load dataset from csv](#load-a-dataset-from-a-csv)
     - [Load dataset from sdf](#load-a-dataset-from-a-sdf)
@@ -42,11 +42,6 @@ More detailed and comprehensive documentation in [DeepMol readthedocs](https://d
   - [Related Publications](#publications-using-deepmol)
 - [License](#licensing)
 
-
-## Requirements
-
-
-  
 
 ## Installation
 
@@ -111,6 +106,10 @@ You can also use the provided image to build your own Docker image:
 ```bash
 docker pull biosystemsum/deepmol
 ```
+
+### Disclaimer
+
+If you’d like to use the GPU, make sure to install the versions of TensorFlow and DGL that match the CUDA drivers for your hardware.
 
 
 ## Getting Started

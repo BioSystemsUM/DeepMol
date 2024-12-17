@@ -60,3 +60,7 @@ You can also use the provided image to build your own Docker image:
 ```bash
 docker pull biosystemsum/deepmol
 ```
+
+### Disclaimer
+
+If you’d like to use the GPU, make sure to install the versions of TensorFlow and DGL that match the CUDA drivers for your hardware.

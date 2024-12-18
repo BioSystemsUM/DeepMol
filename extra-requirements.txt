@@ -8,7 +8,6 @@ cached_property==1.5.2: preprocessing, deep-learning, machine-learning, test
 numpy==1.23.5: preprocessing, deep-learning, machine-learning, test
 dill==0.3.6: preprocessing, deep-learning, machine-learning, test
 shap==0.44.0: deep-learning, machine-learning
-gensim==4.2.0: preprocessing, deep-learning, machine-learning
 IPython: preprocessing, deep-learning, machine-learning
 imblearn: preprocessing, machine-learning, deep-learning
 umap-learn==0.5.1: machine-learning, deep-learning

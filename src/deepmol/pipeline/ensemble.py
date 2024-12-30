@@ -146,6 +146,8 @@ class VotingPipeline:
             for prob in pipeline_predictions:
                 if isinstance(prob, float) or isinstance(prob, int) or isinstance(prob, np.float_) or isinstance(prob, np.int_):
                     preds_.append([1 - prob, prob])
+                elif isinstance(prob, np.ndarray):
+                    preds_.append(list(prob))
             preds.append(preds_)
         # Calculate the weighted average of predicted probabilities
         soft_votes = np.average(preds, axis=0, weights=self.weights)

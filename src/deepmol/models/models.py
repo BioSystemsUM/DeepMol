@@ -146,7 +146,7 @@ class Model(BaseEstimator, Predictor, ABC):
             Path to file where model should be saved.
         """
 
-    def predict(self, dataset: Dataset) -> np.ndarray:
+    def predict(self, dataset: Dataset, return_invalid: bool = False) -> np.ndarray:
         """
         Uses self to make predictions on provided Dataset object.
 
@@ -154,6 +154,9 @@ class Model(BaseEstimator, Predictor, ABC):
         ----------
         dataset: Dataset
             Dataset to make prediction on
+        
+        return_invalid: bool
+            Return invalid entries with NaN
 
         Returns
         -------
@@ -168,9 +171,10 @@ class Model(BaseEstimator, Predictor, ABC):
             y_pred_batch = y_pred_batch[:n_samples]
             y_preds.append(y_pred_batch)
         y_pred = np.concatenate(y_preds)
+
         return y_pred
 
-    def predict_proba(self, dataset: Dataset) -> np.ndarray:
+    def predict_proba(self, dataset: Dataset, return_invalid: bool = False) -> np.ndarray:
         """
         Uses self to make predictions on provided Dataset object.
 
@@ -178,6 +182,9 @@ class Model(BaseEstimator, Predictor, ABC):
         ----------
         dataset: Dataset
             Dataset to make prediction on
+
+        return_invalid: bool
+            Return invalid entries with NaN
 
         Returns
         -------

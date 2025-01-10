@@ -74,6 +74,30 @@ class Dataset(ABC):
             Molecules in the dataset.
         """
 
+    @property
+    @abstractmethod
+    def removed_elements(self) -> np.ndarray:
+        """
+        Get the molecules in the dataset.
+
+        Returns
+        -------
+        mols : np.ndarray
+            Removed molecules in the dataset.
+        """
+    
+    @removed_elements.setter
+    @abstractmethod
+    def removed_elements(self, value: Union[List[str], np.ndarray]) -> None:
+        """
+        Set the molecules in the dataset.
+        Parameters
+        ----------
+        value: Union[List[str], np.ndarray]
+            The removed elements in the dataset.
+        """
+
+
     @mols.setter
     @abstractmethod
     def mols(self, value: Union[List[str], np.ndarray]) -> None:
@@ -374,6 +398,7 @@ class SmilesDataset(Dataset):
         self._y = np.array(y) if y is not None else None
         self._mols = np.array(mols) if mols is not None else np.array([smiles_to_mol(s) for s in self._smiles])
         invalid = [self._ids[i] for i, m in enumerate(self._mols) if m is None]
+        self._removed_elements = []
         self.remove_elements(invalid, inplace=True)
         self._feature_names = np.array(feature_names) if feature_names is not None else None
         self._label_names = np.array(label_names) if label_names is not None else None
@@ -483,6 +508,7 @@ class SmilesDataset(Dataset):
         self._X = None
         self._y = None
         self._n_tasks = None
+        self._removed_elements = []
         self._mols = np.array([smiles_to_mol(s) for s in self._smiles])
         self.remove_elements([self._ids[i] for i, m in enumerate(self._mols) if m is None], inplace=True)
         self._feature_names = None
@@ -765,6 +791,30 @@ class SmilesDataset(Dataset):
             ids = self.ids[index]
             self.select(ids, axis=0, inplace=True)
 
+    @property
+    def removed_elements(self) -> np.ndarray:
+        """
+        Get the molecules in the dataset.
+
+        Returns
+        -------
+        mols : np.ndarray
+            Removed molecules in the dataset.
+        """
+        return self._removed_elements
+    
+    @removed_elements.setter
+    def removed_elements(self, value: Union[List[str], np.ndarray]) -> None:
+        """
+        Set the molecules in the dataset.
+        Parameters
+        ----------
+        value: Union[List[str], np.ndarray]
+            The removed elements in the dataset.
+        """
+        self._removed_elements = value
+
+
     @inplace_decorator
     def remove_elements(self, ids: List[str]) -> None:
         """
@@ -778,6 +828,8 @@ class SmilesDataset(Dataset):
         """
         if len(ids) != 0:
             all_indexes = self.ids
+            positions = np.where(np.isin(all_indexes, list(set(ids))))[0]
+            self.removed_elements.extend(list(positions))
             indexes_to_keep = list(set(all_indexes) - set(ids))
             self.select(indexes_to_keep, inplace=True)
 

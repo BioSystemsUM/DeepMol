@@ -168,6 +168,23 @@ class TestSmilesDataset(TestCase):
         self.assertEqual(df00.__len__(), 5)
         self.assertEqual(df0.__len__(), 7)
 
+    def test_remove_elements(self):
+        df0 = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCC', 'CCCC', 'CCCC', 'CCCCC'],
+                            X=[1, 1, 3, 4, 5, 6, 1],
+                            ids=[0,1,2,3,4,5,6])
+        
+        self.assertEqual(df0.__len__(), 7)
+        df0.remove_elements(ids=["0","1","2"])
+        self.assertEqual(df0.__len__(), 7)
+        self.assertEqual(df0.removed_elements, [])
+        df00 = df0.remove_elements(ids=["0","1","2"], inplace=False)
+        self.assertEqual(df00.__len__(), 4)
+        self.assertEqual(df00.removed_elements, [0,1,2])
+        self.assertEqual(df0.__len__(), 7)
+        self.assertEqual(df0.removed_elements, [])
+        df0.remove_elements(ids=["0","1","2"], inplace=True)
+        self.assertEqual(df0.removed_elements, [0,1,2])
+
     def test_remove_nan_axis_0(self):
         df0 = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCC', 'CCCC', 'CCCC', 'CCCCC'])
         self.assertEqual(df0.__len__(), 7)
@@ -179,16 +196,21 @@ class TestSmilesDataset(TestCase):
         self.assertEqual(df.__len__(), 7)
         df.remove_nan()
         self.assertEqual(df.__len__(), 7)
+        self.assertEqual(df.removed_elements, [])
         dff = df.remove_nan()
         self.assertEqual(dff.__len__(), 6)
+        self.assertEqual(dff.removed_elements, [1])
         df.remove_nan(inplace=True)
         self.assertEqual(df.__len__(), 6)
+        self.assertEqual(df.removed_elements, [1])
 
         df2 = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCC', 'CCCC', 'CCCC', 'CCCCC'],
                             X=[[1, 1], [1, np.nan], [3, 4], [4, 5], [5, 6], [6, 1], [1, np.nan]])
         self.assertEqual(df2.__len__(), 7)
+        self.assertEqual(df2.removed_elements, [])
         df2.remove_nan(inplace=True)
         self.assertEqual(df2.__len__(), 5)
+        self.assertEqual(df2.removed_elements, [1, 6])
 
         df3 = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCC', 'CCCC', 'CCCC', 'CCCCC'],
                             X=[[[1, 0, 0], [0, 1, 0], [0, 0, 1]],

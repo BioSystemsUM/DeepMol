@@ -4,6 +4,7 @@ import shutil
 import tempfile
 from typing import List, Sequence, Union
 import numpy as np
+import torch
 
 from deepmol.base import Predictor
 from deepmol.evaluator import Evaluator
@@ -19,7 +20,7 @@ try:
 except ImportError:
     pass
 
-from deepmol.models._utils import _get_splitter, save_to_disk, load_from_disk, get_prediction_from_proba
+from deepmol.models._utils import _get_splitter, _return_invalid, save_to_disk, load_from_disk, get_prediction_from_proba
 from deepmol.splitters.splitters import Splitter
 from deepmol.utils.utils import normalize_labels_shape
 
@@ -238,7 +239,8 @@ class DeepChemModel(BaseDeepChemModel, Predictor):
 
     def predict(self,
                 dataset: Dataset,
-                transformers: List[dc.trans.NormalizationTransformer] = None
+                transformers: List[dc.trans.NormalizationTransformer] = None,
+                return_invalid: bool = False
                 ) -> np.ndarray:
         """
         Makes predictions on dataset.
@@ -252,6 +254,9 @@ class DeepChemModel(BaseDeepChemModel, Predictor):
             Transformers that the input data has been transformed by. The output
             is passed through these transformers to undo the transformations.
 
+        return_invalid: bool
+            Return invalid entries with NaN
+
         Returns
         -------
         np.ndarray
@@ -261,11 +266,15 @@ class DeepChemModel(BaseDeepChemModel, Predictor):
         predictions = self.predict_proba(dataset, transformers)
         y_pred_rounded = get_prediction_from_proba(dataset, predictions)
 
+        if return_invalid:
+            y_pred_rounded = _return_invalid(dataset, y_pred_rounded)
+
         return y_pred_rounded
 
     def predict_proba(self,
                       dataset: Dataset,
-                      transformers: List[dc.trans.NormalizationTransformer] = None
+                      transformers: List[dc.trans.NormalizationTransformer] = None,
+                      return_invalid: bool = False
                       ) -> np.ndarray:
         """
         Makes predictions on dataset.
@@ -279,6 +288,9 @@ class DeepChemModel(BaseDeepChemModel, Predictor):
             Transformers that the input data has been transformed by. The output
             is passed through these transformers to undo the transformations.
 
+        return_invalid: bool
+            Return invalid entries with NaN
+
         Returns
         -------
         np.ndarray
@@ -291,11 +303,14 @@ class DeepChemModel(BaseDeepChemModel, Predictor):
         res = self.model.predict(new_dataset, transformers)
 
         if isinstance(self.model, TorchModel) and self.model.model.mode == 'classification':
+            
+            if return_invalid:
+                res = _return_invalid(dataset, res)
+
             return res
         else:
             new_res = np.squeeze(
-                res)  # this works for all regression models (Keras and PyTorch) and is more general than the
-            # commented code above
+                res)  
 
         if dataset.mode is not None:
             if not isinstance(dataset.mode, str):
@@ -313,6 +328,9 @@ class DeepChemModel(BaseDeepChemModel, Predictor):
         if len(new_res.shape) > 1:
             if new_res.shape[1] == len(dataset.mols) and new_res.shape[0] == dataset.n_tasks:
                 new_res = new_res.T
+
+        if return_invalid:
+            new_res = _return_invalid(dataset, new_res)
 
         return new_res
 
@@ -346,7 +364,7 @@ class DeepChemModel(BaseDeepChemModel, Predictor):
 
         if os.path.exists(os.path.join(folder_path, "model")):
             shutil.rmtree(os.path.join(folder_path, "model"))
-            
+
         shutil.copytree(self.model.model_dir, os.path.join(folder_path, "model"))
 
         save_to_disk(self.parameters_to_save, os.path.join(folder_path, "model_parameters.pkl"))
@@ -381,10 +399,14 @@ class DeepChemModel(BaseDeepChemModel, Predictor):
 
         deepchem_model = cls(model=model, 
                              model_dir=os.path.join(folder_path, "model"), **model_parameters)
+        
+        if not torch.cuda.is_available():
+            deepchem_model.model.device = "cpu"
         try:
             deepchem_model.model.restore(model_dir=os.path.join(folder_path, "model"))
         except ValueError:
             print("The model was not restored. The model was probably not trained.")
+
         return deepchem_model
 
     def cross_validate(self,

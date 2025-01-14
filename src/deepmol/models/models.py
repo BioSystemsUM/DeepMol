@@ -13,6 +13,8 @@ from deepmol.metrics.metrics import Metric
 
 from sklearn.base import BaseEstimator
 
+from deepmol.models._utils import _return_invalid
+
 
 class Model(BaseEstimator, Predictor, ABC):
     """
@@ -172,6 +174,9 @@ class Model(BaseEstimator, Predictor, ABC):
             y_preds.append(y_pred_batch)
         y_pred = np.concatenate(y_preds)
 
+        if return_invalid:
+            y_pred = _return_invalid(dataset, y_pred)
+
         return y_pred
 
     def predict_proba(self, dataset: Dataset, return_invalid: bool = False) -> np.ndarray:
@@ -192,6 +197,9 @@ class Model(BaseEstimator, Predictor, ABC):
             A numpy array of predictions.
         """
         y_pred = self.model.predict_proba(dataset.X)
+
+        if return_invalid:
+            y_pred = _return_invalid(dataset, y_pred)
         return y_pred
 
     def evaluate(self,

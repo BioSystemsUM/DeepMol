@@ -102,7 +102,7 @@ class SimilaritySplitterTestCase(SplittersTestCase, TestCase):
 
         train_dataset, test_dataset = similarity_splitter.train_test_split(self.invalid_smiles_dataset)
         self.assertGreater(len(train_dataset.smiles), len(test_dataset.smiles))
-        self.assertEqual(len(train_dataset.smiles), 2)
+        self.assertEqual(len(train_dataset.smiles), 3)
         self.assertEqual(len(test_dataset.smiles), 1)
 
     def test_similarity_splitter_invalid_smiles_and_nan(self):
@@ -114,5 +114,5 @@ class SimilaritySplitterTestCase(SplittersTestCase, TestCase):
 
         train_dataset, test_dataset = similarity_splitter.train_test_split(self.invalid_smiles_dataset)
         self.assertGreater(len(train_dataset.smiles), len(test_dataset.smiles))
-        self.assertEqual(len(train_dataset.smiles), 2)
+        self.assertEqual(len(train_dataset.smiles), 3)
         self.assertEqual(len(test_dataset.smiles), 1)

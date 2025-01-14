@@ -255,3 +255,43 @@ def _get_last_layer_info_based_on_mode(mode: str, n_classes: int):
         raise ValueError(f'Unknown mode {mode}')
     last_layer_units = [n_classes] if n_classes > 2 else [1]
     return loss, last_layer_activations, last_layer_units
+
+
+def _return_invalid(dataset: Dataset, y_pred: np.ndarray, removed_elements: list = []):
+    """
+    Insert invalid entries in the predictions
+
+    Parameters
+    ----------
+    dataset: Dataset
+        Dataset with the property removed_elements
+    
+    y_pred: np.ndarray
+        Predictions
+
+    removed_elements: list
+        If not empty, this list is considered for returning null values
+
+    Returns
+    -------
+    np.ndarray
+        A numpy array of predictions.
+    """
+    if not removed_elements:
+        removed_elements = dataset.removed_elements
+    n_rows = len(removed_elements) + y_pred.shape[0]
+    all_indices = np.arange(n_rows)
+    old_rows = np.setdiff1d(all_indices, removed_elements)
+    if len(y_pred.shape) > 1:
+        n_columns = y_pred.shape[1]
+        new_predictions = np.zeros((n_rows, n_columns))
+        new_rows = np.full((len(removed_elements), n_columns), np.nan)
+        new_predictions[removed_elements, :] = new_rows
+        new_predictions[list(old_rows), :] = y_pred
+    else:
+        new_predictions = np.zeros((n_rows, ))
+        new_rows = np.full((len(removed_elements), ), np.nan)
+        new_predictions[removed_elements] = new_rows
+        new_predictions[list(old_rows)] = y_pred
+        
+    return new_predictions

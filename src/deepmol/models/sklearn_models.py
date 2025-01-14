@@ -3,7 +3,7 @@ import os
 import numpy as np
 from sklearn.base import BaseEstimator
 
-from deepmol.models._utils import save_to_disk, _get_splitter, load_from_disk
+from deepmol.models._utils import _return_invalid, save_to_disk, _get_splitter, load_from_disk
 from deepmol.models.models import Model
 from deepmol.datasets import Dataset
 from deepmol.splitters.splitters import Splitter
@@ -88,7 +88,7 @@ class SklearnModel(Model):
         y = np.squeeze(dataset.y)
         return self.model.fit(features, y)
 
-    def predict(self, dataset: Dataset) -> np.ndarray:
+    def predict(self, dataset: Dataset, return_invalid: bool = False) -> np.ndarray:
         """
         Makes predictions on dataset.
 
@@ -96,6 +96,8 @@ class SklearnModel(Model):
         ----------
         dataset: Dataset
           Dataset to make prediction on.
+        return_invalid: bool
+            Return invalid entries with NaN
 
         Returns
         -------
@@ -109,9 +111,12 @@ class SklearnModel(Model):
             if predictions.shape != (len(dataset.mols), dataset.n_tasks):
                 predictions = normalize_labels_shape(predictions, dataset.n_tasks)
 
+        if return_invalid:
+            predictions = _return_invalid(dataset, predictions)
+
         return predictions
 
-    def predict_proba(self, dataset: Dataset) -> np.ndarray:
+    def predict_proba(self, dataset: Dataset, return_invalid: bool = False) -> np.ndarray:
         """
         Makes predictions on dataset.
 
@@ -119,6 +124,9 @@ class SklearnModel(Model):
         ----------
         dataset: Dataset
             Dataset to make prediction on.
+
+        return_invalid: bool
+            Return invalid entries with NaN
 
         Returns
         -------
@@ -128,7 +136,11 @@ class SklearnModel(Model):
             predictions = self.model.predict_proba(dataset.X)
         except AttributeError as e:
             self.logger.error(f'AttributeError: {e}. The model does not have a predict_proba method. ')
-            return self.model.predict(dataset.X)
+            predictions = self.model.predict(dataset.X)
+            if return_invalid:
+                predictions = _return_invalid(dataset, predictions)
+
+            return predictions
 
         if isinstance(predictions, list):
             predictions = np.array(predictions)
@@ -138,6 +150,9 @@ class SklearnModel(Model):
         if len(predictions.shape) > 1:
             if predictions.shape[1] == len(dataset.mols) and predictions.shape[0] == dataset.n_tasks:
                 predictions = predictions.T
+
+        if return_invalid:
+            predictions = _return_invalid(dataset, predictions)
 
         return predictions
 

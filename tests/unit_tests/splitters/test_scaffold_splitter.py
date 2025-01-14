@@ -154,7 +154,7 @@ class ScaffoldSplitterTestCase(SplittersTestCase, TestCase):
         scaffold_splitter = ScaffoldSplitter()
 
         train_dataset, test_dataset = scaffold_splitter.train_test_split(self.invalid_smiles_dataset)
-        self.assertEqual(len(train_dataset.smiles), 2)
+        self.assertEqual(len(train_dataset.smiles), 3)
         self.assertEqual(len(test_dataset.smiles), 1)
 
     def test_scaffold_splitter_invalid_smiles_and_nan(self):
@@ -165,5 +165,5 @@ class ScaffoldSplitterTestCase(SplittersTestCase, TestCase):
         scaffold_splitter = ScaffoldSplitter()
 
         train_dataset, test_dataset = scaffold_splitter.train_test_split(self.invalid_smiles_dataset)
-        self.assertEqual(len(train_dataset.smiles), 2)
+        self.assertEqual(len(train_dataset.smiles), 3)
         self.assertEqual(len(test_dataset.smiles), 1)

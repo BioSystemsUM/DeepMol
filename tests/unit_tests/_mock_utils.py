@@ -50,11 +50,11 @@ class MockPredictorMagicMock(MagicMock, Predictor):
     def _fit(self, dataset):
         return self
 
-    def predict(self, dataset):
+    def predict(self, dataset, return_invalid=False):
         predictions = np.random.RandomState(self.seed).randint(0, 2, size=dataset.X.shape[0])
         return predictions
 
-    def predict_proba(self, dataset):
+    def predict_proba(self, dataset, return_invalid=False):
         predictions = np.random.RandomState(self.seed).randint(0, 2, size=dataset.X.shape[0])
         return np.vstack([1 - predictions, predictions]).T
 

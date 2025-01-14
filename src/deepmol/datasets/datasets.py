@@ -1,7 +1,7 @@
 import uuid
 import warnings
 from abc import ABC, abstractmethod
-from copy import deepcopy
+from copy import copy, deepcopy
 from typing import Union, List, Tuple
 
 import numpy as np
@@ -394,6 +394,7 @@ class SmilesDataset(Dataset):
         self._smiles = np.array(smiles)
         self._ids = np.array([str(i) for i in ids]) if ids is not None \
             else np.array([str(uuid.uuid4().hex) for _ in range(len(smiles))])
+        self._original_ids = copy(self._ids)
         self._X = np.array(X) if X is not None else None
         self._y = np.array(y) if y is not None else None
         self._mols = np.array(mols) if mols is not None else np.array([smiles_to_mol(s) for s in self._smiles])
@@ -505,6 +506,7 @@ class SmilesDataset(Dataset):
         super().__init__()
         self._smiles = np.array(smiles)
         self._ids = np.array([str(uuid.uuid4().hex) for _ in range(len(smiles))])
+        self._original_ids = copy(self._ids)
         self._X = None
         self._y = None
         self._n_tasks = None
@@ -828,7 +830,7 @@ class SmilesDataset(Dataset):
         """
         if len(ids) != 0:
             all_indexes = self.ids
-            positions = np.where(np.isin(all_indexes, list(set(ids))))[0]
+            positions = np.where(np.isin(self._original_ids, list(set(ids))))[0]
             self.removed_elements.extend(list(positions))
             indexes_to_keep = list(set(all_indexes) - set(ids))
             self.select(indexes_to_keep, inplace=True)

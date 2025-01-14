@@ -190,7 +190,7 @@ class Pipeline(Transformer):
             dataset = step[1].transform(dataset)
         return dataset
 
-    def predict(self, dataset: Dataset) -> np.ndarray:
+    def predict(self, dataset: Dataset, return_invalid: bool = False) -> np.ndarray:
         """
         Make predictions on a dataset using the pipeline predictor.
 
@@ -198,6 +198,9 @@ class Pipeline(Transformer):
         ----------
         dataset: Dataset
             Dataset to make predictions on.
+
+        return_invalid: bool
+            Return invalid entries with NaN
 
         Returns
         -------
@@ -208,10 +211,11 @@ class Pipeline(Transformer):
             raise ValueError("Pipeline is not a prediction pipeline.")
 
         dataset = self.transform(dataset)
-        y_pred = self.steps[-1][1].predict(dataset)
+        y_pred = self.steps[-1][1].predict(dataset, return_invalid=return_invalid)
+
         return y_pred
 
-    def predict_proba(self, dataset: Dataset) -> np.ndarray:
+    def predict_proba(self, dataset: Dataset, return_invalid: bool = False) -> np.ndarray:
         """
         Make predictions on a dataset using the pipeline predictor.
 
@@ -219,6 +223,8 @@ class Pipeline(Transformer):
         ----------
         dataset: Dataset
             Dataset to make predictions on.
+        return_invalid: bool
+            Return invalid entries with NaN
 
         Returns
         -------
@@ -228,7 +234,7 @@ class Pipeline(Transformer):
         if not self.is_prediction_pipeline:
             raise ValueError("Pipeline is not a prediction pipeline.")
         dataset = self.transform(dataset)
-        y_pred = self.steps[-1][1].predict_proba(dataset)
+        y_pred = self.steps[-1][1].predict_proba(dataset, return_invalid=return_invalid)
         return y_pred
 
     def evaluate(self,

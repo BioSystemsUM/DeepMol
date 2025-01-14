@@ -5,7 +5,6 @@ from unittest.mock import MagicMock
 import numpy as np
 from deepchem.feat import ConvMolFeaturizer, MolGraphConvFeaturizer
 from deepchem.models import GraphConvModel, TextCNNModel, GCNModel, MultitaskClassifier
-from deepchem.models.layers import DTNNEmbedding, Highway
 from rdkit.Chem import MolFromSmiles
 from sklearn.metrics import f1_score
 
@@ -15,7 +14,6 @@ from deepmol.metrics.metrics_functions import roc_auc_score, precision_score, ac
 from deepmol.metrics import Metric
 from deepmol.models import DeepChemModel
 from deepmol.splitters import RandomSplitter
-from deepmol.compound_featurization import MorganFingerprint
 from tests.unit_tests.models.test_models import ModelsTestCase
 import dgl
 import torch as th
@@ -177,7 +175,7 @@ class TestDeepChemModel(ModelsTestCase, TestCase):
         model.fit(self.binary_dataset)
         test_predict = model.predict(self.binary_dataset)
         metrics = [Metric(f1_score, average='micro'), Metric(precision_score, average='micro')]
-
+ 
         evaluation = model.evaluate(self.binary_dataset, metrics)
         model.save("test_model")
         new_model = DeepChemModel.load("test_model")

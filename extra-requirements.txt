@@ -4,6 +4,7 @@ seaborn: preprocessing, deep-learning, machine-learning, test
 joblib: preprocessing, deep-learning, machine-learning, test
 pillow: preprocessing, deep-learning, machine-learning, test
 h5py: preprocessing, deep-learning, machine-learning, test
+pandas<=2.0.0: preprocessing, deep-learning, machine-learning, test
 cached_property==1.5.2: preprocessing, deep-learning, machine-learning, test
 numpy: preprocessing, deep-learning, machine-learning, test
 dill==0.3.6: preprocessing, deep-learning, machine-learning, test

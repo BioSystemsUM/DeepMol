@@ -336,8 +336,6 @@ class VotingPipeline:
                     predictions_i = [prediction[:, i] for prediction in predictions]
                     final_predictions[:, i] = np.average(predictions_i, axis=0, weights=self.weights)
 
-            final_predictions = np.average(final_predictions, axis=0, weights=self.weights)
-
             final_predictions = self._deal_with_nan(return_invalid, final_predictions)
 
             return final_predictions

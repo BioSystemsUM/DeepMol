@@ -337,7 +337,7 @@ class TestDatasetModels(TestDataset):
 
         predictions = pipeline.predict_proba(self.multilabel_classification, return_invalid=True)
 
-        self.assertEqual(predictions.shape[0], 99)
+        self.assertEqual(predictions.shape[0], 100)
 
 
 

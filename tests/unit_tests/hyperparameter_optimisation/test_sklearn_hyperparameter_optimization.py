@@ -82,7 +82,7 @@ class TestSklearnHyperparameterOptimization(ModelsTestCase, TestCase):
         metric = validate_metrics(Metric(roc_auc_score))
         self.assertIsInstance(metric, Callable)
 
-        metric = validate_metrics("roc_auc")
+        metric = validate_metrics("roc_auc_score")
         self.assertIsInstance(metric, str)
 
     def test_aucs(self):

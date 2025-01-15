@@ -1,11 +1,11 @@
-rdkit==2023.9.1: preprocessing, deep-learning, machine-learning, test
+rdkit==2023.9.6: preprocessing, deep-learning, machine-learning, test
 smilespe==0.0.3: preprocessing, deep-learning, machine-learning, test
-seaborn==0.12.0: preprocessing, deep-learning, machine-learning, test
-joblib==1.1.1: preprocessing, deep-learning, machine-learning, test
-pillow==8.4.0: preprocessing, deep-learning, machine-learning, test
-h5py==3.7.0: preprocessing, deep-learning, machine-learning, test
+seaborn: preprocessing, deep-learning, machine-learning, test
+joblib: preprocessing, deep-learning, machine-learning, test
+pillow: preprocessing, deep-learning, machine-learning, test
+h5py: preprocessing, deep-learning, machine-learning, test
 cached_property==1.5.2: preprocessing, deep-learning, machine-learning, test
-numpy==1.23.5: preprocessing, deep-learning, machine-learning, test
+numpy: preprocessing, deep-learning, machine-learning, test
 dill==0.3.6: preprocessing, deep-learning, machine-learning, test
 shap==0.44.0: deep-learning, machine-learning
 IPython: preprocessing, deep-learning, machine-learning
@@ -13,20 +13,20 @@ imblearn: preprocessing, machine-learning, deep-learning
 umap-learn==0.5.1: machine-learning, deep-learning
 kneed==0.8.2: machine-learning, deep-learning
 kaleido==0.2.1: machine-learning, deep-learning
-plotly==5.13.1: machine-learning, deep-learning
+plotly: machine-learning, deep-learning
 chembl_structure_pipeline==1.1.0: preprocessing, machine-learning, deep-learning
 timeout_decorator==0.5.0: preprocessing, machine-learning, deep-learning
-torch==2.1.2: deep-learning
+torch==2.5.1: deep-learning
 dgl<=2.0.0: deep-learning
 scikeras==0.12.0: deep-learning
 dgllife==0.3.2: deep-learning
 deepchem==2.8.0: deep-learning
-torch_geometric==2.3.1: deep-learning
+torch_geometric==2.6.1: deep-learning
 tensorflow==2.15.0: deep-learning
-tensorflow-probability==0.22.1: deep-learning
-boruta==0.3: preprocessing, machine-learning
-scikit-learn==1.2.0: machine-learning, deep-learning
-optuna==3.1.1: machine-learning, deep-learning
+tensorflow-probability==0.25.0: deep-learning
+boruta==0.4.3: preprocessing, machine-learning
+scikit-learn<1.6: machine-learning, deep-learning
+optuna==4.1.0: machine-learning, deep-learning
 scikit-multilearn==0.2.0: machine-learning, deep-learning
 pydantic: deep-learning
 pytest>=7.1.1: test

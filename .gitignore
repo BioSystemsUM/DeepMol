@@ -12,6 +12,7 @@ examples/data/
 
 # tests
 tests/**/*.png
+test_model.*
 
 # Distribution / packaging
 .Python

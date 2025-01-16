@@ -1200,7 +1200,7 @@ def random_forest_regressor_step(trial):
     """
     n_estimators = trial.suggest_int('n_estimators_random_forest_regressor', 100, 1000, step=100)
     criterion = trial.suggest_categorical('criterion_random_forest_regressor', ['squared_error', 'absolute_error', 'poisson', 'friedman_mse'])
-    max_features = trial.suggest_categorical('max_features_random_forest_regressor', ['auto', 'sqrt', 'log2'])
+    max_features = trial.suggest_categorical('max_features_random_forest_regressor', ['sqrt', 'log2'])
     bootstrap = trial.suggest_categorical('bootstrap_random_forest_regressor', [True, False])
     random_forest_regressor_kwargs = {'n_estimators': n_estimators, 'criterion': criterion,
                                       'max_features': max_features, 'bootstrap': bootstrap}
@@ -1223,7 +1223,7 @@ def random_forest_classifier_step(trial):
     """
     n_estimators = trial.suggest_int('n_estimators_random_forest_classifier', 100, 1000, step=100)
     criterion = trial.suggest_categorical('criterion_random_forest_classifier', ['gini', 'entropy'])
-    max_features = trial.suggest_categorical('max_features_random_forest_classifier', ['auto', 'sqrt', 'log2'])
+    max_features = trial.suggest_categorical('max_features_random_forest_classifier', ['sqrt', 'log2'])
     bootstrap = trial.suggest_categorical('bootstrap_random_forest_classifier', [True, False])
     random_forest_classifier_kwargs = {'n_estimators': n_estimators, 'criterion': criterion,
                                        'max_features': max_features, 'bootstrap': bootstrap}
@@ -1246,7 +1246,7 @@ def extra_trees_regressor_step(trial):
     """
     n_estimators = trial.suggest_int('n_estimators_extra_trees_regressor', 100, 1000, step=100)
     criterion = trial.suggest_categorical('criterion_extra_trees_regressor', ['friedman_mse', 'squared_error', 'absolute_error', 'poisson'])
-    max_features = trial.suggest_categorical('max_features_extra_trees_regressor', ['auto', 'sqrt', 'log2'])
+    max_features = trial.suggest_categorical('max_features_extra_trees_regressor', ['sqrt', 'log2'])
     bootstrap = trial.suggest_categorical('bootstrap_extra_trees_regressor', [True, False])
     extra_trees_regressor_kwargs = {'n_estimators': n_estimators, 'criterion': criterion,
                                     'max_features': max_features, 'bootstrap': bootstrap}
@@ -1269,7 +1269,7 @@ def extra_trees_classifier_step(trial):
     """
     n_estimators = trial.suggest_int('n_estimators_extra_trees_classifier', 100, 1000, step=100)
     criterion = trial.suggest_categorical('criterion_extra_trees_classifier', ['gini', 'entropy'])
-    max_features = trial.suggest_categorical('max_features_extra_trees_classifier', ['auto', 'sqrt', 'log2'])
+    max_features = trial.suggest_categorical('max_features_extra_trees_classifier', ['sqrt', 'log2'])
     bootstrap = trial.suggest_categorical('bootstrap_extra_trees_classifier', [True, False])
     extra_trees_classifier_kwargs = {'n_estimators': n_estimators, 'criterion': criterion,
                                      'max_features': max_features, 'bootstrap': bootstrap}
@@ -1337,7 +1337,7 @@ def gradient_boosting_regressor_step(trial):
     n_estimators = trial.suggest_int('n_estimators_gradient_boosting_regressor', 50, 500, step=50)
     learning_rate = trial.suggest_float('learning_rate_gradient_boosting_regressor', 0.01, 1.0)
     criterion = trial.suggest_categorical('criterion_gradient_boosting_regressor', ['friedman_mse', 'squared_error'])
-    max_features = trial.suggest_categorical('max_features_gradient_boosting_regressor', ['auto', 'sqrt', 'log2'])
+    max_features = trial.suggest_categorical('max_features_gradient_boosting_regressor', ['sqrt', 'log2'])
     gradient_boosting_regressor_kwargs = {'loss': loss, 'n_estimators': n_estimators,
                                           'learning_rate': learning_rate, 'criterion': criterion,
                                           'max_features': max_features}
@@ -1362,7 +1362,7 @@ def gradient_boosting_classifier_step(trial):
     n_estimators = trial.suggest_int('n_estimators_gradient_boosting_classifier', 50, 500, step=50)
     learning_rate = trial.suggest_float('learning_rate_gradient_boosting_classifier', 0.01, 1.0)
     criterion = trial.suggest_categorical('criterion_gradient_boosting_classifier', ['friedman_mse', 'squared_error'])
-    max_features = trial.suggest_categorical('max_features_gradient_boosting_classifier', ['auto', 'sqrt', 'log2'])
+    max_features = trial.suggest_categorical('max_features_gradient_boosting_classifier', ['sqrt', 'log2'])
     gradient_boosting_classifier_kwargs = {'loss': loss, 'n_estimators': n_estimators,
                                            'learning_rate': learning_rate, 'criterion': criterion,
                                            'max_features': max_features}
@@ -1387,7 +1387,7 @@ def gradient_boosting_multiclass_classifier_step(trial):
     n_estimators = trial.suggest_int('n_estimators_gradient_boosting_multiclass_classifier', 50, 500, step=50)
     learning_rate = trial.suggest_float('learning_rate_gradient_boosting_multiclass_classifier', 0.01, 1.0)
     criterion = trial.suggest_categorical('criterion_gradient_boosting_multiclass', ['friedman_mse', 'squared_error'])
-    max_features = trial.suggest_categorical('max_features_gradient_boosting_multiclass_classifier', ['auto', 'sqrt', 'log2'])
+    max_features = trial.suggest_categorical('max_features_gradient_boosting_multiclass_classifier', ['sqrt', 'log2'])
     gradient_boosting_classifier_kwargs = {'loss': loss, 'n_estimators': n_estimators,
                                            'learning_rate': learning_rate, 'criterion': criterion,
                                            'max_features': max_features}

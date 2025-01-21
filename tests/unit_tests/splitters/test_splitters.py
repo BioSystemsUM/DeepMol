@@ -118,6 +118,7 @@ class SplittersTestCase(ABC):
                                                           mode='classification')
         self.dataset_for_k_split.X = x
         self.dataset_for_k_split.y = y
+        self.dataset_for_k_split.smiles = td.mols
         self.dataset_for_k_split.__len__.return_value = len(self.dataset_for_k_split.smiles)
         self.dataset_for_k_split.select_to_split.side_effect = lambda arg: SmilesDatasetMagicMock(spec=SmilesDataset,
                                                                                                   x=

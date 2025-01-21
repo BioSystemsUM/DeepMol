@@ -8,7 +8,9 @@ from deepmol.datasets import SmilesDataset
 import numpy as np
 import pandas as pd
 
+from deepmol.datasets.llm_smiles_dataset import LLMDataset
 from deepmol.loaders._utils import load_csv_file, load_sdf_file
+from deepmol.tokenizers.transformers_tokenizer import SmilesTokenizer
 
 
 class CSVLoader(object):
@@ -140,6 +142,112 @@ class CSVLoader(object):
                              feature_names=self.features_fields,
                              label_names=self.labels_fields,
                              mode=self.mode)
+    
+class CSVLoaderForMaskedLM(CSVLoader):
+
+    def __init__(self,
+                 dataset_path: str,
+                 smiles_field: str,
+                 id_field: str = None,
+                 labels_fields: List[str] = None,
+                 features_fields: List[str] = None,
+                 shard_size: int = None,
+                 mode: Union[str, List[str]] = 'auto',
+                 vocabulary_path: str = None, 
+                 masking_probability: str = 0.15) -> None:
+        """
+        Initialize the CSVLoader.
+
+        Parameters
+        ----------
+        dataset_path: str
+            path to the dataset file
+        smiles_field: str
+            field containing the molecules'
+        id_field: str
+            field containing the ids
+        labels_fields: List[str]
+            field containing the labels
+        features_fields: List[str]
+            field containing the features
+        shard_size: int
+            size of the shard to load
+        mode: Union[str, List[str]]
+            The mode of the dataset.
+            If 'auto', the mode is inferred from the labels. If 'classification', the dataset is treated as a
+            classification dataset. If 'regression', the dataset is treated as a regression dataset. If a list of
+            modes is passed, the dataset is treated as a multi-task dataset.
+        """
+        self.dataset_path = dataset_path
+        self.mols_field = smiles_field
+        self.id_field = id_field
+        self.labels_fields = labels_fields
+        self.features_fields = features_fields
+        self.shard_size = shard_size
+        fields2keep = [smiles_field]
+
+        if id_field is not None:
+            fields2keep.append(id_field)
+
+        if labels_fields is not None:
+            fields2keep.extend(labels_fields)
+
+        if features_fields is not None:
+            fields2keep.extend(features_fields)
+
+        self.fields2keep = fields2keep
+        self.mode = mode
+        self.vocabulary_path = vocabulary_path
+        self.masking_probability = masking_probability
+
+    def create_dataset(self, **kwargs) -> SmilesDataset:
+        """
+        Creates a dataset from the CSV file.
+
+        Parameters
+        ----------
+        kwargs:
+            Keyword arguments to pass to pandas.read_csv.
+
+        Returns
+        -------
+        SmilesDataset
+            Dataset with the data.
+        """
+        dataset = self._get_dataset(self.dataset_path, fields=self.fields2keep, chunk_size=self.shard_size, **kwargs)
+
+        mols = dataset[self.mols_field].to_numpy()
+
+        if self.features_fields is not None:
+            if len(self.features_fields) == 1:
+                X = dataset[self.features_fields[0]].to_numpy()
+            else:
+                X = dataset[self.features_fields].to_numpy()
+        else:
+            X = None
+
+        if self.labels_fields is not None:
+            if len(self.labels_fields) == 1:
+                y = dataset[self.labels_fields[0]].to_numpy()
+            else:
+                y = dataset[self.labels_fields].to_numpy()
+        else:
+            y = None
+
+        if self.id_field is not None:
+            ids = dataset[self.id_field].to_numpy()
+        else:
+            ids = None
+
+        return LLMDataset(smiles=mols,
+                             X=X,
+                             y=y,
+                             ids=ids,
+                             feature_names=self.features_fields,
+                             label_names=self.labels_fields,
+                             mode=self.mode, 
+                             vocabulary_path = self.vocabulary_path,
+                             masking_probability = self.masking_probability)
 
 
 class SDFLoader(object):

@@ -1,3 +1,4 @@
 from .tokenizer import Tokenizer
 from .atom_level_smiles_tokenizer import AtomLevelSmilesTokenizer
 from .kmer_smiles_tokenizer import KmerSmilesTokenizer
+from .transformers_tokenizer import SmilesTokenizer

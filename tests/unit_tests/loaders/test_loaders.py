@@ -2,6 +2,7 @@ import os
 from unittest import TestCase
 
 from deepmol.loaders import SDFLoader, CSVLoader
+from deepmol.loaders.loaders import CSVLoaderForMaskedLM
 from deepmol.loggers import Logger
 from tests import TEST_DIR
 
@@ -77,3 +78,27 @@ class TestLoaders(TestCase):
         df3 = csv3.create_dataset()
         self.assertEqual(len(df3.mols), 10)
         self.assertEqual(df3.y.shape, (10, 2))
+
+    def test_csv_loader_for_llm(self):
+
+        data_path2 = os.path.join(TEST_DIR, 'data')
+        dataset_path2 = os.path.join(data_path2, "balanced_mini_dataset.csv")
+        csv2 = CSVLoaderForMaskedLM(dataset_path2, smiles_field='Smiles')
+        df2 = csv2.create_dataset(sep=';')
+        self.assertEqual(len(df2.mols), 13)
+
+        self.assertTrue(hasattr(df2, "tokenizer"))
+        self.assertTrue(hasattr(df2, "masking_probability"))
+
+        if os.path.exists('vocab.txt'):
+            os.remove('vocab.txt')
+
+        data_path2 = os.path.join(TEST_DIR, 'data')
+        dataset_path2 = os.path.join(data_path2, "balanced_mini_dataset.csv")
+        csv2 = CSVLoaderForMaskedLM(dataset_path2, smiles_field='Smiles', vocabulary_path=os.path.join(data_path2, "vocab.txt"))
+        df2 = csv2.create_dataset(sep=';')
+        self.assertEqual(len(df2.mols), 13)
+
+        self.assertTrue(hasattr(df2, "tokenizer"))
+        self.assertTrue(hasattr(df2, "masking_probability"))
+        self.assertFalse(os.path.exists('vocab.txt'))

@@ -16,6 +16,10 @@ More detailed and comprehensive documentation in [DeepMol readthedocs](https://d
 - [Regression](https://colab.research.google.com/drive/1vE-Q01orImdD4qFTo20MAT4E4kP2hsYF?usp=sharing)
 - [Multi-task/multi-label](https://colab.research.google.com/drive/18z2vN6zLNSVJ3qgskKZTYxA_t9UNS1b8?usp=sharing)
 
+### DeepMol models
+
+All deployed DeepMol models are available in [here](https://github.com/BioSystemsUM/deepmol_case_studies). An example to obtain predictions with deployed models is available in [here](https://colab.research.google.com/drive/1_I-f7jQPx2AR76h431x4AdV5Peybs5LO?usp=sharing). Installation of the models' API can be done via pip as in [here](https://pypi.org/project/deepmol-models/).
+
 ### Table of contents:
 
 - [Installation](#installation)

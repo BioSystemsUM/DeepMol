@@ -17,5 +17,5 @@ class TestTokenizersTokenizer(FeaturizerTestCase, TestCase):
     def test_featurize(self):
         mock_dataset = copy(self.mock_dataset)
         vocab_path = os.path.join(TEST_DIR, "data", 'vocab.txt')
-        SmilesTokenizer(vocab_path)._tokenize(mock_dataset.smiles[0])
+        print(SmilesTokenizer(vocab_path)._tokenize(mock_dataset.smiles[0]))
 

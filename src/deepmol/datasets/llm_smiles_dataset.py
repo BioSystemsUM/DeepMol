@@ -24,7 +24,8 @@ class LLMDataset(TorchDataset, SmilesDataset):
                  mode: Union[str, List[str]] = 'auto',
                  max_length: int = 256, 
                  masking_probability: float = 0.15,
-                 vocabulary_path: str = None,):
+                 vocabulary_path: str = None,
+                 mask: bool = True):
         """
 
         Parameters
@@ -51,12 +52,14 @@ class LLMDataset(TorchDataset, SmilesDataset):
             max length, by default 256
         masking_probability : float, optional
             Probability of masking item, by default 0.15
+        mask : bool, optional
+            Whether the dataset will be used for masked learning. If False, it assumes it will be used for fine-tuning
         """
 
         super().__init__(smiles, mols, ids, X, feature_names, y, label_names, mode)
         
         if vocabulary_path is None:
-            dir_path = os.path.dirname(os.path.realpath(__file__))
+            dir_path = os.getcwd()
             SmilesTokenizer.export_vocab(self, os.path.join(dir_path, "vocab.txt"))
             self.tokenizer = SmilesTokenizer(os.path.join(dir_path, "vocab.txt"))
         else:
@@ -64,6 +67,7 @@ class LLMDataset(TorchDataset, SmilesDataset):
             
         self.masking_probability = masking_probability
         self.max_length = max_length
+        self.mask = mask
 
     def __len__(self):
         
@@ -75,12 +79,20 @@ class LLMDataset(TorchDataset, SmilesDataset):
         input_ids = tokens.input_ids.squeeze()
         attention_mask = tokens.attention_mask.squeeze()
         
+        if self.mask:
         # Create labels
-        labels = input_ids.clone()
+            labels = input_ids.clone()
+            
+            # Masking
+            probability_matrix = torch.full(labels.shape, self.masking_probability)  # 15% masking
+            mask_indices = torch.bernoulli(probability_matrix).bool()
+            input_ids[mask_indices] = self.tokenizer.mask_token_id
+            
+        else:
         
-        # Masking
-        probability_matrix = torch.full(labels.shape, self.masking_probability)  # 15% masking
-        mask_indices = torch.bernoulli(probability_matrix).bool()
-        input_ids[mask_indices] = self.tokenizer.mask_token_id
-        
+            if len(self.y.shape) == 1:
+                labels = torch.tensor(self.y[idx], dtype=torch.long)
+            else:
+                labels = torch.tensor(self.y[idx, :], dtype=torch.float)
+            
         return input_ids, attention_mask, labels

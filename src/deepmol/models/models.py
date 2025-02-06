@@ -60,8 +60,12 @@ class Model(BaseEstimator, Predictor, ABC):
         """
         Delete model directory if it was created by this object.
         """
-        if 'model_dir_is_temp' in dir(self) and self.model_dir_is_temp:
-            shutil.rmtree(self.model_dir)
+        try:
+            if 'model_dir_is_temp' in dir(self) and self.model_dir_is_temp:
+                if os.path.exists(self.model_dir):
+                    shutil.rmtree(self.model_dir)
+        except AttributeError:
+            pass
 
     def fit_on_batch(self, dataset: Dataset) -> None:
         """

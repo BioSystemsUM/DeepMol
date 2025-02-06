@@ -34,7 +34,7 @@ from deepmol.utils.utils import normalize_labels_shape
 class TransformerModelForMaskedLM(LightningModule, Model):
 
     def __init__(self, model, learning_rate=1e-4, batch_size=8, model_dir = None, mode: str = "masked_learning",
-                 cls_token = True, optimizer = AdamW, loss = BCELoss,
+                 cls_token = True, optimizer = AdamW, loss = BCELoss, metric = None, prediction_head_layers = [1024],
                  **trainer_kwargs):
         
         # Initialize LightningModule
@@ -58,6 +58,8 @@ class TransformerModelForMaskedLM(LightningModule, Model):
 
         self.mode = mode
 
+        self.metric = None
+
         self._model_dir = model_dir
         self.model = model
         self.model_class = model.__class__
@@ -66,11 +68,19 @@ class TransformerModelForMaskedLM(LightningModule, Model):
 
         self.dataset_mode = None
 
+        self.prediction_head_layers = prediction_head_layers
+
         self.head = nn.Sequential(
-                nn.Linear(self.model.config.hidden_size, 1024),
-                nn.BatchNorm1d(1024),
+                nn.Linear(self.model.config.hidden_size, prediction_head_layers[0]),
                 nn.ReLU(),
-            )
+                nn.BatchNorm1d(prediction_head_layers[0]))
+
+        if len(prediction_head_layers) > 1:
+            for i, layer in enumerate(prediction_head_layers[1:]):
+                i += 1
+                self.head.add_module(f"layer_{i}", nn.Linear(prediction_head_layers[i-1], layer))
+                self.head.add_module(f"relu_{i}", nn.ReLU())
+                self.head.add_module(f"batch_norm_{i}", nn.BatchNorm1d(layer))
 
     def _forward_fine_tuning(self, input_ids, attention_mask):
 
@@ -111,6 +121,11 @@ class TransformerModelForMaskedLM(LightningModule, Model):
 
         self.log('train_loss', loss, on_epoch=True, 
                  prog_bar=True, logger=True, sync_dist=True)
+        
+        if self.metric != None:
+            score = self.metric(outputs, batch.y)
+            self.log(f'train_{self.metric.__class__.__name__}', score, on_epoch=True,
+                    prog_bar=True, logger=True, sync_dist=True)
         return loss
     
     def validation_step(self, batch, batch_idx):
@@ -125,6 +140,12 @@ class TransformerModelForMaskedLM(LightningModule, Model):
 
         self.log('val_loss', val_loss, on_epoch=True, 
                  prog_bar=True, logger=True, sync_dist=True)
+        
+        if self.metric != None:
+            score = self.metric(outputs, batch.y)
+            self.log(f'val_{self.metric.__class__.__name__}', score, on_epoch=True,
+                    prog_bar=True, logger=True, sync_dist=True)
+            
         return val_loss
     
     def predict_step(self, batch, batch_idx, dataloader_idx=None):
@@ -140,9 +161,9 @@ class TransformerModelForMaskedLM(LightningModule, Model):
         self.dataset_mode = dataset.mode
 
         if isinstance(self.dataset_mode, list):
-            self.head.add_module("last_layer", nn.Linear(1024, len(self.dataset_mode)))
+            self.head.add_module("last_layer", nn.Linear(self.prediction_head_layers[-1], len(self.dataset_mode)))
         else:
-            self.head.add_module("last_layer", nn.Linear(1024, 1))
+            self.head.add_module("last_layer", nn.Linear(self.prediction_head_layers[-1], 1))
 
         dataloader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
         callbacks = []

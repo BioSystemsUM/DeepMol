@@ -2,7 +2,7 @@ import os
 import shutil
 from unittest import TestCase, skip
 
-from deepmol.models.atmol.atmol_pl import AtMolLightning
+from deepmol.models.atmol.atmol import AtMolLightning
 from deepmol.models.atmol.utils_gat_pretrain import AtmolTorchDataset
 from tests.integration_tests.dataset.test_dataset import TestDataset
 

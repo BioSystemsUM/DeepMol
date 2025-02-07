@@ -186,6 +186,7 @@ class TransformerModelForMaskedLM(LightningModule, Model):
             every_n_epochs=1,
             verbose=True
         )
+
         callbacks.append(checkpoint_callback)
         
         self.trainer = Trainer(**self.trainer_kwargs,
@@ -301,11 +302,11 @@ class TransformerModelForMaskedLM(LightningModule, Model):
         self.trainer.save_checkpoint(pl_model_path)
         torch.save(self.model.state_dict(), model_path)
 
-        with open(os.path.join(file_path, "trainer.pk"), "wb") as b:
-            pickle.dump(self.trainer, b, protocol=pickle.HIGHEST_PROTOCOL)
+        # with open(os.path.join(file_path, "trainer.pk"), "wb") as b:
+        #     pickle.dump(self.trainer, b, protocol=pickle.HIGHEST_PROTOCOL)
 
-        with open(os.path.join(file_path, "model.pk"), "wb") as b:
-            pickle.dump(self, b, protocol=pickle.HIGHEST_PROTOCOL)
+        # with open(os.path.join(file_path, "model.pk"), "wb") as b:
+        #     pickle.dump(self, b, protocol=pickle.HIGHEST_PROTOCOL)
 
         with open(os.path.join(file_path, "config.pk"), "wb") as b:
             pickle.dump(self.config, b, protocol=pickle.HIGHEST_PROTOCOL)
@@ -314,22 +315,22 @@ class TransformerModelForMaskedLM(LightningModule, Model):
     @classmethod
     def load(cls, folder_path: str, mode: str = "classification") -> 'TransformerModelForMaskedLM':
 
-        with open(os.path.join(folder_path, "model.pk"), "rb") as b:
-            new_model = pickle.load(b)
+        # with open(os.path.join(folder_path, "model.pk"), "rb") as b:
+        #     new_model = pickle.load(b)
 
         with open(os.path.join(folder_path, "config.pk"), "rb") as b:
         
             config = pickle.load(b)
 
-        with open(os.path.join(folder_path, "trainer.pk"), "rb") as b:
+        # with open(os.path.join(folder_path, "trainer.pk"), "rb") as b:
         
-            trainer = pickle.load(b)
+        #     trainer = pickle.load(b)
+
+        new_model = cls.load_from_checkpoint(os.path.join(folder_path, "model.ckpt"), strict=False)
 
         model_path = os.path.join(folder_path, "model.pt")
 
         new_model._load(config, model_path, mode)
-        new_model.trainer = trainer
-
 
         return new_model
     

@@ -92,26 +92,27 @@ class AtmolTorchDataset(InMemoryDataset):
         y = self.data.y
         if y is None:
             self.mode = None
-        if len(y.shape) > 1:
-            labels_per_task = []
-            for label in range(y.shape[1]):
-                label_i = y[:, label]
-                classes = np.all(np.isclose(label_i, np.round(label_i), equal_nan=True))
-                if classes:
-                    labels_per_task.append('classification')
-                else:
-                    labels_per_task.append('regression')
-
-            self.mode = labels_per_task
-            self.n_tasks = len(labels_per_task)
-
-        classes = np.all(np.isclose(y, np.round(y), equal_nan=True))
-        if not classes:
-            self.mode = 'regression'
-            self.n_tasks = 1
         else:
-            self.mode = 'classification'
-            self.n_tasks = 1
+            if len(y.shape) > 1:
+                labels_per_task = []
+                for label in range(y.shape[1]):
+                    label_i = y[:, label]
+                    classes = np.all(np.isclose(label_i, np.round(label_i), equal_nan=True))
+                    if classes:
+                        labels_per_task.append('classification')
+                    else:
+                        labels_per_task.append('regression')
+
+                self.mode = labels_per_task
+                self.n_tasks = len(labels_per_task)
+
+            classes = np.all(np.isclose(y, np.round(y), equal_nan=True))
+            if not classes:
+                self.mode = 'regression'
+                self.n_tasks = 1
+            else:
+                self.mode = 'classification'
+                self.n_tasks = 1
         
 
     def export(self, output_path):

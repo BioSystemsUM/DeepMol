@@ -41,14 +41,14 @@ class TestMaskedLearningModels(TestDataset, TestCase):
     def test_save_and_load(self):
 
         model = DeBERTa(vocab_size=self.dataset_for_masked_learning.tokenizer.vocab_size, 
-                        accelerator="gpu", devices=[0], max_epochs=3, batch_size=56).fit(self.dataset_for_masked_learning)
+                        accelerator="cpu", max_epochs=3, batch_size=56).fit(self.dataset_for_masked_learning)
 
         model.save("test")
         model = DeBERTa.load("test")
         model.mode = "classification"
 
         self.dataset_for_masked_learning.mask = False
-        
+
         model.fit(self.dataset_for_masked_learning)
 
         predictions = model.predict(self.dataset_for_masked_learning)

@@ -116,12 +116,12 @@ class AtMolLightning(pl.LightningModule, Model):
             loss = self.loss(y_pred, batch.y)
 
         self.log('train_loss', loss, on_epoch=True, 
-                 prog_bar=True, logger=True, sync_dist=True)
+                 prog_bar=True, logger=True, sync_dist=True, batch_size=self.batch_size)
         
         if self.metric != None:
             score = self.metric(y_pred, batch.y)
             self.log(f'train_{self.metric.__class__.__name__}', score, on_epoch=True,
-                    prog_bar=True, logger=True, sync_dist=True)
+                    prog_bar=True, logger=True, sync_dist=True, batch_size=self.batch_size)
 
         return loss
 
@@ -135,12 +135,12 @@ class AtMolLightning(pl.LightningModule, Model):
             loss = self.loss(y_pred, batch.y)
 
         self.log('val_loss', loss, on_epoch=True, 
-                 prog_bar=True, logger=True, sync_dist=True)
+                 prog_bar=True, logger=True, sync_dist=True, batch_size=self.batch_size)
         
         if self.metric != None:
             score = self.metric(y_pred, batch.y)
             self.log(f'val_{self.metric.__class__.__name__}', score, on_epoch=True,
-                    prog_bar=True, logger=True, sync_dist=True)
+                    prog_bar=True, logger=True, sync_dist=True, batch_size=self.batch_size)
         return loss
 
     def predict_step(self, batch, batch_idx, dataloader_idx=None):

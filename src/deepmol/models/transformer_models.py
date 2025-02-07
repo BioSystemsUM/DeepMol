@@ -34,7 +34,8 @@ from deepmol.utils.utils import normalize_labels_shape
 class TransformerModelForMaskedLM(LightningModule, Model):
 
     def __init__(self, model, learning_rate=1e-4, batch_size=8, model_dir = None, mode: str = "masked_learning",
-                 cls_token = True, optimizer = AdamW, loss = BCELoss, metric = None, prediction_head_layers = [1024],
+                 cls_token = True, output_neurons = 1, optimizer = AdamW, loss = BCELoss, metric = None, prediction_head_layers = [1024],
+                 dataset_mode = None,
                  **trainer_kwargs):
         
         # Initialize LightningModule
@@ -46,6 +47,7 @@ class TransformerModelForMaskedLM(LightningModule, Model):
         self.learning_rate = learning_rate
         self.cls_token = cls_token
         self.loss = loss()
+        self._output_neurons = output_neurons
 
         self.model_dir_is_temp = False
 
@@ -58,7 +60,7 @@ class TransformerModelForMaskedLM(LightningModule, Model):
 
         self.mode = mode
 
-        self.metric = None
+        self.metric = metric
 
         self._model_dir = model_dir
         self.model = model
@@ -66,7 +68,7 @@ class TransformerModelForMaskedLM(LightningModule, Model):
 
         self.optimizer = optimizer
 
-        self.dataset_mode = None
+        self.dataset_mode = dataset_mode
 
         self.prediction_head_layers = prediction_head_layers
 
@@ -82,9 +84,23 @@ class TransformerModelForMaskedLM(LightningModule, Model):
                 self.head.add_module(f"relu_{i}", nn.ReLU())
                 self.head.add_module(f"batch_norm_{i}", nn.BatchNorm1d(layer))
 
+        self.head.add_module("last_layer", nn.Linear(self.prediction_head_layers[-1], self._output_neurons))
+
+    @property
+    def output_neurons(self):
+        return self._output_neurons
+    
+    @output_neurons.setter
+    def output_neurons(self, value):
+        self._output_neurons = value
+
+        self.head.last_layer = nn.Linear(self.prediction_head_layers[-1],value)
+        self.hparams["output_neurons"] = value
+
     def _forward_fine_tuning(self, input_ids, attention_mask):
 
-        outputs = self.model(input_ids=input_ids, attention_mask=attention_mask)
+        outputs = self.model.base_model(input_ids=input_ids, attention_mask=attention_mask)
+
         if self.cls_token:
             cls_output = outputs.last_hidden_state[:, 0, :]
         else:
@@ -159,11 +175,12 @@ class TransformerModelForMaskedLM(LightningModule, Model):
     def _fit(self, dataset: Dataset, validation_dataset: Dataset = None):
 
         self.dataset_mode = dataset.mode
+        self.hparams["dataset_mode"] = self.dataset_mode
 
         if isinstance(self.dataset_mode, list):
-            self.head.add_module("last_layer", nn.Linear(self.prediction_head_layers[-1], len(self.dataset_mode)))
+            self.output_neurons = len(self.dataset_mode)
         else:
-            self.head.add_module("last_layer", nn.Linear(self.prediction_head_layers[-1], 1))
+            self.output_neurons = 1
 
         dataloader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
         callbacks = []
@@ -183,7 +200,6 @@ class TransformerModelForMaskedLM(LightningModule, Model):
             dirpath='checkpoints',
             filename='epoch-{epoch:02d}',
             save_top_k=5,
-            every_n_epochs=1,
             verbose=True
         )
 
@@ -235,7 +251,9 @@ class TransformerModelForMaskedLM(LightningModule, Model):
         np.ndarray
         """
         dataloader = DataLoader(dataset, batch_size=self.batch_size, shuffle=False)
-        predictions = self.trainer.predict(self, dataloader)
+        trainer = Trainer(**self.trainer_kwargs)
+        self = self.eval()
+        predictions = trainer.predict(self, dataloader)
 
         if type(predictions[0]) == tuple:
             len_tuple = len(predictions[0])
@@ -258,79 +276,21 @@ class TransformerModelForMaskedLM(LightningModule, Model):
 
         return predictions
     
-    @abstractmethod
-    def _load(config, model_path, mode):
-        """_summary_
-
-        Parameters
-        ----------
-        config : _type_
-            _description_
-        model_path : _type_
-            _description_
-        mode : _type_
-            _description_
-
-        Returns
-        -------
-        _type_
-            _description_
-        """
-
-    # def load_from_pretrained(self, config, path, mode: str = "classification"):
-
-    #     self._load(config, path, mode)
-
-    #     self.trainer = Trainer(accelerator="cpu")
-
-    #     return self
-
-    # def export_model(self, output_path):
-
-    #     torch.save(self.model.state_dict(), output_path)
-
     def save(self, file_path: str = None):
 
         if file_path is None:
-            model_path = os.path.join(self.model_dir, "model.pt")
             pl_model_path = os.path.join(self.model_dir, "model.ckpt")
         else:
             os.makedirs(file_path, exist_ok=True)
-            model_path = os.path.join(file_path, "model.pt")
             pl_model_path = os.path.join(file_path, "model.ckpt")
 
         self.trainer.save_checkpoint(pl_model_path)
-        torch.save(self.model.state_dict(), model_path)
-
-        # with open(os.path.join(file_path, "trainer.pk"), "wb") as b:
-        #     pickle.dump(self.trainer, b, protocol=pickle.HIGHEST_PROTOCOL)
-
-        # with open(os.path.join(file_path, "model.pk"), "wb") as b:
-        #     pickle.dump(self, b, protocol=pickle.HIGHEST_PROTOCOL)
-
-        with open(os.path.join(file_path, "config.pk"), "wb") as b:
-            pickle.dump(self.config, b, protocol=pickle.HIGHEST_PROTOCOL)
-
 
     @classmethod
     def load(cls, folder_path: str, mode: str = "classification") -> 'TransformerModelForMaskedLM':
 
-        # with open(os.path.join(folder_path, "model.pk"), "rb") as b:
-        #     new_model = pickle.load(b)
-
-        with open(os.path.join(folder_path, "config.pk"), "rb") as b:
-        
-            config = pickle.load(b)
-
-        # with open(os.path.join(folder_path, "trainer.pk"), "rb") as b:
-        
-        #     trainer = pickle.load(b)
-
-        new_model = cls.load_from_checkpoint(os.path.join(folder_path, "model.ckpt"), strict=False)
-
-        model_path = os.path.join(folder_path, "model.pt")
-
-        new_model._load(config, model_path, mode)
+        new_model = cls.load_from_checkpoint(os.path.join(folder_path, "model.ckpt"))
+        new_model.mode = mode
 
         return new_model
     
@@ -352,35 +312,17 @@ class ModernBERT(TransformerModelForMaskedLM):
             pad_token_id = 0
         )
 
-        if mode == "masked_learning":
-
-            model = ModernBertForMaskedLM(self.config)
-        
-        else:
-
-            model = ModernBertModel(self.config)
+        model = ModernBertForMaskedLM(self.config)
 
         super().__init__(model, batch_size=batch_size, learning_rate=learning_rate, mode = mode,
                  cls_token = cls_token, optimizer = optimizer, loss = loss, **trainer_kwargs)
         
-    def _load(self, config, model_path, mode):
-        self.config = config
-
-        if mode == "masked_learning":
-
-            model = ModernBertForMaskedLM.from_pretrained(pretrained_model_name_or_path = model_path, config=config)
-        
-        else:
-
-            model = ModernBertModel.from_pretrained(pretrained_model_name_or_path = model_path, config=config)
-
-        self.model = model
 
 class BERT(TransformerModelForMaskedLM):
 
     def __init__(self, vocab_size, max_length=256, hidden_size=256, num_hidden_layers=8, num_attention_heads=8,
                  learning_rate=1e-4, batch_size=8, mode: str = "masked_learning",
-                 cls_token = True, num_labels = 1, optimizer = AdamW, loss = BCELoss,
+                 cls_token = True, optimizer = AdamW, loss = BCELoss,
                  **trainer_kwargs):
         
         self.config = BertConfig(
@@ -393,30 +335,12 @@ class BERT(TransformerModelForMaskedLM):
             pad_token_id = 0
         )
 
-        if mode == "masked_learning":
 
-            model = BertForMaskedLM(self.config)
-        
-        else:
-
-            model = BertModel(self.config)
+        model = BertForMaskedLM(self.config)
 
         super().__init__(model, batch_size=batch_size, learning_rate=learning_rate, mode = mode,
                  cls_token = cls_token, optimizer = optimizer, loss = loss, **trainer_kwargs)
         
-    def _load(self, config, model_path, mode):
-        self.config = config
-
-        if mode == "masked_learning":
-
-            model = BertForMaskedLM.from_pretrained(pretrained_model_name_or_path = model_path, config=config)
-        
-        else:
-
-            model = BertModel.from_pretrained(pretrained_model_name_or_path = model_path, config=config)
-
-        self.model = model
-
 
 class RoBERTa(TransformerModelForMaskedLM):
 
@@ -435,30 +359,13 @@ class RoBERTa(TransformerModelForMaskedLM):
             pad_token_id = 0
         )
 
-        if mode == "masked_learning":
 
-            model = RobertaForMaskedLM(self.config)
+        model = RobertaForMaskedLM(self.config)
         
-        else:
-
-            model = RobertaModel(self.config)
 
         super().__init__(model, batch_size=batch_size, learning_rate=learning_rate, mode = mode,
                  cls_token = cls_token, optimizer = optimizer, loss = loss, **trainer_kwargs)
         
-    def _load(self, config, model_path, mode):
-        self.config = config
-
-        if mode == "masked_learning":
-
-            model = RobertaForMaskedLM.from_pretrained(pretrained_model_name_or_path = model_path, config=config)
-        
-        else:
-
-            model = RobertaModel.from_pretrained(pretrained_model_name_or_path = model_path, config=config)
-
-        self.model = model
-
 
 class DeBERTa(TransformerModelForMaskedLM):
 
@@ -477,29 +384,10 @@ class DeBERTa(TransformerModelForMaskedLM):
             pad_token_id = 0
         )
 
-        if mode == "masked_learning":
 
-            model = DebertaForMaskedLM(self.config)
-        
-        else:
-
-            model = DebertaModel(self.config)
-
+        model = DebertaForMaskedLM(self.config)
 
         super().__init__(model, batch_size=batch_size, learning_rate=learning_rate, mode = mode,
                  cls_token = cls_token, optimizer = optimizer, loss = loss, **trainer_kwargs)
         
-    def _load(self, config, model_path, mode):
-        self.config = config
-
-        if mode == "masked_learning":
-
-            model = DebertaForMaskedLM.from_pretrained(pretrained_model_name_or_path = model_path, config=config)
-        
-        else:
-
-            model = DebertaModel.from_pretrained(pretrained_model_name_or_path = model_path, config=config)
-
-        self.model = model
-
     

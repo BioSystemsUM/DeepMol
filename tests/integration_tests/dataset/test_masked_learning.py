@@ -18,7 +18,7 @@ class TestMaskedLearningModels(TestDataset, TestCase):
         model = DeBERTa(vocab_size=self.dataset_for_masked_learning.tokenizer.vocab_size, accelerator="gpu", devices=[0], max_epochs=3, batch_size=56).fit(self.dataset_for_masked_learning)
 
         model.save("test")
-        model = TransformerModelForMaskedLM.load("test")
+        model = DeBERTa.load("test")
         if os.path.exists('vocab.txt'):
             os.remove('vocab.txt')
 
@@ -40,38 +40,48 @@ class TestMaskedLearningModels(TestDataset, TestCase):
 
     def test_save_and_load(self):
 
-        model = DeBERTa(vocab_size=self.dataset_for_masked_learning.tokenizer.vocab_size, 
-                        accelerator="cpu", max_epochs=3, batch_size=56).fit(self.dataset_for_masked_learning)
+        for model_cls in [DeBERTa, ModernBERT, RoBERTa, BERT]:
 
-        model.save("test")
-        model = DeBERTa.load("test")
-        model.mode = "classification"
+            self.dataset_for_masked_learning.mask = True
+            
+            model = model_cls(vocab_size=self.dataset_for_masked_learning.tokenizer.vocab_size,
+                            accelerator="gpu", devices=[0] , max_epochs=3, batch_size=56)
 
-        self.dataset_for_masked_learning.mask = False
+            model.mode = "masked_learning"
+            model.fit(self.dataset_for_masked_learning)
+            model.save("test")
 
-        model.fit(self.dataset_for_masked_learning)
+            model = model_cls.load("test")
+            model.mode = "classification"
 
-        predictions = model.predict(self.dataset_for_masked_learning)
+            if os.path.exists('test'):
+                shutil.rmtree('test')
 
-        self.assertEqual(predictions.shape[0], self.dataset_for_masked_learning.y.shape[0])
-        self.assertEqual(predictions.shape[1], self.dataset_for_masked_learning.y.shape[1])
+            self.dataset_for_masked_learning.mask = False
+            model.trainer_kwargs["max_epochs"] = 10
+            model.fit(self.dataset_for_masked_learning)
 
-        model.save("test")
-        model = DeBERTa.load("test")
-        
-        if os.path.exists('vocab.txt'):
-            os.remove('vocab.txt')
+            predictions = model.predict(self.dataset_for_masked_learning)
 
-        if os.path.exists('test'):
-            shutil.rmtree('test')
+            self.assertEqual(predictions.shape[0], self.dataset_for_masked_learning.y.shape[0])
+            self.assertEqual(predictions.shape[1], self.dataset_for_masked_learning.y.shape[1])
 
-        predictions_2 = model.predict(self.dataset_for_masked_learning)
+            model.save("test2")
+            model = model_cls.load("test2")
+            
+            if os.path.exists('vocab.txt'):
+                os.remove('vocab.txt')
 
-        self.assertEqual(predictions_2.shape[0], self.dataset_for_masked_learning.y.shape[0])
-        self.assertEqual(predictions_2.shape[1], self.dataset_for_masked_learning.y.shape[1])
+            if os.path.exists('test2'):
+                shutil.rmtree('test2')
 
-        import numpy as np
-        np.testing.assert_array_equal(predictions, predictions_2)
+            predictions_2 = model.predict(self.dataset_for_masked_learning)
+
+            self.assertEqual(predictions_2.shape[0], self.dataset_for_masked_learning.y.shape[0])
+            self.assertEqual(predictions_2.shape[1], self.dataset_for_masked_learning.y.shape[1])
+
+            import numpy as np
+            np.testing.assert_array_equal(predictions, predictions_2)
         
 
         

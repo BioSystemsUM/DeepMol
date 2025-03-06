@@ -1,5 +1,6 @@
 
 import os
+import random
 from typing import List, Union
 import numpy as np
 import torch
@@ -78,21 +79,39 @@ class LLMDataset(TorchDataset, SmilesDataset):
         tokens = self.tokenizer(smiles, max_length=self.max_length, padding='max_length', truncation=True, return_tensors='pt')
         input_ids = tokens.input_ids.squeeze()
         attention_mask = tokens.attention_mask.squeeze()
-        
+        mask_indices = None
+
         if self.mask:
-        # Create labels
+            torch.manual_seed(42)
+            random.seed(42)
             labels = input_ids.clone()
             
-            # Masking
-            probability_matrix = torch.full(labels.shape, self.masking_probability)  # 15% masking
-            mask_indices = torch.bernoulli(probability_matrix).bool()
-            input_ids[mask_indices] = self.tokenizer.mask_token_id
+            # Identify special tokens
+            special_tokens = {self.tokenizer.pad_token_id, self.tokenizer.unk_token_id, 
+                            self.tokenizer.sep_token_id, self.tokenizer.mask_token_id, 
+                            self.tokenizer.cls_token_id}
             
-        else:
+            # Create masking probability matrix
+            probability_matrix = torch.full(labels.shape, self.masking_probability)
+            mask_indices = torch.bernoulli(probability_matrix).bool()
+            
+            # Avoid masking special tokens
+            for token_id in special_tokens:
+                mask_indices &= input_ids != token_id
+            
+            # Ensure masked tokens are valid (select other tokens if special)
+            for idx in torch.where(mask_indices)[0]:
+                if input_ids[idx].item() in special_tokens:
+                    available_tokens = [t for t in range(self.tokenizer.vocab_size) if t not in special_tokens]
+                    input_ids[idx] = torch.tensor(random.choice(available_tokens), dtype=torch.long)
+            
+            input_ids[mask_indices] = self.tokenizer.mask_token_id
+            return input_ids, attention_mask, labels, mask_indices
         
+        else:
             if len(self.y.shape) == 1:
                 labels = torch.tensor(self.y[idx], dtype=torch.long)
             else:
                 labels = torch.tensor(self.y[idx, :], dtype=torch.float)
-            
-        return input_ids, attention_mask, labels
+
+            return input_ids, attention_mask, labels

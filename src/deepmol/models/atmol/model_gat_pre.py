@@ -142,7 +142,7 @@ def get_allIndex(weight,len_w):
     device = weight.device
     # max-weight True min-weight False
     sorted, indices = torch.sort(weight, dim=0, descending=True)
-    p = 0.75 #遮掩率
+    p = 0.2
     len_q = int(len_w * p)
     top_indices, ind = torch.sort(indices[:len_q], descending=True)
     remain_indices, ind = torch.sort(indices[len_q:], descending=True)

@@ -52,7 +52,7 @@ class Test3DDescriptors(FeaturizerTestCase, TestCase):
         self.assertAlmostEqual(rmsd, 0, delta=10)
 
     def test_before_featurization(self):
-        generator = ThreeDimensionalMoleculeGenerator()
+        generator = ThreeDimensionalMoleculeGenerator(timeout_per_molecule=1)
 
         mol = MolFromSmiles("CC(CC(C)(O)C=C)=CC=CC")
         mol = generator.generate_conformers(mol, 1)

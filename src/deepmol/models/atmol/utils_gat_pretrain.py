@@ -45,6 +45,7 @@ class AtmolTorchDataset(InMemoryDataset):
     def featurize(self):
 
         compound_iso_smiles = list(set(self.dataset.smiles))
+        self.y_shape = self.dataset.y.shape
 
         # Process SMILES strings to create graph data.
         for i, smile in tqdm(enumerate(compound_iso_smiles), total=len(compound_iso_smiles)):
@@ -57,7 +58,7 @@ class AtmolTorchDataset(InMemoryDataset):
                     if len(self.dataset.y.shape) > 1:
                         y_mol = self.dataset.y[i, :]
                     else:
-                        y_mol = self.dataset.y[i]
+                        y_mol = [self.dataset.y[i]]
 
                     graph_data = tg_data.Data(x=torch.Tensor(features),
                                         edge_index=torch.LongTensor(edge_index).transpose(1, 0),
@@ -80,49 +81,16 @@ class AtmolTorchDataset(InMemoryDataset):
 
         return self
     
-    def _infer_mode(self) -> Union[str, None, List[str]]:
-        """
-        Infers the mode of the dataset.
-
-        Returns
-        -------
-        str
-            The inferred mode.
-        """
-        y = self.data.y
-        if y is None:
-            self.mode = None
-        else:
-            if len(y.shape) > 1:
-                labels_per_task = []
-                for label in range(y.shape[1]):
-                    label_i = y[:, label]
-                    classes = np.all(np.isclose(label_i, np.round(label_i), equal_nan=True))
-                    if classes:
-                        labels_per_task.append('classification')
-                    else:
-                        labels_per_task.append('regression')
-
-                self.mode = labels_per_task
-                self.n_tasks = len(labels_per_task)
-
-            classes = np.all(np.isclose(y, np.round(y), equal_nan=True))
-            if not classes:
-                self.mode = 'regression'
-                self.n_tasks = 1
-            else:
-                self.mode = 'classification'
-                self.n_tasks = 1
-        
-
     def export(self, output_path):
         # save preprocessed data:
-        torch.save((self.data, self.slices), output_path)
+        torch.save((self.data, self.slices, self.y_shape, self.mode), output_path)
 
     @classmethod
     def from_pt(cls, input_path):
+        from torch_geometric.data.data import DataEdgeAttr, DataTensorAttr, GlobalStorage
         new_dataset = cls()
-        new_dataset.data, new_dataset.slices = torch.load(input_path)
-        new_dataset._infer_mode()
+        with torch.serialization.safe_globals([DataEdgeAttr, DataTensorAttr, GlobalStorage]):
+            new_dataset.data, new_dataset.slices, new_dataset.y_shape, new_dataset.mode = torch.load(input_path)
+        # new_dataset._infer_mode()
         return new_dataset
 

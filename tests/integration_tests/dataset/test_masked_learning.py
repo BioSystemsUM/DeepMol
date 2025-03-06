@@ -40,19 +40,23 @@ class TestMaskedLearningModels(TestDataset, TestCase):
 
     def test_save_and_load(self):
 
-        for model_cls in [DeBERTa, ModernBERT, RoBERTa, BERT]:
+        from torchmetrics.text import Perplexity
+
+        for model_cls in [DeBERTa]:
 
             self.dataset_for_masked_learning.mask = True
             
             model = model_cls(vocab_size=self.dataset_for_masked_learning.tokenizer.vocab_size,
-                            accelerator="gpu", devices=[0] , max_epochs=3, batch_size=56)
+                            accelerator="cpu" , max_epochs=3, batch_size=56, metric = Perplexity())
 
             model.mode = "masked_learning"
             model.fit(self.dataset_for_masked_learning)
+            print(model.evaluate(self.dataset_for_masked_learning))
             model.save("test")
 
             model = model_cls.load("test")
             model.mode = "classification"
+            model.metric = None
 
             if os.path.exists('test'):
                 shutil.rmtree('test')

@@ -1,6 +1,8 @@
 import copy
 import inspect
+import os
 import sys
+from time import sleep
 import traceback
 import warnings
 from abc import ABC
@@ -12,6 +14,7 @@ from rdkit.Chem import Mol, AllChem, MolFromSmiles, Descriptors, rdMolDescriptor
 from rdkit.Chem.GraphDescriptors import Ipc
 from rdkit.Chem.rdForceFieldHelpers import UFFOptimizeMoleculeConfs
 from rdkit.ML.Descriptors import MoleculeDescriptors
+import timeout_decorator
 from tqdm import tqdm
 
 from deepmol.compound_featurization import MolecularFeaturizer
@@ -209,16 +212,36 @@ class ThreeDimensionalMoleculeGenerator:
         mol: Mol
             Mol object with optimized molecular geometry.
         """
-        @timeout(self.timeout_per_molecule)
+        
+        def generate_conformers_with_timeout_windows(new_mol, etkg_version, optimization_mode):
+
+            @timeout(self.timeout_per_molecule)
+            def run_with_timeout(new_mol, etkg_version, optimization_mode):
+                new_mol = self.generate_conformers(new_mol, etkdg_version = etkg_version)
+                new_mol = self.optimize_molecular_geometry(new_mol, mode = optimization_mode)
+                return new_mol
+            
+            return run_with_timeout(new_mol, etkg_version, optimization_mode)
+        
         def generate_conformers_with_timeout(new_mol, etkg_version, optimization_mode):
-            new_mol = self.generate_conformers(new_mol, etkdg_version = etkg_version)
-            new_mol = self.optimize_molecular_geometry(new_mol, mode = optimization_mode)
-            return new_mol
+            
+            @timeout_decorator.timeout(self.timeout_per_molecule, use_signals=True)
+            def run_with_timeout(new_mol, etkg_version, optimization_mode):
+                new_mol = self.generate_conformers(new_mol, etkdg_version = etkg_version)
+                new_mol = self.optimize_molecular_geometry(new_mol, mode = optimization_mode)
+                return new_mol
+            
+            return run_with_timeout(new_mol, etkg_version, optimization_mode)
 
         try:
-            new_mol = copy.deepcopy(mol)
-            return generate_conformers_with_timeout(new_mol, etkdg_version, mode)
-        except (TimeoutError, ValueError):
+            if os.name == "nt":
+                new_mol = copy.deepcopy(mol)
+                return generate_conformers_with_timeout_windows(new_mol, etkdg_version, mode)
+            else:
+                new_mol = copy.deepcopy(mol)
+                return generate_conformers_with_timeout(new_mol, etkdg_version, mode)
+            
+        except (TimeoutError, ValueError, timeout_decorator.timeout_decorator.TimeoutError):
             return mol
 
     def generate(self, dataset: Dataset, etkdg_version: int = 3, mode: str = "MMFF94"):

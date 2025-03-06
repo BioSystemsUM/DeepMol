@@ -171,7 +171,7 @@ class SmilesTokenizer(BertTokenizer):
         
         max_size = 0
         for smile in tqdm(smiles_list, total=len(smiles_list)):
-            tokens = self.tokenizer.tokenize(smile)
+            tokens = self.tokenizer._tokenize(smile)
             if len(tokens) > max_size:
                 max_size = len(tokens)
         
@@ -181,7 +181,7 @@ class SmilesTokenizer(BertTokenizer):
 
         lengths = []
         for smile in tqdm(smiles_list, total=len(smiles_list)):
-            tokens = self.tokenizer.tokenize(smile)
+            tokens = self.tokenizer._tokenize(smile)
             lengths.append(len(tokens))
 
         return lengths

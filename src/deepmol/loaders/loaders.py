@@ -239,6 +239,11 @@ class CSVLoaderForMaskedLM(CSVLoader):
         else:
             ids = None
 
+        if self.masking_probability == None or self.masking_probability == 0:
+            mask = False
+        else:
+            mask = True
+
         return LLMDataset(smiles=mols,
                              X=X,
                              y=y,
@@ -247,7 +252,8 @@ class CSVLoaderForMaskedLM(CSVLoader):
                              label_names=self.labels_fields,
                              mode=self.mode, 
                              vocabulary_path = self.vocabulary_path,
-                             masking_probability = self.masking_probability)
+                             masking_probability = self.masking_probability,
+                             mask = mask)
 
 
 class SDFLoader(object):

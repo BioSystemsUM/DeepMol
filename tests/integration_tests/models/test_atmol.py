@@ -2,6 +2,8 @@ import os
 import shutil
 from unittest import TestCase, skip
 
+from torchmetrics import Accuracy
+
 from deepmol.models.atmol.atmol import AtMolLightning
 from deepmol.models.atmol.utils_gat_pretrain import AtmolTorchDataset
 from tests.integration_tests.dataset.test_dataset import TestDataset
@@ -28,17 +30,20 @@ class TestATMOL(TestDataset, TestCase):
             os.remove("test.pt")
 
     def test_fit_save_and_load(self):
+        from torchmetrics.classification import  MultilabelF1Score
         
-        dataset = AtmolTorchDataset(self.small_dataset_to_test).featurize()
+        dataset = AtmolTorchDataset(self.multilabel_classification).featurize()
         dataset.export("test.pt")
 
         dataset = AtmolTorchDataset.from_pt("test.pt")
+        self.assertEqual(type(dataset.mode), list)
 
-        model = AtMolLightning(max_epochs=2, accelerator="gpu", devices=[0]).fit(dataset)
+        model = AtMolLightning(max_epochs=2, accelerator="cpu", n_output=1024).fit(dataset)
 
         model.save("test")
         model = AtMolLightning.load("test")
         model.mode = "classification"
+        model.metric = MultilabelF1Score(average="macro", num_labels=23, threshold=0.5)
         
         model.fit(dataset)
         print(model.predict(dataset))

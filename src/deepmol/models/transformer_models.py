@@ -19,8 +19,7 @@ from pytorch_lightning import LightningModule, Trainer
 from torch.optim import AdamW
 
 from transformers import ModernBertConfig, ModernBertForMaskedLM, BertConfig, \
-    BertForMaskedLM, RobertaForMaskedLM, RobertaConfig, DebertaForMaskedLM, DebertaConfig, ModernBertModel, \
-    RobertaModel, BertModel, DebertaModel
+    BertForMaskedLM, RobertaForMaskedLM, RobertaConfig, DebertaForMaskedLM, DebertaConfig
 
 
 
@@ -30,12 +29,51 @@ from torch.nn import BCELoss
 
 from deepmol.utils.utils import normalize_labels_shape
 
+import torch
+import torch.nn.functional as F
+from torchmetrics import Metric
+
+class MaskedSymbolRecoveryAccuracy(Metric):
+    def __init__(self, dist_sync_on_step=False):
+        super().__init__(dist_sync_on_step=dist_sync_on_step)
+        
+        # Store counts as torch tensors for distributed training compatibility
+        self.add_state("correct", default=torch.tensor(0), dist_reduce_fx="sum")
+        self.add_state("total", default=torch.tensor(0), dist_reduce_fx="sum")
+
+    def update(self, labels, logits, mask_indices):
+        """
+        input_ids: Tensor of shape (batch_size, seq_len), input tokens with masking
+        labels: Tensor of shape (batch_size, seq_len), true token labels
+        logits: Tensor of shape (batch_size, seq_len, vocab_size), model outputs
+        mask_indices: Boolean tensor of shape (batch_size, seq_len), where True indicates masked positions
+        """
+        # Get predicted token IDs
+        predicted_ids = torch.argmax(logits, dim=-1)
+        
+        # Select only masked token positions
+        masked_labels = labels[mask_indices]
+        predicted_tokens = predicted_ids[mask_indices]
+        
+        # Count correct predictions
+        correct_preds = (masked_labels == predicted_tokens).sum()
+        total_preds = mask_indices.sum()
+
+        # Update metric state
+        self.correct += correct_preds
+        self.total += total_preds
+
+    def compute(self):
+        """ Compute final accuracy score """
+        return self.correct.float() / self.total if self.total > 0 else torch.tensor(0.0)
+
+
 
 class TransformerModelForMaskedLM(LightningModule, Model):
 
     def __init__(self, model, learning_rate=1e-4, batch_size=8, model_dir = None, mode: str = "masked_learning",
                  cls_token = True, output_neurons = 1, optimizer = AdamW, loss = BCELoss, metric = None, prediction_head_layers = [1024],
-                 dataset_mode = None,
+                 dataset_mode = None, patience = 2,
                  **trainer_kwargs):
         
         # Initialize LightningModule
@@ -48,6 +86,7 @@ class TransformerModelForMaskedLM(LightningModule, Model):
         self.cls_token = cls_token
         self.loss = loss()
         self._output_neurons = output_neurons
+        self.patience = patience
 
         self.model_dir_is_temp = False
 
@@ -59,6 +98,7 @@ class TransformerModelForMaskedLM(LightningModule, Model):
             self.model_dir_is_temp = True
 
         self.mode = mode
+        self.masked_tokens_recovery_accuracy = MaskedSymbolRecoveryAccuracy()
 
         self.metric = metric
 
@@ -71,6 +111,9 @@ class TransformerModelForMaskedLM(LightningModule, Model):
         self.dataset_mode = dataset_mode
 
         self.prediction_head_layers = prediction_head_layers
+
+        self.freeze_transformer = False
+        self.embedding = False
 
         self.head = nn.Sequential(
                 nn.Linear(self.model.config.hidden_size, prediction_head_layers[0]),
@@ -99,12 +142,14 @@ class TransformerModelForMaskedLM(LightningModule, Model):
 
     def _forward_fine_tuning(self, input_ids, attention_mask):
 
-        outputs = self.model.base_model(input_ids=input_ids, attention_mask=attention_mask)
+        outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, output_hidden_states=True)
 
+        last_hidden_state = outputs.hidden_states[-1]
         if self.cls_token:
-            cls_output = outputs.last_hidden_state[:, 0, :]
+            cls_output = last_hidden_state[:, 0, :]
         else:
-            cls_output = outputs.last_hidden_state[:, 1:, :].mean(dim=1)
+            cls_output = last_hidden_state[:, 1:, :].mean(dim=1)
+
         head_output = self.head(cls_output)
 
         if isinstance(self.dataset_mode, list):
@@ -117,21 +162,33 @@ class TransformerModelForMaskedLM(LightningModule, Model):
     
     def forward(self, input_ids, attention_mask, labels=None):
 
+        if self.embedding:
+            outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, output_hidden_states=True)
+            last_hidden_state = outputs.hidden_states[-1]
+            return last_hidden_state[:, 1:, :].mean(dim=1)
+
         if self.mode == "masked_learning":
             try:
-                return self.model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
+                outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
+                return outputs
             except TypeError as e:
                 raise TypeError(f"{e}. Make sure the mode is correctly set")
         else:
             return self._forward_fine_tuning(input_ids, attention_mask)
 
     def training_step(self, batch, batch_idx):
-        input_ids, attention_mask, labels = batch
 
         if self.mode == "masked_learning":
+            input_ids, attention_mask, labels, masked_indexes = batch
             outputs = self(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
             loss = outputs.loss
+            outputs = outputs.logits
+            accuracy = self.masked_tokens_recovery_accuracy(labels, outputs, masked_indexes)
+            self.log('train_masked_tokens_recovery_accuracy', accuracy, on_epoch=True, 
+                 prog_bar=True, logger=True, sync_dist=True)
+            
         else:
+            input_ids, attention_mask, labels = batch
             outputs = self(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
             loss = self.loss(outputs, labels)
 
@@ -139,18 +196,30 @@ class TransformerModelForMaskedLM(LightningModule, Model):
                  prog_bar=True, logger=True, sync_dist=True)
         
         if self.metric != None:
-            score = self.metric(outputs, batch.y)
-            self.log(f'train_{self.metric.__class__.__name__}', score, on_epoch=True,
-                    prog_bar=True, logger=True, sync_dist=True)
+            if isinstance(self.metric, list):
+                for metric in self.metric:
+                    score = metric(outputs, labels)
+                    self.log(f'train_{metric.__class__.__name__}', score, on_epoch=True,
+                            prog_bar=True, logger=True, sync_dist=True)
+            else:
+                score = self.metric(outputs, labels)
+                self.log(f'train_{self.metric.__class__.__name__}', score, on_epoch=True,
+                        prog_bar=True, logger=True, sync_dist=True)
         return loss
     
     def validation_step(self, batch, batch_idx):
-        input_ids, attention_mask, labels = batch
-
+        
         if self.mode == "masked_learning":
+            input_ids, attention_mask, labels, masked_indexes = batch
+
             outputs = self(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
             val_loss = outputs.loss
+            outputs = outputs.logits
+            accuracy = self.masked_tokens_recovery_accuracy(labels, outputs, masked_indexes)
+            self.log('validation_masked_tokens_recovery_accuracy', accuracy, on_epoch=True, 
+                 prog_bar=True, logger=True, sync_dist=True)
         else:
+            input_ids, attention_mask, labels = batch
             outputs = self(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
             val_loss = self.loss(outputs, labels)
 
@@ -158,19 +227,67 @@ class TransformerModelForMaskedLM(LightningModule, Model):
                  prog_bar=True, logger=True, sync_dist=True)
         
         if self.metric != None:
-            score = self.metric(outputs, batch.y)
-            self.log(f'val_{self.metric.__class__.__name__}', score, on_epoch=True,
-                    prog_bar=True, logger=True, sync_dist=True)
+            if isinstance(self.metric, list):
+                for metric in self.metric:
+                    score = metric(outputs, labels)
+                    self.log(f'val_{metric.__class__.__name__}', score, on_epoch=True,
+                            prog_bar=True, logger=True, sync_dist=True)
+            else:
+                score = self.metric(outputs, labels)
+                self.log(f'val_{self.metric.__class__.__name__}', score, on_epoch=True,
+                        prog_bar=True, logger=True, sync_dist=True)
             
         return val_loss
     
     def predict_step(self, batch, batch_idx, dataloader_idx=None):
-        input_ids, attention_mask, labels = batch
+        if self.mode == "masked_learning":
+            input_ids, attention_mask, labels, masked_indexes = batch
+        else:
+            input_ids, attention_mask, labels = batch
         outputs = self(input_ids=input_ids, attention_mask=attention_mask)
         return outputs
+    
+    def test_step(self, batch, batch_idx, dataloader_idx=None):
 
+        if self.mode == "masked_learning":
+            input_ids, attention_mask, labels, masked_indexes = batch
+            outputs = self(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
+            val_loss = outputs.loss
+            outputs = outputs.logits
+            accuracy = self.masked_tokens_recovery_accuracy(labels, outputs, masked_indexes)
+            self.log('test_masked_tokens_recovery_accuracy', accuracy, on_epoch=True, 
+                 prog_bar=True, logger=True, sync_dist=True)
+        else:
+            input_ids, attention_mask, labels = batch
+            outputs = self(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
+            val_loss = self.loss(outputs, labels)
+
+        self.log('test_loss', val_loss, on_epoch=True, 
+                 prog_bar=True, logger=True, sync_dist=True)
+        
+        if self.metric != None:
+            if isinstance(self.metric, list):
+                for metric in self.metric:
+                    score = metric(outputs, labels)
+                    self.log(f'test_{metric.__class__.__name__}', score, on_epoch=True,
+                            prog_bar=True, logger=True, sync_dist=True)
+            else:
+                score = self.metric(outputs, labels)
+                self.log(f'test_{self.metric.__class__.__name__}', score, on_epoch=True,
+                        prog_bar=True, logger=True, sync_dist=True)
+                    
+    def evaluate(self, dataset):
+        dataloader = DataLoader(dataset, batch_size=self.batch_size, shuffle=False)
+        trainer = Trainer(**self.trainer_kwargs)
+        self = self.eval()
+        return trainer.test(self, dataloaders=dataloader)
+    
     def configure_optimizers(self):
-        return self.optimizer(self.parameters(), lr=self.learning_rate)
+        if self.freeze_transformer:
+            self.model = self.model.eval()
+            return self.optimizer(self.head.parameters(), lr=self.learning_rate)
+        else:
+            return self.optimizer(self.parameters(), lr=self.learning_rate)
     
     def _fit(self, dataset: Dataset, validation_dataset: Dataset = None):
 
@@ -188,7 +305,7 @@ class TransformerModelForMaskedLM(LightningModule, Model):
         if validation_dataset is not None:
             val_dataloader = DataLoader(validation_dataset, batch_size=self.batch_size, shuffle=False)
             monitor = "val_loss"
-            early_stopping_callback = EarlyStopping(monitor='val_loss', mode='min', patience=2, verbose=True)
+            early_stopping_callback = EarlyStopping(monitor='val_loss', mode='min', patience=self.patience, verbose=True)
             callbacks.append(early_stopping_callback)
         else:
             val_dataloader=None
@@ -209,6 +326,21 @@ class TransformerModelForMaskedLM(LightningModule, Model):
                      callbacks=callbacks)  # Use gpus=1 if you have a GPU available
         self.trainer.fit(self, dataloader, val_dataloader)
 
+    def get_embedding(self, dataset: Dataset):
+        self.embedding = True
+        dataloader = DataLoader(dataset, batch_size=self.batch_size, shuffle=False)
+        trainer = Trainer(**self.trainer_kwargs)
+        self = self.eval()
+        predictions = trainer.predict(self, dataloader)
+        self.embedding = False
+
+        predictions = torch.cat(predictions)
+        # convert to numpy array
+        predictions = predictions.detach().cpu().numpy()
+
+        return predictions
+
+
     def predict(self, dataset: Dataset, return_invalid: bool = False) -> np.ndarray:
         """
         Makes predictions on dataset.
@@ -228,11 +360,12 @@ class TransformerModelForMaskedLM(LightningModule, Model):
         """
         predictions = self.predict_proba(dataset)
 
-        y_pred_rounded = get_prediction_from_proba(dataset, predictions)
+        if self.mode != "masked_learning":
+            predictions = get_prediction_from_proba(dataset, predictions)
 
         if return_invalid:
-            y_pred_rounded = _return_invalid(dataset, y_pred_rounded)
-        return y_pred_rounded
+            predictions = _return_invalid(dataset, predictions)
+        return predictions
 
     def predict_proba(self, dataset: Dataset, return_invalid: bool = False) -> np.ndarray:
         """
@@ -267,9 +400,10 @@ class TransformerModelForMaskedLM(LightningModule, Model):
             # convert to numpy array
             predictions = predictions.detach().cpu().numpy()
 
-        if len(predictions.shape) > 1:
-            if predictions.shape != (len(dataset.mols), dataset.n_tasks):
-                predictions = normalize_labels_shape(predictions, dataset.n_tasks)
+        if self.mode != "masked_learning":
+            if len(predictions.shape) > 1:
+                if predictions.shape != (len(dataset.mols), dataset.n_tasks):
+                    predictions = normalize_labels_shape(predictions, dataset.n_tasks)
 
         if return_invalid:
             predictions = _return_invalid(dataset, predictions)
@@ -287,9 +421,9 @@ class TransformerModelForMaskedLM(LightningModule, Model):
         self.trainer.save_checkpoint(pl_model_path)
 
     @classmethod
-    def load(cls, folder_path: str, mode: str = "classification") -> 'TransformerModelForMaskedLM':
+    def load(cls, folder_path: str, mode: str = "classification", **kwargs) -> 'TransformerModelForMaskedLM':
 
-        new_model = cls.load_from_checkpoint(os.path.join(folder_path, "model.ckpt"))
+        new_model = cls.load_from_checkpoint(os.path.join(folder_path, "model.ckpt"), **kwargs)
         new_model.mode = mode
 
         return new_model
@@ -299,7 +433,7 @@ class ModernBERT(TransformerModelForMaskedLM):
 
     def __init__(self, vocab_size, max_length=256, hidden_size=256, num_hidden_layers=8, num_attention_heads=8,
                  learning_rate=1e-4, batch_size=8, mode: str = "masked_learning",
-                 cls_token = True, optimizer = AdamW, loss = BCELoss,
+                 cls_token = True, optimizer = AdamW, loss = BCELoss, patience = 2,
                  **trainer_kwargs):
         
         self.config = ModernBertConfig(
@@ -315,14 +449,14 @@ class ModernBERT(TransformerModelForMaskedLM):
         model = ModernBertForMaskedLM(self.config)
 
         super().__init__(model, batch_size=batch_size, learning_rate=learning_rate, mode = mode,
-                 cls_token = cls_token, optimizer = optimizer, loss = loss, **trainer_kwargs)
+                 cls_token = cls_token, optimizer = optimizer, loss = loss, patience = patience, **trainer_kwargs)
         
 
 class BERT(TransformerModelForMaskedLM):
 
     def __init__(self, vocab_size, max_length=256, hidden_size=256, num_hidden_layers=8, num_attention_heads=8,
                  learning_rate=1e-4, batch_size=8, mode: str = "masked_learning",
-                 cls_token = True, optimizer = AdamW, loss = BCELoss,
+                 cls_token = True, optimizer = AdamW, loss = BCELoss, patience = 2,
                  **trainer_kwargs):
         
         self.config = BertConfig(
@@ -339,13 +473,13 @@ class BERT(TransformerModelForMaskedLM):
         model = BertForMaskedLM(self.config)
 
         super().__init__(model, batch_size=batch_size, learning_rate=learning_rate, mode = mode,
-                 cls_token = cls_token, optimizer = optimizer, loss = loss, **trainer_kwargs)
+                 cls_token = cls_token, optimizer = optimizer, loss = loss, patience = patience, **trainer_kwargs)
         
 
 class RoBERTa(TransformerModelForMaskedLM):
 
     def __init__(self, vocab_size, max_length=256, hidden_size=256, num_hidden_layers=8, num_attention_heads=8,
-                 learning_rate=1e-4, batch_size=8, mode: str = "masked_learning",
+                 learning_rate=1e-4, batch_size=8, mode: str = "masked_learning", patience = 2,
                  cls_token = True, optimizer = AdamW, loss = BCELoss,
                  **trainer_kwargs):
         
@@ -364,14 +498,14 @@ class RoBERTa(TransformerModelForMaskedLM):
         
 
         super().__init__(model, batch_size=batch_size, learning_rate=learning_rate, mode = mode,
-                 cls_token = cls_token, optimizer = optimizer, loss = loss, **trainer_kwargs)
+                 cls_token = cls_token, optimizer = optimizer, loss = loss, patience = patience, **trainer_kwargs)
         
 
 class DeBERTa(TransformerModelForMaskedLM):
 
     def __init__(self, vocab_size, max_length=256, hidden_size=256, num_hidden_layers=8, num_attention_heads=8,
                  learning_rate=1e-4, batch_size=8, mode: str = "masked_learning",
-                 cls_token = True, optimizer = AdamW, loss = BCELoss,
+                 cls_token = True, optimizer = AdamW, loss = BCELoss, patience = 2,
                  **trainer_kwargs):
         
         self.config = DebertaConfig(
@@ -388,6 +522,6 @@ class DeBERTa(TransformerModelForMaskedLM):
         model = DebertaForMaskedLM(self.config)
 
         super().__init__(model, batch_size=batch_size, learning_rate=learning_rate, mode = mode,
-                 cls_token = cls_token, optimizer = optimizer, loss = loss, **trainer_kwargs)
+                 cls_token = cls_token, optimizer = optimizer, loss = loss, patience = patience, **trainer_kwargs)
         
     

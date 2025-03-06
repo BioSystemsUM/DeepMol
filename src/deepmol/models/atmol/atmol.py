@@ -14,6 +14,8 @@ from deepmol.models.atmol.nt_xent import NT_Xent
 from deepmol.models.atmol.utils_gat_pretrain import AtmolTorchDataset
 from deepmol.models.models import Model
 
+from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
+
 from torch.optim import Adam
 
 from torch.nn import BCELoss
@@ -24,11 +26,13 @@ class AtMolLightning(pl.LightningModule, Model):
 
     def __init__(self, temperature=0.1, n_output=128, lr=0.0001, weight_decay=1e-7, 
                  batch_size=128, mode = "masked_learning", optimizer = Adam, loss = BCELoss,
-                 prediction_head_layers: list = [512, 256, 128], metric = None,
+                 prediction_head_layers: list = [512, 256, 128], metric = None, patience = 2,
                  **trainer_args):
         
         super().__init__()
+        self.save_hyperparameters()
         self.temperature = temperature
+        self.patience = patience
 
         self.loss = loss()
         self.optimizer = optimizer
@@ -43,9 +47,9 @@ class AtMolLightning(pl.LightningModule, Model):
         self.batch_size = batch_size
         self.n_output = n_output
 
-        self.metric = None
+        self.metric = metric
 
-        self.model = GATCon(n_output, encoder1=self.encoder1, encoder2=self.encoder2)
+        self.model = GATCon(n_output, output_dim=n_output ,encoder1=self.encoder1, encoder2=self.encoder2)
 
         self.prediction_head_layers = prediction_head_layers
         
@@ -84,7 +88,6 @@ class AtMolLightning(pl.LightningModule, Model):
     def _fit(self, dataset: Union[Dataset, AtmolTorchDataset], validation_dataset: Union[Dataset, AtmolTorchDataset] = None):
         
         self.dataset_mode = dataset.mode
-
         if isinstance(self.dataset_mode, list):
             self.head.add_module("last_layer", nn.Linear(self.prediction_head_layers[-1], len(self.dataset_mode)))
         else:
@@ -101,10 +104,29 @@ class AtMolLightning(pl.LightningModule, Model):
                 validation_dataset = DataLoader(validation_dataset, batch_size=self.batch_size, shuffle=False)
             
 
-        model = AtMolLightning(self.temperature, self.n_output)
-        self.trainer = pl.Trainer(**self.trainer_args)
+        callbacks = []
+        if validation_dataset is not None:
+            val_dataloader = DataLoader(validation_dataset, batch_size=self.batch_size, shuffle=False)
+            monitor = "val_loss"
+            early_stopping_callback = EarlyStopping(monitor='val_loss', mode='min', patience=self.patience, verbose=True)
+            callbacks.append(early_stopping_callback)
+        else:
+            val_dataloader=None
+            monitor='train_loss'
 
-        self.trainer.fit(model, dataset, validation_dataset)
+        # Create a checkpoint callback
+        checkpoint_callback = ModelCheckpoint(
+            monitor=monitor,
+            dirpath='checkpoints_atmol',
+            filename='atmol-epoch-{epoch:02d}',
+            save_top_k=5,
+            verbose=True
+        )
+        callbacks.append(checkpoint_callback)
+
+        self.trainer = pl.Trainer(**self.trainer_args, callbacks=callbacks)
+
+        self.trainer.fit(self, dataset, val_dataloader)
 
     def training_step(self, batch, batch_idx):
         if self.mode == "masked_learning":
@@ -112,14 +134,20 @@ class AtMolLightning(pl.LightningModule, Model):
             criterion = NT_Xent(out_1.shape[0], self.temperature, 1)
             loss = criterion(out_1, out_2)
         else:
-            y_pred = self(batch)
-            loss = self.loss(y_pred, batch.y)
+            y_pred = self(batch).squeeze(-1) 
+            # y_pred = self(batch)
+            # print(y_pred)
+            y_true = batch.y
+            y_true = y_true.reshape(y_pred.shape)
+            loss = self.loss(y_pred, y_true)
 
         self.log('train_loss', loss, on_epoch=True, 
                  prog_bar=True, logger=True, sync_dist=True, batch_size=self.batch_size)
         
         if self.metric != None:
-            score = self.metric(y_pred, batch.y)
+            y_true = batch.y
+            y_true = y_true.reshape(y_pred.shape)
+            score = self.metric(y_pred, y_true)
             self.log(f'train_{self.metric.__class__.__name__}', score, on_epoch=True,
                     prog_bar=True, logger=True, sync_dist=True, batch_size=self.batch_size)
 
@@ -131,14 +159,18 @@ class AtMolLightning(pl.LightningModule, Model):
             criterion = NT_Xent(out_1.shape[0], self.temperature, 1)
             loss = criterion(out_1, out_2)
         else:
-            y_pred = self(batch)
-            loss = self.loss(y_pred, batch.y)
+            y_pred = self(batch).squeeze(-1)
+            y_true = batch.y
+            y_true = y_true.reshape(y_pred.shape)
+            loss = self.loss(y_pred, y_true)
 
         self.log('val_loss', loss, on_epoch=True, 
                  prog_bar=True, logger=True, sync_dist=True, batch_size=self.batch_size)
         
         if self.metric != None:
-            score = self.metric(y_pred, batch.y)
+            y_true = batch.y
+            y_true = y_true.reshape(y_pred.shape)
+            score = self.metric(y_pred, y_true)
             self.log(f'val_{self.metric.__class__.__name__}', score, on_epoch=True,
                     prog_bar=True, logger=True, sync_dist=True, batch_size=self.batch_size)
         return loss
@@ -204,8 +236,8 @@ class AtMolLightning(pl.LightningModule, Model):
             predictions = predictions.detach().cpu().numpy()
 
         if len(predictions.shape) > 1:
-            if predictions.shape != (len(dataset.data), dataset.n_tasks):
-                predictions = normalize_labels_shape(predictions, dataset.n_tasks)
+            if predictions.shape != (len(dataset.data), len(dataset.mode)):
+                predictions = normalize_labels_shape(predictions, len(dataset.mode))
 
         if return_invalid:
             predictions = _return_invalid(dataset, predictions)

@@ -4,7 +4,7 @@ seaborn==0.12.0
 torch==2.0.0
 dgl==0.9.1
 joblib==1.1.1
-pillow==8.4.0
+pillow==10.3.0
 h5py==3.7.0
 deepchem==2.7.1
 shap==0.41.0

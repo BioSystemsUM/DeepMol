@@ -1,6 +1,7 @@
 rdkit==2023.9.6
 smilespe==0.0.3
 seaborn
+torchvision
 torch==2.5.1
 dgl<=2.0.0
 joblib

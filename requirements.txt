@@ -23,7 +23,7 @@ numpy
 dgllife==0.3.2
 dill==0.3.6
 optuna==4.1.0
-tensorflow-probability==0.25.0
+tensorflow-probability==0.23.0
 torch_geometric==2.6.1
 scikit-multilearn==0.2.0
 scikeras==0.12.0

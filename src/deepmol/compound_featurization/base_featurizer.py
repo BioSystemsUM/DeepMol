@@ -98,9 +98,14 @@ class MolecularFeaturizer(ABC, Transformer):
 
         remove_mols_list = np.array(remove_mols)
         dataset.remove_elements(np.array(dataset.ids)[remove_mols_list], inplace=True)
-
+        
         features = np.array(features, dtype=object)
         features = features[~remove_mols_list]
+        
+        try:
+            features = features.astype('float64')
+        except:
+            pass
 
         if (isinstance(features[0], np.ndarray) and len(features[0].shape) == 2) or not isinstance(features[0],
                                                                                                    np.ndarray):

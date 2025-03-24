@@ -25,7 +25,7 @@ dgllife==0.3.2: deep-learning
 deepchem==2.8.0: deep-learning
 torch_geometric==2.6.1: deep-learning
 tensorflow==2.15.0: deep-learning
-tensorflow-probability==0.25.0: deep-learning
+tensorflow-probability==0.23.0: deep-learning
 boruta==0.4.3: preprocessing, machine-learning
 scikit-learn<1.6: machine-learning, deep-learning
 optuna==4.1.0: machine-learning, deep-learning

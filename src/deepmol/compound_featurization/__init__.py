@@ -35,3 +35,5 @@ from .nc_mfp_generator import NcMfp
 from .neural_npfp_generator import NeuralNPFP
 
 from .mhfp import MHFP
+
+from .biosynfoni import BiosynfoniKeys

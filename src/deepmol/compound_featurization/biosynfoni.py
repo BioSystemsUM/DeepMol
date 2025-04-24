@@ -2,15 +2,13 @@ from deepmol.compound_featurization import MolecularFeaturizer
 from rdkit.Chem import Mol
 import numpy as np
 from biosynfoni import Biosynfoni
-from biosynfoni.subkeys import substructureSmarts
+from biosynfoni.subkeys import substructureSmarts, fpVersions, defaultVersion
 
 class BiosynfoniKeys(MolecularFeaturizer):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.features_names = []
-        for key in substructureSmarts.keys():
-            self.features_names.append(substructureSmarts[key]["name"])        
+        self.feature_names = fpVersions[defaultVersion]
         
     
     def _featurize(self, mol: Mol) -> np.ndarray:

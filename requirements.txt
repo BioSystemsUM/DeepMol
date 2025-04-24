@@ -32,3 +32,4 @@ timeout_decorator==0.5.0
 IPython
 deepchem==2.8.0
 pandas<=2.0.0
+biosynfoni

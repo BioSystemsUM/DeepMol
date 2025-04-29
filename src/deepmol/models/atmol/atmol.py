@@ -101,17 +101,16 @@ class AtMolLightning(pl.LightningModule, Model):
         if validation_dataset is not None:
             if not isinstance(validation_dataset, AtmolTorchDataset):
                 validation_dataset = AtmolTorchDataset(validation_dataset).featurize()
-                validation_dataset = DataLoader(validation_dataset, batch_size=self.batch_size, shuffle=False)
+            
+            validation_dataset = DataLoader(validation_dataset, batch_size=self.batch_size, shuffle=False)
             
 
         callbacks = []
         if validation_dataset is not None:
-            val_dataloader = DataLoader(validation_dataset, batch_size=self.batch_size, shuffle=False)
             monitor = "val_loss"
             early_stopping_callback = EarlyStopping(monitor='val_loss', mode='min', patience=self.patience, verbose=True)
             callbacks.append(early_stopping_callback)
         else:
-            val_dataloader=None
             monitor='train_loss'
 
         # Create a checkpoint callback
@@ -126,7 +125,7 @@ class AtMolLightning(pl.LightningModule, Model):
 
         self.trainer = pl.Trainer(**self.trainer_args, callbacks=callbacks)
 
-        self.trainer.fit(self, dataset, val_dataloader)
+        self.trainer.fit(self, dataset, validation_dataset)
 
     def training_step(self, batch, batch_idx):
         if self.mode == "masked_learning":

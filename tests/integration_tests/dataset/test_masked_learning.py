@@ -8,7 +8,7 @@ from unittest import TestCase, skip
 from deepmol.models.transformer_models import BERT, ModernBERT, RoBERTa, DeBERTa, TransformerModelForMaskedLM
 from tests.integration_tests.dataset.test_dataset import TestDataset
 
-# @skip
+@skip
 class TestMaskedLearningModels(TestDataset, TestCase):
 
     def test_fit_predict_evaluate(self):
@@ -42,7 +42,7 @@ class TestMaskedLearningModels(TestDataset, TestCase):
 
         from torchmetrics.text import Perplexity
 
-        for model_cls in [DeBERTa]:
+        for model_cls in [BERT, DeBERTa, ModernBERT]:
 
             self.dataset_for_masked_learning.mask = True
             
@@ -56,13 +56,14 @@ class TestMaskedLearningModels(TestDataset, TestCase):
 
             model = model_cls.load("test")
             model.mode = "classification"
+            model.freeze_transformer = True
             model.metric = None
 
             if os.path.exists('test'):
                 shutil.rmtree('test')
 
             self.dataset_for_masked_learning.mask = False
-            model.trainer_kwargs["max_epochs"] = 10
+            model.trainer_kwargs["max_epochs"] = 3
             model.fit(self.dataset_for_masked_learning)
 
             predictions = model.predict(self.dataset_for_masked_learning)

@@ -19,7 +19,8 @@ from pytorch_lightning import LightningModule, Trainer
 from torch.optim import AdamW
 
 from transformers import ModernBertConfig, ModernBertForMaskedLM, BertConfig, \
-    BertForMaskedLM, RobertaForMaskedLM, RobertaConfig, DebertaForMaskedLM, DebertaConfig
+    BertForMaskedLM, RobertaForMaskedLM, RobertaConfig, DebertaForMaskedLM, DebertaConfig, \
+    BertModel, DebertaModel, ModernBertModel
 
 
 
@@ -30,7 +31,6 @@ from torch.nn import BCELoss
 from deepmol.utils.utils import normalize_labels_shape
 
 import torch
-import torch.nn.functional as F
 from torchmetrics import Metric
 
 class MaskedSymbolRecoveryAccuracy(Metric):
@@ -142,9 +142,14 @@ class TransformerModelForMaskedLM(LightningModule, Model):
 
     def _forward_fine_tuning(self, input_ids, attention_mask):
 
-        outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, output_hidden_states=True)
+        if self.freeze_transformer:
+            with torch.no_grad():
+                outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, output_hidden_states=True)
+        else:
+            outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, output_hidden_states=True)
 
-        last_hidden_state = outputs.hidden_states[-1]
+        # last_hidden_state = outputs.hidden_states[-1]
+        last_hidden_state = outputs.last_hidden_state
         if self.cls_token:
             cls_output = last_hidden_state[:, 0, :]
         else:
@@ -164,7 +169,7 @@ class TransformerModelForMaskedLM(LightningModule, Model):
 
         if self.embedding:
             outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, output_hidden_states=True)
-            last_hidden_state = outputs.hidden_states[-1]
+            last_hidden_state = outputs.last_hidden_state
             return last_hidden_state[:, 1:, :].mean(dim=1)
 
         if self.mode == "masked_learning":
@@ -284,12 +289,16 @@ class TransformerModelForMaskedLM(LightningModule, Model):
     
     def configure_optimizers(self):
         if self.freeze_transformer:
-            self.model = self.model.eval()
             return self.optimizer(self.head.parameters(), lr=self.learning_rate)
         else:
             return self.optimizer(self.parameters(), lr=self.learning_rate)
     
     def _fit(self, dataset: Dataset, validation_dataset: Dataset = None):
+
+        if self.freeze_transformer:
+            self.model = self.model.eval()
+        else:
+            self.model = self.model.train()
 
         self.dataset_mode = dataset.mode
         self.hparams["dataset_mode"] = self.dataset_mode
@@ -414,20 +423,18 @@ class TransformerModelForMaskedLM(LightningModule, Model):
 
         if file_path is None:
             pl_model_path = os.path.join(self.model_dir, "model.ckpt")
+            model_path = os.path.join(self.model_dir, "model.pt")
         else:
             os.makedirs(file_path, exist_ok=True)
             pl_model_path = os.path.join(file_path, "model.ckpt")
+            model_path = os.path.join(file_path, "model.pt")
 
         self.trainer.save_checkpoint(pl_model_path)
+        torch.save(self.model.state_dict(), model_path)
 
     @classmethod
     def load(cls, folder_path: str, mode: str = "classification", **kwargs) -> 'TransformerModelForMaskedLM':
-
-        new_model = cls.load_from_checkpoint(os.path.join(folder_path, "model.ckpt"), **kwargs)
-        new_model.mode = mode
-
-        return new_model
-    
+        pass
 
 class ModernBERT(TransformerModelForMaskedLM):
 
@@ -446,34 +453,68 @@ class ModernBERT(TransformerModelForMaskedLM):
             pad_token_id = 0
         )
 
-        model = ModernBertForMaskedLM(self.config)
+        if mode == "masked_learning":
+            model = ModernBertForMaskedLM(self.config)
+        else:
+            model = ModernBertModel(self.config)
 
         super().__init__(model, batch_size=batch_size, learning_rate=learning_rate, mode = mode,
                  cls_token = cls_token, optimizer = optimizer, loss = loss, patience = patience, **trainer_kwargs)
+
+    @classmethod
+    def load(cls, folder_path: str, mode: str = "classification", **kwargs) -> 'TransformerModelForMaskedLM':
+        try:
+            new_model = cls.load_from_checkpoint(os.path.join(folder_path, "model.ckpt"),  mode = mode, **kwargs)
+        except:
+            new_model = cls.load_from_checkpoint(os.path.join(folder_path, "model.ckpt"),  *kwargs)
+        new_model.mode = mode
+        if mode != "masked_learning":
+            new_model.model = ModernBertModel.from_pretrained(os.path.join(folder_path, "model.pt"), config = new_model.config)
+
+        return new_model
         
 
 class BERT(TransformerModelForMaskedLM):
 
     def __init__(self, vocab_size, max_length=256, hidden_size=256, num_hidden_layers=8, num_attention_heads=8,
                  learning_rate=1e-4, batch_size=8, mode: str = "masked_learning",
-                 cls_token = True, optimizer = AdamW, loss = BCELoss, patience = 2,
+                 cls_token = True, optimizer = AdamW, loss = BCELoss, patience = 2, intermediate_size=None, max_position_embeddings=None,
                  **trainer_kwargs):
+        
+        if intermediate_size is None:
+            intermediate_size = hidden_size * 4
+        if max_position_embeddings is None:
+            max_position_embeddings = max_length
         
         self.config = BertConfig(
             vocab_size=vocab_size,
             hidden_size=hidden_size,
             num_hidden_layers=num_hidden_layers,
             num_attention_heads=num_attention_heads,
-            intermediate_size=hidden_size * 4,
-            max_position_embeddings=max_length,
+            intermediate_size=intermediate_size,
+            max_position_embeddings=max_position_embeddings,
             pad_token_id = 0
         )
 
-
-        model = BertForMaskedLM(self.config)
+        if mode == "masked_learning":
+            model = BertForMaskedLM(self.config)
+        else:
+            model = BertModel(self.config)
 
         super().__init__(model, batch_size=batch_size, learning_rate=learning_rate, mode = mode,
                  cls_token = cls_token, optimizer = optimizer, loss = loss, patience = patience, **trainer_kwargs)
+
+    @classmethod
+    def load(cls, folder_path: str, mode: str = "classification", **kwargs) -> 'TransformerModelForMaskedLM':
+        try:
+            new_model = cls.load_from_checkpoint(os.path.join(folder_path, "model.ckpt"),  mode = mode, **kwargs)
+        except:
+            new_model = cls.load_from_checkpoint(os.path.join(folder_path, "model.ckpt"),  *kwargs)
+        new_model.mode = mode
+        if mode != "masked_learning":
+            new_model.model = BertModel.from_pretrained(os.path.join(folder_path, "model.pt"), config = new_model.config)
+
+        return new_model
         
 
 class RoBERTa(TransformerModelForMaskedLM):
@@ -519,9 +560,24 @@ class DeBERTa(TransformerModelForMaskedLM):
         )
 
 
-        model = DebertaForMaskedLM(self.config)
+        if mode == "masked_learning":
+            model = DebertaForMaskedLM(self.config)
+        else:
+            model = DebertaModel(self.config)
 
         super().__init__(model, batch_size=batch_size, learning_rate=learning_rate, mode = mode,
                  cls_token = cls_token, optimizer = optimizer, loss = loss, patience = patience, **trainer_kwargs)
+
+    @classmethod
+    def load(cls, folder_path: str, mode: str = "classification", **kwargs) -> 'TransformerModelForMaskedLM':
+        try:
+            new_model = cls.load_from_checkpoint(os.path.join(folder_path, "model.ckpt"),  mode = mode, **kwargs)
+        except:
+            new_model = cls.load_from_checkpoint(os.path.join(folder_path, "model.ckpt"),  *kwargs)
+        new_model.mode = mode
+        if mode != "masked_learning":
+            new_model.model = DebertaModel.from_pretrained(os.path.join(folder_path, "model.pt"), config = new_model.config)
+
+        return new_model
         
     

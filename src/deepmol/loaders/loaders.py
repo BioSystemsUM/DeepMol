@@ -154,7 +154,8 @@ class CSVLoaderForMaskedLM(CSVLoader):
                  shard_size: int = None,
                  mode: Union[str, List[str]] = 'auto',
                  vocabulary_path: str = None, 
-                 masking_probability: str = 0.15) -> None:
+                 masking_probability: str = 0.15, 
+                 max_length=256) -> None:
         """
         Initialize the CSVLoader.
 
@@ -199,6 +200,7 @@ class CSVLoaderForMaskedLM(CSVLoader):
         self.mode = mode
         self.vocabulary_path = vocabulary_path
         self.masking_probability = masking_probability
+        self.max_length = max_length
 
     def create_dataset(self, **kwargs) -> SmilesDataset:
         """
@@ -253,7 +255,8 @@ class CSVLoaderForMaskedLM(CSVLoader):
                              mode=self.mode, 
                              vocabulary_path = self.vocabulary_path,
                              masking_probability = self.masking_probability,
-                             mask = mask)
+                             mask = mask,
+                             max_length = self.max_length)
 
 
 class SDFLoader(object):

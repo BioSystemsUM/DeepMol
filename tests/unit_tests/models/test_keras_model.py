@@ -96,6 +96,40 @@ class TestKerasModel(ModelsTestCase, TestCase):
 
         shutil.rmtree("test_model")
 
+    def test_save_model_with_dots(self):
+        model = KerasModel(model_builder=make_cnn_model,
+                           epochs=2, input_dim=self.binary_dataset.X.shape[1])
+        model.fit(self.binary_dataset)
+
+        first_predictions = model.predict(self.binary_dataset_test)
+
+        model.save("../test_model")
+        loaded_model = KerasModel.load("../test_model")
+        self.assertEqual(2, loaded_model.epochs)
+        self.assertEqual(50, loaded_model.parameters_to_save["input_dim"])
+        loaded_model_predictions = loaded_model.predict(self.binary_dataset_test)
+
+        assert np.array_equal(first_predictions, loaded_model_predictions)
+
+        shutil.rmtree("../test_model")
+
+    def test_load_models_with_dots(self):
+        model = KerasModel(model_builder=make_cnn_model,
+                           epochs=2, input_dim=self.binary_dataset.X.shape[1])
+        model.fit(self.binary_dataset)
+
+        first_predictions = model.predict(self.binary_dataset_test)
+
+        model.save("../test_model")
+        loaded_model = KerasModel.load("../test_model")
+        self.assertEqual(2, loaded_model.epochs)
+        self.assertEqual(50, loaded_model.parameters_to_save["input_dim"])
+        loaded_model_predictions = loaded_model.predict(self.binary_dataset_test)
+
+        assert np.array_equal(first_predictions, loaded_model_predictions)
+
+        shutil.rmtree("../test_model")
+
     def test_baseline_models(self):
         model_kwargs = {'input_dim': 50}
         keras_kwargs = {}

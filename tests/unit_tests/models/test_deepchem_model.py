@@ -1,4 +1,5 @@
 import os
+import shutil
 from unittest import TestCase
 from unittest.mock import MagicMock
 
@@ -108,6 +109,25 @@ class TestDeepChemModel(ModelsTestCase, TestCase):
         self.assertEqual(model_graph.epochs, 3)
         new_predictions = model_graph_loaded.predict(ds_test)
         self.assertTrue(np.array_equal(test_preds, new_predictions))
+
+    def test_save_load_with_dots(self):
+        ds_train = self.multitask_dataset
+        ds_train.X = ConvMolFeaturizer().featurize([MolFromSmiles('CCC')] * 10)
+        ds_test = self.multitask_dataset_test
+        ds_test.X = ConvMolFeaturizer().featurize([MolFromSmiles('CCC')] * 10)
+
+        model_graph = DeepChemModel(GraphConvModel, n_tasks=ds_train.n_tasks, mode='classification', epochs=3)
+
+        model_graph.fit(ds_train)
+        test_preds = model_graph.predict(ds_test)
+
+        model_graph.save("../test_model")
+        model_graph_loaded = DeepChemModel.load("../test_model")
+        self.assertEqual(model_graph.n_tasks, ds_train.n_tasks)
+        self.assertEqual(model_graph.epochs, 3)
+        new_predictions = model_graph_loaded.predict(ds_test)
+        self.assertTrue(np.array_equal(test_preds, new_predictions))
+        shutil.rmtree("../test_model")
 
     def test_cross_validate(self):
         ds_train = self.binary_dataset

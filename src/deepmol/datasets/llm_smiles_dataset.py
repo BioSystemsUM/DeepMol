@@ -65,7 +65,7 @@ class LLMDataset(TorchDataset, SmilesDataset):
             self.tokenizer = SmilesTokenizer(os.path.join(dir_path, "vocab.txt"))
         else:
             self.tokenizer = SmilesTokenizer(vocabulary_path)
-            
+        
         self.masking_probability = masking_probability
         self.max_length = max_length
         self.mask = mask
@@ -109,9 +109,12 @@ class LLMDataset(TorchDataset, SmilesDataset):
             return input_ids, attention_mask, labels, mask_indices
         
         else:
-            if len(self.y.shape) == 1:
-                labels = torch.tensor(self.y[idx], dtype=torch.long)
+            if self.y is not None:
+                if len(self.y.shape) == 1:
+                    labels = torch.tensor(self.y[idx], dtype=torch.long)
+                else:
+                    labels = torch.tensor(self.y[idx, :], dtype=torch.float)
             else:
-                labels = torch.tensor(self.y[idx, :], dtype=torch.float)
+                labels = torch.tensor([])
 
             return input_ids, attention_mask, labels

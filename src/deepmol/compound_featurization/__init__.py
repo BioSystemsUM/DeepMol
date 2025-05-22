@@ -37,3 +37,5 @@ from .neural_npfp_generator import NeuralNPFP
 from .mhfp import MHFP
 
 from .biosynfoni import BiosynfoniKeys
+
+from .llms import LLM

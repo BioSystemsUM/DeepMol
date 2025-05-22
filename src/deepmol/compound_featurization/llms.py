@@ -1,8 +1,6 @@
 import os
 from typing import Tuple
 import numpy as np
-from rdkit.Chem import Mol
-import torch
 from tqdm import tqdm
 
 from deepmol.compound_featurization import MolecularFeaturizer
@@ -20,15 +18,18 @@ class LLM(MolecularFeaturizer):
     molecule instances as MHFP fingerprints.
     """
 
-    def __init__(self, model_path: str, tokenizer: BertTokenizer = None, model = BertModel, config_class = BertConfig,**kwargs):
+    def __init__(self, model_path: str, tokenizer: BertTokenizer = None, model = BertModel, config_class = BertConfig, device = "cpu", 
+                 **kwargs):
         super().__init__(**kwargs)
 
         # read bert model
         if tokenizer is None:
             tokenizer = SmilesTokenizer(vocab_file=os.path.join(model_path, "vocab.txt"))
+        self.device = device
         self.tokenizer = tokenizer
         self.config = config_class.from_json_file(os.path.join(model_path, "config.json"))
         self.model = model.from_pretrained(os.path.join(model_path, "model.pt"), config=self.config)
+        self.model.to(self.device)
 
         self.feature_names = [f'llm_{i}' for i in range(self.config.output_hidden_states)]
 
@@ -121,6 +122,9 @@ class LLM(MolecularFeaturizer):
         input_ids = inputs.input_ids
         attention_mask = inputs.attention_mask
 
+        input_ids = input_ids.to(self.device)
+        attention_mask = attention_mask.to(self.device)
+
         # Get the model's output
         outputs = self.model(input_ids=input_ids, attention_mask=attention_mask)
 
@@ -132,5 +136,5 @@ class LLM(MolecularFeaturizer):
 
         # Convert to numpy array
         mean_last_hidden_state = mean_last_hidden_state.squeeze()
-        features = mean_last_hidden_state.detach().numpy()
+        features = mean_last_hidden_state.cpu().detach().numpy()
         return features

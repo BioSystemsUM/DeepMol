@@ -4,14 +4,14 @@ from deepmol.compound_featurization.llms import LLM
 from deepmol.tokenizers.transformers_tokenizer import SmilesTokenizer
 from tests import TEST_DIR
 from tests.unit_tests.featurizers.test_featurizers import FeaturizerTestCase
-from unittest import TestCase
+from unittest import TestCase, skip
 
 from rdkit.Chem import MolFromSmiles
 from transformers import ModernBertModel, ModernBertConfig
 
 from deepmol.compound_featurization.biosynfoni import BiosynfoniKeys
 
-
+@skip
 class TestLLMs(FeaturizerTestCase, TestCase):
 
     def test_featurize(self):

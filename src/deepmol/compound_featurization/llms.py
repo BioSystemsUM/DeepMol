@@ -31,7 +31,7 @@ class LLM(MolecularFeaturizer):
         self.model = model.from_pretrained(os.path.join(model_path, "model.pt"), config=self.config)
         self.model.to(self.device)
 
-        self.feature_names = [f'llm_{i}' for i in range(self.config.output_hidden_states)]
+        self.feature_names = [f'llm_{i}' for i in range(self.config.hidden_size)]
 
     @modify_object_inplace_decorator
     def featurize(self,

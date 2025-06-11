@@ -190,8 +190,8 @@ class SklearnModel(Model):
 
         save_to_disk(self.model, model_path)
 
-        # change file path to keep the extension but add _params
-        parameters_file_path = model_path.split('.')[0] + '_params.' + model_path.split('.')[1]
+        base, ext = os.path.splitext(model_path)
+        parameters_file_path = f"{base}_params{ext}"
         save_to_disk(self.parameters_to_save, parameters_file_path)
 
     @classmethod
@@ -213,7 +213,8 @@ class SklearnModel(Model):
         model_path = cls.get_model_filename(folder_path)
         model = load_from_disk(model_path)
         # change file path to keep the extension but add _params
-        parameters_file_path = ".".join(model_path.split('.')[:-1]) + '_params.' + model_path.split('.')[-1]
+        base, ext = os.path.splitext(model_path)
+        parameters_file_path = f"{base}_params{ext}"
         params = load_from_disk(parameters_file_path)
         instance = cls(model=model, model_dir=model_path, **params)
         return instance

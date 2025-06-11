@@ -150,11 +150,12 @@ class TestSklearnModel(ModelsTestCase, TestCase):
 
         self.assertEqual("classification", model.mode)
 
-        with self.assertRaises(ValueError):
-            model.save("test_model.params.pkl")
-
-        with self.assertRaises(ValueError):
-            model.save("test_model.params.joblib")
+        model.save("test_model.params.pkl")
+        self.assertTrue(os.path.exists("test_model.params.pkl"))
+        shutil.rmtree("test_model.params.pkl")
+        model.save("test_model.params.joblib")
+        self.assertTrue(os.path.exists("test_model.params.joblib"))
+        shutil.rmtree("test_model.params.joblib")
 
         rf = RandomForestClassifier()
         model = SklearnModel(model=rf, mode="classification", model_dir="test_model")
@@ -163,6 +164,34 @@ class TestSklearnModel(ModelsTestCase, TestCase):
         self.assertTrue(os.path.exists(os.path.join("test_model", "model.pkl")))
 
         shutil.rmtree("test_model")
+
+    def test_save_model_with_dots(self):
+        rf = RandomForestClassifier()
+        model = SklearnModel(model=rf, mode="classification", model_dir="test_model")
+        model.fit(self.binary_dataset)
+        model.save("../test_model")
+        self.assertTrue(os.path.exists("../test_model"))
+        shutil.rmtree("../test_model")
+
+    def test_load_models_with_dots(self):
+        rf = RandomForestClassifier()
+        model = SklearnModel(model=rf, mode="classification", model_dir="../test_model")
+        model.fit(self.binary_dataset)
+        model.save("../test_model")
+        self.assertTrue(os.path.exists("../test_model"))
+
+        predictions_1 = model.predict(self.binary_dataset_test)
+
+        new_model = SklearnModel.load("../test_model")
+        y_test = new_model.predict(self.binary_dataset_test)
+        self.assertEqual(len(y_test), len(self.binary_dataset_test.y))
+        self.assertIsInstance(new_model, SklearnModel)
+        self.assertEqual("classification", new_model.mode)
+
+        assert np.array_equal(predictions_1, y_test)
+
+        shutil.rmtree("../test_model")
+
 
     def test_load_model(self):
         rf = RandomForestClassifier()

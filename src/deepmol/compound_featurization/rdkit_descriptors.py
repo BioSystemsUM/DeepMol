@@ -218,7 +218,7 @@ class ThreeDimensionalMoleculeGenerator:
         try:
             new_mol = copy.deepcopy(mol)
             return generate_conformers_with_timeout(new_mol, etkdg_version, mode)
-        except (TimeoutError, ValueError):
+        except:
             return mol
 
     def generate(self, dataset: Dataset, etkdg_version: int = 3, mode: str = "MMFF94"):

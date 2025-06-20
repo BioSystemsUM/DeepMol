@@ -214,11 +214,11 @@ class KerasModel(Model):
                 self.logger.info(str(self.model))
                 self.logger.info(str(type(self.model)))
                 predictions = self.model.predict(dataset.X.astype('float32'))
-
+        
         predictions = np.array(predictions)
         if predictions.shape != (len(dataset.mols), dataset.n_tasks):
             predictions = normalize_labels_shape(predictions, dataset.n_tasks)
-
+        
         if len(predictions.shape) > 1:
             if predictions.shape[1] == len(dataset.mols) and predictions.shape[0] == dataset.n_tasks:
                 predictions = predictions.T

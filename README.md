@@ -1,6 +1,7 @@
 # DeepMol
 
-![deepmol_logo](docs/imgs/deepmol_logo.png)
+<!-- ![deepmol_logo](docs/imgs/deepmol_logo.png) -->
+<img src="docs/imgs/deepmol_logo.png" alt="drawing" width="500"/>
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13121149.svg)](https://doi.org/10.1186/s13321-024-00937-7)
 [![ReadTheDocs](https://img.shields.io/badge/Readthedocs-%23000000.svg?style=for-the-badge&logo=readthedocs&logoColor=white)](https://deepmol.readthedocs.io/en/latest/)

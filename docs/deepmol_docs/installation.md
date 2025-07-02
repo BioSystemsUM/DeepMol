@@ -1,6 +1,6 @@
 # Installation
 
-<img src="../imgs/deepmol_logo.png" alt="drawing" width="500"/>
+![alt text](../imgs/deepmol_logo.png)
 
 ## Pip
 

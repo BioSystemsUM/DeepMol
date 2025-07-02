@@ -1,6 +1,6 @@
 # Introduction
 
-![alt text](../imgs/deepmol_logo.png)
+![alt text](../imgs/deepmol_black_background.png)
 
 DeepMol is a Python-based machine and deep learning framework for drug discovery. 
 It offers a variety of functionalities that enable a smoother approach to many 

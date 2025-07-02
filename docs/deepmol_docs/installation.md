@@ -1,6 +1,6 @@
 # Installation
 
-![alt text](../imgs/deepmol_logo.png)
+![alt text](../imgs/deepmol_black_background.png)
 
 ## Pip
 

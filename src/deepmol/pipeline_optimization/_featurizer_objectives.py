@@ -16,7 +16,7 @@ except NameError:
     _1D_FEATURIZERS = {'2d_descriptors': TwoDimensionDescriptors, 'morgan': MorganFingerprint,
                        'atom_pair': AtomPairFingerprint, 'layered': LayeredFingerprint, 'rdk': RDKFingerprint,
                        'maccs': MACCSkeysFingerprint, 'mixed': MixedFeaturizer, 'np_classifier_fp': NPClassifierFP,
-                       'neural_npfp': NeuralNPFP, "mhfp": MHFP}
+                       "mhfp": MHFP}
 
 
 def _get_featurizer(trial: Trial, feat_type: Literal['1D', '2D']) -> Transformer:
@@ -68,9 +68,6 @@ def _get_featurizer(trial: Trial, feat_type: Literal['1D', '2D']) -> Transformer
             return MixedFeaturizer([_1D_FEATURIZERS[f1](), _1D_FEATURIZERS[f2]()], n_jobs=num_of_cores)
         elif feat == 'np_classifier_fp':
             return NPClassifierFP(n_jobs=num_of_cores)
-        elif feat == 'neural_npfp':
-            model = trial.suggest_categorical('model', ['aux', 'base', 'ae'])
-            return NeuralNPFP(model, n_jobs=num_of_cores)
         elif feat == 'mhfp':
             return MHFP(n_jobs=num_of_cores)
 

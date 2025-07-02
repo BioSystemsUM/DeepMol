@@ -3,7 +3,7 @@ from typing import Union
 
 
 from sklearn.base import clone
-from deepmol.models._utils import _get_splitter, load_from_disk, _save_keras_model, get_prediction_from_proba, save_to_disk
+from deepmol.models._utils import _get_splitter, _return_invalid, load_from_disk, _save_keras_model, get_prediction_from_proba, save_to_disk
 from deepmol.models.models import Model
 from deepmol.models.sklearn_models import SklearnModel
 from deepmol.metrics.metrics import Metric
@@ -164,7 +164,7 @@ class KerasModel(Model):
         else:
             self.history = self.model.history
 
-    def predict(self, dataset: Dataset) -> np.ndarray:
+    def predict(self, dataset: Dataset, return_invalid: bool = False) -> np.ndarray:
         """
         Makes predictions on dataset.
 
@@ -172,6 +172,8 @@ class KerasModel(Model):
         ----------
         dataset: Dataset
           Dataset to make prediction on.
+        return_invalid: bool
+          Return invalid entries with NaN
 
         Returns
         -------
@@ -181,9 +183,12 @@ class KerasModel(Model):
         """
         predictions = self.predict_proba(dataset)
         y_pred_rounded = get_prediction_from_proba(dataset, predictions)
+
+        if return_invalid:
+            y_pred_rounded = _return_invalid(dataset, y_pred_rounded)
         return y_pred_rounded
 
-    def predict_proba(self, dataset: Dataset) -> np.ndarray:
+    def predict_proba(self, dataset: Dataset, return_invalid: bool = False) -> np.ndarray:
         """
         Makes predictions on dataset.
 
@@ -191,6 +196,8 @@ class KerasModel(Model):
         ----------
         dataset: Dataset
             Dataset to make prediction on.
+        return_invalid: bool
+            Return invalid entries with NaN
 
         Returns
         -------
@@ -207,14 +214,17 @@ class KerasModel(Model):
                 self.logger.info(str(self.model))
                 self.logger.info(str(type(self.model)))
                 predictions = self.model.predict(dataset.X.astype('float32'))
-
+        
         predictions = np.array(predictions)
         if predictions.shape != (len(dataset.mols), dataset.n_tasks):
             predictions = normalize_labels_shape(predictions, dataset.n_tasks)
-
+        
         if len(predictions.shape) > 1:
             if predictions.shape[1] == len(dataset.mols) and predictions.shape[0] == dataset.n_tasks:
                 predictions = predictions.T
+
+        if return_invalid:
+            predictions = _return_invalid(dataset, predictions)
 
         return predictions
 

@@ -238,8 +238,7 @@ class SMOTE(ImbalancedLearn):
         """
         ros = over_sampling.SMOTE(sampling_strategy=self.sampling_strategy,
                                   random_state=self.random_state,
-                                  k_neighbors=self.k_neighbors,
-                                  n_jobs=self.n_jobs)
+                                  k_neighbors=self.k_neighbors)
         x, y = ros.fit_resample(self.features, self.y)
         # list of original ids + artificial ids
         ids = np.concatenate((self.ids, [f"ib_{uuid.uuid4().hex}" for _ in range(x.shape[0] - self.features.shape[0])]))

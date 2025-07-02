@@ -11,7 +11,7 @@
 
 Introduction <deepmol_docs/introduction>
 Installation <deepmol_docs/installation>
-Datasets <deepmol_docs/loaders>
+Input/output operations <deepmol_docs/loaders>
 Compound Standardization <deepmol_docs/molecular_standardizers>
 Compound Featurization <deepmol_docs/featurization>
 Data Scaling <deepmol_docs/scaling>

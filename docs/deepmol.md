@@ -8,6 +8,7 @@
 deepmol.base
 deepmol.compound_featurization
 deepmol.datasets
+deepmol.encoders
 deepmol.evaluator
 deepmol.feature_importance
 deepmol.feature_selection

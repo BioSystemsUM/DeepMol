@@ -98,7 +98,7 @@ class Predictor:
         return hasattr(self, '_is_fitted') and self._is_fitted
 
     @abstractmethod
-    def predict(self, dataset: Dataset) -> np.ndarray:
+    def predict(self, dataset: Dataset, return_invalid: bool = False) -> np.ndarray:
         """
         Uses self to make predictions on provided Dataset object.
 
@@ -106,6 +106,9 @@ class Predictor:
         ----------
         dataset: Dataset
             Dataset to make prediction on
+
+        return_invalid: bool
+            Return invalid entries with NaN
 
         Returns
         -------
@@ -114,7 +117,7 @@ class Predictor:
         """
 
     @abstractmethod
-    def predict_proba(self, dataset: Dataset) -> np.ndarray:
+    def predict_proba(self, dataset: Dataset, return_invalid: bool = False) -> np.ndarray:
         """
         Uses self to make predictions on provided Dataset object.
 
@@ -122,6 +125,9 @@ class Predictor:
         ----------
         dataset: Dataset
             Dataset to make prediction on
+        
+        return_invalid: bool
+            Return invalid entries with NaN
 
         Returns
         -------

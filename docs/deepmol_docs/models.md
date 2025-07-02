@@ -66,6 +66,12 @@ model.predict(test_dataset)
            [0.35, 0.65],
            [0.  , 1.  ]])
 
+As some pipelines identify some molecules as invalid, you can also predict including the invalid molecules:
+
+```python
+model.predict(test_dataset, return_invalid=True)
+```
+
 
 <font size="4"> **And finally, let's evaluate our model according to some metrics** </font>
 

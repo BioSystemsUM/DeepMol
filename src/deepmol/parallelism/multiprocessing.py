@@ -125,7 +125,7 @@ class JoblibMultiprocessing(MultiprocessingClass):
                 with tqdm_joblib(tqdm(desc=self._process_name, total=len(items))):
                     results = parallel_callback(
                         delayed(self.process)(item) for item in items)
-
+                    
         except Exception as e:
             if "pickle" in str(e):
                 self.logger.warning(f"Failed to pickle process {self.process.__name__} function. Processing the input "

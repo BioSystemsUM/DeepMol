@@ -143,6 +143,31 @@ class ModelsTestCase(ABC):
                                                               mode='classification',
                                                               ids=ids,
                                                               smiles=smiles)
+        
+
+        ids = np.array([str(i) for i in range(100)])
+        ids_test = np.array([str(i) for i in range(100, 110)])
+        # create binary classification dataset
+        smiles = ['CCC$' * 50 for _ in range(50)]
+        smiles.extend(['CCC' * 50 for _ in range(50)])
+        mols = [MolFromSmiles(smi) for smi in smiles]
+        self.binary_dataset_invalid = SmilesDatasetMagicMock(spec=SmilesDataset,
+                                                     X=x,
+                                                     y=y,
+                                                     n_tasks=1,
+                                                     label_names=['binary_label'],
+                                                     mode='classification',
+                                                     ids=ids,
+                                                     smiles=smiles)
+        self.binary_dataset_invalid.mols = [MolFromSmiles(smi) for smi in smiles]
+        self.binary_dataset_invalid.select_to_split.side_effect = lambda arg: MagicMock(spec=SmilesDataset,
+                                                                                X=x[arg],
+                                                                                y=y[arg],
+                                                                                n_tasks=1,
+                                                                                label_names=['binary_label'],
+                                                                                mode='classification',
+                                                                                ids=ids[arg])
+        self.binary_dataset_invalid.__len__.return_value = 100
 
     def tearDown(self) -> None:
         # Close logger file handlers to release the file

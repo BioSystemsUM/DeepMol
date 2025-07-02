@@ -11,7 +11,7 @@ import sys
 sys.path.insert(0, os.path.abspath('../src/'))
 
 project = 'deepmol'
-copyright = '2023, João Correia and João Capela'
+copyright = '2024, João Correia and João Capela'
 author = 'João Correia and João Capela'
 release = '1.0.0'
 

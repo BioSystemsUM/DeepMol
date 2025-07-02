@@ -164,7 +164,7 @@ def preset_deepchem_models(trial, data: Dataset) -> list:
     models = ["gat_model", "gcn_model", "attentive_fp_model", "pagtn_model", "chem_ception_model", "dag_model",
               "graph_conv_model", "smiles_to_vec_model", "text_cnn_model", "weave_model", "dmpnn_model"]
     batch_size = trial.suggest_categorical("batch_size_deepchem", [8, 16, 32, 64, 128, 256, 512])
-    epochs = trial.suggest_int("epochs_deepchem", 100, 1000)
+    epochs = trial.suggest_int("epochs_deepchem", 10, 200)
     deepchem_kwargs = {"epochs": epochs}
     if mode == 'classification' or (len(set(mode)) == 1 and mode[0] == 'classification'):
         # , "multitask_irv_classifier_model",

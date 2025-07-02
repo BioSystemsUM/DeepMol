@@ -7,6 +7,7 @@ import pandas as pd
 from rdkit.Chem import Mol, MolFromSmiles
 
 from deepmol.datasets import SmilesDataset
+from deepmol.loaders._utils import load_sdf_file
 from deepmol.loggers import Logger
 from deepmol.models._utils import get_prediction_from_proba
 
@@ -167,6 +168,23 @@ class TestSmilesDataset(TestCase):
         self.assertEqual(df00.__len__(), 5)
         self.assertEqual(df0.__len__(), 7)
 
+    def test_remove_elements(self):
+        df0 = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCC', 'CCCC', 'CCCC', 'CCCCC'],
+                            X=[1, 1, 3, 4, 5, 6, 1],
+                            ids=[0,1,2,3,4,5,6])
+        
+        self.assertEqual(df0.__len__(), 7)
+        df0.remove_elements(ids=["0","1","2"])
+        self.assertEqual(df0.__len__(), 7)
+        self.assertEqual(df0.removed_elements, [])
+        df00 = df0.remove_elements(ids=["0","1","2"], inplace=False)
+        self.assertEqual(df00.__len__(), 4)
+        self.assertEqual(df00.removed_elements, [0,1,2])
+        self.assertEqual(df0.__len__(), 7)
+        self.assertEqual(df0.removed_elements, [])
+        df0.remove_elements(ids=["0","1","2"], inplace=True)
+        self.assertEqual(df0.removed_elements, [0,1,2])
+
     def test_remove_nan_axis_0(self):
         df0 = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCC', 'CCCC', 'CCCC', 'CCCCC'])
         self.assertEqual(df0.__len__(), 7)
@@ -178,16 +196,21 @@ class TestSmilesDataset(TestCase):
         self.assertEqual(df.__len__(), 7)
         df.remove_nan()
         self.assertEqual(df.__len__(), 7)
+        self.assertEqual(df.removed_elements, [])
         dff = df.remove_nan()
         self.assertEqual(dff.__len__(), 6)
+        self.assertEqual(dff.removed_elements, [1])
         df.remove_nan(inplace=True)
         self.assertEqual(df.__len__(), 6)
+        self.assertEqual(df.removed_elements, [1])
 
         df2 = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCC', 'CCCC', 'CCCC', 'CCCCC'],
                             X=[[1, 1], [1, np.nan], [3, 4], [4, 5], [5, 6], [6, 1], [1, np.nan]])
         self.assertEqual(df2.__len__(), 7)
+        self.assertEqual(df2.removed_elements, [])
         df2.remove_nan(inplace=True)
         self.assertEqual(df2.__len__(), 5)
+        self.assertEqual(df2.removed_elements, [1, 6])
 
         df3 = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCC', 'CCCC', 'CCCC', 'CCCCC'],
                             X=[[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
@@ -394,18 +417,56 @@ class TestSmilesDataset(TestCase):
         merged_x2 = dd.merge([d])
         self.assertIsNone(merged_x2.X)
 
+    def test_to_dataframe(self):
+        df = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCCC', 'CCCCC'],
+                           X=[[1, 0, 1], [0, 1, 0], [1, 0, 1], [1, 0, 1], [1, 0, 1]],
+                           y=[1, 0, 1, 0, 1],
+                           ids=[1, 2, 3, 4, 5],
+                           feature_names=['XXX', 'YYY', 'ZZZ'])
+        
+        pd_df = df.to_dataframe()
+        self.assertEqual(pd_df.shape, (len(df.mols), 3 + df.X.shape[1]))
+        for i, col_name in enumerate(pd_df.columns.values):
+            self.assertEqual(col_name, ['ids', 'smiles', 'y', 'XXX', 'YYY', 'ZZZ'][i])
+
     def test_save_to_csv(self):
         df = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCCC', 'CCCCC'],
                            X=[[1, 0, 1], [0, 1, 0], [1, 0, 1], [1, 0, 1], [1, 0, 1]],
                            y=[1, 0, 1, 0, 1],
                            ids=[1, 2, 3, 4, 5],
                            feature_names=['XXX', 'YYY', 'ZZZ'])
-        df.to_csv(os.path.join(self.output_dir, 'test.csv'))
+        df.to_csv(os.path.join(self.output_dir, 'test.csv'), index=False, sep=",")
         pd_df = pd.read_csv(os.path.join(self.output_dir, 'test.csv'))
         # ids + mols + y + features
         self.assertEqual(pd_df.shape, (len(df.mols), 3 + df.X.shape[1]))
         for i, col_name in enumerate(pd_df.columns.values):
             self.assertEqual(col_name, ['ids', 'smiles', 'y', 'XXX', 'YYY', 'ZZZ'][i])
+
+    def test_save_to_sdf(self):
+        dataset = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCCC', 'CCCCC'],
+                                X=[[1, 0, 1], [0, 1, 0], [1, 0, 1], [1, 0, 1], [1, 0, 1]],
+                                y=[1, 0, 1, 0, 1],
+                                ids=[1, 2, 3, 4, 5])
+        dataset.to_sdf(os.path.join(self.output_dir, 'test.sdf'))
+        mols = load_sdf_file(os.path.join(self.output_dir, 'test.sdf'))
+        y = [1, 0, 1, 0, 1]
+        for i, mol in enumerate(mols):
+            y_i = mol.GetProp("y")
+            self.assertEqual(y[i], int(float(y_i)))
+
+        dataset2 = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCCC', 'CCCCC'],
+                                 X=[1, 0, 1, 1, 1],
+                                 y=np.array([[1, 0, 1, 0, 1], [1, 0, 1, 0, 1]]).T,
+                                 ids=[1, 2, 3, 4, 5])
+        dataset2.to_sdf(os.path.join(self.output_dir, 'test.sdf'))
+        mols = load_sdf_file(os.path.join(self.output_dir, 'test.sdf'))
+        y = np.array([[1, 0, 1, 0, 1], [1, 0, 1, 0, 1]]).T
+        for i, mol in enumerate(mols):
+            y_i = mol.GetProp("y_0")
+            self.assertEqual(y[i, 0], int(float(y_i)))
+            y_i = mol.GetProp("y_1")
+            self.assertEqual(y[i, 1], int(float(y_i)))
+
 
     def test_save_load_features(self):
         d = SmilesDataset(smiles=['C', 'CC', 'CCC', 'CCCC', 'CCCCC'])

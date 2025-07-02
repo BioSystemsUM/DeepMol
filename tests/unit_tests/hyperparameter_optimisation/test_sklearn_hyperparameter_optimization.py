@@ -82,13 +82,13 @@ class TestSklearnHyperparameterOptimization(ModelsTestCase, TestCase):
         metric = validate_metrics(Metric(roc_auc_score))
         self.assertIsInstance(metric, Callable)
 
-        metric = validate_metrics("roc_auc")
+        metric = validate_metrics("roc_auc_score")
         self.assertIsInstance(metric, str)
 
     def test_aucs(self):
         train_dataset, test_dataset = self.binary_dataset, self.binary_dataset_test
 
-        def rf_model_builder(n_estimators=10, max_features='auto', class_weight=None):
+        def rf_model_builder(n_estimators=10, max_features="sqrt", class_weight=None):
             if class_weight is None:
                 class_weight = {0: 1., 1: 1.}
             rf_model = RandomForestClassifier(n_estimators=n_estimators, max_features=max_features,
@@ -96,7 +96,7 @@ class TestSklearnHyperparameterOptimization(ModelsTestCase, TestCase):
             return rf_model
 
         params_dict_rf = {"n_estimators": [10, 100],
-                          "max_features": ["auto", "sqrt", "log2", None],
+                          "max_features": ["sqrt", "log2", None],
                           "class_weight": [{0: 1., 1: 1.}, {0: 1., 1: 5}, {0: 1., 1: 10}]
                           }
 

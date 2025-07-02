@@ -30,13 +30,19 @@ operations on molecular data.
 
 More detailed and comprehensive documentation in [DeepMol readthedocs](https://deepmol.readthedocs.io/en/latest/).
 
+### Google colabs to run AutoML
+
+- [Binary and multiclass classification](https://colab.research.google.com/drive/1wtiwuuhfWKVo40ywgweWUMavKL0zdwJK?usp=sharing)
+- [Regression](https://colab.research.google.com/drive/1vE-Q01orImdD4qFTo20MAT4E4kP2hsYF?usp=sharing)
+- [Multi-task/multi-label](https://colab.research.google.com/drive/18z2vN6zLNSVJ3qgskKZTYxA_t9UNS1b8?usp=sharing)
+
 ### Table of contents:
 
-- [Requirements](#requirements)
 - [Installation](#installation)
     - [Pip](#pip)
     - [Manually](#manually)
     - [Docker](#docker)
+    - [Disclaimer](#disclaimer)
 - [Getting Started](#getting-started)
     - [Load dataset from csv](#load-a-dataset-from-a-csv)
     - [Load dataset from sdf](#load-a-dataset-from-a-sdf)
@@ -58,6 +64,7 @@ More detailed and comprehensive documentation in [DeepMol readthedocs](https://d
 - [License](#licensing)
 
 
+
 ## Installation
 
 ### Pip
@@ -70,12 +77,27 @@ If you intend to install all the deepmol modules' dependencies:
 pip install deepmol[all]
 ```
 
+or in MacOS:
+
+```bash
+pip install "deepmol[all]"
+```
+
+
 Extra modules:
 
 ```bash
 pip install deepmol[preprocessing]
 pip install deepmol[machine-learning]
 pip install deepmol[deep-learning]
+```
+
+or in MacOS:
+
+```bash
+pip install "deepmol[preprocessing]"
+pip install "deepmol[machine-learning]"
+pip install "deepmol[deep-learning]"
 ```
 
 Also, you should install mol2vec and its dependencies:
@@ -106,6 +128,14 @@ You can also use the provided image to build your own Docker image:
 ```bash
 docker pull biosystemsum/deepmol
 ```
+
+### Disclaimer
+
+If you’d like to use the GPU, make sure to install the versions of TensorFlow and DGL that match the CUDA drivers for your hardware.
+
+Do not install JAX, it will result dependency conflicts. 
+
+Loading tensorflow models will be problematic for MacOS users due to a known tensorflow issue [46](https://github.com/keras-team/tf-keras/issues/46).
 
 
 ## Getting Started
@@ -710,6 +740,7 @@ and in industry scenarios.
 ## Citing DeepMol
 
 Correia, J., Capela, J., & Rocha, M. (2024). DeepMol: An Automated Machine and Deep Learning Framework for Computational Chemistry. [https://doi.org/10.1186/s13321-024-00937-7](https://doi.org/10.1186/s13321-024-00937-7)
+Correia, J., Capela, J. & Rocha, M. Deepmol: an automated machine and deep learning framework for computational chemistry. J Cheminform 16, 136 (2024). [https://doi.org/10.1186/s13321-024-00937-7](https://doi.org/10.1186/s13321-024-00937-7)
 
 ### Publications using DeepMol
 

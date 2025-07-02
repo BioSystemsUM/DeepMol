@@ -180,7 +180,7 @@ class TestPipelineOptimization(TestCase):
         from deepmol.pipeline_optimization._deepchem_models_objectives import gat_model_steps
 
         def objective(trial):
-            gat_kwargs = {'n_tasks': 1, 'mode': "classification", 'n_classes': 2}
+            gat_kwargs = {'n_tasks': 1, 'mode': "classification", 'n_classes': 2, "epochs": 1000}
             steps = gat_model_steps(trial, gat_kwargs=gat_kwargs)
             return steps
 
@@ -370,7 +370,7 @@ class TestPipelineOptimization(TestCase):
         def objective(trial):
             max_atoms = max([mol.GetNumAtoms() for mol in self.dataset_descriptors.mols])
             featurizer = CoulombFeat(max_atoms=max_atoms)
-            dtnn_kwargs = {'n_tasks': 1}
+            dtnn_kwargs = {'n_tasks': 1, "epochs":300}
             model_step = dtnn_model_steps(trial=trial, dtnn_kwargs=dtnn_kwargs)
             final_steps = [('featurizer', featurizer), model_step[0]]
             return final_steps
@@ -381,7 +381,7 @@ class TestPipelineOptimization(TestCase):
         metric = Metric(accuracy_score)
         train, test = RandomSplitter().train_test_split(self.dataset_descriptors, seed=123)
         po.optimize(train_dataset=train, test_dataset=test, objective_steps=objective, metric=metric, n_trials=5,
-                    save_top_n=3)
+                    save_top_n=3, trial_timeout=20)
         self.assertEqual(po.best_params, po.best_trial.params)
         self.assertIsInstance(po.best_value, float)
 

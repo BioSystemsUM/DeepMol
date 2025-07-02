@@ -1,7 +1,9 @@
+import inspect
 from typing import Dict, Any, Union, Callable
 
 import sklearn
 from sklearn.metrics import make_scorer
+import sklearn.metrics
 
 from deepmol.loggers.logger import Logger
 from deepmol.metrics import Metric
@@ -51,16 +53,25 @@ def validate_metrics(metric: Union[str, Metric, Callable]) -> Union[str, Callabl
     """
 
     logger = Logger()
-    if str(metric) in sklearn.metrics.SCORERS.keys():
-        logger.info(f'Using {metric} as scoring function.')
-        return metric
-    elif isinstance(metric, Metric):
+    sklearn_functions = [
+        name for name, _ in inspect.getmembers(sklearn.metrics, inspect.isfunction)
+        ]
+    
+    if isinstance(metric, Metric):
         logger.info(f'Using {metric.name} as scoring function.')
         return make_scorer(metric.metric)
     elif isinstance(metric, Callable):
+        metric_str = metric.__name__
+        if metric_str in sklearn_functions:
+            logger.info(f'Using {metric.__name__} as scoring function.')
+            return metric
+        
         metric = Metric(metric)
         logger.info(f'Using {metric.name} as scoring function.')
         return make_scorer(metric)
+    elif isinstance(metric, str) and metric in sklearn_functions:
+        logger.info(f'Using {metric} as scoring function.')
+        return metric
     else:
         raise ValueError(f'{metric}, is not a valid scoring function. '
                          'Use sorted(sklearn.metrics.SCORERS.keys()) to get valid options.')

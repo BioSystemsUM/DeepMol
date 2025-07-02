@@ -1,11 +1,11 @@
 import os
+import shutil
 from unittest import TestCase
 from unittest.mock import MagicMock
 
 import numpy as np
 from deepchem.feat import ConvMolFeaturizer, MolGraphConvFeaturizer
 from deepchem.models import GraphConvModel, TextCNNModel, GCNModel, MultitaskClassifier
-from deepchem.models.layers import DTNNEmbedding, Highway
 from rdkit.Chem import MolFromSmiles
 from sklearn.metrics import f1_score
 
@@ -15,11 +15,25 @@ from deepmol.metrics.metrics_functions import roc_auc_score, precision_score, ac
 from deepmol.metrics import Metric
 from deepmol.models import DeepChemModel
 from deepmol.splitters import RandomSplitter
-from deepmol.compound_featurization import MorganFingerprint
 from tests.unit_tests.models.test_models import ModelsTestCase
+import dgl
+import torch as th
+from dgl import DGLError
 
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
+# os.environ["CUDA_VISIBLE_DEVICES"] = ""
+def check_if_cuda_is_available_for_dgl() -> bool:
+    """
+    Check if cuda is available for dgl.
+    """
+    
+    u, v = th.tensor([0, 1, 2]), th.tensor([2, 3, 4])
+    g = dgl.graph((u, v))
+    try:
+        g.to("cuda")
+        return True
+    except DGLError as e:
+        return False
 
 class TestDeepChemModel(ModelsTestCase, TestCase):
 
@@ -96,6 +110,25 @@ class TestDeepChemModel(ModelsTestCase, TestCase):
         new_predictions = model_graph_loaded.predict(ds_test)
         self.assertTrue(np.array_equal(test_preds, new_predictions))
 
+    def test_save_load_with_dots(self):
+        ds_train = self.multitask_dataset
+        ds_train.X = ConvMolFeaturizer().featurize([MolFromSmiles('CCC')] * 10)
+        ds_test = self.multitask_dataset_test
+        ds_test.X = ConvMolFeaturizer().featurize([MolFromSmiles('CCC')] * 10)
+
+        model_graph = DeepChemModel(GraphConvModel, n_tasks=ds_train.n_tasks, mode='classification', epochs=3)
+
+        model_graph.fit(ds_train)
+        test_preds = model_graph.predict(ds_test)
+
+        model_graph.save("../test_model")
+        model_graph_loaded = DeepChemModel.load("../test_model")
+        self.assertEqual(model_graph.n_tasks, ds_train.n_tasks)
+        self.assertEqual(model_graph.epochs, 3)
+        new_predictions = model_graph_loaded.predict(ds_test)
+        self.assertTrue(np.array_equal(test_preds, new_predictions))
+        shutil.rmtree("../test_model")
+
     def test_cross_validate(self):
         ds_train = self.binary_dataset
         ds_train.X = ConvMolFeaturizer().featurize([MolFromSmiles('CCC')] * 100)
@@ -162,7 +195,7 @@ class TestDeepChemModel(ModelsTestCase, TestCase):
         model.fit(self.binary_dataset)
         test_predict = model.predict(self.binary_dataset)
         metrics = [Metric(f1_score, average='micro'), Metric(precision_score, average='micro')]
-
+ 
         evaluation = model.evaluate(self.binary_dataset, metrics)
         model.save("test_model")
         new_model = DeepChemModel.load("test_model")

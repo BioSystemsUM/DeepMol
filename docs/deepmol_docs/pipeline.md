@@ -88,6 +88,12 @@ pipeline.fit(train)
 y_pred = pipeline.predict(test)
 ```
 
+As some pipelines identify some molecules as invalid, you can also predict including the invalid molecules:
+
+```python
+y_pred = pipeline.predict(test, return_invalid=True)
+```
+
 
 ### Evaluate 
 

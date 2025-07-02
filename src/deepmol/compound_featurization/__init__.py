@@ -32,6 +32,12 @@ from .np_classifier_fp import NPClassifierFP
 
 from .nc_mfp_generator import NcMfp
 
-from .neural_npfp_generator import NeuralNPFP
+try:
+    from .neural_npfp_generator import NeuralNPFP
+except ImportError:
+    warnings.warn("Neural NPFP not available. Please install the 'deep-learning' or 'all' of deepmol to use it. "
+                  "(pip install deepmol[deep-learning] or pip install deepmol[all])")
 
 from .mhfp import MHFP
+
+from .biosynfoni import BiosynfoniKeys

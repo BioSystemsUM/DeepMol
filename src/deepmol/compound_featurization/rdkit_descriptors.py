@@ -1,3 +1,4 @@
+import copy
 import inspect
 import sys
 import traceback
@@ -7,42 +8,17 @@ from typing import Union, List
 
 import numpy as np
 from rdkit import Chem
-from rdkit.Chem import Mol, AllChem, MolFromSmiles, Descriptors, rdMolDescriptors
+from rdkit.Chem import Mol, AllChem, MolFromSmiles, Descriptors, rdMolDescriptors, MolToSmiles
 from rdkit.Chem.GraphDescriptors import Ipc
 from rdkit.Chem.rdForceFieldHelpers import UFFOptimizeMoleculeConfs
 from rdkit.ML.Descriptors import MoleculeDescriptors
+from tqdm import tqdm
 
 from deepmol.compound_featurization import MolecularFeaturizer
 from deepmol.datasets import Dataset
 from deepmol.loggers.logger import Logger
 from deepmol.utils.decorators import timeout
 from deepmol.utils.errors import PreConditionViolationException
-
-
-def _no_conformers_message(e):
-    """
-    Print a message when no conformers are found.
-
-    Parameters
-    ----------
-    e : Exception
-        Exception to print.
-    """
-    exc = traceback.format_exc()
-
-    logger = Logger()
-
-    if isinstance(e, RuntimeError) and "molecule has no conformers" in exc \
-            or isinstance(e, ValueError) and "Bad Conformer Id" in exc:
-        logger.error("You have to generate molecular conformers for each molecule. \n"
-                     "You can execute the following method: \n"
-                     "rdkit3DDescriptors.generate_conformers_to_sdf_file(dataset: Dataset, file_path: str,"
-                     " n_conformations: int,max_iterations: int, threads: int, timeout_per_molecule: int) \n"
-                     "The result will be stored in a SDF format file which can be loaded with the "
-                     "method: loaders.Loaders.SDFLoader()\n\n"
-                     "Or set the generate_conformers parameter to True")
-
-        exit(1)
 
 
 def check_atoms_coordinates(mol):
@@ -140,8 +116,8 @@ class ThreeDimensionalMoleculeGenerator:
             if number_hydrogens != 0:
                 return True
         return False
-
-    def generate_conformers(self, new_mol: Mol, etkdg_version: int = 1, **kwargs):
+    
+    def generate_conformers(self, new_mol: Mol, etkdg_version: int = 3, **kwargs):
         """
         method to generate three-dimensional conformers
 
@@ -214,6 +190,59 @@ class ThreeDimensionalMoleculeGenerator:
                                      numThreads=self.threads)
 
         return mol
+    
+    def generate_structure(self, mol: Mol, etkdg_version: int = 3, mode: str = "MMFF94"):
+        """
+        Method to generate three-dimensional conformers
+
+        Parameters
+        ----------
+        new_mol: Mol
+          Mol object from rdkit.
+        etkdg_version: int
+          version of the experimental-torsion-knowledge distance geometry (ETKDG) algorithm
+        mode: str
+          mode for the molecular geometry optimization (MMFF or UFF variants).
+
+        Returns
+        -------
+        mol: Mol
+            Mol object with optimized molecular geometry.
+        """
+        @timeout(self.timeout_per_molecule)
+        def generate_conformers_with_timeout(new_mol, etkg_version, optimization_mode):
+            new_mol = self.generate_conformers(new_mol, etkdg_version = etkg_version)
+            new_mol = self.optimize_molecular_geometry(new_mol, mode = optimization_mode)
+            return new_mol
+
+        try:
+            new_mol = copy.deepcopy(mol)
+            return generate_conformers_with_timeout(new_mol, etkdg_version, mode)
+        except:
+            return mol
+
+    def generate(self, dataset: Dataset, etkdg_version: int = 3, mode: str = "MMFF94"):
+        """
+        Method to generate three-dimensional conformers for a dataset
+
+        Parameters
+        ----------
+        dataset: dataset
+          Dataset
+        etkdg_version: int
+          version of the experimental-torsion-knowledge distance geometry (ETKDG) algorithm
+        mode: str
+          mode for the molecular geometry optimization (MMFF or UFF variants).
+
+        Returns
+        -------
+        mol: Mol
+            Mol object with optimized molecular geometry.
+        """
+        mol_set = dataset.mols
+        for i, mol in tqdm(enumerate(mol_set), total=len(mol_set), desc="Generating 3D structure"):
+            new_mol = self.generate_structure(mol, etkdg_version, mode)
+            dataset._mols[i] = new_mol
 
 
 def get_all_3D_descriptors(mol):
@@ -251,7 +280,7 @@ def get_all_3D_descriptors(mol):
                     raise Exception
 
         except Exception:
-            logger.error('error in molecule: ' + str(mol))
+            logger.error('error in molecule: ' + str(MolToSmiles(mol)))
             all_descriptors = np.empty(size, dtype=float)
             all_descriptors[:] = np.NaN
             break
@@ -307,10 +336,6 @@ def generate_conformers(generator: ThreeDimensionalMoleculeGenerator,
     new_mol = generator.generate_conformers(new_mol, etkg_version)
     new_mol = generator.optimize_molecular_geometry(new_mol, optimization_mode)
     return new_mol
-
-
-def handler(signum, frame):
-    raise Exception()
 
 
 # TODO : check whether sdf file is being correctly exported for multi-class classification
@@ -391,15 +416,26 @@ def generate_conformers_to_sdf_file(dataset: Dataset,
         try:
             m2 = generate_conformers_with_timeout(generator, mol_set[i], etkg_version, optimization_mode)
             if dataset.y is not None and dataset.y.size > 0:
-                label = dataset.y[i]
-                for j, class_name in enumerate(dataset.label_names):
-                    m2.SetProp(class_name, "%f" % label[j])
+                if len(dataset.y.shape) > 1 and dataset.y.shape[1] > 1:
+                    label = dataset.y[i, :]
+                    for j, class_name in enumerate(dataset.label_names):
+                        m2.SetProp(class_name, "%f" % label[j])
+                elif len(dataset.y.shape) > 1 and dataset.y.shape[1] == 1:
+                    class_name = dataset.label_names[0]
+                    label = dataset.y[i, 0]
+                    m2.SetProp(class_name, "%f" % label)
+
+                else:
+                    class_name = dataset.label_names[0]
+                    label = dataset.y[i]
+                    m2.SetProp(class_name, "%f" % label)
+
             if dataset.ids is not None and dataset.ids.size > 0:
                 mol_id = dataset.ids[i]
                 m2.SetProp("_ID", f"{mol_id}")
             writer.write(m2)
             final_set_with_conformations.append(m2)
-        except TimeoutError:
+        except (TimeoutError, ValueError):
             logger.info("Timeout for molecule %d" % i)
 
     writer.close()
@@ -562,14 +598,16 @@ class All3DDescriptors(MolecularFeaturizer):
         if not has_conformers and self.generate_conformers:
             mol = self.three_dimensional_generator.generate_conformers(mol)
             mol = self.three_dimensional_generator.optimize_molecular_geometry(mol)
+            fp = get_all_3D_descriptors(mol)
         elif not has_conformers:
-            raise PreConditionViolationException("molecule has no conformers")
+            fp = [np.NaN] * len(self.feature_names)
 
-        fp = get_all_3D_descriptors(mol)
+        else:
+            fp = get_all_3D_descriptors(mol)
+        
         fp = np.asarray(fp, dtype=np.float32)
         return fp
-
-
+    
 class AutoCorr3D(ThreeDimensionDescriptor):
     """
     AutoCorr3D.

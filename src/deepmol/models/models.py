@@ -13,6 +13,8 @@ from deepmol.metrics.metrics import Metric
 
 from sklearn.base import BaseEstimator
 
+from deepmol.models._utils import _return_invalid
+
 
 class Model(BaseEstimator, Predictor, ABC):
     """
@@ -146,7 +148,7 @@ class Model(BaseEstimator, Predictor, ABC):
             Path to file where model should be saved.
         """
 
-    def predict(self, dataset: Dataset) -> np.ndarray:
+    def predict(self, dataset: Dataset, return_invalid: bool = False) -> np.ndarray:
         """
         Uses self to make predictions on provided Dataset object.
 
@@ -154,6 +156,9 @@ class Model(BaseEstimator, Predictor, ABC):
         ----------
         dataset: Dataset
             Dataset to make prediction on
+        
+        return_invalid: bool
+            Return invalid entries with NaN
 
         Returns
         -------
@@ -168,9 +173,13 @@ class Model(BaseEstimator, Predictor, ABC):
             y_pred_batch = y_pred_batch[:n_samples]
             y_preds.append(y_pred_batch)
         y_pred = np.concatenate(y_preds)
+
+        if return_invalid:
+            y_pred = _return_invalid(dataset, y_pred)
+
         return y_pred
 
-    def predict_proba(self, dataset: Dataset) -> np.ndarray:
+    def predict_proba(self, dataset: Dataset, return_invalid: bool = False) -> np.ndarray:
         """
         Uses self to make predictions on provided Dataset object.
 
@@ -179,12 +188,18 @@ class Model(BaseEstimator, Predictor, ABC):
         dataset: Dataset
             Dataset to make prediction on
 
+        return_invalid: bool
+            Return invalid entries with NaN
+
         Returns
         -------
         np.ndarray
             A numpy array of predictions.
         """
         y_pred = self.model.predict_proba(dataset.X)
+
+        if return_invalid:
+            y_pred = _return_invalid(dataset, y_pred)
         return y_pred
 
     def evaluate(self,

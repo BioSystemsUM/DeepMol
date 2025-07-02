@@ -1,6 +1,7 @@
 from deepmol.compound_featurization import MorganFingerprint, LayeredFingerprint, TwoDimensionDescriptors
+from deepmol.compound_featurization.rdkit_descriptors import ThreeDimensionalMoleculeGenerator
 from tests.integration_tests.dataset.test_dataset import TestDataset
-from deepmol.compound_featurization import MHFP
+from deepmol.compound_featurization import MHFP, BiosynfoniKeys
 
 class TestDatasetFeaturizers(TestDataset):
 
@@ -38,3 +39,15 @@ class TestDatasetFeaturizers(TestDataset):
         MHFP().featurize(self.small_dataset_to_test, inplace=True)
         self.assertEqual(self.small_dataset_to_test.X.shape[0], 13)
         self.assertEqual(self.small_dataset_to_test.X.shape[1], 2048)
+
+    def test_biosynfoni_featurizer(self):
+        BiosynfoniKeys().featurize(self.small_dataset_to_test, inplace=True)
+        self.assertEqual(self.small_dataset_to_test.X.shape[0], 13)
+        self.assertEqual(self.small_dataset_to_test.X.shape[1], 39)
+
+    def test_generate_structures(self):
+        generator = ThreeDimensionalMoleculeGenerator()
+        generator.generate(self.small_dataset_to_test)
+
+        for mol in self.small_dataset_to_test.mols:
+            self.assertGreater(len(mol.GetConformers()), 0)

@@ -1,8 +1,9 @@
-# Loading data into DeepMol
+# Input/output operations
 
-It is possible to read data from CSV and SDF files or directly from numpy arrays / lists.
+It is possible to read and export data from/to CSV and SDF files or directly from/to numpy arrays / lists and pandas dataframes.
 
-## Using CSVLoader
+## Input - dataset loaders
+### Using CSVLoader
 
 The CSVLoader class can be used to load tabular data from files. It accepts the following arguments:
 - dataset_path: path to the CSV file (mandatory)
@@ -37,7 +38,7 @@ csv_dataset = loader.create_dataset(sep=',', header=0)
     2023-05-24 16:51:56,426 — INFO — Assuming classification since there are less than 10 unique y values. If otherwise, explicitly set the mode to 'regression'!
 
 
-## Using SDFLoader
+### Using SDFLoader
 
 SDF stands for "Structural Data File," which is a file format commonly used in chemistry and bioinformatics to represent the structure of molecules.
 
@@ -68,7 +69,7 @@ loader = SDFLoader(dataset_path='../data/example_sdf_file.sdf',
 sdf_dataset = loader.create_dataset()
 ```
 
-## Directly from numpy arrays / lists
+### Directly from numpy arrays / lists
 
 Directly from numpy arrays / lists as a SmilesDataset (both CSVLoader and SDFLoader return SmilesDataset objects).
 
@@ -114,7 +115,8 @@ df_mols = SmilesDataset.from_mols(mols=mols, # only mandatory argument, a list o
                                   mode='auto')
 ```
 
-## Access the data stored in the datasets
+## Output - access data
+### Access the data stored in the datasets
 
 - dataset.smiles: list of SMILES strings
 - dataset.mols: list of RDKit molecules
@@ -264,4 +266,43 @@ csv_dataset.n_tasks
 
     1
 
+Also, it is possible to convert to pandas dataframe:
+
+```python
+csv_dataset.to_dataframe()
+```
+
+### Export to SDF or CSV files
+
+
+Import the dataset first.
+
+```python
+from deepmol.loaders import CSVLoader
+# Load data from CSV file
+loader = CSVLoader(dataset_path='../data/example_data_with_features.csv',
+                   smiles_field='mols',
+                   id_field='ids',
+                   labels_fields=['y'],
+                   features_fields=[f'feat_{i+1}' for i in range(1024)],
+                   shard_size=500,
+                   mode='auto')
+# create the dataset
+csv_dataset = loader.create_dataset(sep=',', header=0)
+
+```
+
+Apply any DeepMol operation.
+
+Export to a CSV file:
+
+```python
+csv_dataset.to_csv()
+```
+
+or SDF
+
+```python
+csv_dataset.to_sdf()
+```
 

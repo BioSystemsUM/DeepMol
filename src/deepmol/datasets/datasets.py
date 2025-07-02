@@ -1,12 +1,12 @@
 import uuid
 import warnings
 from abc import ABC, abstractmethod
-from copy import deepcopy
+from copy import copy, deepcopy
 from typing import Union, List, Tuple
 
 import numpy as np
 import pandas as pd
-from rdkit.Chem import Mol
+from rdkit.Chem import Mol, SDWriter
 
 from deepmol.loggers.logger import Logger
 from deepmol.datasets._utils import merge_arrays, merge_arrays_of_arrays
@@ -73,6 +73,30 @@ class Dataset(ABC):
         mols : np.ndarray
             Molecules in the dataset.
         """
+
+    @property
+    @abstractmethod
+    def removed_elements(self) -> np.ndarray:
+        """
+        Get the molecules in the dataset.
+
+        Returns
+        -------
+        mols : np.ndarray
+            Removed molecules in the dataset.
+        """
+    
+    @removed_elements.setter
+    @abstractmethod
+    def removed_elements(self, value: Union[List[str], np.ndarray]) -> None:
+        """
+        Set the molecules in the dataset.
+        Parameters
+        ----------
+        value: Union[List[str], np.ndarray]
+            The removed elements in the dataset.
+        """
+
 
     @mols.setter
     @abstractmethod
@@ -370,10 +394,12 @@ class SmilesDataset(Dataset):
         self._smiles = np.array(smiles)
         self._ids = np.array([str(i) for i in ids]) if ids is not None \
             else np.array([str(uuid.uuid4().hex) for _ in range(len(smiles))])
+        self._original_ids = copy(self._ids)
         self._X = np.array(X) if X is not None else None
         self._y = np.array(y) if y is not None else None
         self._mols = np.array(mols) if mols is not None else np.array([smiles_to_mol(s) for s in self._smiles])
         invalid = [self._ids[i] for i, m in enumerate(self._mols) if m is None]
+        self._removed_elements = []
         self.remove_elements(invalid, inplace=True)
         self._feature_names = np.array(feature_names) if feature_names is not None else None
         self._label_names = np.array(label_names) if label_names is not None else None
@@ -480,9 +506,11 @@ class SmilesDataset(Dataset):
         super().__init__()
         self._smiles = np.array(smiles)
         self._ids = np.array([str(uuid.uuid4().hex) for _ in range(len(smiles))])
+        self._original_ids = copy(self._ids)
         self._X = None
         self._y = None
         self._n_tasks = None
+        self._removed_elements = []
         self._mols = np.array([smiles_to_mol(s) for s in self._smiles])
         self.remove_elements([self._ids[i] for i, m in enumerate(self._mols) if m is None], inplace=True)
         self._feature_names = None
@@ -765,6 +793,30 @@ class SmilesDataset(Dataset):
             ids = self.ids[index]
             self.select(ids, axis=0, inplace=True)
 
+    @property
+    def removed_elements(self) -> np.ndarray:
+        """
+        Get the molecules in the dataset.
+
+        Returns
+        -------
+        mols : np.ndarray
+            Removed molecules in the dataset.
+        """
+        return self._removed_elements
+    
+    @removed_elements.setter
+    def removed_elements(self, value: Union[List[str], np.ndarray]) -> None:
+        """
+        Set the molecules in the dataset.
+        Parameters
+        ----------
+        value: Union[List[str], np.ndarray]
+            The removed elements in the dataset.
+        """
+        self._removed_elements = value
+
+
     @inplace_decorator
     def remove_elements(self, ids: List[str]) -> None:
         """
@@ -778,6 +830,8 @@ class SmilesDataset(Dataset):
         """
         if len(ids) != 0:
             all_indexes = self.ids
+            positions = np.where(np.isin(self._original_ids, list(set(ids))))[0]
+            self.removed_elements.extend(list(positions))
             indexes_to_keep = list(set(all_indexes) - set(ids))
             self.select(indexes_to_keep, inplace=True)
 
@@ -969,15 +1023,11 @@ class SmilesDataset(Dataset):
             mols = np.append(mols, ds.mols, axis=0)
             smiles = np.append(smiles, ds.smiles, axis=0)
         return SmilesDataset(smiles, mols, ids, X, feature_names, y, label_names, mode)
-
-    def to_csv(self, path: str) -> None:
+    
+    def to_dataframe(self):
         """
-        Save the dataset to a csv file.
-        Parameters
-        ----------
-        path: str
-            Path to save the csv file.
-        """
+        Convert data into dataframe
+        """ 
         df = pd.DataFrame()
         df['ids'] = pd.Series(self._ids)
         df['smiles'] = pd.Series(self._smiles)
@@ -989,8 +1039,53 @@ class SmilesDataset(Dataset):
             columns_names = self._feature_names
             df_x = pd.DataFrame(self._X, columns=columns_names)
             df = pd.concat([df, df_x], axis=1)
+        return df
 
-        df.to_csv(path, index=False)
+    def to_csv(self, path: str, **kwargs) -> None:
+        """
+        Save the dataset to a csv file.
+        Parameters
+        ----------
+        path: str
+            Path to save the csv file.
+        """
+        df = self.to_dataframe()
+
+        df.to_csv(path, **kwargs)
+
+    def to_sdf(self, path: str) -> None:
+        """
+        Save the dataset to a sdf file.
+        Parameters
+        ----------
+        path: str
+            Path to save the sdf file.
+        """
+        mol_set = self.mols
+        writer = SDWriter(path)
+
+        for i, mol in enumerate(mol_set):
+            if self.y is not None and self.y.size > 0:
+                if len(self.y.shape) > 1 and self.y.shape[1] > 1:
+                    label = self.y[i, :]
+                    for j, class_name in enumerate(self.label_names):
+                        mol.SetProp(class_name, "%f" % label[j])
+                elif len(self.y.shape) > 1 and self.y.shape[1] == 1:
+                    class_name = self.label_names[0]
+                    label = self.y[i, 0]
+                    mol.SetProp(class_name, "%f" % label)
+
+                else:
+                    class_name = self.label_names[0]
+                    label = self.y[i]
+                    mol.SetProp(class_name, "%f" % label)
+
+            if self.ids is not None and self.ids.size > 0:
+                mol_id = self.ids[i]
+                mol.SetProp("_ID", f"{mol_id}")
+            writer.write(mol)
+
+        writer.close()
 
     @inplace_decorator
     def load_features(self, path: str, **kwargs) -> None:
@@ -1022,3 +1117,5 @@ class SmilesDataset(Dataset):
             df.to_csv(path, index=False)
         else:
             raise ValueError('Features array is empty!')
+
+    

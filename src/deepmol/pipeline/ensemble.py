@@ -9,7 +9,8 @@ from deepmol.pipeline import Pipeline
 from deepmol.datasets import Dataset
 from deepmol.utils.utils import normalize_labels_shape
 
-from joblib import Parallel, delayed
+
+from scipy.stats import mode
 
 
 class VotingPipeline:
@@ -117,11 +118,60 @@ class VotingPipeline:
         np.ndarray
             Array of predictions by hard voting.
         """
-        binary_predictions = [np.where(pred >= 0.5, 1, 0) for pred in predictions]
-        weights = [int(w) for w in self.weights * 100]
-        final_predictions = [
-            Counter(np.repeat(binary_predictions, weights, axis=0)[:, i]).most_common(1)[0][0] for i in
-            range(len(binary_predictions[0]))]
+        # predictions = np.array(predictions, dtype=np.float64)
+        # if len(predictions.shape) > 2 and predictions.shape[2] == 1:
+        #     predictions = predictions.reshape((predictions.shape[0], predictions.shape[1]))
+
+        # binary_predictions = (predictions >= 0.5).astype(int)
+        # weights = np.array([int(w) for w in self.weights * 100])
+        # # Repeat predictions by weights
+        # weighted_predictions = np.repeat(binary_predictions, weights.astype(int), axis=0)
+
+        # # Perform majority voting for each sample
+        # final_predictions = np.apply_along_axis(
+        # lambda col: Counter(col).most_common(1)[0][0], axis=0, arr=weighted_predictions.T
+        # )
+
+        # Ensure the input is a numpy array
+        predictions = np.array(predictions)
+
+        # Convert probabilistic scores to binary predictions (0 or 1), preserving NaNs
+        def to_binary(values):
+            binary_values = np.where(~np.isnan(values), (values >= 0.5).astype(int), np.nan)
+            return binary_values
+
+        predictions = np.apply_along_axis(to_binary, 0, predictions)
+
+        # Check if the input is 2D or 3D
+        if predictions.ndim not in (2, 3):
+            raise ValueError("Input array must be either 2D or 3D.")
+
+        # Helper function to calculate majority vote for a 1D array, prioritizing NaNs
+        def vote_with_nan_handling(values):
+            if np.isnan(values).any():
+                return np.nan
+            else:
+                values = np.array(values, dtype=int)
+                counts = np.bincount(values)
+    
+                return np.argmax(counts) 
+
+        # If 2D, process directly
+        if predictions.ndim == 2:
+            # Transpose for easier iteration over samples
+            transposed = predictions.T
+            final_predictions = np.apply_along_axis(vote_with_nan_handling, axis=1, arr=transposed)
+
+        # If 3D, process each task separately
+        elif predictions.ndim == 3:
+            n_tasks = predictions.shape[1]
+            result = []
+            for task_idx in range(n_tasks):
+                transposed = predictions[:, task_idx, :].T
+                task_votes = np.apply_along_axis(vote_with_nan_handling, axis=1, arr=transposed)
+                result.append(task_votes)
+            final_predictions = np.array(result)
+
         return np.array(final_predictions)
 
     def _soft_voting(self, predictions: List[np.ndarray]) -> np.ndarray:
@@ -142,13 +192,36 @@ class VotingPipeline:
         # [[0.1, 0.9], [0.8, 0.2]] -> [[[0.9, 0.1], [0.1, 0.9]], [[0.2, 0.8], [0.8, 0.2]]]
         preds = []
         for pipeline_predictions in predictions:
-            preds.append([[1 - prob, prob] if isinstance(prob, float) else prob for prob in pipeline_predictions])
+            preds_ = []
+            for prob in pipeline_predictions:
+                if isinstance(prob, float) or isinstance(prob, int) or isinstance(prob, np.float_) or isinstance(prob, np.int_):
+                    preds_.append([1 - prob, prob])
+                elif isinstance(prob, np.ndarray):
+                    preds_.append(list(prob))
+            preds.append(preds_)
         # Calculate the weighted average of predicted probabilities
         soft_votes = np.average(preds, axis=0, weights=self.weights)
+        nan_mask = np.isnan(soft_votes).any(axis=1)
+    
+        # Compute argmax for rows without NaN
+        result = np.full(soft_votes.shape[0], np.nan)  # Initialize all values as NaN
+        valid_rows = ~nan_mask
+        result[valid_rows] = np.argmax(soft_votes[valid_rows], axis=1)
         # TODO: should this return classes or probabilities?
-        return np.argmax(soft_votes, axis=1)
+        return result
+    
+    def _deal_with_nan(self, return_invalid, final_predictions):
 
-    def predict(self, dataset: Dataset) -> np.ndarray:
+        if not return_invalid:
+            if len(final_predictions.shape) > 1:
+                predictions_idx = ~np.isnan(final_predictions).any(axis=1)
+            else:
+                predictions_idx = ~np.isnan(final_predictions)
+            final_predictions = final_predictions[predictions_idx]
+
+        return final_predictions
+    
+    def predict(self, dataset: Dataset, return_invalid: bool = False) -> np.ndarray:
         """
         Makes predictions for the given dataset using the voting pipeline.
 
@@ -156,20 +229,37 @@ class VotingPipeline:
         ----------
         dataset: Dataset
             Dataset to be used for prediction.
+        return_invalid: bool
+            Return invalid entries with NaN
 
         Returns
         -------
         np.ndarray
             Array of predictions.
         """
+        predictions = []
         if dataset.mode == 'classification':
-            predictions = [pipeline.predict_proba(dataset) for pipeline in self.pipelines]
-            return self._voting(predictions)
+            for pipeline in self.pipelines:
+                predictions.append(pipeline.predict_proba(dataset, return_invalid=True))
+
+            predictions = self._voting(predictions)
+
+            predictions = self._deal_with_nan(return_invalid, predictions)
+
+            return predictions
+        
         elif dataset.mode == 'regression':
-            predictions = [pipeline.predict(dataset) for pipeline in self.pipelines]
-            return np.average(predictions, axis=0, weights=self.weights)
+            for pipeline in self.pipelines:
+                predictions.append(pipeline.predict_proba(dataset, return_invalid=True))
+
+            predictions = np.average(predictions, axis=0, weights=self.weights)
+
+            predictions = self._deal_with_nan(return_invalid, predictions)
+
+            return predictions
         else:
-            predictions = [pipeline.predict_proba(dataset) for pipeline in self.pipelines]
+            for pipeline in self.pipelines:
+                predictions.append(pipeline.predict_proba(dataset, return_invalid=True))
 
             final_predictions = np.empty(predictions[0].shape)
 
@@ -186,9 +276,11 @@ class VotingPipeline:
                     predictions_i = [prediction[:, i] for prediction in predictions]
                     final_predictions[:, i] = self._voting(predictions_i)
 
+            final_predictions = self._deal_with_nan(return_invalid, final_predictions)
+
             return final_predictions
-    
-    def predict_proba(self, dataset: Dataset) -> np.ndarray:
+        
+    def predict_proba(self, dataset: Dataset, return_invalid: bool = False) -> np.ndarray:
         """
         Makes predictions for the given dataset using the voting pipeline.
 
@@ -196,20 +288,38 @@ class VotingPipeline:
         ----------
         dataset: Dataset
             Dataset to be used for prediction.
+        return_invalid: bool
+            Return invalid entries with NaN
 
         Returns
         -------
         np.ndarray
             Array of predictions.
         """
+        predictions = []
         if dataset.mode == 'classification':
-            predictions = [pipeline.predict_proba(dataset) for pipeline in self.pipelines]
-            return np.average(predictions, axis=0, weights=self.weights)
+            for pipeline in self.pipelines:
+                predictions.append(pipeline.predict_proba(dataset, return_invalid=True))
+
+            predictions = np.average(predictions, axis=0, weights=self.weights)
+
+            predictions = self._deal_with_nan(return_invalid, predictions)
+
+            return predictions
+
         elif dataset.mode == 'regression':
-            predictions = [pipeline.predict(dataset) for pipeline in self.pipelines]
-            return np.average(predictions, axis=0, weights=self.weights)
+            for pipeline in self.pipelines:
+                predictions.append(pipeline.predict_proba(dataset, return_invalid=True))
+
+            predictions = np.average(predictions, axis=0, weights=self.weights)
+
+            predictions = self._deal_with_nan(return_invalid, predictions)
+
+            return predictions
+        
         else:
-            predictions = [pipeline.predict_proba(dataset) for pipeline in self.pipelines]
+            for pipeline in self.pipelines:
+                predictions.append(pipeline.predict_proba(dataset, return_invalid=True))
 
             final_predictions = np.empty(predictions[0].shape)
 
@@ -225,6 +335,8 @@ class VotingPipeline:
                 if mode == 'classification':
                     predictions_i = [prediction[:, i] for prediction in predictions]
                     final_predictions[:, i] = np.average(predictions_i, axis=0, weights=self.weights)
+
+            final_predictions = self._deal_with_nan(return_invalid, final_predictions)
 
             return final_predictions
 

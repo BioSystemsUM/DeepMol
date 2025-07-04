@@ -167,7 +167,6 @@ def normalize_labels_shape(y_pred: Union[List, np.ndarray], n_tasks: int) -> np.
     """
     if not isinstance(y_pred, np.ndarray):
         y_pred = np.array(y_pred)
-
     if n_tasks == 1:
         labels = _normalize_singletask_labels_shape(y_pred)
     else:
@@ -198,7 +197,6 @@ def _normalize_singletask_labels_shape(y_pred: Union[List, np.ndarray]) -> np.nd
     labels
         Array of predictions in the format [0, 1, 0, ...]/[[0, 1, 0, ...], [0, 1, 1, ...], ...]
     """
-    labels = []
     # list of probabilities in the format [0.1, 0.9, 0.2, ...]
     if isinstance(y_pred[0], (np.floating, float)):
         return np.array(y_pred)

@@ -302,7 +302,7 @@ def get_all_3D_descriptors(mol):
                 else:
                     raise Exception
 
-        except Exception:
+        except Exception as e:
             logger.error('error in molecule: ' + str(MolToSmiles(mol)))
             all_descriptors = np.empty(size, dtype=float)
             all_descriptors[:] = np.NaN

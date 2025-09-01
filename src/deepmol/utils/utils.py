@@ -167,7 +167,10 @@ def normalize_labels_shape(y_pred: Union[List, np.ndarray], n_tasks: int) -> np.
     """
     if not isinstance(y_pred, np.ndarray):
         y_pred = np.array(y_pred)
-    if n_tasks == 1:
+    
+    if n_tasks == 0 and len(y_pred.shape) < 2:
+        labels = _normalize_singletask_labels_shape(y_pred)
+    elif n_tasks == 1:
         labels = _normalize_singletask_labels_shape(y_pred)
     else:
         if len(y_pred.shape) == 3:

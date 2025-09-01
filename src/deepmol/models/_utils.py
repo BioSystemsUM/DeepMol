@@ -209,6 +209,8 @@ def get_prediction_from_proba(dataset: Dataset, y_pred_proba: np.ndarray) -> np.
                         return y_pred_proba  # case of multiclass ([2, 3, 1])
             elif dataset.mode == "regression":
                 y_pred = y_pred_proba
+            elif dataset.mode == "multilabel":
+                y_pred = multi_label_binarize(y_pred_proba)
             else:
                 y_pred = []
                 if not len(y_pred_proba) == 0:

@@ -1,5 +1,7 @@
 # Installation
 
+![alt text](../imgs/deepmol_black_background.png)
+
 ## Pip
 
 Install DeepMol via pip:

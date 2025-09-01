@@ -1,5 +1,26 @@
 # DeepMol
 
+<!-- ![deepmol_logo](docs/imgs/deepmol_logo.png) -->
+<img src="docs/imgs/deepmol_black_background.png" alt="drawing" width="300"/>
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13121149.svg)](https://doi.org/10.1186/s13321-024-00937-7)
+[![ReadTheDocs](https://img.shields.io/badge/Readthedocs-%23000000.svg?style=for-the-badge&logo=readthedocs&logoColor=white)](https://deepmol.readthedocs.io/en/latest/)
+
+
+## Language and Packages
+![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
+![Keras](https://img.shields.io/badge/Keras-%23D00000.svg?style=for-the-badge&logo=Keras&logoColor=white)
+![PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?style=for-the-badge&logo=PyTorch&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-%23F7931E.svg?style=for-the-badge&logo=scikit-learn&logoColor=white)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-%23FF6F00.svg?style=for-the-badge&logo=TensorFlow&logoColor=white)
+![NumPy](https://img.shields.io/badge/numpy-%23013243.svg?style=for-the-badge&logo=numpy&logoColor=white)
+![Pandas](https://img.shields.io/badge/pandas-%23150458.svg?style=for-the-badge&logo=pandas&logoColor=white)
+
+## Available for Main Operating Systems
+![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
+![Windows 11](https://img.shields.io/badge/Windows%2011-%230079d5.svg?style=for-the-badge&logo=Windows%2011&logoColor=white)
+![macOS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0)
+
 ### Description
 DeepMol is a Python-based machine and deep learning framework for drug discovery. 
 It offers a variety of functionalities that enable a smoother approach to many 
@@ -41,10 +62,12 @@ All deployed DeepMol models are available in [here](https://github.com/BioSystem
     - [Unbalanced Datasets](#unbalanced-datasets)
     - [Pipelines](#pipeline)
     - [Pipeline Optimization](#pipeline-optimization)
+- [Available Models](#available-models)
 - [About Us](#about-us)
 - [Citing DeepMol](#citing-deepmol)
   - [Related Publications](#publications-using-deepmol)
 - [License](#licensing)
+
 
 
 ## Installation
@@ -685,6 +708,10 @@ po.optimize(train_dataset=train, test_dataset=test, objective_steps=objective,
             metric=metric, n_trials=5, save_top_n=3)
 ```
 
+### Available Models
+
+In our [publication](https://doi.org/10.1186/s13321-024-00937-7), we present several case studies associated to Absorption, Distribution, Metabolism, Excretion, and Toxicity of molecules. We made them available to make predictions on new data in the following repository: https://github.com/BioSystemsUM/deepmol_case_studies. Moreover, other models from other publications are also made available. Check it out the link to know more.
+
 ### About Us
 
 DeepMol is managed by a team of contributors from the BioSystems group 
@@ -717,6 +744,7 @@ and in industry scenarios.
 
 ## Citing DeepMol
 
+Correia, J., Capela, J., & Rocha, M. (2024). DeepMol: An Automated Machine and Deep Learning Framework for Computational Chemistry. [https://doi.org/10.1186/s13321-024-00937-7](https://doi.org/10.1186/s13321-024-00937-7)
 Correia, J., Capela, J. & Rocha, M. Deepmol: an automated machine and deep learning framework for computational chemistry. J Cheminform 16, 136 (2024). [https://doi.org/10.1186/s13321-024-00937-7](https://doi.org/10.1186/s13321-024-00937-7)
 
 ### Publications using DeepMol

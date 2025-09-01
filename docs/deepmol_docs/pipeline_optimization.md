@@ -51,6 +51,8 @@ from deepmol.models import SklearnModel
 from deepmol.pipeline_optimization import PipelineOptimization
 from deepmol.splitters import RandomSplitter
 
+from deepmol.pipeline_optimization.objective_wrapper import ObjectiveTrainEval
+
 # DEFINE THE FUNCTION
 def steps(trial):
     model = trial.suggest_categorical('model', ['RandomForestClassifier', 'SVC'])
@@ -149,6 +151,8 @@ from deepmol.pipeline_optimization import PipelineOptimization
 from deepmol.splitters import RandomSplitter
 from sklearn.metrics import mean_squared_error
 import optuna
+
+from deepmol.pipeline_optimization.objective_wrapper import ObjectiveTrainEval
 
 # LOAD THE DATA
 loader = CSVLoader('dataset_regression_path',

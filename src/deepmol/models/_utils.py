@@ -130,14 +130,7 @@ def multi_label_binarize(y_pred_proba, threshold=0.5) -> np.ndarray:
     -------
         np.ndarray: Binary predictions with shape (n_samples, n_classes).
     """
-    n_samples, n_classes = y_pred_proba.shape
-    y_pred = np.zeros((n_samples,))
-    shape = y_pred_proba.shape
-    if len(shape) == 2 and shape[1] == 2:
-        y_pred = (y_pred_proba[:, 1] >= threshold).astype(int)
-    else:
-        y_pred = (y_pred_proba[:, 0] >= threshold).astype(int)
-    return y_pred
+    return (y_pred_proba >= threshold).astype(int)
 
 
 def get_prediction_from_proba(dataset: Dataset, y_pred_proba: np.ndarray) -> np.ndarray:

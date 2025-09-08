@@ -7,9 +7,10 @@ import numpy as np
 
 class NPClassifierFP(MolecularFeaturizer):
 
-    def __init__(self, radius: int = 2, **kwargs) -> None:
+    def __init__(self, radius: int = 2, useChirality: bool = False, **kwargs) -> None:
         super().__init__(**kwargs)
         self.radius = radius
+        self.useChirality = useChirality
         self.feature_names = [f'npclassifier_{i}' for i in range(2048*(self.radius+1))]
 
     def _featurize(self, mol: Mol) -> np.ndarray:
@@ -31,7 +32,7 @@ class NPClassifierFP(MolecularFeaturizer):
         
         mol_bi = {}
         for r in range(self.radius+1):
-            mol_fp = rdMolDescriptors.GetMorganFingerprintAsBitVect(mol, radius=r, bitInfo=mol_bi, nBits = 2048)
+            mol_fp = rdMolDescriptors.GetMorganFingerprintAsBitVect(mol, radius=r, bitInfo=mol_bi, nBits = 2048, useChirality=self.useChirality)
             mol_bi_QC = []
             for i in mol_fp.GetOnBits():
                 num_ = len(mol_bi[i])

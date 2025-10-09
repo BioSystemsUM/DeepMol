@@ -44,21 +44,21 @@ class MultiTaskStratifiedSplitter(Splitter):
 
         if seed is not None:
             np.random.seed(seed)
-
+        
         if frac_valid == 0:
             stratifier = IterativeStratification(n_splits=2, order=1,
-                                                 sample_distribution_per_fold=[frac_test, frac_train])
+                                                 sample_distribution_per_fold=[frac_test, frac_train], random_state=seed)
             train_indexes, test_indexes = next(stratifier.split(dataset.smiles, dataset.y))
 
             return train_indexes, [], test_indexes
         else:
             stratifier = IterativeStratification(n_splits=2, order=1, sample_distribution_per_fold=[frac_test,
-                                                                                                    1 - frac_test])
+                                                                                                    1 - frac_test], random_state=seed)
             train_indexes, test_indexes = next(stratifier.split(dataset.smiles, dataset.y))
 
             new_frac_train = frac_train / (1 - frac_test)
             stratifier = IterativeStratification(n_splits=2, order=1,
-                                                 sample_distribution_per_fold=[1 - new_frac_train, new_frac_train])
+                                                 sample_distribution_per_fold=[1 - new_frac_train, new_frac_train], random_state=seed)
 
             new_train_indexes, valid_indexes = next(stratifier.split(dataset.smiles[train_indexes],
                                                                      dataset.y[train_indexes]))

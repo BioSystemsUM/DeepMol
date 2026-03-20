@@ -40,7 +40,7 @@ class GraphPartSplitterTestCase(SplittersTestCase, TestCase):
         self.assertEqual(len(train_dataset.smiles), 3506)
         self.assertEqual(len(test_dataset.smiles), 344)
         self.assertEqual(len(validation_dataset.smiles), 309)
-
+     
     def test_similarity_splitter_stratified(self):
         # Import the required libraries
         from collections import Counter

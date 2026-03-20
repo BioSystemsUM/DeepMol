@@ -79,11 +79,14 @@ class GraphPartSimilaritySplitter(Splitter):
         frac_test = round(frac_test, 2)
         frac_valid = round(frac_valid, 2)
 
+        smiles = list(dataset.smiles)
+
         # divide idx by y value
         if self.stratified:
-            indexes = train_test_validation_split(dataset.smiles, labels=dataset.y, threshold=self.threshold, test_size=frac_test, valid_size=frac_valid)
+            labels = list(map(str, dataset.y))
+            indexes = train_test_validation_split(smiles, labels=labels, threshold=self.threshold, test_size=frac_test, valid_size=frac_valid)
         else:
-            indexes = train_test_validation_split(dataset.smiles, threshold=self.threshold, test_size=frac_test, valid_size=frac_valid)
+            indexes = train_test_validation_split(smiles, threshold=self.threshold, test_size=frac_test, valid_size=frac_valid)
 
         if len(indexes) == 2:
             if frac_valid == 0:

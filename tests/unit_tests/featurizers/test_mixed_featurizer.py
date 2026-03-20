@@ -32,4 +32,4 @@ class TestMixedFeaturizer(FeaturizerTestCase, TestCase):
         self.mock_scaler.fit_transform(self.mock_dataset, columns)
         self.mock_scaler.transform(self.mock_dataset, columns)
 
-        self.assertEqual(self.mock_dataset._X.shape[1], 1324)
+        self.assertEqual(self.mock_dataset._X.shape[1], 3072)

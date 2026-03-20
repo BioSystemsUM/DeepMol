@@ -41,3 +41,5 @@ except ImportError:
 from .mhfp import MHFP
 
 from .biosynfoni import BiosynfoniKeys
+
+from .llms import LLM

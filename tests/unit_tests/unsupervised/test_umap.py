@@ -4,7 +4,6 @@ from unittest.mock import patch
 
 from plotly.graph_objs import Figure
 
-from deepmol.unsupervised import UMAP
 from tests.unit_tests.unsupervised.test_unsupervised import UnsupervisedBaseTestCase
 
 
@@ -12,6 +11,7 @@ from tests.unit_tests.unsupervised.test_unsupervised import UnsupervisedBaseTest
 class TestUMAP(UnsupervisedBaseTestCase, TestCase):
 
     def validate_umap_classification(self, n_components, **kwargs):
+        from deepmol.unsupervised import UMAP
         dataset = copy(self.dataset)
         pca = UMAP(n_components=n_components, **kwargs)
         components_df = pca.run(dataset)
@@ -19,6 +19,7 @@ class TestUMAP(UnsupervisedBaseTestCase, TestCase):
         pca.plot(components_df._X, path='test_components.png')
 
     def validate_umap_regression(self, n_components, **kwargs):
+        from deepmol.unsupervised import UMAP
         dataset = copy(self.regression_dataset)
         pca = UMAP(n_components=n_components, **kwargs)
         components_df = pca.run(dataset)

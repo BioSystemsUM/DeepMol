@@ -3,6 +3,8 @@ import shutil
 from unittest import TestCase, skip
 
 import numpy as np
+
+from deepmol.datasets.datasets import SmilesDataset
 try:
     from deepchem.models import GraphConvModel
     from tensorflow.keras import Input
@@ -74,6 +76,22 @@ class TestPipeline(TestCase):
         for f in os.listdir():
             if f.startswith('deepmol.log'):
                 os.remove(f)
+    
+    def test_predictor_pipeline_deepchem(self):
+        from deepchem.models import RobustMultitaskClassifier
+        rf = RobustMultitaskClassifier
+        mfp = MorganFingerprint()
+        model = DeepChemModel(model=rf, model_dir='model', n_tasks = 23, n_features=2048)
+        pipeline = Pipeline(steps=[('featurizer', mfp), ('model', model)], path='test_predictor_pipeline/')
+
+        pipeline.fit(self.multi_label_dataset)
+        pipeline.save()
+
+        pipeline2 = Pipeline.load(pipeline.path)
+        smiles_dataset = SmilesDataset(smiles=["CC(=O)OC1=CC=CC=C1C(=O)O"], mode = ["classification"]*23)
+
+        predictions = pipeline2.predict(smiles_dataset)
+        self.assertEqual(predictions.shape, (1, 23))
 
     def test_predictor_pipeline(self):
         rf = RandomForestClassifier()

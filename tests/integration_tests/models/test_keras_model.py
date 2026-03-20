@@ -71,3 +71,4 @@ class TestKerasModel(TestCase):
         model = KerasModel(model_build, epochs = 5, verbose=1, mode=self.multi_task_dataset.mode)
 
         model.fit(self.multi_task_dataset)
+        print(model.predict(self.multi_task_dataset).shape)

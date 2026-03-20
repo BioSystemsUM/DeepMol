@@ -5,6 +5,9 @@ __pycache__/
 
 examples/data/
 
+lightning_logs/
+checkpoints/
+
 # C extensions
 *.so
 

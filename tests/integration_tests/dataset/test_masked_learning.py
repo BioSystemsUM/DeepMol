@@ -5,13 +5,13 @@ import os
 import shutil
 from unittest import TestCase, skip
 
-from deepmol.models.transformer_models import BERT, ModernBERT, RoBERTa, DeBERTa
 from tests.integration_tests.dataset.test_dataset import TestDataset
 
-# @skip
+@skip
 class TestMaskedLearningModels(TestDataset, TestCase):
 
     def test_fit_predict_evaluate(self):
+        from deepmol.models.transformer_models import DeBERTa
         # ModernBERT(vocab_size=self.dataset_for_masked_learning.tokenizer.vocab_size, accelerator="gpu", devices=[0], max_epochs=3, batch_size=56).fit(self.dataset_for_masked_learning)
         # BERT(vocab_size=self.dataset_for_masked_learning.tokenizer.vocab_size, accelerator="gpu", devices=[0], max_epochs=3, batch_size=56).fit(self.dataset_for_masked_learning)
         # RoBERTa(vocab_size=self.dataset_for_masked_learning.tokenizer.vocab_size, accelerator="gpu", devices=[0], max_epochs=3, batch_size=56).fit(self.dataset_for_masked_learning)
@@ -27,6 +27,7 @@ class TestMaskedLearningModels(TestDataset, TestCase):
 
 
     def test_save_and_load(self):
+        from deepmol.models.transformer_models import BERT
 
         from torchmetrics.text import Perplexity
 

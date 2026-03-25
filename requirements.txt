@@ -1,4 +1,4 @@
-rdkit==2023.9.6
+rdkit==2025.9.6
 smilespe==0.0.3
 seaborn
 torchvision

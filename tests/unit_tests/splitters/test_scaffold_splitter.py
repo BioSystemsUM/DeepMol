@@ -57,7 +57,7 @@ class ScaffoldSplitterTestCase(SplittersTestCase, TestCase):
                                                                          frac_train=0.5,
                                                                          seed=123)
 
-        self.assertEqual(len(train_dataset.smiles), len(test_dataset.smiles))
+        self.assertAlmostEqual(len(train_dataset.smiles), len(test_dataset.smiles), delta=1)
         self.assertAlmostEqual(
             len(train_dataset.y[train_dataset.y == 1]) / len(train_dataset.y),
             len(self.binary_dataset.y[self.binary_dataset.y == 1]) / len(self.binary_dataset.y),
@@ -107,7 +107,7 @@ class ScaffoldSplitterTestCase(SplittersTestCase, TestCase):
                                                                          seed=123,
                                                                          homogenous_datasets=False)
 
-        self.assertEqual(len(train_dataset.smiles), len(test_dataset.smiles))
+        self.assertAlmostEqual(len(train_dataset.smiles), len(test_dataset.smiles), delta=1)
         self.assertAlmostEqual(
             len(train_dataset.y[train_dataset.y == 1]) / len(train_dataset.y),
             len(self.binary_dataset.y[self.binary_dataset.y == 1]) / len(self.binary_dataset.y),

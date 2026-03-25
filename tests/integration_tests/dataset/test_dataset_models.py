@@ -26,7 +26,7 @@ from deepchem.models import GraphConvModel
 import numpy as np
 
 def model_build(): # num = number of categories
-    input_f = layers.Input(shape=(210,))
+    input_f = layers.Input(shape=(217,))
     
     X = layers.Dense(2048, activation = 'relu')(input_f)
     X = layers.BatchNormalization()(X)
@@ -42,7 +42,7 @@ def model_build(): # num = number of categories
     return model
 
 def model_build_regression(): # num = number of categories
-    input_f = layers.Input(shape=(210,))
+    input_f = layers.Input(shape=(217,))
     
     X = layers.Dense(2048, activation = 'relu')(input_f)
     X = layers.BatchNormalization()(X)

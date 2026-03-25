@@ -1,4 +1,4 @@
-rdkit==2023.9.6: preprocessing, deep-learning, machine-learning, test
+rdkit==2025.9.6: preprocessing, deep-learning, machine-learning, test
 smilespe==0.0.3: preprocessing, deep-learning, machine-learning, test
 seaborn: preprocessing, deep-learning, machine-learning, test
 joblib: preprocessing, deep-learning, machine-learning, test

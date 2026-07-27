@@ -60,14 +60,7 @@ class TestDatasetFeaturizers(TestDataset):
         featurizer = HuggingFaceFeaturizer()
         valid_count = sum(1 for mol in self.small_dataset_to_test.mols if mol is not None)
     
-        print(f"DEBUG: Dataset length before featurization: {len(self.small_dataset_to_test.mols)}")
-        print(f"DEBUG: Counted valid molecules: {valid_count}")
-        print(f"DEBUG: Featurizer feature names length: {len(featurizer.feature_names)}")
-    
         featurizer.featurize(self.small_dataset_to_test, inplace=True)
-    
-        print(f"DEBUG: Dataset X shape after featurization: {self.small_dataset_to_test.X.shape}")
-        print(f"DEBUG: Dataset _X shape after featurization: {self.small_dataset_to_test._X.shape}")
     
     # Check dataset properties after featurization
         self.assertEqual(self.small_dataset_to_test.X.shape[0], valid_count)

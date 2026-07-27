@@ -1,2 +1,0 @@
-ChemBERTa_Model,Model_Name,Description,Feature_Dimension,Algorithm,ROC_AUC,Accuracy,F1_Score,Precision,Recall,Best_Hyperparams,Featurization_Time_Seconds
-ChemBERTa-zinc-base,seyonec/ChemBERTa-zinc-base-v1,Base model trained on ZINC dataset (768 dim),768,RandomForest,0.7646254784034993,0.7644628099173554,0.7615062761506276,0.7520661157024794,0.7711864406779662,"{'n_estimators': 200, 'max_depth': 20, 'min_samples_split': 10, 'min_samples_leaf': 1, 'class_weight': 'balanced'}",7.359382629394531

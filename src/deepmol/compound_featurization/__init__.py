@@ -43,3 +43,5 @@ from .mhfp import MHFP
 from .biosynfoni import BiosynfoniKeys
 
 from .huggingface_featurizer import HuggingFaceFeaturizer
+
+from .llms import LLM

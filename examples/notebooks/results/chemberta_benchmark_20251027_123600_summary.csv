@@ -1,4 +1,0 @@
-,ROC_AUC,ROC_AUC,ROC_AUC,ROC_AUC,Accuracy,F1_Score,Precision,Recall,Feature_Dimension,Featurization_Time_Seconds
-,mean,std,max,min,mean,mean,mean,mean,first,first
-ChemBERTa_Model,,,,,,,,,,
-ChemBERTa-zinc-base,0.7646,,0.7646,0.7646,0.7645,0.7615,0.7521,0.7712,768,7.3594

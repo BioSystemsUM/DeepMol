@@ -1,2 +1,0 @@
-ChemBERTa_Model,Algorithm,Best_Hyperparameters
-ChemBERTa-zinc-base,RandomForest,"{'n_estimators': 200, 'max_depth': 20, 'min_samples_split': 10, 'min_samples_leaf': 1, 'class_weight': 'balanced'}"

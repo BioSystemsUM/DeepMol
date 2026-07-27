@@ -1,2 +1,0 @@
-ChemBERTa_Model,Algorithm,ROC_AUC,Accuracy,F1_Score,Best_Hyperparams
-ChemBERTa-zinc-base,RandomForest,0.7646254784034993,0.7644628099173554,0.7615062761506276,"{'n_estimators': 200, 'max_depth': 20, 'min_samples_split': 10, 'min_samples_leaf': 1, 'class_weight': 'balanced'}"

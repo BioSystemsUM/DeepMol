@@ -95,7 +95,7 @@ def get_mols_for_each_class(dataset: Dataset):
     mols_classes_map = {}
     indices_classes_map = {}
     for i, mol in enumerate(dataset.mols):
-
+        
         if dataset.y[i] not in mols_classes_map:
             mols_classes_map[dataset.y[i]] = [mol]
             indices_classes_map[dataset.y[i]] = [i]

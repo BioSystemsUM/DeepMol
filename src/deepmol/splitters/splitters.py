@@ -625,7 +625,9 @@ class ScaffoldSplitter(Splitter):
         valid_inds: List[int] = []
         test_inds: List[int] = []
 
-        if not is_regression:
+        classes = dataset.y is not None
+
+        if classes and not is_regression:
             mols_classes_map, indices_classes_map = get_mols_for_each_class(dataset)
             for class_ in mols_classes_map:
                 mols = mols_classes_map[class_]

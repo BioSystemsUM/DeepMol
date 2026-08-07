@@ -309,9 +309,9 @@ class DeepChemModel(BaseDeepChemModel, Predictor):
 
             return res
         else:
+            axes_to_squeeze = [i for i in range(1, res.ndim) if res.shape[i] == 1]
             new_res = np.squeeze(
-                res)  
-
+                res, tuple(axes_to_squeeze))  
         if dataset.mode is not None:
             if not isinstance(dataset.mode, str):
                 n_tasks = len(dataset.mode)

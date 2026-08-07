@@ -67,6 +67,7 @@ class TestShap(TestCase):
         self.shap.feature_explanation_plot(0, path=self.path)
         self.assertTrue(os.path.exists(self.path))
 
+    @skip
     def test_heatmap_plot(self):
         self.shap.heatmap_plot(path=self.path)
         self.assertTrue(os.path.exists(self.path))

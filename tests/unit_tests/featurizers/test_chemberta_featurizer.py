@@ -3,7 +3,7 @@
 from copy import copy
 from unittest import TestCase
 import numpy as np
-from deepmol.compound_featurization.huggingface_featurizer import HuggingFaceFeaturizer, ChemBERTaSmilesFeaturizer
+from deepmol.compound_featurization.huggingface_featurizer import HuggingFaceFeaturizer
 from tests.unit_tests.featurizers.test_featurizers import FeaturizerTestCase
 import unittest
 from rdkit.Chem import MolFromSmiles

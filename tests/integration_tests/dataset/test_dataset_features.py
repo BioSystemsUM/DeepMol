@@ -2,6 +2,9 @@ from deepmol.compound_featurization import MorganFingerprint, LayeredFingerprint
 from deepmol.compound_featurization.rdkit_descriptors import ThreeDimensionalMoleculeGenerator
 from tests.integration_tests.dataset.test_dataset import TestDataset
 from deepmol.compound_featurization import MHFP, BiosynfoniKeys
+from deepmol.compound_featurization import HuggingFaceFeaturizer
+
+
 
 class TestDatasetFeaturizers(TestDataset):
 
@@ -51,3 +54,14 @@ class TestDatasetFeaturizers(TestDataset):
 
         for mol in self.small_dataset_to_test.mols:
             self.assertGreater(len(mol.GetConformers()), 0)
+    
+    
+    def test_dataset_with_chemberta(self):
+        featurizer = HuggingFaceFeaturizer()
+        valid_count = sum(1 for mol in self.small_dataset_to_test.mols if mol is not None)
+    
+        featurizer.featurize(self.small_dataset_to_test, inplace=True)
+    
+    # Check dataset properties after featurization
+        self.assertEqual(self.small_dataset_to_test.X.shape[0], valid_count)
+        self.assertEqual(self.small_dataset_to_test.X.shape[1], len(featurizer.feature_names))
